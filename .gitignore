@@ -1,0 +1,53 @@
+# Node.js and npm/pnpm
+node_modules/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# Vite build output
+dist/
+dist-ssr/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Editor and IDE files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.sublime-project
+*.sublime-workspace
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# TypeScript build output
+*.tsbuildinfo
+
+# Test coverage reports
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# Local development artifacts
+*.local
+
+
+# Vite cache
+.vite/
+
+# Documentation or generated files (if any)
+docs/_build/
+*.mdx

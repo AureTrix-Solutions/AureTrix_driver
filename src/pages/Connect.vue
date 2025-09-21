@@ -10,7 +10,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, ref, computed } from 'vue'; // Import computed
+import { defineComponent, inject, ref, computed } from 'vue';
 
 export default defineComponent({
   name: 'Connect',
@@ -22,9 +22,9 @@ export default defineComponent({
 
     const connectDevice = async () => {
       isConnecting.value = true;
-      status.value = 'Requesting device via SDK... (Step 1/3)';
+      status.value = 'Requesting device via WebHID... (Step 1/3)';
       try {
-        const device = await KeyboardService.requestDevice(); // Uses SDK getDevices()
+        const device = await KeyboardService.requestDevice(); // Triggers WebHID prompt
         if (device && device.id) {
           status.value = `Connecting to ${device.productName || 'Unknown'}... (Step 2/3)`;
           const initializedDevice = await KeyboardService.init(device.id);
@@ -34,7 +34,7 @@ export default defineComponent({
             const info = await KeyboardService.getBaseInfo(device.id);
             deviceInfo.value = info;
           } else {
-            status.value = `Connection established, but initialization failed for ${device.productName || 'Unknown'}. Device may be usable in basic mode. (Step 3/3)`;
+            status.value = `Connection established, but initialization failed for ${device.productName || 'Unknown'}. (Step 3/3)`;
           }
         } else {
           status.value = 'No compatible device found. (Step 1/3)';

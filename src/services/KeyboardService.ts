@@ -22,11 +22,18 @@ class KeyboardService {
 
   async requestDevice(): Promise<any> {
     try {
-      const devices = await this.keyboard.getDevices(); // Use SDK to list devices
+      const devices = await navigator.hid.requestDevice({
+        filters: [{ usagePage: 65440, usage: 1 }], // Ensure WebHID prompt
+      });
+      console.log('Requested devices:', devices); // Debug log
       if (devices.length > 0) {
-        return devices[0]; // Return the first device for simplicity
+        const device = devices[0];
+        // Update SDK device list with the selected device
+        const sdkDevices = await this.getDevices();
+        const existingDevice = sdkDevices.find(d => d.data && d.data.deviceId === device.deviceId);
+        return existingDevice || { id: device.deviceId, data: device }; // Return SDK-compatible Device
       }
-      throw new Error('No devices found or permission denied');
+      throw new Error('No device selected or permission denied');
     } catch (error) {
       throw new Error(`Failed to request device: ${error.message}`);
     }
@@ -51,7 +58,7 @@ class KeyboardService {
     try {
       const device = await this.init(deviceId); // Ensure device is initialized
       if (device) {
-        const info = await this.keyboard.getBaseInfo(); // Fetch base info
+        const info = await this.keyboard.getBaseInfo();
         console.log('Base info:', info); // Debug log
         return info;
       }

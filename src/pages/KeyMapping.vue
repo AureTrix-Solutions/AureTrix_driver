@@ -84,16 +84,21 @@ export default defineComponent({
     const mptValues = ref([0, 0, 0]);
     const socdMode = ref('0');
 
-    // Fetch layer-specific layout (including base layer Fn1) with non-overlapping batched requests
+    // Fetch layer-specific layout with non-overlapping batched requests, re-fetching base layout per layer
     async function fetchLayerLayout(layerIndex: number) {
       try {
-        // Get the base layout structure (2D IDefKeyInfo[][])
+        // Re-fetch base layout for the selected layer to ensure correct structure
         const baseLayout = await KeyboardService.defKey();
         const totalKeys = baseLayout.flat().length;
-        console.log(`Base layout key count: ${totalKeys}`, baseLayout);
+        console.log(`Base layout key count: ${totalKeys} (template for layer ${layerIndex + 1})`, baseLayout);
 
-        // Batch the request to getLayoutKeyInfo with non-overlapping ranges
-        const batchSize = 10; // Set to 10 to ensure reliable retrieval within timeout
+        // Sync device parameters for the selected layer with increased delay
+        await KeyboardService.reloadParameters();
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Increased to 2000ms for better sync
+        console.log(`Reloaded parameters for layer ${layerIndex + 1} with 2000ms delay`);
+
+        // Batch the request to getLayoutKeyInfo with non-overlapping ranges for the selected layer
+        const batchSize = 10; // Maintain 10 for reliability
         const requests = [];
         for (let i = 0; i < baseLayout.flat().length; i += batchSize) {
           const startIdx = i;
@@ -106,30 +111,44 @@ export default defineComponent({
           try {
             const layerData = await KeyboardService.getLayoutKeyInfo(request);
             allLayerData.push(...layerData);
-            console.log(`Fetched batch for keys ${request[0].key} to ${request[request.length - 1].key}, count: ${layerData.length}`, layerData);
+            console.log(`Raw fetched batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, layerData);
           } catch (error) {
-            console.error(`Failed to fetch batch for keys ${request[0].key} to ${request[request.length - 1].key}:`, error);
+            console.error(`Failed to fetch batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, error);
           }
         }
+        console.log(`Raw allLayerData for layer ${layerIndex + 1} before processing:`, allLayerData);
 
-        // Deduplicate layerData using key as the unique identifier
+        // Deduplicate layerData for the current layer
         const uniqueLayerData = new Map<number, { key: number; value: number }>();
         allLayerData.forEach(item => {
           uniqueLayerData.set(item.key, { key: item.key, value: item.value });
-          console.log(`Unique mapping for key ${item.key}: value ${item.value}`); // Debug remapped values
+          console.log(`Unique mapping for key ${item.key}: value ${item.value} in layer ${layerIndex + 1}`);
         });
-        console.log(`Unique layer data key count: ${uniqueLayerData.size}`, Array.from(uniqueLayerData.values()));
+        console.log(`Unique layer data key count for layer ${layerIndex + 1}: ${uniqueLayerData.size}`, Array.from(uniqueLayerData.values()));
 
-        // Transform into 2D IDefKeyInfo[][] by matching with baseLayout, handling edge cases
+        // Transform into 2D IDefKeyInfo[][] by matching with baseLayout, prioritizing remapped values
         const layerLayout: IDefKeyInfo[][] = baseLayout.map(row =>
           row.map(baseKey => {
             const layerKey = uniqueLayerData.get(baseKey.keyValue);
-            const keyValue = layerKey && layerKey.value !== 0 ? layerKey.value : baseKey.keyValue; // Use default if value is 0
-            if (!layerKey) {
-              console.warn(`No unique mapping found for key ${baseKey.keyValue} in layer ${layerIndex}, using default: ${keyValue}`);
-            } else if (layerKey.value > 61440) { // Flag unusual high values (e.g., 61441 for key 1)
-              console.warn(`Unusual value ${layerKey.value} for key ${baseKey.keyValue}, using default: ${baseKey.keyValue}`);
-              return { keyValue: baseKey.keyValue, location: baseKey.location };
+            let keyValue = baseKey.keyValue; // Default to base key value
+            if (layerKey) {
+              keyValue = layerKey.value; // Always use the remapped value if present
+              if (layerKey.value === 0 && layerIndex === 0) {
+                console.log(`Base layer ${layerIndex + 1}: Using default ${keyValue} for unmapped key ${baseKey.keyValue}`);
+              } else if (layerKey.value === 0 || layerKey.value === 1) {
+                console.log(`Layer ${layerIndex + 1}: Preserving unmapped value ${keyValue} for key ${baseKey.keyValue}`);
+              } else {
+                console.log(`Layer ${layerIndex + 1}: Applied remapped value ${keyValue} for key ${baseKey.keyValue}`);
+                if (baseKey.keyValue === 57) { // Debug Caps Lock specifically
+                  console.log(`Caps Lock (key 57) remapped to ${keyValue} in layer ${layerIndex + 1}`);
+                }
+              }
+            } else {
+              console.warn(`No unique mapping found for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using base value: ${keyValue}`);
+            }
+            if (keyValue < 0 || keyValue > 65535) { // Sanity check for invalid values
+              console.warn(`Invalid value ${keyValue} for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using default: ${baseKey.keyValue}`);
+              keyValue = baseKey.keyValue;
             }
             return {
               keyValue,
@@ -139,9 +158,9 @@ export default defineComponent({
         );
 
         layout.value = layerLayout;
-        console.log(`Fetched and transformed layout for layer ${layerIndex}:`, layerLayout);
+        console.log(`Fetched and transformed layout for layer ${layerIndex + 1}:`, layerLayout);
       } catch (error) {
-        console.error(`Failed to fetch layout for layer ${layerIndex}:`, error);
+        console.error(`Failed to fetch layout for layer ${layerIndex + 1}:`, error);
         layout.value = []; // Clear layout on error to prevent rendering issues
       }
     }
@@ -159,13 +178,13 @@ export default defineComponent({
         try {
           const config = [{ key: selectedKey.value.keyValue, layout: selectedLayer.value, value: newKeyValue.value }];
           await KeyboardService.setKey(config);
-          console.log(`Remapped key ${selectedKey.value.keyValue} to ${newKeyValue.value} on layer ${selectedLayer.value}`);
+          console.log(`Remapped key ${selectedKey.value.keyValue} to ${newKeyValue.value} on layer ${selectedLayer.value + 1}`);
           // Test specific remap: Caps Lock (57) to L-Ctrl (224) if not set
           if (selectedKey.value.keyValue === 57 && newKeyValue.value !== 224) {
             await KeyboardService.setKey([{ key: 57, layout: selectedLayer.value, value: 224 }]);
-            console.log(`Test remap: Caps Lock (57) to L-Ctrl (224) on layer ${selectedLayer.value}`);
+            console.log(`Test remap: Caps Lock (57) to L-Ctrl (224) on layer ${selectedLayer.value + 1}`);
           }
-          await fetchLayerLayout(selectedLayer.value); // Refresh layout after remapping
+          await fetchLayerLayout(selectedLayer.value); // Refresh layout for the current layer
         } catch (error) {
           console.error('Remap failed:', error);
         }
@@ -178,14 +197,15 @@ export default defineComponent({
         try {
           if (advancedMode.value === 'dks') {
             await KeyboardService.setDKS({ key: selectedKey.value.keyValue, dks: dksValues.value });
-            console.log(`Applied DKS ${dksValues.value} to ${selectedKey.value.keyValue}`);
+            console.log(`Applied DKS ${dksValues.value} to ${selectedKey.value.keyValue} on layer ${selectedLayer.value + 1}`);
           } else if (advancedMode.value === 'mpt') {
             // Placeholder for MPT configuration (needs SDK method)
-            console.log(`Applied MPT ${mptValues.value} to ${selectedKey.value.keyValue}`);
+            console.log(`Applied MPT ${mptValues.value} to ${selectedKey.value.keyValue} on layer ${selectedLayer.value + 1}`);
           } else if (advancedMode.value === 'socd') {
             await KeyboardService.setSOCD({ key: selectedKey.value.keyValue, mode: parseInt(socdMode.value) });
-            console.log(`Applied SOCD mode ${socdMode.value} to ${selectedKey.value.keyValue}`);
+            console.log(`Applied SOCD mode ${socdMode.value} to ${selectedKey.value.keyValue} on layer ${selectedLayer.value + 1}`);
           }
+          await fetchLayerLayout(selectedLayer.value); // Refresh layout after advanced config
         } catch (error) {
           console.error('Advanced config failed:', error);
         }
@@ -201,6 +221,7 @@ export default defineComponent({
 
     // Watch for layer changes to fetch the appropriate layout
     watch(selectedLayer, (newLayer) => {
+      layout.value = []; // Clear current layout before fetching new layer
       fetchLayerLayout(newLayer);
     });
 

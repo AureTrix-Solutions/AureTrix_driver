@@ -14,7 +14,7 @@
           :key="`k-${rIdx}-${cIdx}`"
           class="key-btn"
           @click="selectKey(keyInfo)"
-          :class="{ 'selected': selectedKey?.keyValue === keyInfo.keyValue }"
+          :class="{ 'selected': selectedKey?.location?.row === keyInfo.location.row && selectedKey?.location?.col === keyInfo.location.col }"
         >
           {{ keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
         </button>
@@ -29,38 +29,6 @@
         <option v-for="(name, value) in keyMap" :key="value" :value="value">{{ name }}</option>
       </select>
       <button @click="remapKey" :disabled="!newKeyValue">Apply Remap</button>
-      <label>Advanced Mode: </label>
-      <select v-model="advancedMode">
-        <option value="none">None</option>
-        <option value="dks">DKS</option>
-        <option value="mpt">MPT</option>
-        <option value="socd">SOCD</option>
-      </select>
-      <div v-if="advancedMode !== 'none'" class="advanced-config">
-        <template v-if="advancedMode === 'dks'">
-          <label>DKS Key Codes: </label>
-          <input v-model.number="dksValues[0]" type="number" placeholder="DKS1" />
-          <input v-model.number="dksValues[1]" type="number" placeholder="DKS2" />
-          <input v-model.number="dksValues[2]" type="number" placeholder="DKS3" />
-          <input v-model.number="dksValues[3]" type="number" placeholder="DKS4" />
-        </template>
-        <template v-if="advancedMode === 'mpt'">
-          <label>MPT Depths: </label>
-          <input v-model.number="mptValues[0]" type="number" placeholder="Depth 1" />
-          <input v-model.number="mptValues[1]" type="number" placeholder="Depth 2" />
-          <input v-model.number="mptValues[2]" type="number" placeholder="Depth 3" />
-        </template>
-        <template v-if="advancedMode === 'socd'">
-          <label>SOCD Mode: </label>
-          <select v-model="socdMode">
-            <option value="0">Override Later</option>
-            <option value="1">A Priority</option>
-            <option value="2">B Priority</option>
-            <option value="3">Neutral</option>
-          </select>
-        </template>
-        <button @click="applyAdvancedConfig" :disabled="!isValidAdvancedConfig">Apply Advanced</button>
-      </div>
     </div>
   </div>
 </template>
@@ -79,10 +47,6 @@ export default defineComponent({
     const selectedLayer = ref(0); // Layers 0-3 (Fn1-Fn4)
     const newKeyValue = ref<number | null>(null);
     const layers = [0, 1, 2, 3]; // Fn1-Fn4
-    const advancedMode = ref<'none' | 'dks' | 'mpt' | 'socd'>('none');
-    const dksValues = ref([0, 0, 0, 0]);
-    const mptValues = ref([0, 0, 0]);
-    const socdMode = ref('0');
 
     // Fetch layer-specific layout with non-overlapping batched requests, re-fetching base layout per layer
     async function fetchLayerLayout(layerIndex: number) {
@@ -92,10 +56,9 @@ export default defineComponent({
         const totalKeys = baseLayout.flat().length;
         console.log(`Base layout key count: ${totalKeys} (template for layer ${layerIndex + 1})`, baseLayout);
 
-        // Sync device parameters for the selected layer with increased delay
+        // Sync device parameters for the selected layer
         await KeyboardService.reloadParameters();
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Increased to 2000ms for better sync
-        console.log(`Reloaded parameters for layer ${layerIndex + 1} with 2000ms delay`);
+        console.log(`Reloaded parameters for layer ${layerIndex + 1}`);
 
         // Batch the request to getLayoutKeyInfo with non-overlapping ranges for the selected layer
         const batchSize = 10; // Maintain 10 for reliability
@@ -170,63 +133,52 @@ export default defineComponent({
       }
     }
 
-    // Select a key for remapping
+    // Select a key for remapping with validation
     const selectKey = (key: IDefKeyInfo) => {
-      selectedKey.value = key;
+      selectedKey.value = { ...key }; // Store full keyInfo, including keyValue and location
+      console.log(`Selected key: { keyValue: ${selectedKey.value.keyValue}, location: { row: ${selectedKey.value.location.row}, col: ${selectedKey.value.location.col} } }`);
       newKeyValue.value = null; // Reset remap selection
-      advancedMode.value = 'none'; // Reset advanced mode
     };
 
-    // Remap a key (test with Caps Lock to L-Ctrl)
+    // Remap a key with enhanced logging, validation, and sync for unmapped keys
     const remapKey = async () => {
       if (selectedKey.value && newKeyValue.value !== null) {
         try {
-          const config = [{ key: selectedKey.value.keyValue, layout: selectedLayer.value, value: newKeyValue.value }];
+          console.log(`Attempting to remap key at location { row: ${selectedKey.value.location.row}, col: ${selectedKey.value.location.col} } with value ${selectedKey.value.keyValue}`);
+          // Fetch base layout to get the original keyValue
+          const baseLayout = await KeyboardService.defKey();
+          const baseKey = baseLayout[selectedKey.value.location.row][selectedKey.value.location.col];
+          const remapKeyValue = baseKey.keyValue; // Use base keyValue for remap
+          console.log(`Using base keyValue: ${remapKeyValue} for remapping at location { row: ${baseKey.location.row}, col: ${baseKey.location.col} }`);
+          const config = [{ key: remapKeyValue, layout: selectedLayer.value, value: newKeyValue.value }];
+          console.log(`Sending remap config:`, config);
           await KeyboardService.setKey(config);
-          console.log(`Remapped key ${selectedKey.value.keyValue} to ${newKeyValue.value} on layer ${selectedLayer.value + 1}`);
-          // Test specific remap: Caps Lock (57) to L-Ctrl (224) if not set
-          if (selectedKey.value.keyValue === 57 && newKeyValue.value !== 224) {
-            await KeyboardService.setKey([{ key: 57, layout: selectedLayer.value, value: 224 }]);
-            console.log(`Test remap: Caps Lock (57) to L-Ctrl (224) on layer ${selectedLayer.value + 1}`);
+          console.log(`Remap request sent for key ${remapKeyValue} to ${newKeyValue.value} on layer ${selectedLayer.value + 1}`);
+          // Force device sync after remap
+          await KeyboardService.reloadParameters();
+          console.log(`Device parameters reloaded after remap on layer ${selectedLayer.value + 1}`);
+          // Verify the specific key's remap with retry using base keyValue
+          let verifyData = [];
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            verifyData = await KeyboardService.getLayoutKeyInfo([{ key: remapKeyValue, layout: selectedLayer.value }]);
+            console.log(`Verified remap data for key ${remapKeyValue} (attempt ${attempt}):`, verifyData);
+            if (verifyData.length > 0 && verifyData[0].value === newKeyValue.value) break;
           }
-          await fetchLayerLayout(selectedLayer.value); // Refresh layout for the current layer
+          if (verifyData.length === 0 || verifyData[0].value !== newKeyValue.value) {
+            console.warn(`Verification failed; latest data:`, verifyData);
+          }
+          await fetchLayerLayout(selectedLayer.value); // Refresh full layout
+          console.log(`Layout refreshed after remap on layer ${selectedLayer.value + 1} with new value ${newKeyValue.value}`);
         } catch (error) {
-          console.error('Remap failed:', error);
+          console.error(`Remap failed for key at location { row: ${selectedKey.value.row}, col: ${selectedKey.value.col} } to ${newKeyValue.value} on layer ${selectedLayer.value + 1}:`, error);
         }
       }
     };
 
-    // Apply advanced configuration (DKS, MPT, SOCD)
-    const applyAdvancedConfig = async () => {
-      if (selectedKey.value && advancedMode.value !== 'none') {
-        try {
-          if (advancedMode.value === 'dks') {
-            await KeyboardService.setDKS({ key: selectedKey.value.keyValue, dks: dksValues.value });
-            console.log(`Applied DKS ${dksValues.value} to ${selectedKey.value.keyValue} on layer ${selectedLayer.value + 1}`);
-          } else if (advancedMode.value === 'mpt') {
-            // Placeholder for MPT configuration (needs SDK method)
-            console.log(`Applied MPT ${mptValues.value} to ${selectedKey.value.keyValue} on layer ${selectedLayer.value + 1}`);
-          } else if (advancedMode.value === 'socd') {
-            await KeyboardService.setSOCD({ key: selectedKey.value.keyValue, mode: parseInt(socdMode.value) });
-            console.log(`Applied SOCD mode ${socdMode.value} to ${selectedKey.value.keyValue} on layer ${selectedLayer.value + 1}`);
-          }
-          await fetchLayerLayout(selectedLayer.value); // Refresh layout after advanced config
-        } catch (error) {
-          console.error('Advanced config failed:', error);
-        }
-      }
-    };
-
-    const isValidAdvancedConfig = computed(() => {
-      if (advancedMode.value === 'dks') return dksValues.value.some(v => v !== 0);
-      if (advancedMode.value === 'mpt') return mptValues.value.some(v => v !== 0);
-      if (advancedMode.value === 'socd') return socdMode.value !== '0';
-      return false;
-    });
-
-    // Watch for layer changes to fetch the appropriate layout
+    // Watch for layer changes to fetch the appropriate layout and clear selection
     watch(selectedLayer, (newLayer) => {
       layout.value = []; // Clear current layout before fetching new layer
+      selectedKey.value = null; // Clear selected key to remove highlight
       fetchLayerLayout(newLayer);
     });
 
@@ -247,12 +199,6 @@ export default defineComponent({
       layers,
       newKeyValue,
       keyMap,
-      advancedMode,
-      dksValues,
-      mptValues,
-      socdMode,
-      applyAdvancedConfig,
-      isValidAdvancedConfig,
     };
   },
 });
@@ -318,7 +264,7 @@ export default defineComponent({
       margin-right: 5px;
       color: v.$text-color;
     }
-    select, input, button {
+    select, button {
       padding: 5px;
       border-radius: v.$border-radius;
       background-color: v.$background-dark;
@@ -330,15 +276,6 @@ export default defineComponent({
       &:disabled {
         background-color: color.adjust(v.$primary-color, $lightness: -20%);
         cursor: not-allowed;
-      }
-    }
-    .advanced-config {
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      input {
-        width: 60px;
       }
     }
   }

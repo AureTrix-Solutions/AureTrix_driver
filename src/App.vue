@@ -1,7 +1,5 @@
-
 <template>
   <div class="app-container">
-
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-header">
@@ -13,6 +11,7 @@
         <router-link to="/macros" class="nav-item">Macros</router-link>
         <router-link to="/profiles" class="nav-item">Profiles</router-link>
         <router-link to="/lighting" class="nav-item">Lighting</router-link>
+        <router-link to="/advanced-config" class="nav-item">Advanced Config</router-link>
       </nav>
     </aside>
 

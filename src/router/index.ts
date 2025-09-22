@@ -7,6 +7,7 @@ const routes = [
   { path: '/macros', component: () => import('../pages/Macros.vue'), name: 'Macros' },
   { path: '/profiles', component: () => import('../pages/Profiles.vue'), name: 'Profiles' },
   { path: '/lighting', component: () => import('../pages/Lighting.vue'), name: 'Lighting' },
+  { path: '/advanced-config', component: () => import('../pages/AdvancedConfig.vue'), name: 'AdvancedConfig' },
 ];
 
 const router = createRouter({

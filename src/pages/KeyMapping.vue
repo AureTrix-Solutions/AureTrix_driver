@@ -146,6 +146,11 @@ export default defineComponent({
             } else {
               console.warn(`No unique mapping found for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using base value: ${keyValue}`);
             }
+            // Visual remap: Change key 1 to key 0
+            if (keyValue === 1) {
+              keyValue = 0;
+              console.log(`Visual remap: Changed key ${baseKey.keyValue} from value 1 to 0 in layer ${layerIndex + 1}`);
+            }
             if (keyValue < 0 || keyValue > 65535) { // Sanity check for invalid values
               console.warn(`Invalid value ${keyValue} for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using default: ${baseKey.keyValue}`);
               keyValue = baseKey.keyValue;

@@ -4,7 +4,7 @@
     <div class="controls">
       <label for="macro-key">Select Key: </label>
       <select v-model="selectedKey" id="macro-key">
-        <option v-for="key in keyMap" :key="key[0]" :value="key[0]">{{ key[1] }}</option>
+        <option v-for="(name, value) in keyMap" :key="value" :value="value">{{ name }}</option>
       </select>
       <label for="macro-index">Macro Index (M0-M22): </label>
       <select v-model="macroIndex" id="macro-index">
@@ -20,12 +20,22 @@
         <option value="3">Hold Repeat (Complete)</option>
       </select>
       <div class="key-picker">
-        <button v-for="key in keyMap" :key="key[0]" @click="addMacroStep(key[0])" class="key-btn">
-          {{ key[1] }}
-        </button>
+        <label>Macro Steps:</label>
+        <div class="step-list">
+          <div v-for="(step, index) in macroSteps" :key="index" class="step-item">
+            {{ keyMap[step.keyCode] || step.keyCode }} ({{ step.timeDifference }}ms)
+            <button @click="removeStep(index)" class="remove-btn">X</button>
+          </div>
+        </div>
+        <div class="picker-row">
+          <select v-model="newStepKeyCode">
+            <option v-for="(name, value) in keyMap" :key="value" :value="value">{{ name }}</option>
+          </select>
+          <input v-model.number="newStepDelay" type="number" placeholder="Delay (ms)" />
+          <button @click="addMacroStep" :disabled="!newStepKeyCode">Add Step</button>
+        </div>
       </div>
       <button @click="saveMacro" :disabled="!macroSteps.length">Save Macro</button>
-      <p>Steps: {{ macroSteps.map(s => `${keyMap[s.keyCode] || s.keyCode} (${s.timeDifference}ms)`).join(', ') }}</p>
     </div>
   </div>
 </template>
@@ -33,6 +43,7 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import KeyboardService from '@services/KeyboardService';
+import { keyMap } from '@utils/keyMap'; // Verify this import
 
 export default defineComponent({
   name: 'Macros',
@@ -41,18 +52,22 @@ export default defineComponent({
     const macroIndex = ref(0); // M0-M22
     const macroMode = ref('0');
     const macroSteps = ref<any[]>([]);
-    const keyMap = {
-      4: 'A', 5: 'B', 6: 'C', 7: 'D', 8: 'E', 9: 'F', 10: 'G', 11: 'H', 12: 'I', 13: 'J',
-      14: 'K', 15: 'L', 16: 'M', 17: 'N', 18: 'O', 19: 'P', 20: 'Q', 21: 'R', 22: 'S', 23: 'T',
-      // Expand with full keyMap from keyboard (1).md later
+    const newStepKeyCode = ref<number | null>(null);
+    const newStepDelay = ref(100); // Default delay
+
+    const addMacroStep = () => {
+      if (newStepKeyCode.value !== null) {
+        macroSteps.value.push({ keyCode: newStepKeyCode.value, timeDifference: newStepDelay.value || 0, status: 1 });
+        newStepKeyCode.value = null; // Reset for next step
+      }
     };
 
-    const addMacroStep = (keyCode: number) => {
-      macroSteps.value.push({ keyCode, timeDifference: 100, status: 1 }); // Default 100ms delay, press
+    const removeStep = (index: number) => {
+      macroSteps.value.splice(index, 1);
     };
 
     const saveMacro = async () => {
-      if (selectedKey.value !== null) {
+      if (selectedKey.value !== null && macroSteps.value.length > 0) {
         try {
           await KeyboardService.setMacro({
             key: selectedKey.value,
@@ -69,7 +84,7 @@ export default defineComponent({
       }
     };
 
-    return { selectedKey, macroIndex, macroMode, macroSteps, addMacroStep, saveMacro, keyMap };
+    return { selectedKey, macroIndex, macroMode, macroSteps, addMacroStep, removeStep, saveMacro, keyMap, newStepKeyCode, newStepDelay };
   },
 });
 </script>
@@ -87,8 +102,11 @@ export default defineComponent({
   }
   .controls {
     margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
     label {
-      margin-right: 10px;
+      margin-right: 5px;
       color: v.$text-color;
     }
     select {
@@ -104,7 +122,7 @@ export default defineComponent({
       margin-right: 10px;
       color: v.$text-color;
     }
-    select, button {
+    select, input, button {
       padding: 5px;
       border-radius: v.$border-radius;
       background-color: v.$background-dark;
@@ -113,15 +131,39 @@ export default defineComponent({
     }
     .key-picker {
       margin: 10px 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-    .key-btn {
-      padding: 5px 10px;
-      cursor: pointer;
-      &:hover {
-        background-color: color.adjust(v.$background-dark, $lightness: 10%);
+      .step-list {
+        margin: 10px 0;
+        .step-item {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          margin-bottom: 5px;
+          .remove-btn {
+            padding: 2px 6px;
+            background-color: color.adjust(v.$accent-color, $lightness: -10%);
+            border: none;
+            border-radius: v.$border-radius;
+            cursor: pointer;
+            &:hover {
+              background-color: color.adjust(v.$accent-color, $lightness: -20%);
+            }
+          }
+        }
+      }
+      .picker-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        input {
+          width: 80px;
+        }
+        button {
+          cursor: pointer;
+          &:disabled {
+            background-color: color.adjust(v.$primary-color, $lightness: -20%);
+            cursor: not-allowed;
+          }
+        }
       }
     }
     button {

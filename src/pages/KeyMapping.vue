@@ -27,15 +27,17 @@
         <option value="" disabled selected>Select a Category</option>
         <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
       </select>
-      <div v-if="selectedCategory" class="virtual-keys" @dragstart="onDragStart" @dragend="onDragEnd">
-        <div
-          v-for="(label, keyValue) in filteredKeyMap"
-          :key="keyValue"
-          class="virtual-key"
-          draggable="true"
-          :data-key-value="keyValue"
-        >
-          {{ label }}
+      <div v-if="selectedCategory" class="virtual-keys-window">
+        <div class="virtual-keys" @dragstart="onDragStart" @dragend="onDragEnd">
+          <div
+            v-for="(label, keyValue) in filteredKeyMap"
+            :key="keyValue"
+            class="virtual-key"
+            draggable="true"
+            :data-key-value="keyValue"
+          >
+            {{ label }}
+          </div>
         </div>
       </div>
     </div>
@@ -299,9 +301,8 @@ export default defineComponent({
   .key-config {
     margin-top: 20px;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 15px;
-    align-items: flex-start;
     label {
       margin-right: 10px;
       color: v.$text-color;
@@ -314,35 +315,38 @@ export default defineComponent({
       color: v.$text-color;
       border: 1px solid rgba(255, 255, 255, 0.2);
       font-size: 1rem;
+      width: 300px; // Ensure the selector is wide enough
     }
-    .virtual-keys {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-      gap: 10px;
-      margin-top: 15px;
-      padding: 15px;
+    .virtual-keys-window {
+      padding: 20px;
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: v.$border-radius;
       background-color: color.adjust(v.$background-dark, $lightness: -2%);
-      max-height: 200px;
-      overflow-y: auto;
-    }
-    .virtual-key {
-      padding: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: v.$border-radius;
-      background-color: v.$background-dark;
-      color: v.$text-color;
-      text-align: center;
-      cursor: move;
-      transition: all 0.2s ease;
-      &:hover {
-        background-color: color.adjust(v.$background-dark, $lightness: 8%);
-        border-color: v.$accent-color;
+      .virtual-keys {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); // Increased key size and columns
+        gap: 15px;
+        padding: 20px;
+        max-height: 400px; // Larger window
+        overflow-y: auto;
       }
-      &.dragging {
-        opacity: 0.6;
-        transform: scale(0.98);
+      .virtual-key {
+        padding: 15px; // Increased padding for larger keys
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: v.$border-radius;
+        background-color: v.$background-dark;
+        color: v.$text-color;
+        text-align: center;
+        cursor: move;
+        transition: all 0.2s ease;
+        &:hover {
+          background-color: color.adjust(v.$background-dark, $lightness: 8%);
+          border-color: v.$accent-color;
+        }
+        &.dragging {
+          opacity: 0.6;
+          transform: scale(0.98);
+        }
       }
     }
   }

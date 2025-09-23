@@ -14,7 +14,7 @@ class KeyboardService {
   async getDevices(): Promise<any[]> {
     try {
       const devices = await this.keyboard.getDevices();
-      console.log('SDK devices:', devices); // Debug log
+      //console.log('SDK devices:', devices); // Debug log
       return devices;
     } catch (error) {
       throw new Error(`Failed to get devices: ${error.message}`);
@@ -26,7 +26,7 @@ class KeyboardService {
       const devices = await navigator.hid.requestDevice({
         filters: [{ usagePage: 65440, usage: 1 }], // Ensure WebHID prompt
       });
-      console.log('Requested devices:', devices); // Debug log
+      //console.log('Requested devices:', devices); // Debug log
       if (devices.length > 0) {
         const device = devices[0];
         const sdkDevices = await this.getDevices();
@@ -41,9 +41,9 @@ class KeyboardService {
 
   async init(deviceId: string): Promise<any> {
     try {
-      console.log('Initializing device with ID:', deviceId); // Debug log
+      //console.log('Initializing device with ID:', deviceId); // Debug log
       const result = await this.keyboard.init(deviceId);
-      console.log('Initialization result:', result); // Debug log
+      //console.log('Initialization result:', result); // Debug log
       if (!result) {
         console.warn('Initialization returned null, device might not be fully initialized');
       }
@@ -59,7 +59,7 @@ class KeyboardService {
       const device = await this.init(deviceId); // Ensure device is initialized
       if (device) {
         const info = await this.keyboard.getBaseInfo();
-        console.log('Base info:', info); // Debug log
+        //console.log('Base info:', info); // Debug log
         return info;
       }
       throw new Error('Device not initialized');
@@ -71,7 +71,7 @@ class KeyboardService {
   async defKey(): Promise<IDefKeyInfo[][]> {
     try {
       const layout = await this.keyboard.defKey();
-      console.log('Fetched keyboard layout:', layout); // Debug log
+      //console.log('Fetched keyboard layout:', layout); // Debug log
       return layout;
     } catch (error) {
       console.error('Failed to fetch keyboard layout:', error);
@@ -85,7 +85,7 @@ class KeyboardService {
     while (attempt <= maxRetries) {
       try {
         const layout = await this.keyboard.getLayoutKeyInfo(params);
-        console.log(`Fetched layer layout (attempt ${attempt}):`, layout); // Debug log
+        //console.log(`Fetched layer layout (attempt ${attempt}):`, layout); // Debug log
         return layout;
       } catch (error) {
         console.warn(`getLayoutKeyInfo attempt ${attempt} failed:`, error);
@@ -104,14 +104,14 @@ class KeyboardService {
   async setKey(keyConfigs: { key: number; layout: number; value: number }[]): Promise<void> {
     try {
       await this.keyboard.setKey(keyConfigs);
-      console.log('Key remapping applied:', keyConfigs); // Debug log
+      //console.log('Key remapping applied:', keyConfigs); // Debug log
       // Save parameters to ensure remapping persists
       await this.saveParameters();
-      console.log('Parameters saved after remapping');
+      //console.log('Parameters saved after remapping');
       // Reload parameters with a delay to allow device sync
       await this.reloadParameters();
       await new Promise(resolve => setTimeout(resolve, 1000)); // 1-second delay
-      console.log('Parameters reloaded and synced after saving');
+      //console.log('Parameters reloaded and synced after saving');
     } catch (error) {
       console.error('Failed to set key:', error);
       throw new Error(`Failed to set key: ${error.message}`);
@@ -121,7 +121,7 @@ class KeyboardService {
   async saveParameters(): Promise<void> {
     try {
       await this.keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-      console.log('Parameters saved successfully'); // Debug log
+      //console.log('Parameters saved successfully'); // Debug log
     } catch (error) {
       console.error('Failed to save parameters:', error);
       throw new Error(`Failed to save parameters: ${error.message}`);
@@ -131,7 +131,7 @@ class KeyboardService {
   async reloadParameters(): Promise<void> {
     try {
       await this.keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
-      console.log('Parameters reloaded successfully'); // Debug log
+      //console.log('Parameters reloaded successfully'); // Debug log
     } catch (error) {
       console.error('Failed to reload parameters:', error);
       throw new Error(`Failed to reload parameters: ${error.message}`);

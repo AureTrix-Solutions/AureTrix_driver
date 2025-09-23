@@ -7,18 +7,20 @@
         <option v-for="layer in layers" :key="layer" :value="layer">{{ `Fn${layer + 1}` }}</option>
       </select>
     </div>
-    <div v-if="layout.length" class="key-grid">
+    <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
       <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
-        <button
+        <div
           v-for="(keyInfo, cIdx) in row"
           :key="`k-${rIdx}-${cIdx}`"
           class="key-btn"
+          :style="getKeyStyle(rIdx, cIdx)"
           :class="{ 'drop-target': isDropTarget(row, cIdx) }"
           @dragover.prevent
           @drop="onDrop(keyInfo, rIdx, cIdx)"
+          @click="selectKey(keyInfo)"
         >
           {{ keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
-        </button>
+        </div>
       </div>
     </div>
     <div class="key-config">
@@ -50,6 +52,8 @@ import KeyboardService from '@services/KeyboardService';
 import { keyMap } from '@utils/keyMap';
 import { categories, categorizedKeys } from '@utils/keyCategories';
 import { IDefKeyInfo } from '../types/types';
+import { getLayoutConfig } from '@utils/layoutConfigs';
+import { mmToPx } from '@utils/mmToPx'; // Import mmToPx
 
 export default defineComponent({
   name: 'KeyMapping',
@@ -60,22 +64,77 @@ export default defineComponent({
     const draggedKey = ref<number | null>(null);
     const layers = [0, 1, 2, 3]; // Fn1-Fn4
     const baseLayout = ref<IDefKeyInfo[][] | null>(null); // Store the initial base layout
+    const selectedKey = ref<IDefKeyInfo | null>(null); // For selectability
+    const loaded = ref(false); // Flag to control rendering
 
     const categorizedKeysComputed = computed(categorizedKeys);
     const filteredKeyMap = computed(() => {
       return selectedCategory.value ? categorizedKeysComputed.value[selectedCategory.value] : {};
     });
 
+    const gridStyle = computed(() => {
+      if (!baseLayout.value) {
+        console.warn('baseLayout.value is undefined, returning empty style');
+        return {};
+      }
+      const totalKeys = baseLayout.value.flat().length;
+      const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value);
+      //console.log('Grid Style keyPositions:', keyPositions); // Debug log
+      if (!keyPositions || keyPositions.length === 0) {
+        console.warn('keyPositions is empty or invalid');
+        return { 'height': '0px', 'width': '0px' };
+      }
+      const containerHeight = keyPositions.reduce((max, row, i) => max + Math.max(...row.map(pos => pos[1] + pos[3])) + (gaps[i] || 0), 0);
+      const maxRowWidth = Math.max(...keyPositions.map(row => row.reduce((sum, pos) => sum + pos[2], 0)));
+      return {
+        'position': 'relative',
+        'height': `${containerHeight}px`,
+        'width': `${maxRowWidth}px`,
+        'margin': '0 auto', // Center the grid
+      };
+    });
+
+    const getKeyStyle = (rowIdx: number, colIdx: number) => {
+      if (!baseLayout.value) {
+        console.warn('baseLayout.value is undefined in getKeyStyle');
+        return {};
+      }
+      const totalKeys = baseLayout.value.flat().length;
+      const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value);
+      const rowLength = baseLayout.value[rowIdx]?.length || 0;
+      if (!keyPositions || !keyPositions[rowIdx] || !Array.isArray(keyPositions[rowIdx]) || colIdx >= rowLength) {
+        console.warn(`Invalid key position at row ${rowIdx}, col ${colIdx}: rowLength=${rowLength}, keyPositions[rowIdx]=`, keyPositions[rowIdx]);
+        return { width: '0px', height: '0px', left: '0px', top: '0px' }; // Fallback to hide invalid keys
+      }
+      const [left, top, width, height] = keyPositions[rowIdx][colIdx];
+      const topGapPx = gaps[rowIdx] || 0;
+      //console.log(`Rendered style for row ${rowIdx}, col ${colIdx}:`, { left, top, width, height }); // Debug log
+      return {
+        position: 'absolute',
+        left: `${left}px`,
+        top: `${top + topGapPx}px`,
+        width: `${width}px`,
+        height: `${height}px`,
+        marginBottom: `${mmToPx(1)}px`, // 1mm bottom spacing
+        boxSizing: 'border-box', // Include border and padding in width/height
+        'data-overlay': '', // Placeholder for future use
+      };
+    };
+
     // Fetch layer-specific layout with non-overlapping batched requests
     async function fetchLayerLayout(layerIndex: number) {
       try {
         const newBaseLayout = await KeyboardService.defKey();
-        if (!baseLayout.value) baseLayout.value = newBaseLayout; // Initialize base layout on first call
+        if (!baseLayout.value) {
+          baseLayout.value = newBaseLayout;
+          const totalKeys = newBaseLayout.flat().length;
+          //console.log(`Detected ${totalKeys} keys, baseLayout:`, newBaseLayout);
+        }
         const totalKeys = newBaseLayout.flat().length;
-        console.log(`Base layout key count: ${totalKeys} (template for layer ${layerIndex + 1})`, newBaseLayout);
+        //console.log(`Base layout key count: ${totalKeys} (template for layer ${layerIndex + 1})`, newBaseLayout);
 
         await KeyboardService.reloadParameters();
-        console.log(`Reloaded parameters for layer ${layerIndex + 1}`);
+        //console.log(`Reloaded parameters for layer ${layerIndex + 1}`);
 
         const batchSize = 10;
         const requests = [];
@@ -90,19 +149,19 @@ export default defineComponent({
           try {
             const layerData = await KeyboardService.getLayoutKeyInfo(request);
             allLayerData.push(...layerData);
-            console.log(`Raw fetched batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, layerData);
+            //console.log(`Raw fetched batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, layerData);
           } catch (error) {
             console.error(`Failed to fetch batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, error);
           }
         }
-        console.log(`Raw allLayerData for layer ${layerIndex + 1} before processing:`, allLayerData);
+        //console.log(`Raw allLayerData for layer ${layerIndex + 1} before processing:`, allLayerData);
 
         const uniqueLayerData = new Map<number, { key: number; value: number }>();
         allLayerData.forEach(item => {
           uniqueLayerData.set(item.key, { key: item.key, value: item.value });
-          console.log(`Unique mapping for key ${item.key}: value ${item.value} in layer ${layerIndex + 1}`);
+          //console.log(`Unique mapping for key ${item.key}: value ${item.value} in layer ${layerIndex + 1}`);
         });
-        console.log(`Unique layer data key count for layer ${layerIndex + 1}: ${uniqueLayerData.size}`, Array.from(uniqueLayerData.values()));
+        //console.log(`Unique layer data key count for layer ${layerIndex + 1}: ${uniqueLayerData.size}`, Array.from(uniqueLayerData.values()));
 
         const layerLayout: IDefKeyInfo[][] = newBaseLayout.map(row =>
           row.map(baseKey => {
@@ -111,13 +170,13 @@ export default defineComponent({
             if (layerKey) {
               keyValue = layerKey.value;
               if (layerKey.value === 0 && layerIndex === 0) {
-                console.log(`Base layer ${layerIndex + 1}: Using default ${keyValue} for unmapped key ${baseKey.keyValue}`);
+                //console.log(`Base layer ${layerIndex + 1}: Using default ${keyValue} for unmapped key ${baseKey.keyValue}`);
               } else if (layerKey.value === 0 || layerKey.value === 1) {
-                console.log(`Layer ${layerIndex + 1}: Preserving unmapped value ${keyValue} for key ${baseKey.keyValue}`);
+                //console.log(`Layer ${layerIndex + 1}: Preserving unmapped value ${keyValue} for key ${baseKey.keyValue}`);
               } else {
-                console.log(`Layer ${layerIndex + 1}: Applied remapped value ${keyValue} for key ${baseKey.keyValue}`);
+                //console.log(`Layer ${layerIndex + 1}: Applied remapped value ${keyValue} for key ${baseKey.keyValue}`);
                 if (baseKey.keyValue === 57) {
-                  console.log(`Caps Lock (key 57) remapped to ${keyValue} in layer ${layerIndex + 1}`);
+                  //console.log(`Caps Lock (key 57) remapped to ${keyValue} in layer ${layerIndex + 1}`);
                 }
               }
             } else {
@@ -125,7 +184,7 @@ export default defineComponent({
             }
             if (keyValue === 1) {
               keyValue = 0;
-              console.log(`Visual remap: Changed key ${baseKey.keyValue} from value 1 to 0 in layer ${layerIndex + 1}`);
+              //console.log(`Visual remap: Changed key ${baseKey.keyValue} from value 1 to 0 in layer ${layerIndex + 1}`);
             }
             if (keyValue < 0 || keyValue > 65535) {
               console.warn(`Invalid value ${keyValue} for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using default: ${baseKey.keyValue}`);
@@ -136,16 +195,18 @@ export default defineComponent({
         );
 
         layout.value = layerLayout;
-        console.log(`Fetched and transformed layout for layer ${layerIndex + 1}:`, layerLayout);
+        loaded.value = true; // Set loaded flag after layout is ready
+        //console.log(`Fetched and transformed layout for layer ${layerIndex + 1}:`, layerLayout);
       } catch (error) {
         console.error(`Failed to fetch layout for layer ${layerIndex + 1}:`, error);
         layout.value = [];
+        loaded.value = false;
       }
     }
 
     const selectKey = (key: IDefKeyInfo) => {
-      // Kept for potential future use (e.g., highlighting or feedback), but not required for remapping
-      console.log(`Clicked key: { keyValue: ${key.keyValue}, location: { row: ${key.location.row}, col: ${key.location.col} } }`);
+      selectedKey.value = key; // Select the key for future use (e.g., overlays)
+      //console.log(`Selected key: { keyValue: ${key.keyValue}, location: { row: ${key.location.row}, col: ${key.location.col} } }`);
     };
 
     const remapKey = async (rowIdx: number, colIdx: number, newValue: number) => {
@@ -153,18 +214,18 @@ export default defineComponent({
         if (!baseLayout.value) throw new Error('Base layout not initialized');
         const targetKey = baseLayout.value[rowIdx][colIdx];
         const targetKeyValue = targetKey.keyValue;
-        console.log(`Attempting to remap key ${keyMap[targetKeyValue] || `Key ${targetKeyValue}`} to ${keyMap[newValue] || `Key ${newValue}`}`);
-        console.log(`Using base keyValue: ${targetKeyValue} for remapping at location { row: ${targetKey.location.row}, col: ${targetKey.location.col} }`);
+        //console.log(`Attempting to remap key ${keyMap[targetKeyValue] || `Key ${targetKeyValue}`} to ${keyMap[newValue] || `Key ${newValue}`}`);
+        //console.log(`Using base keyValue: ${targetKeyValue} for remapping at location { row: ${targetKey.location.row}, col: ${targetKey.location.col} }`);
         const config = [{ key: targetKeyValue, layout: selectedLayer.value, value: newValue }];
-        console.log(`Sending remap config:`, config);
+        //console.log(`Sending remap config:`, config);
         await KeyboardService.setKey(config);
-        console.log(`Remap request sent for key ${targetKeyValue} to ${newValue} on layer ${selectedLayer.value + 1}`);
+        //console.log(`Remap request sent for key ${targetKeyValue} to ${newValue} on layer ${selectedLayer.value + 1}`);
         await KeyboardService.reloadParameters();
-        console.log(`Device parameters reloaded after remap on layer ${selectedLayer.value + 1}`);
+        //console.log(`Device parameters reloaded after remap on layer ${selectedLayer.value + 1}`);
         let verifyData = [];
         for (let attempt = 1; attempt <= 3; attempt++) {
           verifyData = await KeyboardService.getLayoutKeyInfo([{ key: targetKeyValue, layout: selectedLayer.value }]);
-          console.log(`Verified remap data for key ${targetKeyValue} (attempt ${attempt}):`, verifyData);
+          //console.log(`Verified remap data for key ${targetKeyValue} (attempt ${attempt}):`, verifyData);
           if (verifyData.length > 0 && verifyData[0].value === newValue) break;
         }
         if (verifyData.length === 0 || verifyData[0].value !== newValue) {
@@ -174,11 +235,11 @@ export default defineComponent({
             await fetchLayerLayout(selectedLayer.value);
             const updatedKey = layout.value.flat().find(k => k.keyValue === targetKeyValue);
             if (updatedKey && updatedKey.keyValue === newValue) break;
-            console.log(`Retry ${retry} to refresh layout for key ${targetKeyValue}`);
+            //console.log(`Retry ${retry} to refresh layout for key ${targetKeyValue}`);
           }
         }
         await fetchLayerLayout(selectedLayer.value); // Final refresh
-        console.log(`Layout refreshed after remap on layer ${selectedLayer.value + 1} with new value ${newValue}`);
+        //console.log(`Layout refreshed after remap on layer ${selectedLayer.value + 1} with new value ${newValue}`);
       } catch (error) {
         console.error(`Remap failed for key at { row: ${rowIdx}, col: ${colIdx} } to ${newValue} on layer ${selectedLayer.value + 1}:`, error);
       }
@@ -192,12 +253,12 @@ export default defineComponent({
       const target = event.target as HTMLElement;
       draggedKey.value = parseInt(target.getAttribute('data-key-value') || '');
       event.dataTransfer?.setData('text/plain', draggedKey.value.toString());
-      console.log(`Drag started with key value: ${draggedKey.value} (${keyMap[draggedKey.value]})`);
+      //console.log(`Drag started with key value: ${draggedKey.value} (${keyMap[draggedKey.value]})`);
     };
 
     const onDragEnd = () => {
       draggedKey.value = null;
-      console.log('Drag ended');
+      //console.log('Drag ended');
     };
 
     const isDropTarget = (row: IDefKeyInfo[], colIdx: number) => {
@@ -207,14 +268,14 @@ export default defineComponent({
 
     const onDrop = (keyInfo: IDefKeyInfo, rowIdx: number, colIdx: number) => {
       if (draggedKey.value !== null) {
-        console.log(`Dropping key ${keyMap[draggedKey.value]} onto ${keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`}`);
+        //console.log(`Dropping key ${keyMap[draggedKey.value]} onto ${keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`}`);
         remapKey(rowIdx, colIdx, draggedKey.value);
       }
     };
 
     watch(selectedLayer, (newLayer) => {
       layout.value = [];
-      selectedCategory.value = null; // Reset category on layer change
+      loaded.value = false; // Reset loaded flag on layer change
       fetchLayerLayout(newLayer);
     });
 
@@ -238,6 +299,10 @@ export default defineComponent({
       onDragEnd,
       isDropTarget,
       onDrop,
+      gridStyle,
+      getKeyStyle,
+      selectedKey,
+      loaded,
     };
   },
 });
@@ -273,29 +338,40 @@ export default defineComponent({
     }
   }
   .key-grid {
-    display: grid;
-    gap: 8px;
+    display: block;
+    position: relative;
     margin-bottom: 20px;
+    width: fit-content;
+    margin: 0 auto; // Center the grid
+    min-height: 300px; // Minimum height to ensure visibility
   }
   .key-row {
-    display: flex;
-    gap: 8px;
+    display: contents; // Allow positioning of children
   }
   .key-btn {
-    padding: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: v.$border-radius;
-    background-color: v.$background-dark;
+    position: absolute;
+    padding: 4px; // Increased padding for better visual size
+    border: 2px solid rgba(255, 255, 255, 0.3); // Thicker border
+    border-radius: v.$border-radius * 2; // Enhanced rounding
+    background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%); // Gradient for depth
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 -2px 4px rgba(255, 255, 255, 0.2); // Beveled effect
     color: v.$text-color;
     cursor: pointer;
     transition: all 0.2s ease;
+    box-sizing: border-box; // Include border and padding in width/height
+    user-select: text; // Ensure selectability
+    &:focus {
+      outline: 2px solid v.$accent-color; // Visual feedback for selection
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(255, 255, 255, 0.3);
+    }
     &.drop-target {
       outline: 2px dashed v.$accent-color;
       outline-offset: -2px;
-      background-color: color.adjust(v.$background-dark, $lightness: 5%);
+      background-color: color.adjust(v.$background-dark, $lightness: 5%, $alpha: 0.7); // Semi-transparent highlight
     }
     &:hover {
-      background-color: color.adjust(v.$background-dark, $lightness: 5%);
+      background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 5%) 70%, color.adjust(v.$background-dark, $lightness: 15%) 100%);
+      box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(255, 255, 255, 0.3);
     }
   }
   .key-config {

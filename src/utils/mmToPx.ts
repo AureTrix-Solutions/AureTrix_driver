@@ -1,0 +1,1 @@
+export const mmToPx = (mm: number) => Math.round(mm * 3.78);

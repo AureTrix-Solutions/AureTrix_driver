@@ -1,10 +1,11 @@
 const mmToPx = (mm: number) => Math.round(mm * 4); // Increased to 4px/mm for larger keys
 
-export const getLayoutConfig = (keyCount: number, baseLayout?: any[][]) => {
+export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[]) => {
   let rows = 0;
   let cols = 0;
-  let keySizes = [];
-  let gapsAfterCol = [];
+  let keySizes = customKeySizes || [];
+  let gapsAfterCol = customGapsAfterCol || [];
+  let rowSpacing = customRowSpacing || [];
   let baseTop = 0;
 
   // Use baseLayout if provided, otherwise fall back to default
@@ -18,84 +19,91 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][]) => {
     cols = 15; // Default max columns
   }
 
-  // Define keySizes and gaps based on keyCount with dynamic adjustment
+  // Define keySizes, gapsAfterCol, and rowSpacing based on keyCount with custom overrides
   if (keyCount === 61) { // 60%
     keySizes = [
-      Array(13).fill(12).concat(31), // row 0
-      [22].concat(Array(12).fill(12)).concat([22]), // row 1
-      [26].concat(Array(11).fill(12)).concat([35]), // row 2
-      [35].concat(Array(10).fill(12)).concat([44]), // row 3
-      [16, 16, 16, 111, 16, 16, 16, 16], // row 4
+      Array(13).fill(18).concat(37), // row 0
+      [27.3].concat(Array(12).fill(18), 27.3), // row 1
+      [32].concat(Array(11).fill(18), 41.7), // row 2
+      [41.7].concat(Array(10).fill(18), 51.1), // row 3
+      Array(3).fill(22.8).concat(117.2, Array(4).fill(22.8)), // row 4
     ];
     gapsAfterCol = Array(5).fill({});
+    rowSpacing = [18, 18, 18, 18]; // 17mm height + 1mm gap per row
   } else if (keyCount === 67) { // 65% 67-key
     keySizes = [
-      Array(13).fill(12).concat([31, 12]), // row 0
-      [22].concat(Array(12).fill(12)).concat([22]), // row 1
-      [26].concat(Array(12).fill(12)).concat([35]), // row 2
-      [35].concat(Array(11).fill(11)).concat([26]), // row 3
-      [16, 16, 16, 111, 16, 16, 12, 12, 12], // row 4
+      Array(13).fill(18).concat(37, 18), // row 0
+      [27.3].concat(Array(12).fill(18), 27.8, 18), // row 1
+      [32].concat(Array(11).fill(18), 41.9, 18), // row 2
+      [41.7].concat(Array(10).fill(18), 32.3, Array(2).fill(18)), // row 3
+      Array(3).fill(22.8).concat(117.7, Array(2).fill(22.8), Array(3).fill(18)), // row 4
     ];
     gapsAfterCol = Array(5).fill({});
-    gapsAfterCol[4] = {5: 16};
+    gapsAfterCol[4] = { 5: 9.5};
+    rowSpacing = [18, 18, 18, 18]; // 17mm height + 1mm gap per row
   } else if (keyCount === 68) { // 65% 68-key
     keySizes = [
-      Array(13).fill(12).concat([31, 12]), // row 0
-      [22].concat(Array(12).fill(12)).concat([22]), // row 1
-      [26].concat(Array(12).fill(12)).concat([35]), // row 2
-      [35].concat(Array(11).fill(12)).concat([26]), // row 3
-      [16, 16, 16, 111, 16, 16, 16, 16, 16, 16], // row 4
+      Array(13).fill(18).concat(37, 18), // row 0
+      [27.3].concat(Array(12).fill(18), 27.7, 18), // row 1
+      [32].concat(Array(11).fill(18), 41.9, 18), // row 2
+      [41.7].concat(Array(10).fill(18), 32.3 ,Array(2).fill(18)), // row 3
+      Array(3).fill(22.8).concat(117.7, Array(6).fill(18)), // row 4
     ];
     gapsAfterCol = Array(5).fill({});
+    rowSpacing = [18, 18, 18, 18]; // 17mm height + 1mm gap per row
   } else if (keyCount === 84) { // 75% 84-key
     keySizes = [
-      Array(16).fill(12), // row 0
-      Array(14).fill(12).concat([31]), // row 1
-      [22].concat(Array(12).fill(12)).concat([22]), // row 2
-      [26].concat(Array(12).fill(12)).concat([35]), // row 3
-      [35].concat(Array(12).fill(12)).concat([26]), // row 4
-      [16, 16, 16, 111, 16, 16, 12, 12, 12, 12], // row 5
+      Array(16).fill(18), // row 0
+      Array(13).fill(18).concat(37, 18), // row 1
+      [27.3].concat(Array(12).fill(18), 27.7, 18), // row 2
+      [32].concat(Array(11).fill(18), 41.9, 18), // row 3
+      [41.7].concat(Array(10).fill(18), 32.3, Array(2).fill(18)), // row 4
+      Array(3).fill(22.8).concat(117.7, Array(6).fill(18)), // row 5
     ];
     gapsAfterCol = Array(6).fill({});
+    rowSpacing = [18, 18, 18, 18, 18]; // 17mm height + 1mm gap per row
   } else if (keyCount === 82) { // 75% 82-key
     keySizes = [
-      Array(15).fill(12), // row 0
-      Array(14).fill(12).concat([31]), // row 1
-      [22].concat(Array(12).fill(12)).concat([22]), // row 2
-      [26].concat(Array(12).fill(12)).concat([35]), // row 3
-      [35].concat(Array(12).fill(12)).concat([26]), // row 4
-      [16, 16, 16, 111, 16, 16, 12, 12, 12], // row 5
+      Array(14).fill(18), // row 0
+      Array(13).fill(18).concat(37, 18), // row 1
+      [27.3].concat(Array(12).fill(18), 27.7, 18), // row 2
+      [32].concat(Array(11).fill(18), 41.9, 18), // row 3
+      [41.7].concat(Array(10).fill(18), 32.3, Array(2).fill(18)), // row 4
+      Array(3).fill(22.8).concat(117.7, Array(2).fill(22.8), Array(3).fill(18)), // row 5
     ];
     gapsAfterCol = Array(6).fill({});
-    gapsAfterCol[0] = {0: 12, 4: 12, 8: 12, 12: 12};
-    gapsAfterCol[5] = {5: 16};
+    gapsAfterCol[0] = { 0: 9.4, 4: 9.4, 8: 9.4, 12: 9.4 }; // Increased gap after Backspace
+    gapsAfterCol[5] = { 5: 9.5 };
+    rowSpacing = [22, 18, 18, 18, 18]; // 17mm height + 1mm gap, 6mm gap after row 0
   } else if (keyCount === 80) { // 75% 80-key
     keySizes = [
-      [17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17], // row 0 (explicit spacing)
-      Array(13).fill(17).concat(36).concat(17), // row 1
-      [26.5].concat(Array(12).fill(17)).concat([26.5]).concat([17]), // row 2
-      [31].concat(Array(11).fill(17)).concat([41]), // row 3
-      [41].concat(Array(10).fill(17)).concat([31]).concat([17]), // row 4
-      [22, 22, 22, 117, 22, 22, 17, 17, 17], // row 5
+      Array(15).fill(18), // row 0
+      Array(13).fill(18).concat(37, 18), // row 1
+      [27.3].concat(Array(12).fill(18),27.7, 18), // row 2
+      [32].concat(Array(11).fill(18), 41.9), // row 3
+      [41.7].concat(Array(10).fill(18), 32.3, 18), // row 4
+      Array(3).fill(22.8).concat(117.7, Array(2).fill(22.8), Array(3).fill(18)), // row 5
     ];
     gapsAfterCol = Array(6).fill({});
-    gapsAfterCol[0] = {0: 4.7, 4: 4.7, 8: 4.7, 12: 4.7}; // Increased gap after Backspace to 18mm (~72px) to space Page Up
-    gapsAfterCol[5] = {5: 3.5};
+    gapsAfterCol[0] = { 0: 4.7, 4: 4.7, 8: 4.7, 12: 4.7 }; // Increased gap after Backspace
+    gapsAfterCol[5] = { 5: 9.5 };
+    rowSpacing = [22, 18, 18, 18, 18]; // 17mm height + 1mm gap, 6mm gap after row 0
   } else if (keyCount === 87) { // TKL 87-key
     keySizes = [
-      Array(17).fill(12), // row 0
-      Array(13).fill(12).concat([31, 12, 12]), // row 1
-      [22].concat(Array(13).fill(12)).concat([22]), // row 2
-      [26].concat(Array(11).fill(12)).concat([35]), // row 3
-      [35].concat(Array(10).fill(12)).concat([44]), // row 4
-      [16, 12, 16, 108, 16, 12, 12, 16, 12, 12, 12], // row 5
+      Array(16).fill(18), // row 0
+      Array(13).fill(18).concat(37, Array(3).fill(18)), // row 1
+      [27.3].concat(Array(12).fill(18), 27.7, Array(3).fill(18)), // row 2
+      [32].concat(Array(11).fill(18), 41.9), // row 3
+      [41.7].concat(Array(10).fill(18), 51.2, 18), // row 4
+      Array(3).fill(22.8).concat(117.7, Array(4).fill(22.8), Array(3).fill(18)),
     ];
     gapsAfterCol = Array(6).fill({});
-    gapsAfterCol[0] = {0: 21, 4: 12, 8: 12, 12: 9};
-    gapsAfterCol[1] = {13: 9};
-    gapsAfterCol[2] = {13: 9};
-    gapsAfterCol[4] = {11: 24};
-    gapsAfterCol[5] = {7: 9};
+    gapsAfterCol[0] = { 0: 19, 4: 10, 8: 9, 12: 9 };
+    gapsAfterCol[1] = { 13: 9};
+    gapsAfterCol[2] = { 13: 9 };
+    gapsAfterCol[4] = { 11: 28 };
+    gapsAfterCol[5] = { 7: 9 };
+    rowSpacing = [27, 18, 18, 18, 18]; // 17mm height + 1mm gap per row
   } else {
     throw new Error(`Unsupported key count: ${keyCount}`);
   }
@@ -117,13 +125,18 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][]) => {
     cols = Math.max(...keySizes.map(row => row.length));
   }
 
-  // Calculate cumulative left and set top for each row with 6mm spacing
+  // Calculate cumulative left and set top for each row with custom row spacing
   const keyPositions = keySizes.map((rowSizes, rIdx) => {
     let left = 0;
-    const top = rIdx * mmToPx(18); // 14mm height + 6mm spacing per row
+    let cumulativeTop = 0;
+    // Accumulate top based on row spacing
+    for (let i = 0; i < rIdx; i++) {
+      cumulativeTop += mmToPx(rowSpacing[i] || 18); // Default to 18mm if undefined
+    }
+    const top = cumulativeTop;
     const positions = rowSizes.map((width, cIdx) => {
       const pos = [left, top, width, 17]; // [left, top, width, height]
-      left += mmToPx(width) + mmToPx(1); // Base 6mm spacing
+      left += mmToPx(width) + mmToPx(1); // 1mm default spacing
       if (gapsAfterCol[rIdx] && gapsAfterCol[rIdx][cIdx]) {
         left += mmToPx(gapsAfterCol[rIdx][cIdx]);
       }
@@ -134,7 +147,7 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][]) => {
   }) || [];
 
   // Convert to pixels (modify in a new array)
-  const convertedPositions = keyPositions.map(row =>
+  let convertedPositions = keyPositions.map(row =>
     row.map(pos => [pos[0], pos[1], mmToPx(pos[2]), mmToPx(pos[3])])
   ) || [];
 

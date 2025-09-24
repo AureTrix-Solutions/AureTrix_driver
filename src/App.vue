@@ -12,6 +12,7 @@
         <router-link to="/profiles" class="nav-item">Profiles</router-link>
         <router-link to="/lighting" class="nav-item">Lighting</router-link>
         <router-link to="/advanced-config" class="nav-item">Advanced Config</router-link>
+        <router-link to="/layout-preview" class="nav-item">Layout Preview</router-link>
       </nav>
     </aside>
 

@@ -34,9 +34,9 @@ export default defineComponent({
 
     const gridStyle = computed(() => {
       const { keyPositions, gaps } = getLayoutConfig(selectedLayout.value);
-      console.log('Grid Style keyPositions:', keyPositions);
+      ////console.log('Grid Style keyPositions:', keyPositions);
       if (!keyPositions || keyPositions.length === 0) {
-        console.warn('keyPositions is empty or invalid');
+        //console.warn('keyPositions is empty or invalid');
         return { 'height': '0px', 'width': '0px' };
       }
       const containerHeight = keyPositions.reduce((max, row, i) => max + Math.max(...row.map(pos => pos[1] + pos[3])) + (gaps[i] || 0), 0);
@@ -53,7 +53,7 @@ export default defineComponent({
       const { keyPositions, gaps } = getLayoutConfig(selectedLayout.value);
       const rowLength = keyPositions[rowIdx]?.length || 0;
       if (!keyPositions || !keyPositions[rowIdx] || !Array.isArray(keyPositions[rowIdx]) || colIdx >= rowLength) {
-        console.warn(`Invalid key position at row ${rowIdx}, col ${colIdx}: rowLength=${rowLength}, keyPositions[rowIdx]=`, keyPositions[rowIdx]);
+        //console.warn(`Invalid key position at row ${rowIdx}, col ${colIdx}: rowLength=${rowLength}, keyPositions[rowIdx]=`, keyPositions[rowIdx]);
         return { width: '0px', height: '0px', left: '0px', top: '0px' };
       }
       const [left, top, width, height] = keyPositions[rowIdx][colIdx];

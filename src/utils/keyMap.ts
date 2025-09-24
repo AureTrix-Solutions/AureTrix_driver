@@ -59,7 +59,7 @@ export const keyMap = {
   // ── Control Keys ───────────────────────────────────────
   40:    'Enter',
   41:    'ESC',
-  42:    'BackSpace',
+  42:    'Back Space',
   43:    'Tab',
   44:    'Space',
   57:    'Cap',

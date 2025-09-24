@@ -7,38 +7,40 @@
         <option v-for="layer in layers" :key="layer" :value="layer">{{ `Fn${layer + 1}` }}</option>
       </select>
     </div>
-    <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
-      <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
-        <div
-          v-for="(keyInfo, cIdx) in row"
-          :key="`k-${rIdx}-${cIdx}`"
-          class="key-btn"
-          :style="getKeyStyle(rIdx, cIdx)"
-          :class="{ 'drop-target': isDropTarget(row, cIdx) }"
-          @dragover.prevent
-          @drop="onDrop(keyInfo, rIdx, cIdx)"
-          @click="selectKey(keyInfo)"
-        >
-          {{ keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
+    <div class="mapping-container">
+      <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
+        <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
+          <div
+            v-for="(keyInfo, cIdx) in row"
+            :key="`k-${rIdx}-${cIdx}`"
+            class="key-btn"
+            :style="getKeyStyle(rIdx, cIdx)"
+            :class="{ 'drop-target': isDropTarget(row, cIdx) }"
+            @dragover.prevent
+            @drop="onDrop(keyInfo, rIdx, cIdx)"
+            @click="selectKey(keyInfo)"
+          >
+            {{ keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
+          </div>
         </div>
       </div>
-    </div>
-    <div class="key-config">
-      <label for="category-select">Remap to Category: </label>
-      <select v-model="selectedCategory" id="category-select" @change="resetVirtualKeys">
-        <option value="" disabled selected>Select a Category</option>
-        <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
-      </select>
-      <div v-if="selectedCategory" class="virtual-keys-window">
-        <div class="virtual-keys" @dragstart="onDragStart" @dragend="onDragEnd">
-          <div
-            v-for="(label, keyValue) in filteredKeyMap"
-            :key="keyValue"
-            class="virtual-key"
-            draggable="true"
-            :data-key-value="keyValue"
-          >
-            {{ label }}
+      <div class="key-config">
+        <label for="category-select">Remap to Category: </label>
+        <select v-model="selectedCategory" id="category-select" @change="resetVirtualKeys">
+          <option value="" disabled selected>Select a Category</option>
+          <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
+        </select>
+        <div v-if="selectedCategory" class="virtual-keys-window">
+          <div class="virtual-keys" @dragstart="onDragStart" @dragend="onDragEnd">
+            <div
+              v-for="(label, keyValue) in filteredKeyMap"
+              :key="keyValue"
+              class="virtual-key"
+              draggable="true"
+              :data-key-value="keyValue"
+            >
+              {{ label }}
+            </div>
           </div>
         </div>
       </div>
@@ -74,14 +76,14 @@ export default defineComponent({
 
     const gridStyle = computed(() => {
       if (!baseLayout.value) {
-        console.warn('baseLayout.value is undefined, returning empty style');
+        //console.warn('baseLayout.value is undefined, returning empty style');
         return {};
       }
       const totalKeys = baseLayout.value.flat().length;
       const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value);
       //console.log('Grid Style keyPositions:', keyPositions); // Debug log
       if (!keyPositions || keyPositions.length === 0) {
-        console.warn('keyPositions is empty or invalid');
+        //console.warn('keyPositions is empty or invalid');
         return { 'height': '0px', 'width': '0px' };
       }
       const containerHeight = keyPositions.reduce((max, row, i) => max + Math.max(...row.map(pos => pos[1] + pos[3])) + (gaps[i] || 0), 0);
@@ -96,19 +98,19 @@ export default defineComponent({
 
     const getKeyStyle = (rowIdx: number, colIdx: number) => {
       if (!baseLayout.value) {
-        console.warn('baseLayout.value is undefined in getKeyStyle');
+        //console.warn('baseLayout.value is undefined in getKeyStyle');
         return {};
       }
       const totalKeys = baseLayout.value.flat().length;
       const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value);
       const rowLength = baseLayout.value[rowIdx]?.length || 0;
       if (!keyPositions || !keyPositions[rowIdx] || !Array.isArray(keyPositions[rowIdx]) || colIdx >= rowLength) {
-        console.warn(`Invalid key position at row ${rowIdx}, col ${colIdx}: rowLength=${rowLength}, keyPositions[rowIdx]=`, keyPositions[rowIdx]);
-        return { width: '0px', height: '0px', left: '0px', top: '0px' }; // Fallback to hide invalid keys
+        //console.warn(`Invalid key position at row ${rowIdx}, col ${colIdx}: rowLength=${rowLength}, keyPositions[rowIdx]=`, keyPositions[rowIdx]);
+        return { width: '0px', height: '0px', left: '0px', top: '0px' }; // Fallback
       }
       const [left, top, width, height] = keyPositions[rowIdx][colIdx];
       const topGapPx = gaps[rowIdx] || 0;
-      //console.log(`Rendered style for row ${rowIdx}, col ${colIdx}:`, { left, top, width, height }); // Debug log
+      //console.log(`Rendered style for row ${rowIdx}, col ${colIdx}:`, { left, top, width, height });
       return {
         position: 'absolute',
         left: `${left}px`,
@@ -116,8 +118,8 @@ export default defineComponent({
         width: `${width}px`,
         height: `${height}px`,
         marginBottom: `${mmToPx(1)}px`, // 1mm bottom spacing
-        boxSizing: 'border-box', // Include border and padding in width/height
-        'data-overlay': '', // Placeholder for future use
+        boxSizing: 'border-box', // Include border and padding
+        'data-overlay': '', // Placeholder
       };
     };
 
@@ -151,7 +153,7 @@ export default defineComponent({
             allLayerData.push(...layerData);
             //console.log(`Raw fetched batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, layerData);
           } catch (error) {
-            console.error(`Failed to fetch batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, error);
+            //console.error(`Failed to fetch batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, error);
           }
         }
         //console.log(`Raw allLayerData for layer ${layerIndex + 1} before processing:`, allLayerData);
@@ -180,14 +182,14 @@ export default defineComponent({
                 }
               }
             } else {
-              console.warn(`No unique mapping found for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using base value: ${keyValue}`);
+              //console.warn(`No unique mapping found for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using base value: ${keyValue}`);
             }
             if (keyValue === 1) {
               keyValue = 0;
               //console.log(`Visual remap: Changed key ${baseKey.keyValue} from value 1 to 0 in layer ${layerIndex + 1}`);
             }
             if (keyValue < 0 || keyValue > 65535) {
-              console.warn(`Invalid value ${keyValue} for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using default: ${baseKey.keyValue}`);
+              //console.warn(`Invalid value ${keyValue} for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using default: ${baseKey.keyValue}`);
               keyValue = baseKey.keyValue;
             }
             return { keyValue, location: baseKey.location };
@@ -198,7 +200,7 @@ export default defineComponent({
         loaded.value = true; // Set loaded flag after layout is ready
         //console.log(`Fetched and transformed layout for layer ${layerIndex + 1}:`, layerLayout);
       } catch (error) {
-        console.error(`Failed to fetch layout for layer ${layerIndex + 1}:`, error);
+        //console.error(`Failed to fetch layout for layer ${layerIndex + 1}:`, error);
         layout.value = [];
         loaded.value = false;
       }
@@ -229,7 +231,7 @@ export default defineComponent({
           if (verifyData.length > 0 && verifyData[0].value === newValue) break;
         }
         if (verifyData.length === 0 || verifyData[0].value !== newValue) {
-          console.warn(`Verification failed after 3 attempts; latest data:`, verifyData);
+          //console.warn(`Verification failed after 3 attempts; latest data:`, verifyData);
           // Force layout refresh with retry
           for (let retry = 1; retry <= 2; retry++) {
             await fetchLayerLayout(selectedLayer.value);
@@ -241,7 +243,7 @@ export default defineComponent({
         await fetchLayerLayout(selectedLayer.value); // Final refresh
         //console.log(`Layout refreshed after remap on layer ${selectedLayer.value + 1} with new value ${newValue}`);
       } catch (error) {
-        console.error(`Remap failed for key at { row: ${rowIdx}, col: ${colIdx} } to ${newValue} on layer ${selectedLayer.value + 1}:`, error);
+        //console.error(`Remap failed for key at { row: ${rowIdx}, col: ${colIdx} } to ${newValue} on layer ${selectedLayer.value + 1}:`, error);
       }
     };
 
@@ -274,8 +276,6 @@ export default defineComponent({
     };
 
     watch(selectedLayer, (newLayer) => {
-      layout.value = [];
-      loaded.value = false; // Reset loaded flag on layer change
       fetchLayerLayout(newLayer);
     });
 
@@ -317,11 +317,12 @@ export default defineComponent({
   color: v.$text-color;
   h2 {
     color: v.$primary-color;
-    margin-bottom: 20px;
+    margin-bottom: 10px; // Reduced margin
   }
   .controls {
-    margin-bottom: 20px;
+    margin-bottom: 5px; // Further reduced margin
     display: flex;
+    width: fit-content;
     gap: 10px;
     align-items: center;
     label {
@@ -337,37 +338,44 @@ export default defineComponent({
       font-size: 1rem;
     }
   }
+  .mapping-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px; // Reduced gap to 5px
+    max-height: calc(100vh - 150px); // Limit height to viewport minus header/controls
+    overflow-y: auto; // Enable scrolling only if needed
+  }
   .key-grid {
     display: block;
     position: relative;
-    margin-bottom: 20px;
     width: fit-content;
     margin: 0 auto; // Center the grid
-    min-height: 300px; // Minimum height to ensure visibility
+    min-height: 500px; // Reduced further to save space
+    max-height: 500px;
+    flex: 0 0 auto; // Prevent stretching
   }
   .key-row {
     display: contents; // Allow positioning of children
   }
   .key-btn {
     position: absolute;
-    padding: 4px; // Increased padding for better visual size
+    padding: 4px; // Increased padding
     border: 2px solid rgba(255, 255, 255, 0.3); // Thicker border
     border-radius: v.$border-radius * 2; // Enhanced rounding
-    background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%); // Gradient for depth
+    background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%); // Gradient
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 -2px 4px rgba(255, 255, 255, 0.2); // Beveled effect
     color: v.$text-color;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-sizing: border-box; // Include border and padding in width/height
+    box-sizing: 'border-box'; // Include border and padding
     user-select: text; // Ensure selectability
     &:focus {
-      outline: 2px solid v.$accent-color; // Visual feedback for selection
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(255, 255, 255, 0.3);
+      outline: 2px solid v.$accent-color; // Visual feedback
     }
     &.drop-target {
       outline: 2px dashed v.$accent-color;
       outline-offset: -2px;
-      background-color: color.adjust(v.$background-dark, $lightness: 5%, $alpha: 0.7); // Semi-transparent highlight
+      background-color: color.adjust(v.$background-dark, $lightness: 5%, $alpha: 0.7); // Highlight
     }
     &:hover {
       background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 5%) 70%, color.adjust(v.$background-dark, $lightness: 15%) 100%);
@@ -375,10 +383,13 @@ export default defineComponent({
     }
   }
   .key-config {
-    margin-top: 20px;
+    margin-top: 0; // Removed margin
+    padding-top: 5px; // Reduced padding
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    width: fit-content;
+    gap: 10px;
+    flex: 0 0 auto; // Prevent stretching
     label {
       margin-right: 10px;
       color: v.$text-color;
@@ -386,33 +397,37 @@ export default defineComponent({
     }
     select {
       padding: 8px;
+      margin-left: 1px;
       border-radius: v.$border-radius;
       background-color: v.$background-dark;
       color: v.$text-color;
       border: 1px solid rgba(255, 255, 255, 0.2);
       font-size: 1rem;
-      width: 300px; // Ensure the selector is wide enough
+      width: 200px; // Ensure the selector is wide enough
     }
     .virtual-keys-window {
-      padding: 20px;
+      padding: 10px; // Reduced padding
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: v.$border-radius;
       background-color: color.adjust(v.$background-dark, $lightness: -2%);
       .virtual-keys {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); // Increased key size and columns
-        gap: 15px;
-        padding: 20px;
-        max-height: 400px; // Larger window
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); // Increased key size
+        gap: 3px; // Reduced gap
+        padding: 8px; // Reduced padding
+        max-height: 500px; // Reduced max-height
+        max-width: 1000px;
         overflow-y: auto;
       }
       .virtual-key {
-        padding: 15px; // Increased padding for larger keys
+        padding: 8px; // Reduced padding
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: v.$border-radius;
         background-color: v.$background-dark;
         color: v.$text-color;
         text-align: center;
+        height: 48px;
+        width: 50px;
         cursor: move;
         transition: all 0.2s ease;
         &:hover {

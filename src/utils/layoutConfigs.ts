@@ -12,9 +12,9 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
   if (baseLayout && baseLayout.length > 0) {
     rows = baseLayout.length;
     cols = Math.max(...baseLayout.map(row => row.length || 0));
-    console.log(`Using baseLayout: rows=${rows}, cols=${cols}`);
+    ////console.log(`Using baseLayout: rows=${rows}, cols=${cols}`);
   } else {
-    console.warn('baseLayout is undefined, using default layout for keyCount:', keyCount);
+    //console.warn('baseLayout is undefined, using default layout for keyCount:', keyCount);
     rows = 6; // Default to 6 rows for common layouts like 80-key
     cols = 15; // Default max columns
   }
@@ -114,7 +114,7 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
     keySizes = keySizes.slice(0, rows).map((row, rIdx) => {
       const baseCols = baseLayout[rIdx] ? baseLayout[rIdx].length : 0;
       if (baseCols > 0 && baseCols !== row.length) {
-        console.warn(`Adjusting row ${rIdx} from ${row.length} to ${baseCols} columns`);
+        //console.warn(`Adjusting row ${rIdx} from ${row.length} to ${baseCols} columns`);
         if (baseCols > row.length) {
           return [...row, ...Array(baseCols - row.length).fill(12)]; // Pad with 12mm
         }
@@ -140,7 +140,7 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
       if (gapsAfterCol[rIdx] && gapsAfterCol[rIdx][cIdx]) {
         left += mmToPx(gapsAfterCol[rIdx][cIdx]);
       }
-      console.log(`Row ${rIdx}, Col ${cIdx}: pos=`, pos); // Debug log
+      ////console.log(`Row ${rIdx}, Col ${cIdx}: pos=`, pos); // Debug log
       return pos;
     });
     return positions;
@@ -152,7 +152,7 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
   ) || [];
 
   if (convertedPositions.length === 0) {
-    console.error('keyPositions is empty, using default positions');
+    //console.error('keyPositions is empty, using default positions');
     convertedPositions = Array(rows).fill().map(() => Array(cols).fill([0, 0, mmToPx(17), mmToPx(17)]));
   }
 

@@ -1,6 +1,6 @@
 <template>
   <div class="connect-page">
-    <h2>Connect Your Keyboard</h2>
+    <h2>Connect</h2>
     <button @click="connectDevice" :disabled="connectionStore.isConnecting || connectionStore.isConnected" class="connect-btn">
       {{ connectionStore.isConnecting ? 'Connecting...' : connectionStore.isConnected ? 'Connected' : 'Connect Keyboard' }}
     </button>
@@ -35,8 +35,9 @@ export default defineComponent({
 @use '@styles/variables' as v;
 
 .connect-page {
-  text-align: center;
-  padding: 40px;
+  text-align: right;
+  width: 200px;
+  padding-top: 255px;
   color: v.$text-color;
   h2 {
     margin-bottom: 20px;
@@ -44,6 +45,7 @@ export default defineComponent({
   }
   .connect-btn {
     padding: 10px 20px;
+    width: 300px;
     font-size: 1rem;
     background-color: v.$primary-color;
     color: v.$background-dark;

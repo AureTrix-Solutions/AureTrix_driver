@@ -7,8 +7,8 @@
         <div v-if="connectionStore.status" class="status">
           <ul v-if="connectionStore.isConnected">
             <li>Connected: {{ connectionStore.deviceInfo?.productName || 'Unknown Device' }}</li>
-            <li>ID: {{ connectionStore.deviceInfo?.id || 'N/A' }}</li>
-            <li v-if="connectionStore.deviceInfo?.BoardID">BoardID: {{ connectionStore.deviceInfo.BoardID }}</li>
+            <li>SN: {{ connectionStore.deviceInfo?.KeyboardSN || 'N/A' }}</li>
+            <li v-if="connectionStore.deviceInfo?.BoardID">Board ID: {{ connectionStore.deviceInfo.BoardID }}</li>
             <li v-if="connectionStore.deviceInfo?.appVersion">Version: {{ connectionStore.deviceInfo.appVersion }}</li>
           </ul>
           <p v-else>{{ connectionStore.status }}</p>
@@ -80,7 +80,7 @@ export default defineComponent({
     margin-bottom: 10px;
   }
   .status {
-    margin-top: 10px;
+    margin-top: -30px;
     font-size: 0.9rem;
     color: v.$accent-color;
     ul {

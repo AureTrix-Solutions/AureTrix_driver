@@ -1,6 +1,13 @@
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
 import type { DeviceInit, Device } from '@sparklinkplayjoy/sdk-keyboard';
 import { IDefKeyInfo } from '../types/types';
+import { useConnectionStore } from '../store/connection';
+
+interface AxisConfig {
+  key: number; // Key index
+  actuationPoint: number; // Actuation point (0–100%)
+  sensitivity: number; // Sensitivity multiplier (e.g., 0.5–2.0)
+}
 
 class KeyboardService {
   private keyboard: XDKeyboard;
@@ -36,24 +43,43 @@ class KeyboardService {
         return null;
       }
       console.log('Checking for previously paired devices...');
-      const devices = await navigator.hid.getDevices();
-      console.log('Paired devices:', devices);
-      const targetDevice = devices.find(
-        d => d.vendorId === 7331 && d.productId === 1793 && d.collections.some(c => c.usagePage === 65440 && c.usage === 1)
-      );
-      if (targetDevice) {
-        if (!targetDevice.opened) {
-          await targetDevice.open();
-          console.log('Auto-connected device:', targetDevice.productName || 'Unknown', 'VendorID:', targetDevice.vendorId, 'ProductID:', targetDevice.productId, 'DeviceID:', targetDevice.id);
+      let attempts = 0;
+      const maxAttempts = 3;
+      while (attempts < maxAttempts) {
+        try {
+          const devices = await navigator.hid.getDevices();
+          console.log('Paired devices:', devices);
+          const targetDevice = devices.find(
+            d => d.vendorId === 7331 && d.productId === 1793 && d.collections.some(c => c.usagePage === 65440 && c.usage === 1)
+          );
+          if (targetDevice) {
+            if (!targetDevice.opened) {
+              await targetDevice.open();
+              console.log('Auto-connected device:', targetDevice.productName || 'Unknown', 'VendorID:', targetDevice.vendorId, 'ProductID:', targetDevice.productId, 'DeviceID:', targetDevice.id);
+            }
+            const sdkDevices = await this.getDevices();
+            const existingDevice = sdkDevices.find(d => d.id === targetDevice.id);
+            const device = existingDevice || { id: targetDevice.id, data: targetDevice, productName: targetDevice.productName || 'Unknown' };
+            await this.init(device.id);
+            this.connectedDevice = device;
+            return device;
+          }
+          console.log('No previously paired Slice75 HE found, attempt:', attempts + 1);
+          if (attempts < maxAttempts - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+          attempts++;
+        } catch (error) {
+          console.warn(`Auto-connect attempt ${attempts + 1} failed:`, error);
+          if (attempts === maxAttempts - 1) {
+            console.error('Auto-connect failed after max attempts:', error);
+            return null;
+          }
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          attempts++;
         }
-        const sdkDevices = await this.getDevices();
-        const existingDevice = sdkDevices.find(d => d.id === targetDevice.id);
-        const device = existingDevice || { id: targetDevice.id, data: targetDevice, productName: targetDevice.productName || 'Unknown' };
-        await this.init(device.id);
-        this.connectedDevice = device;
-        return device;
       }
-      console.log('No previously paired Slice75 HE found');
+      console.log('No paired device found after max attempts');
       return null;
     } catch (error) {
       console.error('Failed to auto-connect:', error);
@@ -95,11 +121,14 @@ class KeyboardService {
     const device = (event as HIDConnectionEvent).device;
     if (device.vendorId === 7331 && device.productId === 1793 && device.collections.some(c => c.usagePage === 65440 && c.usage === 1)) {
       console.log('Device connected:', device.productName || 'Unknown', 'DeviceID:', device.id);
+      const connectionStore = useConnectionStore();
       const result = await this.autoConnect();
       if (result) {
         console.log('Reconnected device:', result.productName, 'DeviceID:', result.id);
+        connectionStore.autoConnect();
       } else {
         console.error('Failed to reconnect device: autoConnect returned null');
+        connectionStore.disconnect();
       }
     }
   }
@@ -109,6 +138,8 @@ class KeyboardService {
     if (this.connectedDevice && this.connectedDevice.id === device.id) {
       console.log('Device disconnected:', device.productName || 'Unknown', 'DeviceID:', device.id);
       this.connectedDevice = null;
+      const connectionStore = useConnectionStore();
+      connectionStore.disconnect();
     }
   }
 
@@ -211,6 +242,38 @@ class KeyboardService {
     } catch (error) {
       console.error('Failed to reload parameters:', error);
       throw new Error(`Failed to reload parameters: ${(error as Error).message}`);
+    }
+  }
+
+  async getAxis(params: { key: number; layout: number }[]): Promise<{ key: number; actuation: number }[]> {
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const axisData = await this.keyboard.getAxis(params);
+      console.log('Fetched axis data:', axisData);
+      return axisData;
+    } catch (error) {
+      console.error('Failed to fetch axis data:', error);
+      throw new Error(`Failed to fetch axis data: ${(error as Error).message}`);
+    }
+  }
+
+  async setAxis(configs: AxisConfig[]): Promise<void> {
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      await this.keyboard.setAxis(configs);
+      console.log('Axis configurations applied:', configs);
+      await this.saveParameters();
+      console.log('Parameters saved after axis configuration');
+      await this.reloadParameters();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Parameters reloaded and synced after axis configuration');
+    } catch (error) {
+      console.error('Failed to set axis configurations:', error);
+      throw new Error(`Failed to set axis configurations: ${(error as Error).message}`);
     }
   }
 }

@@ -3,7 +3,16 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h2>Keyboard Driver</h2>
+        <img src="@/assets/logo.png" alt="Keyboard Driver Logo" class="logo">
+        <div v-if="connectionStore.status" class="status">
+          <ul v-if="connectionStore.isConnected">
+            <li>Connected: {{ connectionStore.deviceInfo?.productName || 'Unknown Device' }}</li>
+            <li>ID: {{ connectionStore.deviceInfo?.id || 'N/A' }}</li>
+            <li v-if="connectionStore.deviceInfo?.BoardID">BoardID: {{ connectionStore.deviceInfo.BoardID }}</li>
+            <li v-if="connectionStore.deviceInfo?.appVersion">Version: {{ connectionStore.deviceInfo.appVersion }}</li>
+          </ul>
+          <p v-else>{{ connectionStore.status }}</p>
+        </div>
       </div>
       <nav class="sidebar-nav">
         <router-link to="/" class="nav-item">Connect</router-link>
@@ -26,12 +35,17 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { RouterLink, RouterView } from 'vue-router';
+import { useConnectionStore } from './store/connection';
 
 export default defineComponent({
   name: 'App',
   components: {
     RouterLink,
     RouterView,
+  },
+  setup() {
+    const connectionStore = useConnectionStore();
+    return { connectionStore };
   },
 });
 </script>
@@ -59,10 +73,29 @@ export default defineComponent({
 
 .sidebar-header {
   margin-bottom: 20px;
-  h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: v.$primary-color;
+  text-align: left;
+  .logo {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+  }
+  .status {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: v.$accent-color;
+    ul {
+      list-style-type:disc;
+      padding-left: 10px;
+      margin: 0;
+      li {
+        margin: 0;
+        line-height: 1.2;
+      }
+    }
+    p {
+      margin: 0;
+      line-height: 1.2;
+    }
   }
 }
 

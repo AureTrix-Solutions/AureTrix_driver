@@ -323,7 +323,7 @@ export default defineComponent({
     margin-bottom: 5px; // Further reduced margin
     display: flex;
     width: fit-content;
-    gap: 10px;
+    gap: 10px;;
     align-items: center;
     label {
       margin-right: 5px;
@@ -361,14 +361,15 @@ export default defineComponent({
     position: absolute;
     padding: 4px; // Increased padding
     border: 2px solid rgba(255, 255, 255, 0.3); // Thicker border
-    border-radius: v.$border-radius * 2; // Enhanced rounding
+    border-radius: v.$border-radius * 1; // Enhanced rounding
     background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%); // Gradient
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 -2px 4px rgba(255, 255, 255, 0.2); // Beveled effect
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .2), inset 0 -2px 4px rgba(255, 255, 255, 0.2); // Beveled effect
     color: v.$text-color;
     cursor: pointer;
     transition: all 0.2s ease;
     box-sizing: 'border-box'; // Include border and padding
     user-select: text; // Ensure selectability
+    text-align: none;
     &:focus {
       outline: 2px solid v.$accent-color; // Visual feedback
     }
@@ -387,7 +388,7 @@ export default defineComponent({
     padding-top: 5px; // Reduced padding
     display: flex;
     flex-direction: column;
-    width: fit-content;
+    width: 700px;
     gap: 10px;
     flex: 0 0 auto; // Prevent stretching
     label {

@@ -145,6 +145,7 @@ export default defineComponent({
   }
   .key-preview {
     position: absolute;
+    border-radius: v.$border-radius * 1;
     background-color: #444; // Simple gray box for preview
     box-sizing: border-box; // Include padding
   }

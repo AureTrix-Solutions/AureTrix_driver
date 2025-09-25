@@ -1,4 +1,5 @@
-const mmToPx = (mm: number) => Math.round(mm * 4); // Increased to 4px/mm for larger keys
+const mmToPx = (mm: number) => Math.round(mm * 4); // Increased to 4px/mm for
+// larger keys
 
 export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[]) => {
   let rows = 0;

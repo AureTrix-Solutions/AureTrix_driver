@@ -55,7 +55,7 @@ import { keyMap } from '@utils/keyMap';
 import { categories, categorizedKeys } from '@utils/keyCategories';
 import { IDefKeyInfo } from '../types/types';
 import { getLayoutConfig } from '@utils/layoutConfigs';
-import { mmToPx } from '@utils/mmToPx'; // Import mmToPx
+const mmToPx = (mm: number) => Math.round(mm * 4); // Increased to 4px/mm for;
 
 export default defineComponent({
   name: 'KeyMapping',
@@ -95,7 +95,7 @@ export default defineComponent({
         'margin': '0 auto', // Center the grid
       };
     });
-
+    
     const getKeyStyle = (rowIdx: number, colIdx: number) => {
       if (!baseLayout.value) {
         //console.warn('baseLayout.value is undefined in getKeyStyle');
@@ -110,6 +110,7 @@ export default defineComponent({
       }
       const [left, top, width, height] = keyPositions[rowIdx][colIdx];
       const topGapPx = gaps[rowIdx] || 0;
+      
       //console.log(`Rendered style for row ${rowIdx}, col ${colIdx}:`, { left, top, width, height });
       return {
         position: 'absolute',
@@ -126,6 +127,7 @@ export default defineComponent({
     // Fetch layer-specific layout with non-overlapping batched requests
     async function fetchLayerLayout(layerIndex: number) {
       try {
+        
         const newBaseLayout = await KeyboardService.defKey();
         if (!baseLayout.value) {
           baseLayout.value = newBaseLayout;

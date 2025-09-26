@@ -3,6 +3,15 @@
     <h2 class="title">Macro Editor</h2>
     <div class="controls">
       <button @click="startNewMacro" class="action-btn">Record Macro</button>
+      <label for="layout-type" class="control-label">Layout:</label>
+      <select v-model="layoutType" id="layout-type" class="control-select">
+        <option value="default">Default Layout</option>
+        <option value="mapped">Mapped Layout</option>
+      </select>
+      <label for="layer-select" class="control-label">Layer:</label>
+      <select v-model="selectedLayer" id="layer-select" class="control-select" :disabled="layoutType !== 'mapped'">
+        <option v-for="layer in layers" :key="layer" :value="layer">{{ `Fn${layer + 1}` }}</option>
+      </select>
       <label for="macro-name" class="control-label">Macro Name:</label>
       <input
         type="text"
@@ -32,8 +41,8 @@
             :key="`k-${rIdx}-${cIdx}`"
             class="key-btn"
             :style="getKeyStyle(rIdx, cIdx)"
-            :class="{ pressed: isKeyPressed(keyInfo.keyValue) }"
-            @click="toggleKey(keyInfo.keyValue)"
+            :class="{ pressed: isKeyPressed(`${keyInfo.location.row}_${keyInfo.location.col}`) }"
+            @click="toggleKey(keyInfo)"
           >
             {{ keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
           </div>
@@ -74,26 +83,31 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
+import { defineComponent, ref, computed, onMounted, watch } from 'vue';
 import { keyMap } from '@utils/keyMap';
 import { getLayoutConfig } from '@utils/layoutConfigs';
 import type { IDefKeyInfo } from '../types/types';
 import KeyboardService from '@services/KeyboardService';
+import { useConnectionStore } from '../store/connection';
 
 export default defineComponent({
   name: 'MacroRecording',
   setup() {
+    const connectionStore = useConnectionStore();
     const selectedMacro = ref<string | null>(null);
     const macroName = ref<string>('');
     const layout = ref<IDefKeyInfo[][]>([]);
     const baseLayout = ref<IDefKeyInfo[][] | null>(null);
     const loaded = ref(false);
-    const currentSequence = ref<{ key: number; action: 'down' | 'up'; delay: number }[]>([]);
-    const pressedKeys = ref<Set<number>>(new Set());
+    const currentSequence = ref<{ key: string; keyValue: number; action: 'down' | 'up'; delay: number }[]>([]);
+    const pressedKeys = ref<Set<string>>(new Set());
     const notification = ref<{ message: string; isError: boolean } | null>(null);
-    const macroList = ref<{ id: number; name: string; date: string; length: number; step: { id: number; keyValue: number; status: number; delay: number }[] }[]>([]);
+    const macroList = ref<{ id: number; name: string; date: string; length: number; step: { id: number; keyValue: string; displayKeyValue: number; status: number; delay: number }[] }[]>([]);
     const isRecording = ref(false);
     const macroNameInput = ref<HTMLInputElement | null>(null);
+    const layoutType = ref<'default' | 'mapped'>('default');
+    const selectedLayer = ref(0);
+    const layers = [0, 1, 2, 3]; // Fn1-Fn4
 
     const loadMacroList = () => {
       try {
@@ -130,6 +144,7 @@ export default defineComponent({
       if (macro) {
         currentSequence.value = macro.step.map((step, index) => ({
           key: step.keyValue,
+          keyValue: step.displayKeyValue,
           action: step.status === 1 ? 'down' : 'up',
           delay: index === 0 ? 0 : step.delay,
         }));
@@ -192,13 +207,14 @@ export default defineComponent({
           step: currentSequence.value.map((event, index) => ({
             id: index + 1,
             keyValue: event.key,
+            displayKeyValue: event.keyValue,
             status: event.action === 'down' ? 1 : 0,
             delay: index === 0 ? 0 : event.delay,
           })),
         };
         loadMacroList();
         if (selectedMacro.value !== 'new' && macroList.value.some(m => m.id === id)) {
-          // Update existing macro
+          // Updateabyte existing macro
           macroList.value = macroList.value.map(m => (m.id === id ? newMacro : m));
           console.log('Updated existing macro:', newMacro);
         } else {
@@ -253,25 +269,136 @@ export default defineComponent({
       isRecording.value = false;
     };
 
-    const toggleKey = (keyValue: number) => {
-      console.log('toggleKey called with keyValue:', keyValue);
+    async function fetchLayerLayout(layerIndex: number) {
+      try {
+        let layoutData: IDefKeyInfo[][] = [];
+        if (layoutType.value === 'default') {
+          layoutData = await KeyboardService.defKey();
+          console.log('Fetched default layout:', layoutData);
+        } else {
+          if (!connectionStore.isConnected) {
+            console.warn('No device connected, falling back to default layout');
+            notification.value = { message: 'No device connected, using default layout', isError: true };
+            layoutType.value = 'default';
+            layoutData = await KeyboardService.defKey();
+            console.log('Fetched default layout (no device connected):', layoutData);
+          } else {
+            const newBaseLayout = await KeyboardService.defKey();
+            if (!baseLayout.value) {
+              baseLayout.value = newBaseLayout;
+              console.log('Initialized baseLayout:', newBaseLayout);
+            }
+            const totalKeys = newBaseLayout.flat().length;
+            console.log(`Base layout key count: ${totalKeys} (template for layer ${layerIndex + 1})`, newBaseLayout);
+
+            await KeyboardService.reloadParameters();
+            console.log(`Reloaded parameters for layer ${layerIndex + 1}`);
+
+            const batchSize = 10;
+            const requests = [];
+            for (let i = 0; i < newBaseLayout.flat().length; i += batchSize) {
+              const startIdx = i;
+              const endIdx = Math.min(i + batchSize - 1, newBaseLayout.flat().length - 1);
+              const batch = newBaseLayout.flat().slice(startIdx, endIdx + 1).map(k => ({ key: k.keyValue, layout: layerIndex }));
+              requests.push(batch);
+            }
+            const allLayerData = [];
+            for (const request of requests) {
+              try {
+                const layerData = await KeyboardService.getLayoutKeyInfo(request);
+                console.log(`Raw fetched batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, layerData);
+                allLayerData.push(...layerData);
+              } catch (error) {
+                console.error(`Failed to fetch batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, error);
+              }
+            }
+            console.log(`Raw allLayerData for layer ${layerIndex + 1} before processing:`, allLayerData);
+
+            const uniqueLayerData = new Map<number, { key: number; value: number }>();
+            if (Array.isArray(allLayerData)) {
+              allLayerData.forEach(item => {
+                if (item && typeof item === 'object' && 'key' in item && 'value' in item) {
+                  uniqueLayerData.set(item.key, { key: item.key, value: item.value });
+                  console.log(`Unique mapping for key ${item.key}: value ${item.value} in layer ${layerIndex + 1}`);
+                }
+              });
+            }
+
+            if (uniqueLayerData.size === 0) {
+              console.warn('No valid layer data received, falling back to default layout');
+              notification.value = { message: `No mapped layout data for Fn${layerIndex + 1}, using default layout`, isError: true };
+              layoutType.value = 'default';
+              layoutData = await KeyboardService.defKey();
+              console.log('Fetched default layout (no valid layer data):', layoutData);
+            } else {
+              layoutData = newBaseLayout.map(row =>
+                row.map(baseKey => {
+                  const layerKey = uniqueLayerData.get(baseKey.keyValue);
+                  let keyValue = baseKey.keyValue;
+                  if (layerKey) {
+                    keyValue = layerKey.value;
+                    if (layerKey.value === 0 && layerIndex === 0) {
+                      console.log(`Base layer ${layerIndex + 1}: Using default ${keyValue} for unmapped key ${baseKey.keyValue}`);
+                    } else if (layerKey.value === 0 || layerKey.value === 1) {
+                      console.log(`Layer ${layerIndex + 1}: Preserving unmapped value ${keyValue} for key ${baseKey.keyValue}`);
+                    } else {
+                      console.log(`Layer ${layerIndex + 1}: Applied remapped value ${keyValue} for key ${baseKey.keyValue}`);
+                    }
+                  } else {
+                    console.warn(`No unique mapping found for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using base value: ${keyValue}`);
+                  }
+                  if (keyValue === 1) {
+                    keyValue = 0;
+                    console.log(`Visual remap: Changed key ${baseKey.keyValue} from value 1 to 0 in layer ${layerIndex + 1}`);
+                  }
+                  if (keyValue < 0 || keyValue > 65535) {
+                    console.warn(`Invalid value ${keyValue} for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using default: ${baseKey.keyValue}`);
+                    keyValue = baseKey.keyValue;
+                  }
+                  return { keyValue, location: baseKey.location };
+                })
+              );
+              console.log(`Fetched and transformed mapped layout for layer ${layerIndex + 1}:`, layoutData);
+            }
+          }
+        }
+        layout.value = layoutData;
+        baseLayout.value = layoutData;
+        loaded.value = true;
+        console.log('Layout fetched successfully:', { layoutType: layoutType.value, layer: layerIndex, layoutData });
+      } catch (error) {
+        console.error(`Failed to fetch layout for layer ${layerIndex + 1}:`, error);
+        notification.value = { message: `Failed to fetch layout for Fn${layerIndex + 1}: ${(error as Error).message}, using default layout`, isError: true };
+        layoutType.value = 'default';
+        layoutData = await KeyboardService.defKey();
+        layout.value = layoutData;
+        baseLayout.value = layoutData;
+        loaded.value = true;
+        console.log('Fallback to default layout:', layoutData);
+      }
+    }
+
+    const toggleKey = (keyInfo: IDefKeyInfo) => {
+      console.log('toggleKey called with keyInfo:', keyInfo);
       if (currentSequence.value.length >= 64) {
         console.warn('Cannot add action: Macro has reached 64-action limit');
         notification.value = { message: 'Cannot add action: Macro has reached 64-action limit', isError: true };
         return;
       }
-      if (pressedKeys.value.has(keyValue)) {
-        currentSequence.value.push({ key: keyValue, action: 'up', delay: 50 });
-        pressedKeys.value.delete(keyValue);
+      const keyId = `${keyInfo.location.row}_${keyInfo.location.col}`;
+      if (pressedKeys.value.has(keyId)) {
+        currentSequence.value.push({ key: keyId, keyValue: keyInfo.keyValue, action: 'up', delay: 50 });
+        pressedKeys.value.delete(keyId);
       } else {
-        currentSequence.value.push({ key: keyValue, action: 'down', delay: 50 });
-        pressedKeys.value.add(keyValue);
+        currentSequence.value.push({ key: keyId, keyValue: keyInfo.keyValue, action: 'down', delay: 50 });
+        pressedKeys.value.add(keyId);
       }
       console.log('Current sequence after toggle:', currentSequence.value);
     };
 
-    const formatEvent = (event: { key: number; action: 'down' | 'up'; delay: number }) => {
-      return `${keyMap[event.key] || `Key ${event.key}`} ${event.action} (${event.delay}ms)`;
+    const formatEvent = (event: { key: string; keyValue: number; action: 'down' | 'up'; delay: number }) => {
+      const displayKey = keyMap[event.keyValue] || `Key ${event.keyValue}`;
+      return `${displayKey} ${event.action} (${event.delay}ms)`;
     };
 
     const validateDelay = (index: number) => {
@@ -292,22 +419,15 @@ export default defineComponent({
       console.log('Current sequence after removal:', currentSequence.value);
     };
 
-    const fetchLayout = async () => {
-      try {
-        const layoutData = await KeyboardService.defKey();
-        layout.value = layoutData;
-        baseLayout.value = layoutData;
-        loaded.value = true;
-        console.log('Layout fetched:', layoutData);
-      } catch (error) {
-        console.error('Failed to fetch layout:', error);
-        notification.value = { message: `Failed to fetch layout: ${(error as Error).message}`, isError: true };
-      }
-    };
+    // Watch layoutType and selectedLayer to reload layout without resetting recording
+    watch([layoutType, selectedLayer], () => {
+      console.log('Layout or layer changed:', { layoutType: layoutType.value, selectedLayer: selectedLayer.value });
+      fetchLayerLayout(selectedLayer.value);
+    });
 
     onMounted(() => {
       loadMacroList();
-      fetchLayout();
+      fetchLayerLayout(selectedLayer.value);
     });
 
     return {
@@ -361,7 +481,7 @@ export default defineComponent({
           boxSizing: 'border-box',
         };
       },
-      isKeyPressed: (keyValue: number) => pressedKeys.value.has(keyValue),
+      isKeyPressed: (key: string) => pressedKeys.value.has(key),
       toggleKey,
       formatEvent,
       validateDelay,
@@ -374,6 +494,9 @@ export default defineComponent({
       startNewMacro,
       isRecording,
       macroNameInput,
+      layoutType,
+      selectedLayer,
+      layers,
     };
   },
 });

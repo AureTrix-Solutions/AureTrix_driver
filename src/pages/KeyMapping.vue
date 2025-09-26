@@ -1,6 +1,5 @@
 <template>
   <div class="key-mapping-page">
-    <h2>Key Mapping</h2>
     <div class="controls">
       <label for="layer-select">Layer: </label>
       <select v-model="selectedLayer" id="layer-select">

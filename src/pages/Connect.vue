@@ -1,6 +1,5 @@
 <template>
   <div class="connect-page">
-    <h2>Connect</h2>
     <button @click="connectDevice" :disabled="connectionStore.isConnecting || connectionStore.isConnected" class="connect-btn">
       {{ connectionStore.isConnecting ? 'Connecting...' : connectionStore.isConnected ? 'Connected' : 'Connect Keyboard' }}
     </button>
@@ -37,23 +36,24 @@ export default defineComponent({
 .connect-page {
   text-align: right;
   width: 200px;
-  padding-top: 255px;
+  padding-top: 275px;
   color: v.$text-color;
   h2 {
     margin-bottom: 20px;
     color: v.$primary-color;
   }
   .connect-btn {
-    padding: 10px 20px;
-    width: 300px;
-    font-size: 1rem;
+    padding: 8px 20px;
+    width: 250px;
+    font-size: 1.2rem;
     background-color: v.$primary-color;
     color: v.$background-dark;
     border: none;
     border-radius: v.$border-radius;
     cursor: pointer;
     &:disabled {
-      background-color: color.adjust(v.$primary-color, $lightness: -20%);
+      background-color: color.adjust(v.$background-dark, $lightness: 10%);
+      font-size:0%;
       cursor: not-allowed;
     }
   }

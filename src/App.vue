@@ -55,16 +55,16 @@ export default defineComponent({
 @use 'styles/variables' as v;
 
 .app-container {
-  display: flex;
+  display:flex;
   height: 100vh;
-  background-color: v.$background-dark;
+  background-color: color.adjust(v.$background-dark, $lightness: 10%);
   color: v.$text-color;
   font-family: Arial, sans-serif;
 }
 
 .sidebar {
   width: 250px;
-  background-color: color.adjust(v.$background-dark, $lightness: -5%);
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
   padding: 20px;
   display: flex;
   flex-direction: column;

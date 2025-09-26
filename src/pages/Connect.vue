@@ -52,7 +52,7 @@ export default defineComponent({
     border-radius: v.$border-radius;
     cursor: pointer;
     &:disabled {
-      background-color: color.adjust(v.$background-dark, $lightness: 10%);
+      background-color: transparent;
       font-size:0%;
       cursor: not-allowed;
     }

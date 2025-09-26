@@ -17,7 +17,7 @@
       <nav class="sidebar-nav">
         <router-link to="/" class="nav-item">Connect</router-link>
         <router-link to="/key-mapping" class="nav-item">Key Mapping</router-link>
-        <router-link to="/macros" class="nav-item">Macros</router-link>
+        <router-link to="/macros" class="nav-item">Macro Recording</router-link>
         <router-link to="/profiles" class="nav-item">Profiles</router-link>
         <router-link to="/lighting" class="nav-item">Lighting</router-link>
         <router-link to="/advanced-config" class="nav-item">Advanced Config</router-link>
@@ -57,7 +57,12 @@ export default defineComponent({
 .app-container {
   display:flex;
   height: 100vh;
-  background-color: color.adjust(v.$background-dark, $lightness: 10%);
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  //background-image: url("@/assets/logo.png");
+  background-size: 1000px 1000px;
+  background-position: center center;
+  //background-position-y: 500px;
+  background-repeat:no-repeat;
   color: v.$text-color;
   font-family: Arial, sans-serif;
 }

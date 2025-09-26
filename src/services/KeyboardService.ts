@@ -4,9 +4,24 @@ import { IDefKeyInfo } from '../types/types';
 import { useConnectionStore } from '../store/connection';
 
 interface AxisConfig {
-  key: number; // Key index
-  actuationPoint: number; // Actuation point (0–100%)
-  sensitivity: number; // Sensitivity multiplier (e.g., 0.5–2.0)
+  key: number;
+  actuationPoint: number;
+  sensitivity: number;
+}
+
+interface IMacroMode {
+  key: number;
+  index: number;
+  len: number;
+  mode: number;
+  num: number;
+  delay: number;
+}
+
+interface MacroType {
+  keyCode: number;
+  timeDifference: number;
+  status: number; // 1 for press, 0 for release
 }
 
 class KeyboardService {
@@ -18,7 +33,6 @@ class KeyboardService {
       usage: 1,
       usagePage: 65440,
     });
-    // Set up plug/unplug event listeners
     if ('hid' in navigator) {
       navigator.hid.addEventListener('connect', this.handleConnect.bind(this));
       navigator.hid.addEventListener('disconnect', this.handleDisconnect.bind(this));
@@ -274,6 +288,38 @@ class KeyboardService {
     } catch (error) {
       console.error('Failed to set axis configurations:', error);
       throw new Error(`Failed to set axis configurations: ${(error as Error).message}`);
+    }
+  }
+
+  async getMacro(key: number): Promise<IMacroMode> {
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.getMacro(key);
+      console.log(`Fetched macro settings for key ${key}:`, result);
+      return result;
+    } catch (error) {
+      console.error(`Failed to fetch macro for key ${key}:`, error);
+      throw new Error(`Failed to fetch macro: ${(error as Error).message}`);
+    }
+  }
+
+  async setMacro(param: IMacroMode, macros: MacroType[]): Promise<void> {
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      await this.keyboard.setMacro(param, macros);
+      console.log(`Set macro for key ${param.key}:`, { param, macros });
+      await this.saveParameters();
+      console.log('Parameters saved after macro configuration');
+      await this.reloadParameters();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Parameters reloaded and synced after macro configuration');
+    } catch (error) {
+      console.error(`Failed to set macro for key ${param.key}:`, error);
+      throw new Error(`Failed to set macro: ${(error as Error).message}`);
     }
   }
 }

@@ -41,7 +41,7 @@
             :key="`k-${rIdx}-${cIdx}`"
             class="key-btn"
             :style="getKeyStyle(rIdx, cIdx)"
-            :class="{ pressed: isKeyPressed(`${keyInfo.location.row}_${keyInfo.location.col}`) }"
+            :class="{ pressed: isKeyPressed(keyInfo.keyValue) }"
             @click="toggleKey(keyInfo)"
           >
             {{ keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
@@ -99,10 +99,10 @@ export default defineComponent({
     const layout = ref<IDefKeyInfo[][]>([]);
     const baseLayout = ref<IDefKeyInfo[][] | null>(null);
     const loaded = ref(false);
-    const currentSequence = ref<{ key: string; keyValue: number; action: 'down' | 'up'; delay: number }[]>([]);
-    const pressedKeys = ref<Set<string>>(new Set());
+    const currentSequence = ref<{ keyValue: number; action: 'down' | 'up'; delay: number }[]>([]);
+    const pressedKeys = ref<Set<number>>(new Set());
     const notification = ref<{ message: string; isError: boolean } | null>(null);
-    const macroList = ref<{ id: number; name: string; date: string; length: number; step: { id: number; keyValue: string; displayKeyValue: number; status: number; delay: number }[] }[]>([]);
+    const macroList = ref<{ id: number; name: string; date: string; length: number; step: { id: number; keyValue: number; status: number; delay: number }[] }[]>([]);
     const isRecording = ref(false);
     const macroNameInput = ref<HTMLInputElement | null>(null);
     const layoutType = ref<'default' | 'mapped'>('default');
@@ -143,8 +143,7 @@ export default defineComponent({
       const macro = macroList.value.find(m => m.id === parseInt(id));
       if (macro) {
         currentSequence.value = macro.step.map((step, index) => ({
-          key: step.keyValue,
-          keyValue: step.displayKeyValue,
+          keyValue: step.keyValue,
           action: step.status === 1 ? 'down' : 'up',
           delay: index === 0 ? 0 : step.delay,
         }));
@@ -155,9 +154,9 @@ export default defineComponent({
         pressedKeys.value.clear();
         currentSequence.value.forEach(event => {
           if (event.action === 'down') {
-            pressedKeys.value.add(event.key);
+            pressedKeys.value.add(event.keyValue);
           } else {
-            pressedKeys.value.delete(event.key);
+            pressedKeys.value.delete(event.keyValue);
           }
         });
         console.log('Pressed keys after load:', Array.from(pressedKeys.value));
@@ -206,15 +205,14 @@ export default defineComponent({
           length: currentSequence.value.length,
           step: currentSequence.value.map((event, index) => ({
             id: index + 1,
-            keyValue: event.key,
-            displayKeyValue: event.keyValue,
+            keyValue: event.keyValue,
             status: event.action === 'down' ? 1 : 0,
             delay: index === 0 ? 0 : event.delay,
           })),
         };
         loadMacroList();
         if (selectedMacro.value !== 'new' && macroList.value.some(m => m.id === id)) {
-          // Updateabyte existing macro
+          // Update existing macro
           macroList.value = macroList.value.map(m => (m.id === id ? newMacro : m));
           console.log('Updated existing macro:', newMacro);
         } else {
@@ -378,6 +376,19 @@ export default defineComponent({
       }
     }
 
+    const isKeyPressed = (keyValue: number) => {
+      // Check if the keyValue is in a net "down" state
+      const events = currentSequence.value.filter(event => event.keyValue === keyValue);
+      if (events.length === 0) return false;
+      // Count down and up events
+      let downCount = 0;
+      events.forEach(event => {
+        if (event.action === 'down') downCount++;
+        else if (event.action === 'up') downCount--;
+      });
+      return downCount > 0;
+    };
+
     const toggleKey = (keyInfo: IDefKeyInfo) => {
       console.log('toggleKey called with keyInfo:', keyInfo);
       if (currentSequence.value.length >= 64) {
@@ -385,18 +396,26 @@ export default defineComponent({
         notification.value = { message: 'Cannot add action: Macro has reached 64-action limit', isError: true };
         return;
       }
-      const keyId = `${keyInfo.location.row}_${keyInfo.location.col}`;
-      if (pressedKeys.value.has(keyId)) {
-        currentSequence.value.push({ key: keyId, keyValue: keyInfo.keyValue, action: 'up', delay: 50 });
-        pressedKeys.value.delete(keyId);
+      const keyValue = keyInfo.keyValue;
+      // Check the net state of the keyValue
+      const events = currentSequence.value.filter(event => event.keyValue === keyValue);
+      let downCount = 0;
+      events.forEach(event => {
+        if (event.action === 'down') downCount++;
+        else if (event.action === 'up') downCount--;
+      });
+      const isCurrentlyDown = downCount > 0;
+      if (isCurrentlyDown) {
+        currentSequence.value.push({ keyValue, action: 'up', delay: 50 });
+        pressedKeys.value.delete(keyValue);
       } else {
-        currentSequence.value.push({ key: keyId, keyValue: keyInfo.keyValue, action: 'down', delay: 50 });
-        pressedKeys.value.add(keyId);
+        currentSequence.value.push({ keyValue, action: 'down', delay: 50 });
+        pressedKeys.value.add(keyValue);
       }
       console.log('Current sequence after toggle:', currentSequence.value);
     };
 
-    const formatEvent = (event: { key: string; keyValue: number; action: 'down' | 'up'; delay: number }) => {
+    const formatEvent = (event: { keyValue: number; action: 'down' | 'up'; delay: number }) => {
       const displayKey = keyMap[event.keyValue] || `Key ${event.keyValue}`;
       return `${displayKey} ${event.action} (${event.delay}ms)`;
     };
@@ -410,13 +429,21 @@ export default defineComponent({
     const removeEventFromSequence = (index: number) => {
       console.log('removeEventFromSequence called with index:', index);
       const event = currentSequence.value[index];
-      if (event.action === 'down') {
-        pressedKeys.value.delete(event.key);
-      } else {
-        pressedKeys.value.add(event.key);
-      }
+      // Update pressedKeys based on the net state after removal
       currentSequence.value.splice(index, 1);
+      const events = currentSequence.value.filter(e => e.keyValue === event.keyValue);
+      let downCount = 0;
+      events.forEach(e => {
+        if (e.action === 'down') downCount++;
+        else if (e.action === 'up') downCount--;
+      });
+      if (downCount > 0) {
+        pressedKeys.value.add(event.keyValue);
+      } else {
+        pressedKeys.value.delete(event.keyValue);
+      }
       console.log('Current sequence after removal:', currentSequence.value);
+      console.log('Pressed keys after removal:', Array.from(pressedKeys.value));
     };
 
     // Watch layoutType and selectedLayer to reload layout without resetting recording
@@ -481,7 +508,7 @@ export default defineComponent({
           boxSizing: 'border-box',
         };
       },
-      isKeyPressed: (key: string) => pressedKeys.value.has(key),
+      isKeyPressed,
       toggleKey,
       formatEvent,
       validateDelay,

@@ -1,5 +1,6 @@
 <template>
   <div class="key-mapping-page">
+    <h2 class="title">Key Mapping</h2>
     <div class="controls">
       <label for="layer-select">Layer: </label>
       <select v-model="selectedLayer" id="layer-select">
@@ -309,94 +310,100 @@ export default defineComponent({
 });
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 @use 'sass:color';
 @use '@styles/variables' as v;
 
 .key-mapping-page {
   padding: 20px;
   color: v.$text-color;
-  h2 {
+
+  .title {
     color: v.$primary-color;
-    margin-bottom: 10px; // Reduced margin
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+    font-weight: 700;
   }
+
   .controls {
-    margin-bottom: 5px; // Further reduced margin
     display: flex;
-    width: fit-content;
-    gap: 10px;;
-    align-items: center;
-    label {
-      margin-right: 5px;
-      color: v.$text-color;
-    }
-    select {
-      padding: 8px;
-      border-radius: v.$border-radius;
-      background-color: v.$background-dark;
-      color: v.$text-color;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      font-size: 1rem;
-    }
-  }
-  .mapping-container {
-    display: flex;
-    flex-direction: column;
-    gap: 5px; // Reduced gap to 5px
-    max-height: calc(100vh - 150px); // Limit height to viewport minus header/controls
-    overflow-y: auto; // Enable scrolling only if needed
-  }
-  .key-grid {
-    display: block;
-    position: relative;
-    width: fit-content;
-    margin: 0 auto; // Center the grid
-    min-height: 500px; // Reduced further to save space
-    max-height: 500px;
-    flex: 0 0 auto; // Prevent stretching
-  }
-  .key-row {
-    display: contents; // Allow positioning of children
-  }
-  .key-btn {
-    position: absolute;
-    padding: 4px; // Increased padding
-    border: 2px solid rgba(255, 255, 255, 0.3); // Thicker border
-    border-radius: v.$border-radius * 1; // Enhanced rounding
-    background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%); // Gradient
-    box-shadow: 0 2px 4px rgba(0, 0, 0, .2), inset 0 -2px 4px rgba(255, 255, 255, 0.2); // Beveled effect
-    color: v.$text-color;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-sizing: 'border-box'; // Include border and padding
-    user-select: text; // Ensure selectability
-    text-align: none;
-    &:focus {
-      outline: 2px solid v.$accent-color; // Visual feedback
-    }
-    &.drop-target {
-      outline: 2px dashed v.$accent-color;
-      outline-offset: -2px;
-      background-color: color.adjust(v.$background-dark, $lightness: 5%, $alpha: 0.7); // Highlight
-    }
-    &:hover {
-      background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 5%) 70%, color.adjust(v.$background-dark, $lightness: 15%) 100%);
-      box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(255, 255, 255, 0.3);
-    }
-  }
-  .key-config {
-    margin-top: 0; // Removed margin
-    padding-top: 5px; // Reduced padding
-    display: flex;
-    flex-direction: column;
-    width: 700px;
     gap: 10px;
-    flex: 0 0 auto; // Prevent stretching
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+
     label {
       margin-right: 10px;
       color: v.$text-color;
       font-size: 1rem;
     }
+
+    select {
+      padding: 8px;
+      border-radius: v.$border-radius;
+      background-color: v.$background-dark;
+      color: v.$text-color;
+      border: 1px solid rgba(v.$text-color, 0.2);
+      font-size: 1rem;
+    }
+  }
+
+  .mapping-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .key-grid {
+    display: block;
+    position: relative;
+    width: fit-content;
+    margin: 0 auto;
+    min-height: 300px;
+    max-height: 500px;
+    flex-shrink: 0;
+  }
+
+  .key-row {
+    display: contents;
+  }
+
+  .key-btn {
+    position: absolute;
+    padding: 4px;
+    border: 2px solid rgba(v.$text-color, 0.3);
+    border-radius: v.$border-radius;
+    background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
+    color: v.$text-color;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    user-select: none;
+    text-align: center;
+
+    &.drop-target {
+      //outline: 1px solid v.$text-color;
+      outline-offset: -2px;
+      background-color: color.adjust(v.$background-dark, $lightness: 5%, $alpha: 0.7);
+    }
+  }
+
+  .key-config {
+    margin-top: 0;
+    padding-top: 5px;
+    display: flex;
+    flex-direction: column;
+    width: 700px;
+    gap: 10px;
+    flex: 0 0 auto;
+
+    label {
+      margin-right: 10px;
+      color: v.$text-color;
+      font-size: 1rem;
+    }
+
     select {
       padding: 8px;
       margin-left: 1px;
@@ -405,24 +412,27 @@ export default defineComponent({
       color: v.$text-color;
       border: 1px solid rgba(255, 255, 255, 0.2);
       font-size: 1rem;
-      width: 200px; // Ensure the selector is wide enough
+      width: 200px;
     }
+
     .virtual-keys-window {
-      padding: 10px; // Reduced padding
+      padding: 10px;
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: v.$border-radius;
       background-color: color.adjust(v.$background-dark, $lightness: -2%);
+
       .virtual-keys {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); // Increased key size
-        gap: 3px; // Reduced gap
-        padding: 8px; // Reduced padding
-        max-height: 500px; // Reduced max-height
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 3px;
+        padding: 8px;
+        max-height: 500px;
         max-width: 1000px;
         overflow-y: auto;
       }
+
       .virtual-key {
-        padding: 8px; // Reduced padding
+        padding: 8px;
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: v.$border-radius;
         background-color: v.$background-dark;
@@ -432,10 +442,12 @@ export default defineComponent({
         width: 50px;
         cursor: move;
         transition: all 0.2s ease;
+
         &:hover {
           background-color: color.adjust(v.$background-dark, $lightness: 8%);
           border-color: v.$accent-color;
         }
+
         &.dragging {
           opacity: 0.6;
           transform: scale(0.98);

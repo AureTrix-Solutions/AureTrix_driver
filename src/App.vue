@@ -23,6 +23,7 @@
         <router-link to="/advanced-config" class="nav-item">Advanced Config</router-link>
         <router-link to="/layout-preview" class="nav-item">Layout Preview</router-link>
       </nav>
+      <p class="copyright">Copyright©2025 BlastHappy82</p> <!-- Customize [YourAlias] as desired -->
     </aside>
 
     <!-- Main Content Area -->
@@ -55,14 +56,9 @@ export default defineComponent({
 @use 'styles/variables' as v;
 
 .app-container {
-  display:flex;
+  display: flex;
   height: 100vh;
   background-color: color.adjust(v.$background-dark, $lightness: -100%);
-  //background-image: url("@/assets/logo.png");
-  background-size: 1000px 1000px;
-  background-position: center center;
-  //background-position-y: 500px;
-  background-repeat:no-repeat;
   color: v.$text-color;
   font-family: Arial, sans-serif;
 }
@@ -89,7 +85,7 @@ export default defineComponent({
     font-size: 0.9rem;
     color: v.$accent-color;
     ul {
-      list-style-type:disc;
+      list-style-type: disc;
       padding-left: 10px;
       margin: 0;
       li {
@@ -130,5 +126,28 @@ export default defineComponent({
   flex-grow: 1;
   padding: 20px;
   overflow-y: auto;
+}
+
+.copyright {
+  font-size: 0.7rem; /* Small text */
+  color: rgba(v.$text-color, 0.6); /* Subdued color */
+  text-align: center;
+  margin-top: auto; /* Pushes it to the bottom */
+  padding-top: 10px;
+}
+</style>
+
+<style lang="scss">
+/* Global styles to remove white border */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+#app {
+  height: 100%;
+  width: 100%;
 }
 </style>

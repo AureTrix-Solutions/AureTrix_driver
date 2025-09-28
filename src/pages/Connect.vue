@@ -34,9 +34,11 @@ export default defineComponent({
 @use '@styles/variables' as v;
 
 .connect-page {
+  position: relative;
+  padding-top: 324px;
   text-align: right;
-  width: 200px;
-  padding-top: 275px;
+  width: 250px;
+  height: 374px;
   color: v.$text-color;
   h2 {
     margin-bottom: 20px;
@@ -45,7 +47,10 @@ export default defineComponent({
   .connect-btn {
     padding: 8px 20px;
     width: 250px;
-    font-size: 1.2rem;
+    height: 38px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: left;
     background-color: v.$primary-color;
     color: v.$background-dark;
     border: none;

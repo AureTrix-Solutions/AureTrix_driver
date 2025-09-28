@@ -3,16 +3,6 @@
     <h2 class="title">Macro Editor</h2>
     <div class="controls">
       <button @click="startNewMacro" class="action-btn">Record Macro</button>
-      <label for="layout-type" class="control-label">Layout:</label>
-      <select v-model="layoutType" id="layout-type" class="control-select">
-        <option value="default">Default Layout</option>
-        <option value="mapped">Mapped Layout</option>
-      </select>
-      <label for="layer-select" class="control-label">Layer:</label>
-      <select v-model="selectedLayer" id="layer-select" class="control-select" :disabled="layoutType !== 'mapped'">
-        <option v-for="layer in layers" :key="layer" :value="layer">{{ `Fn${layer + 1}` }}</option>
-      </select>
-      <label for="macro-name" class="control-label">Macro Name:</label>
       <input
         type="text"
         v-model="macroName"
@@ -22,6 +12,14 @@
         :disabled="!isRecording"
         ref="macroNameInput"
       />
+      <select v-model="layoutType" id="layout-type" class="control-select">
+        <option value="default">Default Layout</option>
+        <option value="mapped">Mapped Layout</option>
+      </select>
+      <select v-model="selectedLayer" id="layer-select" class="control-select" :disabled="layoutType !== 'mapped'">
+        <option v-for="layer in layers" :key="layer" :value="layer">{{ `Fn${layer}` }}</option>
+      </select>
+
       <button @click="saveMacro" class="action-btn" :disabled="!currentSequence.length || !macroName || !isRecording">
         Save Macro
       </button>
@@ -83,11 +81,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch } from 'vue';
-import { keyMap } from '@utils/keyMap';
-import { getLayoutConfig } from '@utils/layoutConfigs';
-import type { IDefKeyInfo } from '../types/types';
+import { defineComponent, ref, watch, onMounted } from 'vue';
 import KeyboardService from '@services/KeyboardService';
+import { keyMap } from '@utils/keyMap';
+import { useMappedKeyboard } from '@utils/MappedKeyboard';
+import type { IDefKeyInfo } from '../types/types';
 import { useConnectionStore } from '../store/connection';
 
 export default defineComponent({
@@ -96,18 +94,19 @@ export default defineComponent({
     const connectionStore = useConnectionStore();
     const selectedMacro = ref<string | null>(null);
     const macroName = ref<string>('');
-    const layout = ref<IDefKeyInfo[][]>([]);
-    const baseLayout = ref<IDefKeyInfo[][] | null>(null);
-    const loaded = ref(false);
-    const currentSequence = ref<{ keyValue: number; action: 'down' | 'up'; delay: number }[]>([]);
-    const pressedKeys = ref<Set<number>>(new Set());
-    const notification = ref<{ message: string; isError: boolean } | null>(null);
-    const macroList = ref<{ id: number; name: string; date: string; length: number; step: { id: number; keyValue: number; status: number; delay: number }[] }[]>([]);
-    const isRecording = ref(false);
-    const macroNameInput = ref<HTMLInputElement | null>(null);
     const layoutType = ref<'default' | 'mapped'>('default');
     const selectedLayer = ref(0);
     const layers = [0, 1, 2, 3]; // Fn1-Fn4
+    const isRecording = ref(false);
+    const currentSequence = ref<{ keyValue: number; action: 'down' | 'up'; delay: number }[]>([]);
+    const pressedKeys = ref<Set<number>>(new Set());
+    const notification = ref<{ message: string; isError: boolean } | null>(null);
+    const macroNameInput = ref<HTMLInputElement | null>(null);
+    const macroList = ref<{ id: number; name: string; date: string; length: number; step: { id: number; keyValue: number; status: number; delay: number }[] }[]>([]);
+
+    // Use reactive layerIndex, null for default layout
+    const layerIndex = ref<number | null>(layoutType.value === 'mapped' ? selectedLayer.value : null);
+    const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout } = useMappedKeyboard(layerIndex);
 
     const loadMacroList = () => {
       try {
@@ -150,7 +149,6 @@ export default defineComponent({
         macroName.value = macro.name;
         selectedMacro.value = id;
         notification.value = { message: `Loaded macro ${macro.name}`, isError: false };
-        // Update pressedKeys based on loaded sequence
         pressedKeys.value.clear();
         currentSequence.value.forEach(event => {
           if (event.action === 'down') {
@@ -178,14 +176,12 @@ export default defineComponent({
         return;
       }
 
-      // Check 64-action limit per macro
       if (currentSequence.value.length > 64) {
         console.warn('Macro action limit exceeded:', { currentSequenceLength: currentSequence.value.length });
         notification.value = { message: 'Cannot save: Macro exceeds 64-action limit', isError: true };
         return;
       }
 
-      // Check for duplicate macro name for new macros
       if (selectedMacro.value === 'new') {
         const nameExists = macroList.value.some(m => m.name.toLowerCase() === macroName.value.toLowerCase());
         if (nameExists) {
@@ -212,11 +208,9 @@ export default defineComponent({
         };
         loadMacroList();
         if (selectedMacro.value !== 'new' && macroList.value.some(m => m.id === id)) {
-          // Update existing macro
           macroList.value = macroList.value.map(m => (m.id === id ? newMacro : m));
           console.log('Updated existing macro:', newMacro);
         } else {
-          // Append new macro
           macroList.value = [...macroList.value, newMacro];
           console.log('Appended new macro:', newMacro);
         }
@@ -224,7 +218,6 @@ export default defineComponent({
         localStorage.setItem('MacroList', JSON.stringify(macroList.value));
         selectedMacro.value = id.toString();
         notification.value = { message: `Saved macro ${macroName.value} to local storage`, isError: false };
-        // Reset virtual keyboard and macro name
         currentSequence.value = [];
         pressedKeys.value.clear();
         macroName.value = '';
@@ -267,120 +260,9 @@ export default defineComponent({
       isRecording.value = false;
     };
 
-    async function fetchLayerLayout(layerIndex: number) {
-      try {
-        let layoutData: IDefKeyInfo[][] = [];
-        if (layoutType.value === 'default') {
-          layoutData = await KeyboardService.defKey();
-          console.log('Fetched default layout:', layoutData);
-        } else {
-          if (!connectionStore.isConnected) {
-            console.warn('No device connected, falling back to default layout');
-            notification.value = { message: 'No device connected, using default layout', isError: true };
-            layoutType.value = 'default';
-            layoutData = await KeyboardService.defKey();
-            console.log('Fetched default layout (no device connected):', layoutData);
-          } else {
-            const newBaseLayout = await KeyboardService.defKey();
-            if (!baseLayout.value) {
-              baseLayout.value = newBaseLayout;
-              console.log('Initialized baseLayout:', newBaseLayout);
-            }
-            const totalKeys = newBaseLayout.flat().length;
-            console.log(`Base layout key count: ${totalKeys} (template for layer ${layerIndex + 1})`, newBaseLayout);
-
-            await KeyboardService.reloadParameters();
-            console.log(`Reloaded parameters for layer ${layerIndex + 1}`);
-
-            const batchSize = 10;
-            const requests = [];
-            for (let i = 0; i < newBaseLayout.flat().length; i += batchSize) {
-              const startIdx = i;
-              const endIdx = Math.min(i + batchSize - 1, newBaseLayout.flat().length - 1);
-              const batch = newBaseLayout.flat().slice(startIdx, endIdx + 1).map(k => ({ key: k.keyValue, layout: layerIndex }));
-              requests.push(batch);
-            }
-            const allLayerData = [];
-            for (const request of requests) {
-              try {
-                const layerData = await KeyboardService.getLayoutKeyInfo(request);
-                console.log(`Raw fetched batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, layerData);
-                allLayerData.push(...layerData);
-              } catch (error) {
-                console.error(`Failed to fetch batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex + 1}:`, error);
-              }
-            }
-            console.log(`Raw allLayerData for layer ${layerIndex + 1} before processing:`, allLayerData);
-
-            const uniqueLayerData = new Map<number, { key: number; value: number }>();
-            if (Array.isArray(allLayerData)) {
-              allLayerData.forEach(item => {
-                if (item && typeof item === 'object' && 'key' in item && 'value' in item) {
-                  uniqueLayerData.set(item.key, { key: item.key, value: item.value });
-                  console.log(`Unique mapping for key ${item.key}: value ${item.value} in layer ${layerIndex + 1}`);
-                }
-              });
-            }
-
-            if (uniqueLayerData.size === 0) {
-              console.warn('No valid layer data received, falling back to default layout');
-              notification.value = { message: `No mapped layout data for Fn${layerIndex + 1}, using default layout`, isError: true };
-              layoutType.value = 'default';
-              layoutData = await KeyboardService.defKey();
-              console.log('Fetched default layout (no valid layer data):', layoutData);
-            } else {
-              layoutData = newBaseLayout.map(row =>
-                row.map(baseKey => {
-                  const layerKey = uniqueLayerData.get(baseKey.keyValue);
-                  let keyValue = baseKey.keyValue;
-                  if (layerKey) {
-                    keyValue = layerKey.value;
-                    if (layerKey.value === 0 && layerIndex === 0) {
-                      console.log(`Base layer ${layerIndex + 1}: Using default ${keyValue} for unmapped key ${baseKey.keyValue}`);
-                    } else if (layerKey.value === 0 || layerKey.value === 1) {
-                      console.log(`Layer ${layerIndex + 1}: Preserving unmapped value ${keyValue} for key ${baseKey.keyValue}`);
-                    } else {
-                      console.log(`Layer ${layerIndex + 1}: Applied remapped value ${keyValue} for key ${baseKey.keyValue}`);
-                    }
-                  } else {
-                    console.warn(`No unique mapping found for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using base value: ${keyValue}`);
-                  }
-                  if (keyValue === 1) {
-                    keyValue = 0;
-                    console.log(`Visual remap: Changed key ${baseKey.keyValue} from value 1 to 0 in layer ${layerIndex + 1}`);
-                  }
-                  if (keyValue < 0 || keyValue > 65535) {
-                    console.warn(`Invalid value ${keyValue} for key ${baseKey.keyValue} in layer ${layerIndex + 1}, using default: ${baseKey.keyValue}`);
-                    keyValue = baseKey.keyValue;
-                  }
-                  return { keyValue, location: baseKey.location };
-                })
-              );
-              console.log(`Fetched and transformed mapped layout for layer ${layerIndex + 1}:`, layoutData);
-            }
-          }
-        }
-        layout.value = layoutData;
-        baseLayout.value = layoutData;
-        loaded.value = true;
-        console.log('Layout fetched successfully:', { layoutType: layoutType.value, layer: layerIndex, layoutData });
-      } catch (error) {
-        console.error(`Failed to fetch layout for layer ${layerIndex + 1}:`, error);
-        notification.value = { message: `Failed to fetch layout for Fn${layerIndex + 1}: ${(error as Error).message}, using default layout`, isError: true };
-        layoutType.value = 'default';
-        layoutData = await KeyboardService.defKey();
-        layout.value = layoutData;
-        baseLayout.value = layoutData;
-        loaded.value = true;
-        console.log('Fallback to default layout:', layoutData);
-      }
-    }
-
     const isKeyPressed = (keyValue: number) => {
-      // Check if the keyValue is in a net "down" state
       const events = currentSequence.value.filter(event => event.keyValue === keyValue);
       if (events.length === 0) return false;
-      // Count down and up events
       let downCount = 0;
       events.forEach(event => {
         if (event.action === 'down') downCount++;
@@ -397,7 +279,6 @@ export default defineComponent({
         return;
       }
       const keyValue = keyInfo.keyValue;
-      // Check the net state of the keyValue
       const events = currentSequence.value.filter(event => event.keyValue === keyValue);
       let downCount = 0;
       events.forEach(event => {
@@ -429,7 +310,6 @@ export default defineComponent({
     const removeEventFromSequence = (index: number) => {
       console.log('removeEventFromSequence called with index:', index);
       const event = currentSequence.value[index];
-      // Update pressedKeys based on the net state after removal
       currentSequence.value.splice(index, 1);
       const events = currentSequence.value.filter(e => e.keyValue === event.keyValue);
       let downCount = 0;
@@ -446,68 +326,28 @@ export default defineComponent({
       console.log('Pressed keys after removal:', Array.from(pressedKeys.value));
     };
 
-    // Watch layoutType and selectedLayer to reload layout without resetting recording
     watch([layoutType, selectedLayer], () => {
       console.log('Layout or layer changed:', { layoutType: layoutType.value, selectedLayer: selectedLayer.value });
-      fetchLayerLayout(selectedLayer.value);
+      layerIndex.value = layoutType.value === 'mapped' ? selectedLayer.value : null;
+      fetchLayerLayout();
     });
 
     onMounted(() => {
       loadMacroList();
-      fetchLayerLayout(selectedLayer.value);
+      fetchLayerLayout();
+      console.log('MacroRecording.vue mounted');
     });
 
     return {
       selectedMacro,
       macroName,
       layout,
-      baseLayout,
       loaded,
       currentSequence,
       pressedKeys,
       keyMap,
-      gridStyle: computed(() => {
-        if (!baseLayout.value) {
-          return { height: '0px', width: '0px' };
-        }
-        const totalKeys = baseLayout.value.flat().length;
-        const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value);
-        if (!keyPositions || keyPositions.length === 0) {
-          return { height: '0px', width: '0px' };
-        }
-        const containerHeight = keyPositions.reduce(
-          (max, row, i) => max + Math.max(...row.map(pos => pos[1] + pos[3])) + (gaps[i] || 0),
-          0
-        );
-        const maxRowWidth = Math.max(...keyPositions.map(row => row.reduce((sum, pos) => sum + pos[2], 0)));
-        return {
-          position: 'relative',
-          height: `${containerHeight}px`,
-          width: `${maxRowWidth}px`,
-          margin: '0 auto',
-        };
-      }),
-      getKeyStyle: (rowIdx: number, colIdx: number) => {
-        if (!baseLayout.value) {
-          return { width: '0px', height: '0px', left: '0px', top: '0px' };
-        }
-        const totalKeys = baseLayout.value.flat().length;
-        const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value);
-        const rowLength = baseLayout.value[rowIdx]?.length || 0;
-        if (!keyPositions || !keyPositions[rowIdx] || !Array.isArray(keyPositions[rowIdx]) || colIdx >= rowLength) {
-          return { width: '0px', height: '0px', left: '0px', top: '0px' };
-        }
-        const [left, top, width, height] = keyPositions[rowIdx][colIdx];
-        const topGapPx = gaps[rowIdx] || 0;
-        return {
-          position: 'absolute',
-          left: `${left}px`,
-          top: `${top + topGapPx}px`,
-          width: `${width}px`,
-          height: `${height}px`,
-          boxSizing: 'border-box',
-        };
-      },
+      gridStyle,
+      getKeyStyle,
       isKeyPressed,
       toggleKey,
       formatEvent,
@@ -525,7 +365,7 @@ export default defineComponent({
       selectedLayer,
       layers,
     };
-  },
+  }
 });
 </script>
 
@@ -740,67 +580,72 @@ export default defineComponent({
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 16px;
-  }
 
-  .macro-card {
-    padding: 8px 12px;
-    background-color: v.$background-dark;
-    border: 1px solid rgba(v.$text-color, 0.2);
-    border-radius: v.$border-radius;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease;
-    cursor: pointer;
-
-    .card-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: v.$primary-color;
-      margin-bottom: 4px;
-    }
-
-    .card-text {
-      font-size: 0.875rem;
-      color: rgba(v.$text-color, 0.6);
-      margin-bottom: 4px;
-    }
-
-    .card-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 4px;
-    }
-
-    .card-btn {
-      padding: 2px 8px;
-      background-color: v.$primary-color;
-      color: #1f2937;
-      font-weight: 500;
-      border: none;
+    .macro-card {
+      padding: 8px 12px;
+      background-color: v.$background-dark;
+      border: 1px solid rgba(v.$text-color, 0.2);
       border-radius: v.$border-radius;
-      width: 48%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.3s ease;
       cursor: pointer;
-      font-size: 0.875rem;
 
-      &:hover {
-        background-color: color.adjust(v.$primary-color, $lightness: 10%);
+      .card-title {
+        text-decoration: underline
+        ;
+        text-transform:uppercase;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: v.$primary-color;
+        margin: 0px;
       }
 
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(v.$primary-color, 0.5);
+      .card-text {        
+        font-size: 0.875rem;
+        color: rgba(v.$text-color, 0.6);
+        margin-bottom: 0px;
+        margin: 0px;
       }
 
-      &.delete {
-        background-color: #ef4444;
+      .card-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .card-btn {
+        padding: 2px 8px;
+        background-color: v.$primary-color;
+        color: #1f2937;
+        font-weight: 500;
+        border: none;
+        border-radius: v.$border-radius;
+        width: 48%;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: bolder;
 
         &:hover {
-          background-color: color.adjust(#ef4444, $lightness: 10%);
+          background-color: color.adjust(v.$primary-color, $lightness: 10%);
+        }
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(v.$primary-color, 0.5);
+        }
+
+        &.delete {
+          background-color: #ef4444a2;
+
+          &:hover {
+            background-color: color.adjust(#ef4444a2, $lightness: 10%);
+          }
         }
       }
-    }
 
-    &:hover {
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      &:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
     }
   }
 }

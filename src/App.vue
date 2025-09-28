@@ -16,13 +16,13 @@
       </div>
       <nav class="sidebar-nav">
         <router-link to="/" class="nav-item">Connect</router-link>
+        <router-link to="/performance" class="nav-item">Performance</router-link>
         <router-link to="/key-mapping" class="nav-item">Key Mapping</router-link>
         <router-link to="/macros" class="nav-item">Macro Recording</router-link>
-        <router-link to="/profiles" class="nav-item">Profiles</router-link>
         <router-link to="/lighting" class="nav-item">Lighting</router-link>
         <router-link to="/advanced-config" class="nav-item">Advanced Config</router-link>
         <router-link to="/layout-preview" class="nav-item">Layout Preview</router-link>
-        <router-link to="/performance" class="nav-item">Performance</router-link>
+        <router-link to="/profiles" class="nav-item">Profiles</router-link>
       </nav>
       <p class="copyright">Copyright©2025 BlastHappy82</p>
     </aside>
@@ -84,6 +84,8 @@ export default defineComponent({
   .status {
     margin-top: -30px;
     font-size: 0.9rem;
+    width: 250px;
+    height: 69.13px;
     color: v.$accent-color;
     ul {
       list-style-type: disc;

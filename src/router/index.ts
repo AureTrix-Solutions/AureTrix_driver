@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Connect from '../pages/Connect.vue'; // Placeholder until created
+import Connect from '../pages/Connect.vue';
 
 const routes = [
   { path: '/', component: Connect, name: 'Connect' },
@@ -8,7 +8,8 @@ const routes = [
   { path: '/profiles', component: () => import('../pages/Profiles.vue'), name: 'Profiles' },
   { path: '/lighting', component: () => import('../pages/Lighting.vue'), name: 'Lighting' },
   { path: '/advanced-config', component: () => import('../pages/AdvancedConfig.vue'), name: 'AdvancedConfig' },
-  { path: '/layout-preview', component: () => import('../pages/LayoutPreview.vue'), name: 'LayoutPreview' }, // New temporary route
+  { path: '/layout-preview', component: () => import('../pages/LayoutPreview.vue'), name: 'LayoutPreview' },
+  { path: '/performance', component: () => import('../pages/Performance.vue'), name: 'Performance' },
 ];
 
 const router = createRouter({

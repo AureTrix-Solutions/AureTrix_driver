@@ -22,8 +22,9 @@
         <router-link to="/lighting" class="nav-item">Lighting</router-link>
         <router-link to="/advanced-config" class="nav-item">Advanced Config</router-link>
         <router-link to="/layout-preview" class="nav-item">Layout Preview</router-link>
+        <router-link to="/performance" class="nav-item">Performance</router-link>
       </nav>
-      <p class="copyright">Copyright©2025 BlastHappy82</p> <!-- Customize [YourAlias] as desired -->
+      <p class="copyright">Copyright©2025 BlastHappy82</p>
     </aside>
 
     <!-- Main Content Area -->
@@ -129,16 +130,15 @@ export default defineComponent({
 }
 
 .copyright {
-  font-size: 0.7rem; /* Small text */
-  color: rgba(v.$text-color, 0.6); /* Subdued color */
+  font-size: 0.7rem;
+  color: rgba(v.$text-color, 0.6);
   text-align: center;
-  margin-top: auto; /* Pushes it to the bottom */
+  margin-top: auto;
   padding-top: 10px;
 }
 </style>
 
 <style lang="scss">
-/* Global styles to remove white border */
 html, body {
   margin: 0;
   padding: 0;

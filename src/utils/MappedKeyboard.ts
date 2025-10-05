@@ -188,7 +188,11 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
               console.warn(`Invalid value ${keyValue} for key ${baseKey.keyValue} in layer ${layerIndex.value + 1}, using default: ${baseKey.keyValue}`);
               keyValue = baseKey.keyValue;
             }
-            return { keyValue, location: baseKey.location };
+            return {
+              keyValue, 
+              physicalKeyValue: baseKey.keyValue, 
+              location: baseKey.location 
+            };
           })
         );
 

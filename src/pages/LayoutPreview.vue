@@ -23,7 +23,6 @@
 <script lang="ts">
 import { defineComponent, ref, computed, watch, onMounted } from 'vue';
 import { getLayoutConfig } from '@utils/layoutConfigs';
-import { mmToPx } from '@utils/mmToPx'; // Import mmToPx
 
 export default defineComponent({
   name: 'LayoutPreview',
@@ -34,7 +33,7 @@ export default defineComponent({
 
     const gridStyle = computed(() => {
       const { keyPositions, gaps } = getLayoutConfig(selectedLayout.value);
-      ////console.log('Grid Style keyPositions:', keyPositions);
+      //console.log('Grid Style keyPositions:', keyPositions);
       if (!keyPositions || keyPositions.length === 0) {
         //console.warn('keyPositions is empty or invalid');
         return { 'height': '0px', 'width': '0px' };
@@ -114,6 +113,7 @@ export default defineComponent({
   h2 {
     color: v.$primary-color;
     margin-bottom: 10px; // Reduced margin
+    margin-top: 0px;
   }
   .controls {
     margin-bottom: 10px; // Reduced margin

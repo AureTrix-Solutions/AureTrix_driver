@@ -23,6 +23,7 @@
         <router-link to="/advanced-config" class="nav-item">Advanced Config</router-link>
         <router-link to="/layout-preview" class="nav-item">Layout Preview</router-link>
         <router-link to="/profiles" class="nav-item">Profiles</router-link>
+        <router-link to="/debug" class="nav-item">Debug</router-link>
       </nav>
       <p class="copyright">Copyright©2025 BlastHappy82</p>
     </aside>
@@ -129,6 +130,8 @@ export default defineComponent({
   flex-grow: 1;
   padding: 20px;
   overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
+  
 }
 
 .copyright {

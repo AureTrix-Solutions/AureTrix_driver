@@ -1,0 +1,655 @@
+<template>
+  <div class="settings-section">
+    <div class="header-row">
+      <h3>Single Travel</h3>
+      <button @click="toggleOverlay" class="show-btn">{{ showOverlay ? 'Hide' : 'Show' }}</button>
+    </div>
+    <div class="travel-row">
+      <div class="input-group">
+        <div class="label">Trigger Travel (<span class="travel-unit">mm</span>)</div>
+        <div class="slider-container">
+          <div class="value-display">{{ minTravel.toFixed(2) }}</div>
+          <input
+            type="range"
+            v-model.number="singleKeyTravel"
+            id="single-key-travel-slider"
+            :min="minTravel"
+            :max="maxTravel"
+            step="0.01"
+            :disabled="selectedKeys.length === 0"
+            @change="updateSingleKeyTravel"
+          />
+          <div class="value-display">{{ maxTravel.toFixed(2) }}</div>
+        </div>
+        <div class="adjusters">
+          <button @click="adjustTravel(-0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">-</button>
+          <input
+            type="number"
+            v-model.number="singleKeyTravel"
+            id="single-key-travel-input"
+            :min="minTravel"
+            :max="maxTravel"
+            step="0.01"
+            :disabled="selectedKeys.length === 0"
+            @change="updateSingleKeyTravel"
+          />
+          <button @click="adjustTravel(0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="deadzone-group">
+      <div class="input-group">
+        <div class="label">Top Dead Zone (<span class="t-dzone">mm</span>)</div>
+        <div class="slider-container">
+          <div class="value-display">0.00</div>
+          <input
+            type="range"
+            v-model.number="topDeadZone"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            :disabled="selectedKeys.length === 0"
+            @change="updateDeadZones"
+          />
+          <div class="value-display">1.00</div>
+        </div>
+        <div class="adjusters">
+          <button @click="adjustDeadZone(-0.01, 'top')" class="adjust-btn" :disabled="selectedKeys.length === 0">-</button>
+          <input
+            type="number"
+            v-model.number="topDeadZone"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            :disabled="selectedKeys.length === 0"
+            @change="updateDeadZones"
+          />
+          <button @click="adjustDeadZone(0.01, 'top')" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
+        </div>
+      </div>
+      <div class="link-container">
+        <button @click="toggleLinkDeadZones" class="link-btn" :disabled="selectedKeys.length === 0">{{ deadZonesLinked ? 'Unlink' : 'Link' }} Dead Zones</button>
+      </div>
+      <div class="input-group">
+        <div class="label">Bottom Dead Zone (mm)</div>
+        <div class="slider-container">
+          <div class="value-display">0.00</div>
+          <input
+            type="range"
+            v-model.number="bottomDeadZone"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            :disabled="selectedKeys.length === 0"
+            @change="updateDeadZones"
+          />
+          <div class="value-display">1.00</div>
+        </div>
+        <div class="adjusters">
+          <button @click="adjustDeadZone(-0.01, 'bottom')" class="adjust-btn" :disabled="selectedKeys.length === 0">-</button>
+          <input
+            type="number"
+            v-model.number="bottomDeadZone"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            :disabled="selectedKeys.length === 0"
+            @change="updateDeadZones"
+          />
+          <button @click="adjustDeadZone(0.01, 'bottom')" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script lang="ts">
+import { defineComponent, ref, watch, computed, PropType } from 'vue';
+import KeyboardService from '@services/KeyboardService';
+import { keyMap } from '@utils/keyMap';
+import type { IDefKeyInfo } from '@/types/types';
+import { Ref } from 'vue';
+
+export default defineComponent({
+  name: 'SingleKeyTravel',
+  props: {
+    selectedKeys: {
+      type: Array as PropType<IDefKeyInfo[]>,
+      default: () => [],
+    },
+    layout: {
+      type: Array as PropType<IDefKeyInfo[][]>,
+      required: true,
+    },
+    baseLayout: {
+      type: Object as PropType<Ref<IDefKeyInfo[][] | null>>,
+      default: () => ref(null),
+    },
+    profileMaxTravel: {
+      type: Number,
+      default: 4.0,
+    },
+  },
+  emits: ['update-notification', 'update-single-overlay', 'update-overlay'],
+  setup(props, { emit }) {
+    const singleKeyTravel = ref(2.0);
+    const topDeadZone = ref(0.0);
+    const bottomDeadZone = ref(0.0);
+    const deadZonesLinked = ref(false);
+    const showOverlay = ref(false);
+
+    const minTravel = computed(() => {
+      return Math.max(0.1, topDeadZone.value);
+    });
+
+    const maxTravel = computed(() => {
+      return Math.min(props.profileMaxTravel, props.profileMaxTravel - bottomDeadZone.value);
+    });
+
+    // Clamp singleKeyTravel when dead zones change
+    watch([topDeadZone, bottomDeadZone], () => {
+      if (singleKeyTravel.value < minTravel.value) {
+        singleKeyTravel.value = Number(minTravel.value.toFixed(2));
+        //console.log(`Clamped singleKeyTravel to min: ${singleKeyTravel.value} mm due to topDeadZone`);
+      } else if (singleKeyTravel.value > maxTravel.value) {
+        singleKeyTravel.value = Number(maxTravel.value.toFixed(2));
+        //console.log(`Clamped singleKeyTravel to max: ${singleKeyTravel.value} mm due to bottomDeadZone`);
+      }
+    });
+
+    const loadSingleKeyTravel = async () => {
+      if (props.selectedKeys.length === 0) {
+        singleKeyTravel.value = 2.0;
+        return;
+      }
+      const physicalKeyValue = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
+      const keyValue = props.selectedKeys[0].keyValue;
+      try {
+        //console.log(`SingleKeyTravel: Loading travel for physical key ${physicalKeyValue} (display: ${keyValue})`);
+        const result = await KeyboardService.getSingleTravel(physicalKeyValue);
+        if (result instanceof Error) {
+          throw result;
+        }
+        //console.log(`Raw SDK response: singleTravel=${result} mm`);
+        const loadedValue = Number(result);
+        if (loadedValue >= 0.1 && loadedValue <= 4.0) {
+          singleKeyTravel.value = Number(loadedValue.toFixed(2));
+          //console.log(`Loaded single key travel for physical key ${physicalKeyValue}: ${singleKeyTravel.value.toFixed(2)} mm`);
+        } else {
+          throw new Error(`Loaded single key travel ${loadedValue} mm out of range (0.1-4.0 mm)`);
+        }
+      } catch (error) {
+        console.error(`Failed to load single key travel for physical key ${physicalKeyValue}:`, error);
+        emit('update-notification', `Failed to load single key travel: ${(error as Error).message}`, true);
+        singleKeyTravel.value = 2.0;
+      }
+    };
+
+    const loadDeadZones = async () => {
+      if (props.selectedKeys.length === 0) {
+        topDeadZone.value = 0.2;
+        bottomDeadZone.value = 0.2;
+        return;
+      }
+      const physicalKeyValue = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
+      const keyValue = props.selectedKeys[0].keyValue;
+      try {
+        //console.log(`Loading dead zones for physical key ${physicalKeyValue} (display: ${keyValue})`);
+        const result = await KeyboardService.getDpDr(physicalKeyValue);
+        if (result instanceof Error) {
+          throw result;
+        }
+        //console.log(`Raw SDK response: pressDead=${result.pressDead}, releaseDead=${result.releaseDead} mm`);
+        if (result.pressDead >= 0 && result.pressDead <= 1.0) {
+          topDeadZone.value = Number(result.pressDead.toFixed(2));
+        }
+        if (result.releaseDead >= 0 && result.releaseDead <= 1.0) {
+          bottomDeadZone.value = Number(result.releaseDead.toFixed(2));
+        }
+        //console.log(`Loaded dead zones for physical key ${physicalKeyValue}: top ${topDeadZone.value.toFixed(2)}, bottom ${bottomDeadZone.value.toFixed(2)} mm`);
+      } catch (error) {
+        console.error(`Failed to load dead zones for physical key ${physicalKeyValue}:`, error);
+        emit('update-notification', `Failed to load dead zones: ${(error as Error).message}`, true);
+        topDeadZone.value = 0.2;
+        bottomDeadZone.value = 0.2;
+      }
+    };
+
+    const updateSingleKeyTravel = async () => {
+      if (props.selectedKeys.length === 0) {
+        emit('update-notification', 'No key selected', true);
+        return;
+      }
+      const BATCH_SIZE = 80; // Set to 80 based on successful test
+      const keys = props.selectedKeys.map(key => ({
+        physicalKeyValue: key.physicalKeyValue || key.keyValue,
+        keyValue: key.keyValue,
+      }));
+      try {
+        // Split keys into batches
+        const batches = [];
+        for (let i = 0; i < keys.length; i += BATCH_SIZE) {
+          batches.push(keys.slice(i, i + BATCH_SIZE));
+        }
+        // Process each batch sequentially with a delay
+        for (const batch of batches) {
+          // Set performance mode for all keys in the batch
+          await Promise.all(
+            batch.map(({ physicalKeyValue }) =>
+              KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0)
+            )
+          );
+          // Set single travel for all keys in the batch
+          await Promise.all(
+            batch.map(({ physicalKeyValue }) =>
+              KeyboardService.setSingleTravel(physicalKeyValue, singleKeyTravel.value)
+            )
+          );
+          //console.log(`Updated batch of ${batch.length} keys to single mode with travel ${singleKeyTravel.value.toFixed(2)} mm`);
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        const keyDisplay = props.selectedKeys.length === 1
+          ? keyMap[props.selectedKeys[0].keyValue] || props.selectedKeys[0].keyValue
+          : `${props.selectedKeys.length} keys`;
+        //console.log(`Completed batch update for ${keys.length} keys`);
+        emit('update-notification', `Single key travel updated for ${keyDisplay}`, false);
+        
+        // Clear global overlays (re-poll modes to remove changed keys)
+        emit('update-overlay', null);
+        // Clear single overlays (re-poll modes to ensure consistency)
+        emit('update-single-overlay', null);
+        
+        // If single overlay is shown, repopulate with current data
+        if (showOverlay.value) {
+          setTimeout(() => {
+            //console.log(`Repopulating single overlay after delay`);
+            emit('update-single-overlay', { travel: '0', pressDead: '0', releaseDead: '0' }); // Dummy trigger
+          }, 300); // Small delay to allow clears to process
+        }
+      } catch (error) {
+        console.error(`Failed to batch update single key travel for ${keys.length} keys:`, error);
+        emit('update-notification', `Failed to update single key travel: ${(error as Error).message}`, true);
+      }
+    };
+
+    const updateDeadZones = async () => {
+      if (props.selectedKeys.length === 0) {
+        emit('update-notification', 'No keys selected', true);
+        return;
+      }
+      const BATCH_SIZE = 80;
+      const keys = props.selectedKeys.map(key => ({
+        physicalKeyValue: key.physicalKeyValue || key.keyValue,
+        keyValue: key.keyValue,
+      }));
+      try {
+        // Split keys into batches
+        const batches = [];
+        for (let i = 0; i < keys.length; i += BATCH_SIZE) {
+          batches.push(keys.slice(i, i + BATCH_SIZE));
+        }
+        // Process each batch sequentially with a delay
+        for (const batch of batches) {
+          await Promise.all(
+            batch.map(({ physicalKeyValue }) =>
+              Promise.all([
+                KeyboardService.setDp(physicalKeyValue, topDeadZone.value),
+                KeyboardService.setDr(physicalKeyValue, bottomDeadZone.value),
+              ])
+            )
+          );
+          //console.log(`Updated dead zones for batch of ${batch.length} keys: top ${topDeadZone.value.toFixed(2)}, bottom ${bottomDeadZone.value.toFixed(2)} mm`);
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        const keyDisplay = props.selectedKeys.length === 1
+          ? keyMap[props.selectedKeys[0].keyValue] || props.selectedKeys[0].keyValue
+          : `${props.selectedKeys.length} keys`;
+        //console.log(`Completed batch update for ${keys.length} keys`);
+        emit('update-notification', `Dead zones updated for ${keyDisplay}`, false);
+        
+        // Clear global overlays (re-poll modes to remove changed keys)
+        emit('update-overlay', null);
+        // Clear single overlays (re-poll modes to ensure consistency)
+        emit('update-single-overlay', null);
+        
+        // If single overlay is shown, repopulate with current data
+        if (showOverlay.value) {
+          setTimeout(() => {
+            //console.log(`Repopulating single overlay after delay`);
+            emit('update-single-overlay', { travel: '0', pressDead: '0', releaseDead: '0' }); // Dummy trigger
+          }, 300); // Small delay to allow clears to process
+        }
+      } catch (error) {
+        console.error(`Failed to batch update dead zones for ${keys.length} keys:`, error);
+        emit('update-notification', `Failed to update dead zones: ${(error as Error).message}`, true);
+      }
+    };
+
+    const adjustTravel = (delta: number) => {
+      const newValue = Math.min(Math.max(singleKeyTravel.value + delta, minTravel.value), maxTravel.value);
+      singleKeyTravel.value = Number(newValue.toFixed(2));
+      //console.log(`Adjusted single key travel to ${singleKeyTravel.value.toFixed(2)} mm`);
+      updateSingleKeyTravel();
+    };
+
+    const adjustDeadZone = (delta: number, type: 'top' | 'bottom') => {
+      let newValue = type === 'top' ? topDeadZone.value + delta : bottomDeadZone.value + delta;
+      newValue = Math.min(Math.max(newValue, 0), 1.0);
+      if (type === 'top') {
+        topDeadZone.value = Number(newValue.toFixed(2));
+      } else {
+        bottomDeadZone.value = Number(newValue.toFixed(2));
+      }
+      if (deadZonesLinked.value) {
+        const otherType = type === 'top' ? 'bottom' : 'top';
+        (otherType === 'top' ? topDeadZone : bottomDeadZone).value = Number(newValue.toFixed(2));
+      }
+      //console.log(`Adjusted ${type} dead zone to ${newValue.toFixed(2)} mm`);
+      updateDeadZones();
+    };
+
+    const toggleLinkDeadZones = () => {
+      deadZonesLinked.value = !deadZonesLinked.value;
+      //console.log(`Dead zones linked: ${deadZonesLinked.value}`);
+      if (deadZonesLinked.value) {
+        bottomDeadZone.value = topDeadZone.value;
+        updateDeadZones();
+      }
+    };
+
+    const setKeyToGlobalMode = async () => {
+      if (props.selectedKeys.length === 0) {
+        emit('update-notification', 'No keys selected', true);
+        return;
+      }
+      try {
+        for (const key of props.selectedKeys) {
+          const physicalKeyValue = key.physicalKeyValue || key.keyValue;
+          const keyValue = key.keyValue;
+          const result = await KeyboardService.setPerformanceMode(physicalKeyValue, 'global', 0);
+          //console.log(`Set physical key ${physicalKeyValue} (display: ${keyMap[keyValue] || keyValue}) to global mode result:`, result);
+        }
+        emit('update-notification', `Set ${props.selectedKeys.length} keys to global mode`, false);
+        
+        // Clear both overlays (re-poll modes to remove changed keys)
+        emit('update-overlay', null);
+        emit('update-single-overlay', null);
+      } catch (error) {
+        console.error('Failed to set keys to global mode for physical keys:', error);
+        emit('update-notification', `Failed to set keys to global mode: ${(error as Error).message}`, true);
+      }
+    };
+
+    const toggleOverlay = () => {
+      showOverlay.value = !showOverlay.value;
+      //console.log(`SingleKeyTravel: Overlay toggled: ${showOverlay.value}`);
+      // Emit dummy data as trigger; actual values fetched in parent
+      const dummyData = showOverlay.value ? {
+        travel: '0', // Ignored
+        pressDead: '0', // Ignored
+        releaseDead: '0', // Ignored
+      } : null;
+      emit('update-single-overlay', dummyData);
+    };
+
+    watch(() => props.selectedKeys, async (newKeys, oldKeys) => {
+      //console.log(`SingleKeyTravel: Selected keys changed: ${newKeys.map(k => keyMap[k.keyValue] || k.keyValue).join(', ') || 'none'}`);
+      await loadSingleKeyTravel();
+      await loadDeadZones();
+    }, { deep: true });
+
+    watch([topDeadZone, bottomDeadZone], () => {
+      if (deadZonesLinked.value) {
+        bottomDeadZone.value = topDeadZone.value;
+      }
+    });
+
+    return {
+      keyMap,
+      singleKeyTravel,
+      topDeadZone,
+      bottomDeadZone,
+      deadZonesLinked,
+      minTravel,
+      maxTravel,
+      updateSingleKeyTravel,
+      updateDeadZones,
+      adjustTravel,
+      adjustDeadZone,
+      toggleLinkDeadZones,
+      setKeyToGlobalMode,
+      showOverlay,
+      toggleOverlay,
+    };
+  },
+});
+</script>
+
+<style lang="scss" scoped>
+@use 'sass:color';
+@use '@styles/variables' as v;
+
+.settings-section {
+  border: 1px solid rgba(v.$text-color, 0.2);
+  height: 170px;
+  padding-left: 8px;
+
+  .header-row {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    color: v.$primary-color;
+    flex-shrink: 0;
+    width: auto;
+    font-size: 1.5rem;
+    text-decoration: underline;
+    margin: 0;
+    margin-right: 10px;
+  }
+
+  .show-btn {
+    padding: 3px 8px;
+    background-color: v.$accent-color;
+    color: v.$background-dark;
+    border: none;
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    align-self: left;
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust(v.$accent-color, $lightness: 10%);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .travel-row {
+    display: flex;
+    gap: 0px;
+    height: 10px;
+    padding-top: 30px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+
+  .input-group {
+    display: flex;
+    align-items: center;
+    gap: 0px;
+    margin-bottom: 20px;
+    padding: 10px;
+    width: 600px;
+    height: 30px;
+    border: 1px solid rgba(v.$text-color, 0.1);
+    border-radius: v.$border-radius;
+    background-color: rgba(v.$background-dark, 0.5);
+
+    &.global-mode-group {
+      display: inline;
+      padding-left: 5px;
+      width: 150px;
+      height: 72px;
+      gap: 0px;
+      height: 30px;
+      justify-content: center;
+      border: none;
+    }
+
+    .label {
+      min-width: 180px;
+      text-align: center;
+      color: v.$text-color;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .slider-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      input[type="range"] {
+        flex: 1;
+        max-width: 200px;
+        cursor: pointer;
+        height: 6px;
+
+        &::-webkit-slider-thumb {
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background-color: v.$accent-color;
+          cursor: pointer;
+        }
+      }
+
+      .value-display {
+        min-width: 60px;
+        color: v.$accent-color;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-align: center;
+      }
+    }
+
+    .adjusters {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      input[type="number"] {
+        width: 60px;
+        padding: 4px 6px;
+        border-radius: v.$border-radius;
+        background-color: v.$background-dark;
+        color: v.$text-color;
+        border: 1px solid rgba(v.$text-color, 0.2);
+        font-size: 0.9rem;
+        text-align: center;
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
+        }
+      }
+
+      .adjust-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 50%;
+        background-color: rgba(v.$text-color, 0.2);
+        color: v.$text-color;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: bold;
+        transition: background-color 0.2s ease;
+
+        &:hover:not(:disabled) {
+          background-color: rgba(v.$accent-color, 0.3);
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  .deadzone-group {
+    display: inline-flex;
+    width: 1500px;
+    gap: 0px;
+    margin-bottom: 20px;
+  }
+
+  .link-container {
+    display: flex;
+    width: 150px;
+    align-items: center;
+    justify-content: center;
+    padding: -30px;
+    padding-bottom: 20px;
+  }
+
+  .link-btn {
+    padding: 8px 16px;
+    background-color: v.$accent-color;
+    color: v.$background-dark;
+    border: none;
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust(v.$accent-color, $lightness: 10%);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .global-mode-btn {
+    padding: 8px 16px;
+    background-color: v.$primary-color;
+    color: v.$background-dark;
+    border: none;
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    font-size: .9rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    width: 140.88px;
+    height: 32px;
+    text-align: center;
+    margin-top: 0px;
+
+    &:hover:not(:disabled) {
+      background-color: color.adjust(v.$primary-color, $lightness: 10%);
+    }
+
+    &:disabled {
+      background-color: color.adjust(v.$primary-color, $lightness: -20%);
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+</style>

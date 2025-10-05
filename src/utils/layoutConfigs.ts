@@ -13,7 +13,7 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
   if (baseLayout && baseLayout.length > 0) {
     rows = baseLayout.length;
     cols = Math.max(...baseLayout.map(row => row.length || 0));
-    ////console.log(`Using baseLayout: rows=${rows}, cols=${cols}`);
+    //console.log(`Using baseLayout: rows=${rows}, cols=${cols}`);
   } else {
     //console.warn('baseLayout is undefined, using default layout for keyCount:', keyCount);
     rows = 6; // Default to 6 rows for common layouts like 80-key
@@ -141,7 +141,7 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
       if (gapsAfterCol[rIdx] && gapsAfterCol[rIdx][cIdx]) {
         left += mmToPx(gapsAfterCol[rIdx][cIdx]);
       }
-      ////console.log(`Row ${rIdx}, Col ${cIdx}: pos=`, pos); // Debug log
+      //console.log(`Row ${rIdx}, Col ${cIdx}: pos=`, pos); // Debug log
       return pos;
     });
     return positions;

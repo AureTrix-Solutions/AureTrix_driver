@@ -111,7 +111,7 @@ export default defineComponent({
     const loadMacroList = () => {
       try {
         const stored = localStorage.getItem('MacroList');
-        console.log('Loading MacroList from localStorage:', stored);
+        //console.log('Loading MacroList from localStorage:', stored);
         if (stored) {
           macroList.value = JSON.parse(stored);
         } else {
@@ -124,7 +124,7 @@ export default defineComponent({
     };
 
     const startNewMacro = () => {
-      console.log('startNewMacro called');
+      //console.log('startNewMacro called');
       selectedMacro.value = 'new';
       currentSequence.value = [];
       pressedKeys.value.clear();
@@ -133,12 +133,12 @@ export default defineComponent({
       isRecording.value = true;
       if (macroNameInput.value) {
         macroNameInput.value.focus();
-        console.log('Focused macro name input');
+        //console.log('Focused macro name input');
       }
     };
 
     const loadMacro = (id: string) => {
-      console.log('Loading macro with id:', id);
+      //console.log('Loading macro with id:', id);
       const macro = macroList.value.find(m => m.id === parseInt(id));
       if (macro) {
         currentSequence.value = macro.step.map((step, index) => ({
@@ -157,11 +157,11 @@ export default defineComponent({
             pressedKeys.value.delete(event.keyValue);
           }
         });
-        console.log('Pressed keys after load:', Array.from(pressedKeys.value));
+        //console.log('Pressed keys after load:', Array.from(pressedKeys.value));
         isRecording.value = true;
         if (macroNameInput.value) {
           macroNameInput.value.focus();
-          console.log('Focused macro name input after load');
+          //console.log('Focused macro name input after load');
         }
       } else {
         notification.value = { message: `Macro with ID ${id} not found`, isError: true };
@@ -169,7 +169,7 @@ export default defineComponent({
     };
 
     const saveMacro = () => {
-      console.log('saveMacro called with:', { selectedMacro: selectedMacro.value, currentSequenceLength: currentSequence.value.length, macroName: macroName.value });
+      //console.log('saveMacro called with:', { selectedMacro: selectedMacro.value, currentSequenceLength: currentSequence.value.length, macroName: macroName.value });
       if (!currentSequence.value.length || !macroName.value) {
         console.warn('saveMacro conditions not met:', { currentSequenceLength: currentSequence.value.length, macroName: macroName.value });
         notification.value = { message: 'Cannot save: Sequence must not be empty and name must be provided', isError: true };
@@ -209,12 +209,12 @@ export default defineComponent({
         loadMacroList();
         if (selectedMacro.value !== 'new' && macroList.value.some(m => m.id === id)) {
           macroList.value = macroList.value.map(m => (m.id === id ? newMacro : m));
-          console.log('Updated existing macro:', newMacro);
+          //console.log('Updated existing macro:', newMacro);
         } else {
           macroList.value = [...macroList.value, newMacro];
-          console.log('Appended new macro:', newMacro);
+          //console.log('Appended new macro:', newMacro);
         }
-        console.log('Saving updated MacroList to localStorage:', JSON.stringify(macroList.value));
+        //console.log('Saving updated MacroList to localStorage:', JSON.stringify(macroList.value));
         localStorage.setItem('MacroList', JSON.stringify(macroList.value));
         selectedMacro.value = id.toString();
         notification.value = { message: `Saved macro ${macroName.value} to local storage`, isError: false };
@@ -222,7 +222,7 @@ export default defineComponent({
         pressedKeys.value.clear();
         macroName.value = '';
         isRecording.value = false;
-        console.log('Virtual keyboard and macro name reset after save');
+        //console.log('Virtual keyboard and macro name reset after save');
       } catch (error) {
         console.error('Failed to save macro:', error);
         notification.value = { message: `Failed to save macro: ${(error as Error).message}`, isError: true };
@@ -230,12 +230,12 @@ export default defineComponent({
     };
 
     const deleteMacro = (id: string) => {
-      console.log('deleteMacro called with id:', id);
+      //console.log('deleteMacro called with id:', id);
       try {
         const macroId = parseInt(id);
         macroList.value = macroList.value.filter(m => m.id !== macroId);
-        console.log('Deleted macro with id:', id);
-        console.log('Saving updated MacroList to localStorage:', JSON.stringify(macroList.value));
+        //console.log('Deleted macro with id:', id);
+        //console.log('Saving updated MacroList to localStorage:', JSON.stringify(macroList.value));
         localStorage.setItem('MacroList', JSON.stringify(macroList.value));
         notification.value = { message: `Deleted macro`, isError: false };
         if (selectedMacro.value === id) {
@@ -252,7 +252,7 @@ export default defineComponent({
     };
 
     const clearMacro = () => {
-      console.log('clearMacro called');
+      //console.log('clearMacro called');
       currentSequence.value = [];
       pressedKeys.value.clear();
       macroName.value = '';
@@ -272,7 +272,7 @@ export default defineComponent({
     };
 
     const toggleKey = (keyInfo: IDefKeyInfo) => {
-      console.log('toggleKey called with keyInfo:', keyInfo);
+      //console.log('toggleKey called with keyInfo:', keyInfo);
       if (currentSequence.value.length >= 64) {
         console.warn('Cannot add action: Macro has reached 64-action limit');
         notification.value = { message: 'Cannot add action: Macro has reached 64-action limit', isError: true };
@@ -293,7 +293,7 @@ export default defineComponent({
         currentSequence.value.push({ keyValue, action: 'down', delay: 50 });
         pressedKeys.value.add(keyValue);
       }
-      console.log('Current sequence after toggle:', currentSequence.value);
+      //console.log('Current sequence after toggle:', currentSequence.value);
     };
 
     const formatEvent = (event: { keyValue: number; action: 'down' | 'up'; delay: number }) => {
@@ -308,7 +308,7 @@ export default defineComponent({
     };
 
     const removeEventFromSequence = (index: number) => {
-      console.log('removeEventFromSequence called with index:', index);
+      //console.log('removeEventFromSequence called with index:', index);
       const event = currentSequence.value[index];
       currentSequence.value.splice(index, 1);
       const events = currentSequence.value.filter(e => e.keyValue === event.keyValue);
@@ -322,12 +322,12 @@ export default defineComponent({
       } else {
         pressedKeys.value.delete(event.keyValue);
       }
-      console.log('Current sequence after removal:', currentSequence.value);
-      console.log('Pressed keys after removal:', Array.from(pressedKeys.value));
+      //console.log('Current sequence after removal:', currentSequence.value);
+      //console.log('Pressed keys after removal:', Array.from(pressedKeys.value));
     };
 
     watch([layoutType, selectedLayer], () => {
-      console.log('Layout or layer changed:', { layoutType: layoutType.value, selectedLayer: selectedLayer.value });
+      //console.log('Layout or layer changed:', { layoutType: layoutType.value, selectedLayer: selectedLayer.value });
       layerIndex.value = layoutType.value === 'mapped' ? selectedLayer.value : null;
       fetchLayerLayout();
     });
@@ -335,7 +335,7 @@ export default defineComponent({
     onMounted(() => {
       loadMacroList();
       fetchLayerLayout();
-      console.log('MacroRecording.vue mounted');
+      //console.log('MacroRecording.vue mounted');
     });
 
     return {
@@ -380,6 +380,7 @@ export default defineComponent({
   .title {
     color: v.$primary-color;
     margin-bottom: 10px;
+    margin-top: 0px;
     font-size: 1.5rem;
     font-weight: 700;
   }
@@ -513,8 +514,8 @@ export default defineComponent({
     text-align: center;
 
     &.pressed {
-      background: linear-gradient(to bottom, v.$accent-color 70%, color.adjust(v.$accent-color, $lightness: 10%) 100%);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(255, 255, 255, 0.3);
+      border-color: v.$accent-color;
+      box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
     }
   }
 

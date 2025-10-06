@@ -301,7 +301,7 @@ export default defineComponent({
         } catch (error) {
           console.error(`Polling failed for key ${props.selectedKeys[0]?.physicalKeyValue || props.selectedKeys[0]?.keyValue}:`, error);
         }
-      }, 50);  // 50ms for responsive updates
+      }, 0);  // 50ms for responsive updates
 
       showKeyTestModal.value = true;
       //console.log(`[DEBUG] Polling interval started successfully for physical key ${physicalKey} using maxTravel`);

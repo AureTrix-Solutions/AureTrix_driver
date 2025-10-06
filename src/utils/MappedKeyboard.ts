@@ -69,23 +69,25 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
     const maxAttempts = 3;
     for (let i = 0; i < config.length; i += batchSize) {
       const batch = config.slice(i, i + batchSize);
-      // console.log(`Sending batch setKey for keys ${batch[0].key} to ${batch[batch.length - 1].key} on layer ${batch[0].layout + 1}`);
       let attempts = 0;
       while (attempts < maxAttempts) {
         try {
+          // Pass batch directly for bulk handling in setKey (uses cmdKey(true, ...))
           await KeyboardService.setKey(batch);
-          // console.log(`Batch setKey successful for ${batch.length} keys`);
           break;
         } catch (error) {
           console.error(`Batch setKey attempt ${attempts + 1} failed for keys ${batch[0].key} to ${batch[batch.length - 1].key}:`, error);
           attempts++;
           if (attempts < maxAttempts) {
-            // console.log(`Retrying batch setKey in 1000ms (attempt ${attempts + 1})`);
             await new Promise(resolve => setTimeout(resolve, 1000));
           } else {
             throw new Error(`Failed to set key batch after ${maxAttempts} attempts`);
           }
         }
+      }
+      // Add inter-batch delay to prevent overload
+      if (i + batchSize < config.length) {
+        await new Promise(resolve => setTimeout(resolve, 150));
       }
     }
   }

@@ -235,12 +235,8 @@ class KeyboardService {
   async setKey(keyConfigs: { key: number; layout: number; value: number }[]): Promise<void> {
     try {
       await this.keyboard.setKey(keyConfigs);
-      //console.log('Key remapping applied:', keyConfigs);
       await this.saveParameters();
-      //console.log('Parameters saved after remapping');
       await this.reloadParameters();
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      //console.log('Parameters reloaded and synced after saving');
     } catch (error) {
       console.error('Failed to set key:', error);
       throw new Error(`Failed to set key: ${(error as Error).message}`);

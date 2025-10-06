@@ -32,16 +32,6 @@
         <label for="key-test-toggle">Enable Key Test:</label>
         <input type="checkbox" v-model="keyTestEnabled" id="key-test-toggle" :disabled="selectedKeys.length === 0" />
       </div>
-      <div v-if="keyTestEnabled && selectedKeys.length > 0" class="key-test-container">
-        <div class="key-test-bar">
-          <div
-            class="key-test-depth"
-            :style="{ height: `${keyPressDepth * 100}%`, backgroundColor: keyPressDepth >= (actuationPoint / profileMaxTravel) ? '#00ff00' : '#ff4444' }"
-          ></div>
-          <div class="actuation-point" :style="{ bottom: `${(actuationPoint / profileMaxTravel) * 100}%` }"></div>
-        </div>
-        <p>Depth: {{ (keyPressDepth * profileMaxTravel).toFixed(2) }} mm / Actuation: {{ actuationPoint.toFixed(2) }} mm</p>
-      </div>
     </div>
 
     <!-- Modal for Capture -->
@@ -63,8 +53,7 @@
     <div v-if="showKeyTestModal" class="modal-overlay" @click="closeKeyTestModal">
       <div class="modal-content key-test-modal" @click.stop>
         <h4>Key Test Monitor</h4>
-        <p>Press the selected key to monitor travel and trigger.</p>
-        <p>Press slow for better accuracy</p>
+        <p>Press the selected key to monitor travel and trigger. Press slow for better accuracy.</p>
         <table class="key-test-table">
           <thead>
             <tr>
@@ -76,8 +65,8 @@
           <tbody>
             <tr>
               <td>{{ selectedKeyLabel }}</td>
-              <td>{{ travelValue }} mm</td>
-              <td :class="{ triggered: triggered }">{{ triggered ? triggerValue + ' mm' : 'N/A' }}</td>
+              <td class="live">{{ travelValue }} mm</td>
+              <td :class="{ 'trigger triggered': triggered }">{{ triggered ? triggerValue + ' mm' : 'N/A' }}</td>
             </tr>
           </tbody>
         </table>
@@ -90,7 +79,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onUnmounted, computed, watch, PropType, Ref } from 'vue';
+import { defineComponent, ref, onUnmounted, computed, watch, PropType } from 'vue';
 import KeyboardService from '@services/KeyboardService';
 import { useTravelProfilesStore } from '@/store/travelProfilesStore';
 import { keyMap } from '@utils/keyMap';
@@ -99,7 +88,6 @@ import type { TravelProfile } from '@/store/travelProfilesStore';
 
 export default defineComponent({
   name: 'SwitchProfiles',
-  components: {},
   props: {
     selectedKeys: {
       type: Array as PropType<IDefKeyInfo[]>,
@@ -110,19 +98,24 @@ export default defineComponent({
       required: true,
     },
     baseLayout: {
-      type: Object as PropType<Ref<IDefKeyInfo[][] | null>>,
-      default: () => ref(null),
+      type: Object as PropType<any>,
+      default: null,
     },
     profileMaxTravel: {
       type: Number,
       default: 4.0,
     },
   },
-  emits: ['update-notification'],
-  setup(props, { emit }) {
+  setup(props) {
     const store = useTravelProfilesStore();
+
+    // Profile Management Refs
     const newProfileName = ref('');
     const selectedProfileId = ref(store.selectedProfileId);
+    const profiles = computed(() => store.profiles);
+    const profileOptions = computed(() => store.profileOptions);
+
+    // Capture Modal Refs
     const showCaptureModal = ref(false);
     const currentProfileName = ref('');
     const isCapturing = ref(false);
@@ -134,36 +127,24 @@ export default defineComponent({
 
     // Key Test Refs
     const keyTestEnabled = ref(false);
-    const keyPressDepth = ref(0);
-    const actuationPoint = ref(0.5);
-
-    // Key Test Modal Refs
+    const actuationPoint = ref(0.5); // Loaded set actuation (baseline, not measured trigger)
     const showKeyTestModal = ref(false);
-    const travelValue = ref('0.00');
-    const triggerValue = ref('0.00');
-    const triggered = ref(false);
-    const keyTestInterval = ref<NodeJS.Timeout | null>(null);
-
-    // Ref for keydown listener (to remove later)
+    const travelValue = ref('0.00'); // Live travel (mm)
+    const triggerValue = ref('0.00'); // Measured actual trigger depth (mm)
+    const triggered = ref(false); // UI state for trigger highlight
+    let keyTestInterval: NodeJS.Timeout | null = null;
     const keydownListener = ref<((event: KeyboardEvent) => void) | null>(null);
+    const pendingTriggerCapture = ref(false); // Flag for post-event depth clamp
+    const triggerCaptured = ref(false); // Prevent multi-capture per press
+    const originalKeyMapping = ref<number | null>(null); // For remap restore
 
-    // Flag for pending trigger capture after keydown
-    const pendingTriggerCapture = ref(false);
-
-    // Flag to clamp trigger after first capture per press
-    const triggerCaptured = ref(false);
-
-    // NEW: Ref for original key mapping to restore after test
-    const originalKeyMapping = ref<number | null>(null);
-
-    // Computed for Selected Key Label
+    // Computed Helpers
     const selectedKeyLabel = computed(() => {
       if (props.selectedKeys.length === 0) return 'None';
       const keyValue = props.selectedKeys[0].keyValue;
       return keyMap[keyValue] || `Key ${keyValue}`;
     });
 
-    // Computed for Selected Physical Key Index in Flat Layout
     const selectedKeyIndex = computed(() => {
       if (props.selectedKeys.length === 0 || !props.layout.length) return -1;
       const flatLayout = props.layout.flat();
@@ -171,272 +152,56 @@ export default defineComponent({
       return flatLayout.findIndex(k => (k.physicalKeyValue || k.keyValue) === physicalKey);
     });
 
-    // Reactive store data
-    const profiles = computed(() => store.profiles);
-    const profileOptions = computed(() => store.profileOptions);
-
-    const loadActuationPoint = async () => {
-      if (props.selectedKeys.length === 0) return;
-      const physicalKeyValue = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
-      const keyValue = props.selectedKeys[0].keyValue;
-      try {
-        //console.log(`Loading actuation point for key ${keyValue}`);
-        const result = await KeyboardService.getSingleTravel(physicalKeyValue);
-        if (result instanceof Error) {
-          throw result;
-        }
-        //console.log(`Raw SDK response: singleTravel=${result} mm`);
-        const loadedValue = Number(result);
-        if (loadedValue >= 0.1 && loadedValue <= props.profileMaxTravel) {
-          actuationPoint.value = loadedValue;  // Store in mm
-          //console.log(`Loaded actuation point: ${actuationPoint.value} mm`);
-        } else {
-          throw new Error(`Loaded actuation point ${loadedValue} mm out of range (0.1-${props.profileMaxTravel} mm)`);
-        }
-      } catch (error) {
-        console.error(`Failed to load actuation point for key ${keyValue}:`, error);
-        emit('update-notification', `Failed to load actuation point: ${(error as Error).message}`, true);
-        keyTestEnabled.value = false;
-      }
-    };
-
-    // Extracted function to start polling (reusable for watchers) - Updated to use maxTravel
-    const startKeyTestPolling = async () => {
-      //console.log('[DEBUG] startKeyTestPolling called - selectedKeys length:', props.selectedKeys.length);
-      if (props.selectedKeys.length === 0) {
-        console.warn('Cannot start polling: No key selected');
-        return;
-      }
-
-      const physicalKey = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
-      //console.log('[DEBUG] Selected physicalKey:', physicalKey);
-      const flatLayout = props.layout.flat();
-      //console.log('[DEBUG] flatLayout sample around expected index:', flatLayout.slice(Math.max(0, selectedKeyIndex.value - 2), selectedKeyIndex.value + 3).map(k => ({ physical: k.physicalKeyValue || k.keyValue, label: keyMap[k.keyValue] || k.keyValue })));
-
-      // Load actuation point if not already loaded
-      await loadActuationPoint();
-      if (actuationPoint.value <= 0) {
-        //console.log('[DEBUG] Aborting polling start - invalid actuation point');
-        emit('update-notification', 'Failed to load actuation point', true);
-        keyTestEnabled.value = false;
-        return;
-      }
-
-      // NEW: Temporarily remap the selected key to 'A' (keycode 4) for testing
-      try {
-        const originalResult = await KeyboardService.getLayoutKeyInfo([{ key: physicalKey, layout: 0 }]);
-        if (originalResult instanceof Error) {
-          throw originalResult;
-        }
-        originalKeyMapping.value = originalResult[0].value;
-        await KeyboardService.setKey([{ key: physicalKey, value: 4, layout: 0 }]);
-        //console.log('[DEBUG] Temporarily remapped key to "A" for testing');
-      } catch (error) {
-        console.error('[DEBUG] Failed to remap key for testing:', error);
-        emit('update-notification', `Failed to remap key for testing: ${(error as Error).message}`, true);
-        keyTestEnabled.value = false;
-        return;
-      }
-
-      // Clear any existing interval before starting new
-      if (keyTestInterval.value) {
-        clearInterval(keyTestInterval.value);
-        keyTestInterval.value = null;
-      }
-
-      // Add keydown listener for actual key send detection, ignoring repeats
-      keydownListener.value = (event: KeyboardEvent) => {
-        if (event.repeat) return; // Ignore repeat events from holding key
-        if (event.key.toLowerCase() === 'a') { // Detect 'a' from remap
-          pendingTriggerCapture.value = true;
-          triggerCaptured.value = false; // Reset capture flag for new press
-          //console.log('[DEBUG] Initial key send detected (as "a") - Pending capture for first non-zero travel');
-        }
-      };
-      window.addEventListener('keydown', keydownListener.value);
-
-      // Start polling for live travel using maxTravel for simplicity
-      keyTestInterval.value = setInterval(async () => {
-        try {
-          const result = await KeyboardService.getRm6X21Travel();
-          //console.log('[DEBUG] Polling result maxTravel:', result.maxTravel);
-          if (result instanceof Error) {
-            console.warn('Polling error:', result);
-            return;
-          }
-          const currentTravel = result.maxTravel || 0;
-          //console.log('[DEBUG] currentTravel (maxTravel):', currentTravel, '(actuationPoint ref:', actuationPoint.value, ')');
-          if (currentTravel > 0) {
-            // Update live travel display (in mm)
-            travelValue.value = currentTravel.toFixed(2);
-
-            // Capture trigger if pending and non-zero and not already captured
-            if (pendingTriggerCapture.value && !triggerCaptured.value) {
-              triggerValue.value = currentTravel.toFixed(2);
-              triggered.value = true;
-              pendingTriggerCapture.value = false;
-              triggerCaptured.value = true;
-              //console.log(`Trigger clamped at first non-zero after send: ${triggerValue.value} mm for key ${keyMap[props.selectedKeys[0]?.keyValue]}`);
-            }
-
-            // Reset triggered and flags on release (travel drops below a small threshold, e.g., 0.1mm)
-            if (triggered.value && currentTravel < 0.1) {
-              triggered.value = false;
-              triggerCaptured.value = false;
-              pendingTriggerCapture.value = false;
-            }
-
-            // Normalize for old bar visualization (if kept)
-            keyPressDepth.value = currentTravel / props.profileMaxTravel;
-          } else {
-            // No press: reset to 0
-            travelValue.value = '0.00';
-            if (triggered.value && keyPressDepth.value < 0.1) {
-              triggered.value = false;
-              triggerCaptured.value = false;
-              pendingTriggerCapture.value = false;
-            }
-            keyPressDepth.value = 0;
-          }
-        } catch (error) {
-          console.error(`Polling failed for key ${props.selectedKeys[0]?.physicalKeyValue || props.selectedKeys[0]?.keyValue}:`, error);
-        }
-      }, 0);  // 50ms for responsive updates
-
-      showKeyTestModal.value = true;
-      //console.log(`[DEBUG] Polling interval started successfully for physical key ${physicalKey} using maxTravel`);
-    };
-
-    // Extracted function to stop polling (reusable for watchers)
-    const stopKeyTestPolling = () => {
-      //console.log('[DEBUG] stopKeyTestPolling called');
-      if (keyTestInterval.value) {
-        clearInterval(keyTestInterval.value);
-        keyTestInterval.value = null;
-      }
-      // Remove keydown listener
-      if (keydownListener.value) {
-        window.removeEventListener('keydown', keydownListener.value);
-        keydownListener.value = null;
-      }
-      // NEW: Restore original key mapping if set
-      if (originalKeyMapping.value !== null && props.selectedKeys.length > 0) {
-        const physicalKey = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
-        KeyboardService.setKey([{ key: physicalKey, value: originalKeyMapping.value, layout: 0 }]).then(() => {
-          //console.log('[DEBUG] Restored original key mapping');
-        }).catch(error => {
-          console.error('[DEBUG] Failed to restore original key mapping:', error);
-        });
-        originalKeyMapping.value = null;
-      }
-      travelValue.value = '0.00';
-      triggerValue.value = '0.00';
-      triggered.value = false;
-      pendingTriggerCapture.value = false; // Reset pending
-      triggerCaptured.value = false; // Reset captured
-      showKeyTestModal.value = false;
-      keyPressDepth.value = 0;
-      //console.log('Key test stopped');
-    };
-
-    // Function to close modal and stop key test
-    const closeKeyTestModal = () => {
-      keyTestEnabled.value = false; // Triggers watcher to stop polling
-    };
-
-    // Watcher on keyTestEnabled to handle start/stop (replaces toggleKeyTest)
-    watch(keyTestEnabled, async (newEnabled, oldEnabled) => {
-      //console.log(`[DEBUG] keyTestEnabled watcher fired - new: ${newEnabled}, old: ${oldEnabled}, selectedKeys length: ${props.selectedKeys.length}`);
-      if (newEnabled && oldEnabled !== newEnabled) {  // Rising edge: start
-        //console.log('[DEBUG] keyTestEnabled watcher: Entering enable branch');
-        if (props.selectedKeys.length === 0) {
-          emit('update-notification', 'No key selected for testing', true);
-          keyTestEnabled.value = false;  // Revert if no key
-          return;
-        }
-        await startKeyTestPolling();
-        const keyValue = props.selectedKeys[0]?.keyValue;
-        emit('update-notification', `Key test started for ${keyMap[keyValue]} (Actuation: ${actuationPoint.value.toFixed(2)} mm)`, false);
-      } else if (!newEnabled && oldEnabled !== newEnabled) {  // Falling edge: stop
-        //console.log('[DEBUG] keyTestEnabled watcher: Entering disable branch');
-        stopKeyTestPolling();
-        const keyValue = props.selectedKeys[0]?.keyValue;
-        if (keyValue) {
-          emit('update-notification', `Key test stopped for ${keyMap[keyValue]}`, false);
-        }
-      }
-    });
-
-    // Watcher on selectedKeys (keeps restart logic)
-    watch(() => props.selectedKeys, async (newKeys, oldKeys) => {
-      //console.log(`[DEBUG] Selected keys watcher fired - new length: ${newKeys.length}, old length: ${oldKeys?.length || 0}, keyTestEnabled: ${keyTestEnabled.value}`);
-      //console.log(`SwitchProfiles: Selected keys changed: ${newKeys.map(k => keyMap[k.keyValue] || k.keyValue).join(', ') || 'none'}`);
-      if (newKeys.length === 0) {
-        //console.log('[DEBUG] Watcher: No keys - forcing disable');
-        // Force disable if no keys selected
-        keyTestEnabled.value = false;
-        keyPressDepth.value = 0;
-        stopKeyTestPolling();  // Use new stop function
-      } else if (keyTestEnabled.value) {
-        //console.log('[DEBUG] Watcher: Keys changed while enabled - restarting polling');
-        // Restart polling for new key without disabling
-        stopKeyTestPolling();  // Clear first
-        await startKeyTestPolling();
-        emit('update-notification', `Key test restarted for new selection: ${keyMap[newKeys[0].keyValue]}`, false);
-      }
-      loadActuationPoint();
-    }, { deep: true, immediate: false });
-
-    // Watch store for sync to ref
+    // Store Sync Watchers
     watch(() => store.selectedProfileId, (newId) => {
       selectedProfileId.value = newId;
     });
 
-    // Watch ref for sync to store
     watch(selectedProfileId, (newId) => {
       store.selectProfile(newId || null);
     });
 
+    // Profile CRUD Functions
+    // Handles adding new profile with auto-capture
     const addProfile = () => {
-      if (newProfileName.value.trim()) {
-        const profileName = newProfileName.value.trim();
-        store.addProfile(profileName, 2.0);
-        newProfileName.value = '';
-        selectedProfileId.value = store.selectedProfileId;
-        currentProfileName.value = profileName;
-        showCaptureModal.value = true;
-        setTimeout(() => captureTravel(), 500);
-      }
+      if (!newProfileName.value.trim()) return;
+      const profileName = newProfileName.value.trim();
+      store.addProfile(profileName, 2.0);
+      newProfileName.value = '';
+      selectedProfileId.value = store.selectedProfileId;
+      currentProfileName.value = profileName;
+      showCaptureModal.value = true;
+      setTimeout(() => captureTravel(), 500);
     };
 
+    // Handles profile deletion
     const deleteProfile = () => {
-      if (selectedProfileId.value) {
-        store.deleteProfile(selectedProfileId.value);
-        selectedProfileId.value = null;
-        capturedTravel.value = 0;
-        showCaptureModal.value = false;
-      }
+      if (!selectedProfileId.value) return;
+      store.deleteProfile(selectedProfileId.value);
+      selectedProfileId.value = null;
+      capturedTravel.value = 0;
+      showCaptureModal.value = false;
     };
 
+    // Travel Capture Logic (for new profiles)
+    // Polls SDK for max travel over 5s, auto-saves if valid
     const captureTravel = async () => {
       if (isCapturing.value) return;
       isCapturing.value = true;
       capturedTravel.value = 0;
       maxObservedTravel = 0;
       countdown.value = 5;
-      //console.log('Starting travel capture... Press a key now.');
+      console.log('[CAPTURE] Starting travel capture for profile:', currentProfileName.value);
 
       countdownInterval = setInterval(() => {
-        if (countdown.value > 0) {
-          countdown.value--;
-        }
+        if (countdown.value > 0) countdown.value--;
       }, 1000);
 
       captureInterval = setInterval(async () => {
         try {
           const result = await KeyboardService.getRm6X21Travel();
           if (result instanceof Error) {
-            console.error('Capture error:', result);
+            console.error('[CAPTURE] Error:', result);
             return;
           }
           const { travels } = result;
@@ -448,13 +213,13 @@ export default defineComponent({
             if (currentMax > maxObservedTravel) {
               maxObservedTravel = currentMax;
               capturedTravel.value = maxObservedTravel;
-              //console.log(`Observed travel: ${currentMax.toFixed(1)} mm`);
+              console.log(`[CAPTURE] Observed max: ${currentMax.toFixed(1)} mm`);
             }
           }
         } catch (error) {
-          console.error('Failed during capture:', error);
+          console.error('[CAPTURE] Failed during poll:', error);
         }
-      }, 0);
+      }, 50); // ~20Hz for capture responsiveness
 
       setTimeout(() => {
         if (isCapturing.value) {
@@ -478,19 +243,16 @@ export default defineComponent({
         clearInterval(countdownInterval);
         countdownInterval = null;
       }
-      //console.log('Capture stopped.');
+      console.log('[CAPTURE] Stopped.');
     };
 
     const saveCapturedTravel = () => {
-      if (selectedProfileId.value && capturedTravel.value > 0) {
-        const travelToSave = capturedTravel.value;
-        store.updateProfile(selectedProfileId.value, { maxTravel: travelToSave });
-        //console.log(`Saving max travel ${travelToSave.toFixed(1)} mm to profile ${currentProfileName.value}`);
-        const updatedProfile = store.selectedProfile;
-        //console.log(`Updated profile maxTravel: ${updatedProfile?.maxTravel?.toFixed(1) || 'N/A'} mm`);
-        capturedTravel.value = 0;
-        closeModal();
-      }
+      if (!selectedProfileId.value || capturedTravel.value <= 0) return;
+      const travelToSave = capturedTravel.value;
+      store.updateProfile(selectedProfileId.value, { maxTravel: travelToSave });
+      console.log(`[CAPTURE] Saved ${travelToSave.toFixed(1)} mm to profile:`, currentProfileName.value);
+      capturedTravel.value = 0;
+      closeModal();
     };
 
     const closeModal = () => {
@@ -500,43 +262,236 @@ export default defineComponent({
       showCaptureModal.value = false;
     };
 
-    onUnmounted(() => {
+    // Key Test Core Functions
+    // Loads set actuation point from SDK for validation/baseline
+    const loadActuationPoint = async () => {
+      if (props.selectedKeys.length === 0) return;
+      const physicalKeyValue = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
+      const keyValue = props.selectedKeys[0].keyValue;
+      try {
+        const result = await KeyboardService.getSingleTravel(physicalKeyValue);
+        if (result instanceof Error) throw result;
+        const loadedValue = Number(result);
+        if (loadedValue >= 0.1 && loadedValue <= props.profileMaxTravel) {
+          actuationPoint.value = loadedValue;
+          console.log(`[KEYTEST] Loaded set actuation: ${actuationPoint.value.toFixed(2)} mm for key ${keyValue}`);
+        } else {
+          throw new Error(`Out of range: ${loadedValue} mm`);
+        }
+      } catch (error) {
+        console.error(`[KEYTEST] Failed to load actuation for key ${keyValue}:`, error);
+        keyTestEnabled.value = false;
+      }
+    };
+
+    // Temporarily remaps key to 'A' (keycode 4) for isolated OS event detection
+    const remapKeyForTest = async (physicalKey: number) => {
+      try {
+        const originalResult = await KeyboardService.getLayoutKeyInfo([{ key: physicalKey, layout: 0 }]);
+        if (originalResult instanceof Error) throw originalResult;
+        originalKeyMapping.value = originalResult[0].value;
+        await KeyboardService.setKey([{ key: physicalKey, value: 4, layout: 0 }]);
+        console.log(`[KEYTEST] Remapped key ${physicalKey} to 'A' (original: ${originalKeyMapping.value})`);
+      } catch (error) {
+        console.error('[KEYTEST] Remap failed:', error);
+        keyTestEnabled.value = false;
+        throw error;
+      }
+    };
+
+    // Restores original key mapping after test
+    const restoreKeyMapping = async (physicalKey: number) => {
+      if (originalKeyMapping.value === null) return;
+      try {
+        await KeyboardService.setKey([{ key: physicalKey, value: originalKeyMapping.value, layout: 0 }]);
+        console.log(`[KEYTEST] Restored key ${physicalKey} to original mapping`);
+      } catch (error) {
+        console.error('[KEYTEST] Restore failed:', error);
+      }
+      originalKeyMapping.value = null;
+    };
+
+    // Starts polling for live travel + trigger capture
+    const startPolling = async (physicalKey: number) => {
+      // Clear existing
+      if (keyTestInterval) {
+        clearInterval(keyTestInterval);
+        keyTestInterval = null;
+      }
+
+      // Keydown listener: Detects OS 'a' event, flags for trigger clamp
+      keydownListener.value = (event: KeyboardEvent) => {
+        if (event.repeat || event.key.toLowerCase() !== 'a') return;
+        pendingTriggerCapture.value = true;
+        triggerCaptured.value = false;
+        console.log('[KEYTEST] OS keydown detected - pending trigger capture');
+      };
+      window.addEventListener('keydown', keydownListener.value);
+
+      // Poll loop: Fetches maxTravel, updates UI, clamps trigger on flag
+      keyTestInterval = setInterval(async () => {
+        try {
+          const result = await KeyboardService.getRm6X21Travel();
+          if (result instanceof Error) {
+            console.warn('[KEYTEST] Poll error:', result);
+            return;
+          }
+          const currentTravel = result.maxTravel || 0;
+          if (currentTravel > 0) {
+            travelValue.value = currentTravel.toFixed(2);
+
+            // Clamp actual trigger: First non-zero after event
+            if (pendingTriggerCapture.value && !triggerCaptured.value && currentTravel >= 0.1) {
+              triggerValue.value = currentTravel.toFixed(2);
+              triggered.value = true;
+              pendingTriggerCapture.value = false;
+              triggerCaptured.value = true;
+              console.log(`[KEYTEST] Clamped trigger at ${triggerValue.value} mm`);
+            }
+
+            // Reset on release (<0.1mm)
+            if (triggered.value && currentTravel < 0.1) {
+              triggered.value = false;
+              triggerCaptured.value = false;
+              pendingTriggerCapture.value = false;
+            }
+          } else {
+            travelValue.value = '0.00';
+            if (triggered.value) { // Release reset
+              triggered.value = false;
+              triggerCaptured.value = false;
+              pendingTriggerCapture.value = false;
+            }
+          }
+        } catch (error) {
+          console.error('[KEYTEST] Poll failed:', error);
+        }
+      }, 0); // ~60Hz+ for real-time feel
+
+      showKeyTestModal.value = true;
+      console.log(`[KEYTEST] Polling started for physical key ${physicalKey}`);
+    };
+
+    // Stops polling, cleans up listeners/remaps
+    const stopPolling = async () => {
+      console.log('[KEYTEST] Stopping polling');
+      if (keyTestInterval) {
+        clearInterval(keyTestInterval);
+        keyTestInterval = null;
+      }
+      if (keydownListener.value) {
+        window.removeEventListener('keydown', keydownListener.value);
+        keydownListener.value = null;
+      }
+      if (props.selectedKeys.length > 0 && originalKeyMapping.value !== null) {
+        const physicalKey = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
+        await restoreKeyMapping(physicalKey);
+      }
+      // Reset UI state
+      travelValue.value = '0.00';
+      triggerValue.value = '0.00';
+      triggered.value = false;
+      pendingTriggerCapture.value = false;
+      triggerCaptured.value = false;
+      showKeyTestModal.value = false;
+    };
+
+    // Main start: Validates, remaps, loads actuation, starts poll
+    const startKeyTest = async () => {
+      if (props.selectedKeys.length === 0) {
+        console.warn('[KEYTEST] No key selected');
+        keyTestEnabled.value = false;
+        return;
+      }
+      const physicalKey = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
+      await loadActuationPoint();
+      if (actuationPoint.value <= 0) {
+        console.error('[KEYTEST] Invalid actuation point');
+        keyTestEnabled.value = false;
+        return;
+      }
+      try {
+        await remapKeyForTest(physicalKey);
+        await startPolling(physicalKey);
+        console.log(`[KEYTEST] Started for ${selectedKeyLabel.value} (baseline: ${actuationPoint.value.toFixed(2)} mm)`);
+      } catch (error) {
+        keyTestEnabled.value = false;
+      }
+    };
+
+    // Closes modal and stops test
+    const closeKeyTestModal = () => {
+      keyTestEnabled.value = false;
+    };
+
+    // Key Test Watchers
+    // Toggles test on checkbox change (rising/falling edge)
+    watch(keyTestEnabled, async (newVal, oldVal) => {
+      if (newVal && oldVal !== newVal) {
+        await startKeyTest();
+      } else if (!newVal && oldVal !== newVal) {
+        await stopPolling();
+        console.log(`[KEYTEST] Stopped for ${selectedKeyLabel.value}`);
+      }
+    });
+
+    // Handles key selection changes: Restart if enabled, force stop if none
+    watch(() => props.selectedKeys, async (newKeys) => {
+      if (newKeys.length === 0) {
+        keyTestEnabled.value = false;
+        await stopPolling();
+        console.log('[KEYTEST] No keys - disabled');
+      } else if (keyTestEnabled.value) {
+        await stopPolling();
+        await startKeyTest();
+        console.log(`[KEYTEST] Restarted for new key: ${selectedKeyLabel.value}`);
+      }
+      await loadActuationPoint(); // Always reload on change
+    }, { deep: true });
+
+    // Cleanup on unmount
+    onUnmounted(async () => {
       if (captureInterval) clearInterval(captureInterval);
       if (countdownInterval) clearInterval(countdownInterval);
-      if (keyTestInterval.value) clearInterval(keyTestInterval.value);
+      if (keyTestInterval) clearInterval(keyTestInterval);
       if (keydownListener.value) window.removeEventListener('keydown', keydownListener.value);
+      if (props.selectedKeys.length > 0 && originalKeyMapping.value !== null) {
+        const physicalKey = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
+        await restoreKeyMapping(physicalKey);
+      }
     });
 
     return {
+      // Profile
       profiles,
       profileOptions,
       newProfileName,
       selectedProfileId,
+      addProfile,
+      deleteProfile,
+      // Capture
       showCaptureModal,
       currentProfileName,
       isCapturing,
       capturedTravel,
       countdown,
-      addProfile,
-      deleteProfile,
       captureTravel,
       stopCapture,
       saveCapturedTravel,
       closeModal,
+      // Key Test
       keyTestEnabled,
-      keyPressDepth,
       actuationPoint,
-      loadActuationPoint,
-      keyMap,
-      profileMaxTravel: props.profileMaxTravel,
-      selectedKeys: props.selectedKeys,
       showKeyTestModal,
       travelValue,
       triggerValue,
       triggered,
       selectedKeyLabel,
-      selectedKeyIndex,
-      closeKeyTestModal, // Add to return
+      closeKeyTestModal,
+      // Props passthrough (for template)
+      profileMaxTravel: props.profileMaxTravel,
+      selectedKeys: props.selectedKeys,
+      keyMap,
     };
   },
 });
@@ -640,48 +595,6 @@ export default defineComponent({
     margin: 10px 0;
   }
 
-  .no-profiles {
-    text-align: center;
-    color: v.$text-color;
-    font-size: 1rem;
-    padding: 20px;
-  }
-
-  .key-test-container {
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-
-    .key-test-bar {
-      width: 20px;
-      height: 100px;
-      background-color: rgba(v.$background-dark, 0.8);
-      border: 1px solid rgba(v.$text-color, 0.3);
-      position: relative;
-      overflow: hidden;
-
-      .key-test-depth {
-        width: 100%;
-        bottom: 0;
-        position: absolute;
-        transition: height 0.1s ease;
-      }
-
-      .actuation-point {
-        width: 100%;
-        height: 2px;
-        background-color: v.$accent-color;
-        position: absolute;
-      }
-    }
-
-    p {
-      color: v.$text-color;
-      font-size: 0.9rem;
-    }
-  }
-
   /* Modal Styles */
   .modal-overlay {
     position: fixed;
@@ -702,6 +615,9 @@ export default defineComponent({
     border-radius: v.$border-radius;
     border: 1px solid rgba(v.$text-color, 0.2);
     max-width: 400px;
+    width: 90vw; // Responsive for mobile
+    max-height: 80vh;
+    overflow-y: auto;
     text-align: center;
 
     h4 {
@@ -712,8 +628,8 @@ export default defineComponent({
     p {
       color: whitesmoke;
       margin-bottom: 10px;
-      font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      font-weight: light;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-weight: 300;
     }
 
     .modal-buttons {
@@ -740,29 +656,27 @@ export default defineComponent({
   }
 
   .key-test-table {
-    width: 80%;  // Adjust width as needed
-    margin: 0 auto;  // Center the table
+    width: 80%;
+    margin: 15px auto 0;
     border-collapse: collapse;
-
 
     th, td {
       padding: 8px;
       border: 1px solid rgba(v.$text-color, 0.2);
       font-weight: lighter;
       text-align: center;
-      color: white;
-      font-family:monospace;
-      font-size: large;
-      
+      color: v.$text-color;
+      font-family: monospace;
+      font-size: 1.1rem;
     }
 
     th {
       background-color: rgba(v.$background-dark, 0.8);
-     
     }
 
     .live {
       color: v.$accent-color;
+      font-weight: 500;
     }
 
     .trigger {

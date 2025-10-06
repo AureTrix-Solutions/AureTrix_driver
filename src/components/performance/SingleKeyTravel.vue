@@ -68,7 +68,9 @@
         </div>
       </div>
       <div class="link-container">
-        <button @click="toggleLinkDeadZones" class="link-btn" :disabled="selectedKeys.length === 0">{{ deadZonesLinked ? 'Unlink' : 'Link' }} Dead Zones</button>
+        <button @click="toggleLinkDeadZones" class="link-btn" :disabled="selectedKeys.length === 0">
+          {{ deadZonesLinked ? 'Unlink' : 'Link' }} Dead Zones
+        </button>
       </div>
       <div class="input-group">
         <div class="label">Bottom Dead Zone (mm)</div>
@@ -108,7 +110,6 @@ import { defineComponent, ref, watch, computed, PropType } from 'vue';
 import KeyboardService from '@services/KeyboardService';
 import { keyMap } from '@utils/keyMap';
 import type { IDefKeyInfo } from '@/types/types';
-import { Ref } from 'vue';
 
 export default defineComponent({
   name: 'SingleKeyTravel',
@@ -122,41 +123,30 @@ export default defineComponent({
       required: true,
     },
     baseLayout: {
-      type: Object as PropType<Ref<IDefKeyInfo[][] | null>>,
-      default: () => ref(null),
+      type: Object as PropType<any>,
+      default: null,
     },
     profileMaxTravel: {
       type: Number,
       default: 4.0,
     },
   },
-  emits: ['update-notification', 'update-single-overlay', 'update-overlay'],
+  emits: ['update-single-overlay', 'update-overlay'],
   setup(props, { emit }) {
+    // Core Refs
     const singleKeyTravel = ref(2.0);
     const topDeadZone = ref(0.0);
     const bottomDeadZone = ref(0.0);
     const deadZonesLinked = ref(false);
     const showOverlay = ref(false);
 
-    const minTravel = computed(() => {
-      return Math.max(0.1, topDeadZone.value);
-    });
+    // Computed Bounds
+    // Min/max for travel slider, respecting dead zones
+    const minTravel = computed(() => Math.max(0.1, topDeadZone.value));
+    const maxTravel = computed(() => Math.min(props.profileMaxTravel, props.profileMaxTravel - bottomDeadZone.value));
 
-    const maxTravel = computed(() => {
-      return Math.min(props.profileMaxTravel, props.profileMaxTravel - bottomDeadZone.value);
-    });
-
-    // Clamp singleKeyTravel when dead zones change
-    watch([topDeadZone, bottomDeadZone], () => {
-      if (singleKeyTravel.value < minTravel.value) {
-        singleKeyTravel.value = Number(minTravel.value.toFixed(2));
-        //console.log(`Clamped singleKeyTravel to min: ${singleKeyTravel.value} mm due to topDeadZone`);
-      } else if (singleKeyTravel.value > maxTravel.value) {
-        singleKeyTravel.value = Number(maxTravel.value.toFixed(2));
-        //console.log(`Clamped singleKeyTravel to max: ${singleKeyTravel.value} mm due to bottomDeadZone`);
-      }
-    });
-
+    // Load Functions
+    // Fetches current single key travel from SDK
     const loadSingleKeyTravel = async () => {
       if (props.selectedKeys.length === 0) {
         singleKeyTravel.value = 2.0;
@@ -165,26 +155,23 @@ export default defineComponent({
       const physicalKeyValue = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
       const keyValue = props.selectedKeys[0].keyValue;
       try {
-        //console.log(`SingleKeyTravel: Loading travel for physical key ${physicalKeyValue} (display: ${keyValue})`);
+        console.log(`[SINGLETRAVEL] Loading travel for physical key ${physicalKeyValue} (display: ${keyValue})`);
         const result = await KeyboardService.getSingleTravel(physicalKeyValue);
-        if (result instanceof Error) {
-          throw result;
-        }
-        //console.log(`Raw SDK response: singleTravel=${result} mm`);
+        if (result instanceof Error) throw result;
         const loadedValue = Number(result);
         if (loadedValue >= 0.1 && loadedValue <= 4.0) {
           singleKeyTravel.value = Number(loadedValue.toFixed(2));
-          //console.log(`Loaded single key travel for physical key ${physicalKeyValue}: ${singleKeyTravel.value.toFixed(2)} mm`);
+          console.log(`[SINGLETRAVEL] Loaded: ${singleKeyTravel.value.toFixed(2)} mm for key ${physicalKeyValue}`);
         } else {
-          throw new Error(`Loaded single key travel ${loadedValue} mm out of range (0.1-4.0 mm)`);
+          throw new Error(`Out of range: ${loadedValue} mm`);
         }
       } catch (error) {
-        console.error(`Failed to load single key travel for physical key ${physicalKeyValue}:`, error);
-        emit('update-notification', `Failed to load single key travel: ${(error as Error).message}`, true);
+        console.error(`[SINGLETRAVEL] Failed to load travel for key ${physicalKeyValue}:`, error);
         singleKeyTravel.value = 2.0;
       }
     };
 
+    // Fetches current dead zones (press/release) from SDK
     const loadDeadZones = async () => {
       if (props.selectedKeys.length === 0) {
         topDeadZone.value = 0.2;
@@ -194,144 +181,116 @@ export default defineComponent({
       const physicalKeyValue = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
       const keyValue = props.selectedKeys[0].keyValue;
       try {
-        //console.log(`Loading dead zones for physical key ${physicalKeyValue} (display: ${keyValue})`);
+        console.log(`[SINGLETRAVEL] Loading dead zones for physical key ${physicalKeyValue} (display: ${keyValue})`);
         const result = await KeyboardService.getDpDr(physicalKeyValue);
-        if (result instanceof Error) {
-          throw result;
-        }
-        //console.log(`Raw SDK response: pressDead=${result.pressDead}, releaseDead=${result.releaseDead} mm`);
+        if (result instanceof Error) throw result;
         if (result.pressDead >= 0 && result.pressDead <= 1.0) {
           topDeadZone.value = Number(result.pressDead.toFixed(2));
         }
         if (result.releaseDead >= 0 && result.releaseDead <= 1.0) {
           bottomDeadZone.value = Number(result.releaseDead.toFixed(2));
         }
-        //console.log(`Loaded dead zones for physical key ${physicalKeyValue}: top ${topDeadZone.value.toFixed(2)}, bottom ${bottomDeadZone.value.toFixed(2)} mm`);
+        console.log(`[SINGLETRAVEL] Loaded: top ${topDeadZone.value.toFixed(2)}, bottom ${bottomDeadZone.value.toFixed(2)} mm for key ${physicalKeyValue}`);
       } catch (error) {
-        console.error(`Failed to load dead zones for physical key ${physicalKeyValue}:`, error);
-        emit('update-notification', `Failed to load dead zones: ${(error as Error).message}`, true);
+        console.error(`[SINGLETRAVEL] Failed to load dead zones for key ${physicalKeyValue}:`, error);
         topDeadZone.value = 0.2;
         bottomDeadZone.value = 0.2;
       }
     };
 
+    // Batch Update Helpers
+    // Processes keys in batches for SDK calls (avoids overload)
+    const processBatches = async (keys: { physicalKeyValue: number; keyValue: number }[], updateFn: (physicalKey: number) => Promise<any>, batchSize = 80) => {
+      const batches = [];
+      for (let i = 0; i < keys.length; i += batchSize) {
+        batches.push(keys.slice(i, i + batchSize));
+      }
+      for (const batch of batches) {
+        await Promise.all(batch.map(({ physicalKeyValue }) => updateFn(physicalKeyValue)));
+        await new Promise(resolve => setTimeout(resolve, 100)); // Throttle
+        console.log(`[SINGLETRAVEL] Processed batch of ${batch.length} keys`);
+      }
+    };
+
+    // Update Functions
+    // Applies single travel to selected keys (with performance mode)
     const updateSingleKeyTravel = async () => {
       if (props.selectedKeys.length === 0) {
-        emit('update-notification', 'No key selected', true);
+        console.warn('[SINGLETRAVEL] No keys selected');
         return;
       }
-      const BATCH_SIZE = 80; // Set to 80 based on successful test
       const keys = props.selectedKeys.map(key => ({
         physicalKeyValue: key.physicalKeyValue || key.keyValue,
         keyValue: key.keyValue,
       }));
       try {
-        // Split keys into batches
-        const batches = [];
-        for (let i = 0; i < keys.length; i += BATCH_SIZE) {
-          batches.push(keys.slice(i, i + BATCH_SIZE));
-        }
-        // Process each batch sequentially with a delay
-        for (const batch of batches) {
-          // Set performance mode for all keys in the batch
-          await Promise.all(
-            batch.map(({ physicalKeyValue }) =>
-              KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0)
-            )
-          );
-          // Set single travel for all keys in the batch
-          await Promise.all(
-            batch.map(({ physicalKeyValue }) =>
-              KeyboardService.setSingleTravel(physicalKeyValue, singleKeyTravel.value)
-            )
-          );
-          //console.log(`Updated batch of ${batch.length} keys to single mode with travel ${singleKeyTravel.value.toFixed(2)} mm`);
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
+        await processBatches(keys, async (physicalKeyValue) => {
+          await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);
+          await KeyboardService.setSingleTravel(physicalKeyValue, singleKeyTravel.value);
+        });
         const keyDisplay = props.selectedKeys.length === 1
           ? keyMap[props.selectedKeys[0].keyValue] || props.selectedKeys[0].keyValue
           : `${props.selectedKeys.length} keys`;
-        //console.log(`Completed batch update for ${keys.length} keys`);
-        emit('update-notification', `Single key travel updated for ${keyDisplay}`, false);
+        console.log(`[SINGLETRAVEL] Updated travel to ${singleKeyTravel.value.toFixed(2)} mm for ${keyDisplay}`);
         
-        // Clear global overlays (re-poll modes to remove changed keys)
+        // Clear overlays for re-poll
         emit('update-overlay', null);
-        // Clear single overlays (re-poll modes to ensure consistency)
         emit('update-single-overlay', null);
         
-        // If single overlay is shown, repopulate with current data
+        // Repopulate if shown
         if (showOverlay.value) {
-          setTimeout(() => {
-            //console.log(`Repopulating single overlay after delay`);
-            emit('update-single-overlay', { travel: '0', pressDead: '0', releaseDead: '0' }); // Dummy trigger
-          }, 300); // Small delay to allow clears to process
+          setTimeout(() => emit('update-single-overlay', { travel: '0', pressDead: '0', releaseDead: '0' }), 300);
         }
       } catch (error) {
-        console.error(`Failed to batch update single key travel for ${keys.length} keys:`, error);
-        emit('update-notification', `Failed to update single key travel: ${(error as Error).message}`, true);
+        console.error(`[SINGLETRAVEL] Failed to update travel for ${keys.length} keys:`, error);
       }
     };
 
+    // Applies dead zones to selected keys
     const updateDeadZones = async () => {
       if (props.selectedKeys.length === 0) {
-        emit('update-notification', 'No keys selected', true);
+        console.warn('[SINGLETRAVEL] No keys selected');
         return;
       }
-      const BATCH_SIZE = 80;
       const keys = props.selectedKeys.map(key => ({
         physicalKeyValue: key.physicalKeyValue || key.keyValue,
         keyValue: key.keyValue,
       }));
       try {
-        // Split keys into batches
-        const batches = [];
-        for (let i = 0; i < keys.length; i += BATCH_SIZE) {
-          batches.push(keys.slice(i, i + BATCH_SIZE));
-        }
-        // Process each batch sequentially with a delay
-        for (const batch of batches) {
-          await Promise.all(
-            batch.map(({ physicalKeyValue }) =>
-              Promise.all([
-                KeyboardService.setDp(physicalKeyValue, topDeadZone.value),
-                KeyboardService.setDr(physicalKeyValue, bottomDeadZone.value),
-              ])
-            )
-          );
-          //console.log(`Updated dead zones for batch of ${batch.length} keys: top ${topDeadZone.value.toFixed(2)}, bottom ${bottomDeadZone.value.toFixed(2)} mm`);
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
+        await processBatches(keys, async (physicalKeyValue) => {
+          await Promise.all([
+            KeyboardService.setDp(physicalKeyValue, topDeadZone.value),
+            KeyboardService.setDr(physicalKeyValue, bottomDeadZone.value),
+          ]);
+        });
         const keyDisplay = props.selectedKeys.length === 1
           ? keyMap[props.selectedKeys[0].keyValue] || props.selectedKeys[0].keyValue
           : `${props.selectedKeys.length} keys`;
-        //console.log(`Completed batch update for ${keys.length} keys`);
-        emit('update-notification', `Dead zones updated for ${keyDisplay}`, false);
+        console.log(`[SINGLETRAVEL] Updated dead zones (top: ${topDeadZone.value.toFixed(2)}, bottom: ${bottomDeadZone.value.toFixed(2)}) for ${keyDisplay}`);
         
-        // Clear global overlays (re-poll modes to remove changed keys)
+        // Clear overlays for re-poll
         emit('update-overlay', null);
-        // Clear single overlays (re-poll modes to ensure consistency)
         emit('update-single-overlay', null);
         
-        // If single overlay is shown, repopulate with current data
+        // Repopulate if shown
         if (showOverlay.value) {
-          setTimeout(() => {
-            //console.log(`Repopulating single overlay after delay`);
-            emit('update-single-overlay', { travel: '0', pressDead: '0', releaseDead: '0' }); // Dummy trigger
-          }, 300); // Small delay to allow clears to process
+          setTimeout(() => emit('update-single-overlay', { travel: '0', pressDead: '0', releaseDead: '0' }), 300);
         }
       } catch (error) {
-        console.error(`Failed to batch update dead zones for ${keys.length} keys:`, error);
-        emit('update-notification', `Failed to update dead zones: ${(error as Error).message}`, true);
+        console.error(`[SINGLETRAVEL] Failed to update dead zones for ${keys.length} keys:`, error);
       }
     };
 
+    // Adjust Helpers
+    // Incremental travel adjustment with bounds
     const adjustTravel = (delta: number) => {
       const newValue = Math.min(Math.max(singleKeyTravel.value + delta, minTravel.value), maxTravel.value);
       singleKeyTravel.value = Number(newValue.toFixed(2));
-      //console.log(`Adjusted single key travel to ${singleKeyTravel.value.toFixed(2)} mm`);
+      console.log(`[SINGLETRAVEL] Adjusted travel to ${singleKeyTravel.value.toFixed(2)} mm`);
       updateSingleKeyTravel();
     };
 
+    // Incremental dead zone adjustment with linking
     const adjustDeadZone = (delta: number, type: 'top' | 'bottom') => {
       let newValue = type === 'top' ? topDeadZone.value + delta : bottomDeadZone.value + delta;
       newValue = Math.min(Math.max(newValue, 0), 1.0);
@@ -344,65 +303,55 @@ export default defineComponent({
         const otherType = type === 'top' ? 'bottom' : 'top';
         (otherType === 'top' ? topDeadZone : bottomDeadZone).value = Number(newValue.toFixed(2));
       }
-      //console.log(`Adjusted ${type} dead zone to ${newValue.toFixed(2)} mm`);
+      console.log(`[SINGLETRAVEL] Adjusted ${type} dead zone to ${newValue.toFixed(2)} mm`);
       updateDeadZones();
     };
 
+    // Linking Toggle
+    // Syncs bottom to top on link
     const toggleLinkDeadZones = () => {
       deadZonesLinked.value = !deadZonesLinked.value;
-      //console.log(`Dead zones linked: ${deadZonesLinked.value}`);
+      console.log(`[SINGLETRAVEL] Dead zones linked: ${deadZonesLinked.value}`);
       if (deadZonesLinked.value) {
         bottomDeadZone.value = topDeadZone.value;
         updateDeadZones();
       }
     };
 
-    const setKeyToGlobalMode = async () => {
-      if (props.selectedKeys.length === 0) {
-        emit('update-notification', 'No keys selected', true);
-        return;
-      }
-      try {
-        for (const key of props.selectedKeys) {
-          const physicalKeyValue = key.physicalKeyValue || key.keyValue;
-          const keyValue = key.keyValue;
-          const result = await KeyboardService.setPerformanceMode(physicalKeyValue, 'global', 0);
-          //console.log(`Set physical key ${physicalKeyValue} (display: ${keyMap[keyValue] || keyValue}) to global mode result:`, result);
-        }
-        emit('update-notification', `Set ${props.selectedKeys.length} keys to global mode`, false);
-        
-        // Clear both overlays (re-poll modes to remove changed keys)
-        emit('update-overlay', null);
-        emit('update-single-overlay', null);
-      } catch (error) {
-        console.error('Failed to set keys to global mode for physical keys:', error);
-        emit('update-notification', `Failed to set keys to global mode: ${(error as Error).message}`, true);
-      }
-    };
-
+    // Overlay Toggle
+    // Manages single key overlay visibility
     const toggleOverlay = () => {
       showOverlay.value = !showOverlay.value;
-      //console.log(`SingleKeyTravel: Overlay toggled: ${showOverlay.value}`);
-      // Emit dummy data as trigger; actual values fetched in parent
+      console.log(`[SINGLETRAVEL] Overlay toggled: ${showOverlay.value}`);
       const dummyData = showOverlay.value ? {
-        travel: '0', // Ignored
-        pressDead: '0', // Ignored
-        releaseDead: '0', // Ignored
+        travel: '0',
+        pressDead: '0',
+        releaseDead: '0',
       } : null;
       emit('update-single-overlay', dummyData);
     };
 
-    watch(() => props.selectedKeys, async (newKeys, oldKeys) => {
-      //console.log(`SingleKeyTravel: Selected keys changed: ${newKeys.map(k => keyMap[k.keyValue] || k.keyValue).join(', ') || 'none'}`);
-      await loadSingleKeyTravel();
-      await loadDeadZones();
-    }, { deep: true });
-
+    // Watchers
+    // Clamps travel on dead zone changes
     watch([topDeadZone, bottomDeadZone], () => {
+      if (singleKeyTravel.value < minTravel.value) {
+        singleKeyTravel.value = Number(minTravel.value.toFixed(2));
+        console.log(`[SINGLETRAVEL] Clamped travel to min: ${singleKeyTravel.value} mm (top dead zone)`);
+      } else if (singleKeyTravel.value > maxTravel.value) {
+        singleKeyTravel.value = Number(maxTravel.value.toFixed(2));
+        console.log(`[SINGLETRAVEL] Clamped travel to max: ${singleKeyTravel.value} mm (bottom dead zone)`);
+      }
       if (deadZonesLinked.value) {
         bottomDeadZone.value = topDeadZone.value;
       }
     });
+
+    // Reloads on key selection change
+    watch(() => props.selectedKeys, async (newKeys) => {
+      console.log(`[SINGLETRAVEL] Selected keys changed: ${newKeys.map(k => keyMap[k.keyValue] || k.keyValue).join(', ') || 'none'}`);
+      await loadSingleKeyTravel();
+      await loadDeadZones();
+    }, { deep: true });
 
     return {
       keyMap,
@@ -417,7 +366,6 @@ export default defineComponent({
       adjustTravel,
       adjustDeadZone,
       toggleLinkDeadZones,
-      setKeyToGlobalMode,
       showOverlay,
       toggleOverlay,
     };

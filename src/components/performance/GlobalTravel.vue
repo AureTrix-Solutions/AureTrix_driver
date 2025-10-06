@@ -122,37 +122,27 @@ export default defineComponent({
       default: 4.0,
     },
   },
-  emits: ['update-notification', 'update-overlay', 'update-single-overlay'],
+  emits: ['update-overlay', 'update-single-overlay'],
   setup(props, { emit }) {
+    // Core Refs
     const globalTravel = ref(2.0);
     const pressDead = ref(0.2);
     const releaseDead = ref(0.2);
     const deadZonesLinked = ref(false);
     const showOverlay = ref(false);
 
-    const minTravel = computed(() => {
-      return Math.max(0.1, pressDead.value);
-    });
+    // Computed Bounds
+    // Min/max for travel slider, respecting dead zones
+    const minTravel = computed(() => Math.max(0.1, pressDead.value));
+    const maxTravel = computed(() => Math.min(props.profileMaxTravel, props.profileMaxTravel - releaseDead.value));
 
-    const maxTravel = computed(() => {
-      return Math.min(props.profileMaxTravel, props.profileMaxTravel - releaseDead.value);
-    });
-
-    // Clamp globalTravel when dead zones change
-    watch([pressDead, releaseDead], () => {
-      if (globalTravel.value < minTravel.value) {
-        globalTravel.value = Number(minTravel.value.toFixed(2));
-      } else if (globalTravel.value > maxTravel.value) {
-        globalTravel.value = Number(maxTravel.value.toFixed(2));
-      }
-    });
-
+    // Load Function
+    // Fetches global settings from SDK
     const loadGlobalSettings = async () => {
       try {
+        console.log('[GLOBALTRAVEL] Loading global settings');
         const settings = await KeyboardService.getGlobalTouchTravel();
-        if (settings instanceof Error) {
-          throw settings;
-        }
+        if (settings instanceof Error) throw settings;
         if (settings.globalTouchTravel >= 0.1 && settings.globalTouchTravel <= 4.0) {
           globalTravel.value = Number(settings.globalTouchTravel.toFixed(2));
         }
@@ -162,87 +152,76 @@ export default defineComponent({
         if (settings.releaseDead >= 0 && settings.releaseDead <= 1.0) {
           releaseDead.value = Number(settings.releaseDead.toFixed(2));
         }
-        emit('update-notification', `Global settings loaded: travel ${globalTravel.value.toFixed(2)} mm`, false);
+        console.log(`[GLOBALTRAVEL] Loaded: travel ${globalTravel.value.toFixed(2)} mm, press ${pressDead.value.toFixed(2)}, release ${releaseDead.value.toFixed(2)} mm`);
       } catch (error) {
-        console.error(`Failed to load global settings:`, error);
-        emit('update-notification', `Failed to load global settings: ${(error as Error).message}`, true);
+        console.error('[GLOBALTRAVEL] Failed to load settings:', error);
       }
     };
 
+    // Batch Update Helper
+    // Processes key IDs in batches for SDK calls
+    const processBatches = async (keyIds: number[], updateFn: (keyId: number) => Promise<any>, batchSize = 80) => {
+      const batches = [];
+      for (let i = 0; i < keyIds.length; i += batchSize) {
+        batches.push(keyIds.slice(i, i + batchSize));
+      }
+      for (const batch of batches) {
+        await Promise.all(batch.map(updateFn));
+        await new Promise(resolve => setTimeout(resolve, 100)); // Throttle
+        console.log(`[GLOBALTRAVEL] Processed batch of ${batch.length} keys`);
+      }
+    };
+
+    // Dead Zone Update
+    // Applies dead zones only to global mode keys
     const updateGlobalDeadZones = async () => {
       try {
         const keyIds = props.layout.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
-        //console.log(`Updating dead zones for global mode keys among ${keyIds.length} keys`);
-        const BATCH_SIZE = 80;
-        const batches = [];
-        for (let i = 0; i < keyIds.length; i += BATCH_SIZE) {
-          batches.push(keyIds.slice(i, i + BATCH_SIZE));
-        }
+        console.log(`[GLOBALTRAVEL] Updating dead zones for global keys among ${keyIds.length} total keys`);
 
+        // Collect global mode keys
         const globalModeKeys: number[] = [];
-        // First, collect all global mode keys
-        for (const batch of batches) {
-          const keyModes = await Promise.all(
-            batch.map(async (keyId) => {
-              try {
-                const mode = await KeyboardService.getPerformanceMode(keyId);
-                return { key: keyId, touchMode: mode.touchMode };
-              } catch (error) {
-                console.warn(`Failed to fetch performance mode for key ${keyId}:`, error);
-                return null;
-              }
-            })
-          );
-          globalModeKeys.push(...keyModes
-            .filter((mode): mode is { key: number; touchMode: string } => mode !== null)
-            .filter(mode => mode.touchMode === 'global')
-            .map(mode => mode.key));
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-        //console.log(`Found ${globalModeKeys.length} global mode keys:`, globalModeKeys);
+        await processBatches(keyIds, async (keyId) => {
+          try {
+            const mode = await KeyboardService.getPerformanceMode(keyId);
+            if (mode.touchMode === 'global') {
+              globalModeKeys.push(keyId);
+            }
+          } catch (error) {
+            console.warn(`[GLOBALTRAVEL] Failed to fetch mode for key ${keyId}:`, error);
+          }
+        });
 
         if (globalModeKeys.length === 0) {
-          //console.log('No global mode keys to update dead zones for');
+          console.log('[GLOBALTRAVEL] No global mode keys to update');
           return;
         }
 
-        // Now, batch set dead zones for global mode keys
-        const globalBatches = [];
-        for (let i = 0; i < globalModeKeys.length; i += BATCH_SIZE) {
-          globalBatches.push(globalModeKeys.slice(i, i + BATCH_SIZE));
-        }
+        // Set dead zones for global keys
+        await processBatches(globalModeKeys, async (keyId) => {
+          await Promise.all([
+            KeyboardService.setDp(keyId, pressDead.value),
+            KeyboardService.setDr(keyId, releaseDead.value),
+          ]);
+        });
 
-        for (const batch of globalBatches) {
-          await Promise.all(
-            batch.map(async (keyId) => {
-              try {
-                await Promise.all([
-                  KeyboardService.setDp(keyId, pressDead.value),
-                  KeyboardService.setDr(keyId, releaseDead.value),
-                ]);
-              } catch (error) {
-                console.warn(`Failed to set dead zones for global key ${keyId}:`, error);
-              }
-            })
-          );
-          //console.log(`Updated dead zones for batch of ${batch.length} global keys: press ${pressDead.value.toFixed(2)}, release ${releaseDead.value.toFixed(2)} mm`);
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-        emit('update-notification', `Updated dead zones for ${globalModeKeys.length} global keys`, false);
+        console.log(`[GLOBALTRAVEL] Updated dead zones for ${globalModeKeys.length} global keys (press: ${pressDead.value.toFixed(2)}, release: ${releaseDead.value.toFixed(2)} mm)`);
       } catch (error) {
-        console.error('Failed to update global dead zones:', error);
-        emit('update-notification', `Failed to update global dead zones: ${(error as Error).message}`, true);
+        console.error('[GLOBALTRAVEL] Failed to update global dead zones:', error);
       }
     };
 
+    // Main Update
+    // Sets global travel and triggers dead zone apply
     const updateGlobalSettings = async () => {
       try {
         const param = { globalTouchTravel: globalTravel.value, pressDead: pressDead.value, releaseDead: releaseDead.value };
         await KeyboardService.setGlobalTouchTravel(param);
-        //console.log(`Updated global settings to:`, param);
-        await updateGlobalDeadZones(); // Apply dead zones to global keys
-        emit('update-notification', `Global settings updated: travel ${globalTravel.value.toFixed(2)} mm`, false);
-        // Emit overlay data when sliders are released
+        console.log('[GLOBALTRAVEL] Updated global params:', param);
+        await updateGlobalDeadZones();
+        console.log(`[GLOBALTRAVEL] Settings updated: travel ${globalTravel.value.toFixed(2)} mm`);
+
+        // Sync overlay if shown
         if (showOverlay.value) {
           emit('update-overlay', {
             travel: globalTravel.value.toFixed(2),
@@ -251,18 +230,20 @@ export default defineComponent({
           });
         }
       } catch (error) {
-        console.error(`Failed to update global settings:`, error);
-        emit('update-notification', `Failed to update global settings: ${(error as Error).message}`, true);
+        console.error('[GLOBALTRAVEL] Failed to update settings:', error);
       }
     };
 
+    // Adjust Helpers
+    // Incremental travel adjustment with bounds
     const adjustTravel = (delta: number) => {
       const newValue = Math.min(Math.max(globalTravel.value + delta, minTravel.value), maxTravel.value);
       globalTravel.value = Number(newValue.toFixed(2));
-      //console.log(`Adjusted global travel to ${globalTravel.value.toFixed(2)} mm`);
+      console.log(`[GLOBALTRAVEL] Adjusted travel to ${globalTravel.value.toFixed(2)} mm`);
       updateGlobalSettings();
     };
 
+    // Incremental dead zone adjustment with linking
     const adjustDeadZone = (delta: number, type: 'press' | 'release') => {
       let newValue = type === 'press' ? pressDead.value + delta : releaseDead.value + delta;
       newValue = Math.min(Math.max(newValue, 0), 1.0);
@@ -275,21 +256,26 @@ export default defineComponent({
         const otherType = type === 'press' ? 'release' : 'press';
         (otherType === 'press' ? pressDead : releaseDead).value = Number(newValue.toFixed(2));
       }
-      //console.log(`Adjusted ${type} dead zone to ${newValue.toFixed(2)} mm`);
+      console.log(`[GLOBALTRAVEL] Adjusted ${type} dead zone to ${newValue.toFixed(2)} mm`);
       updateGlobalSettings();
     };
 
+    // Linking Toggle
+    // Syncs release to press on link
     const toggleLinkDeadZones = () => {
       deadZonesLinked.value = !deadZonesLinked.value;
+      console.log(`[GLOBALTRAVEL] Dead zones linked: ${deadZonesLinked.value}`);
       if (deadZonesLinked.value) {
         releaseDead.value = pressDead.value;
         updateGlobalSettings();
       }
     };
 
+    // Mode Switch
+    // Sets selected keys to global and applies settings
     const setKeyToGlobalMode = async () => {
       if (props.selectedKeys.length === 0) {
-        emit('update-notification', 'No keys selected', true);
+        console.warn('[GLOBALTRAVEL] No keys selected');
         return;
       }
       const keys = props.selectedKeys.map(key => ({
@@ -297,44 +283,38 @@ export default defineComponent({
         keyValue: key.keyValue,
       }));
       try {
-        // Set all keys to global mode in a single Promise.all
-        await Promise.all(
-          keys.map(({ physicalKeyValue }) =>
-            KeyboardService.setPerformanceMode(physicalKeyValue, 'global', 0)
-          )
-        );
-        // Apply global settings to ensure keys adopt current values
+        // Set to global mode
+        await Promise.all(keys.map(({ physicalKeyValue }) => KeyboardService.setPerformanceMode(physicalKeyValue, 'global', 0)));
+        // Apply settings
         await updateGlobalSettings();
         
-        // Clear single overlays (re-poll modes to remove changed keys)
+        // Clear overlays for re-poll
         emit('update-single-overlay', null);
-        // Clear global overlays (re-poll modes to ensure consistency)
         emit('update-overlay', null);
         
-        // If global overlay is shown, repopulate with current data
+        // Repopulate if shown
         if (showOverlay.value) {
-          setTimeout(() => {
-            emit('update-overlay', {
-              travel: globalTravel.value.toFixed(2),
-              pressDead: pressDead.value.toFixed(2),
-              releaseDead: releaseDead.value.toFixed(2),
-            });
-          }, 300); // Small delay to allow clears to process
+          setTimeout(() => emit('update-overlay', {
+            travel: globalTravel.value.toFixed(2),
+            pressDead: pressDead.value.toFixed(2),
+            releaseDead: releaseDead.value.toFixed(2),
+          }), 300);
         }
         
         const keyDisplay = props.selectedKeys.length === 1
           ? keyMap[props.selectedKeys[0].keyValue] || props.selectedKeys[0].keyValue
           : `${props.selectedKeys.length} keys`;
-        emit('update-notification', `Set ${keyDisplay} to global mode and applied global settings`, false);
+        console.log(`[GLOBALTRAVEL] Set ${keyDisplay} to global mode and applied settings`);
       } catch (error) {
-        console.error(`Failed to set global mode or apply global settings for ${keys.length} keys:`, error);
-        emit('update-notification', `Failed to set keys to global mode: ${(error as Error).message}`, true);
+        console.error(`[GLOBALTRAVEL] Failed to set global mode for ${keys.length} keys:`, error);
       }
     };
 
+    // Overlay Toggle
+    // Manages global overlay visibility and data
     const toggleOverlay = () => {
       showOverlay.value = !showOverlay.value;
-      // Emit overlay data when toggling
+      console.log(`[GLOBALTRAVEL] Overlay toggled: ${showOverlay.value}`);
       emit('update-overlay', showOverlay.value ? {
         travel: globalTravel.value.toFixed(2),
         pressDead: pressDead.value.toFixed(2),
@@ -342,12 +322,22 @@ export default defineComponent({
       } : null);
     };
 
+    // Watchers
+    // Clamps travel on dead zone changes
     watch([pressDead, releaseDead], () => {
+      if (globalTravel.value < minTravel.value) {
+        globalTravel.value = Number(minTravel.value.toFixed(2));
+        console.log(`[GLOBALTRAVEL] Clamped travel to min: ${globalTravel.value} mm (press dead zone)`);
+      } else if (globalTravel.value > maxTravel.value) {
+        globalTravel.value = Number(maxTravel.value.toFixed(2));
+        console.log(`[GLOBALTRAVEL] Clamped travel to max: ${globalTravel.value} mm (release dead zone)`);
+      }
       if (deadZonesLinked.value) {
         releaseDead.value = pressDead.value;
       }
     });
 
+    // Init Load
     onMounted(() => {
       loadGlobalSettings();
     });
@@ -373,7 +363,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-// (Style remains unchanged from previous version)
 @use 'sass:color';
 @use '@styles/variables' as v;
 
@@ -385,14 +374,12 @@ export default defineComponent({
 
   .header-row {
     display: flex;
-    flex-shrink: 0;
     align-items: center;
     margin-bottom: 16px;
   }
 
   h3 {
     color: v.$primary-color;
-    flex-shrink: 0;
     width: auto;
     font-size: 1.5rem;
     text-decoration: underline;
@@ -424,7 +411,6 @@ export default defineComponent({
 
   .global-travel-row {
     display: flex;
-    flex-shrink: 0;
     height: 10px;
     padding-top: 30px;
     gap: 0px;
@@ -434,7 +420,6 @@ export default defineComponent({
 
   .input-group {
     display: flex;
-    flex-shrink: 0;
     align-items: center;
     gap: 0px;
     margin-bottom: 20px;
@@ -449,8 +434,6 @@ export default defineComponent({
       display: inline;
       padding-left: 5px;
       width: 150px;
-      height: 72px;
-      gap: 0px;
       height: 30px;
       justify-content: center;
       border: none;
@@ -467,7 +450,6 @@ export default defineComponent({
     .slider-container {
       flex: 1;
       display: flex;
-      flex-shrink: 0;
       align-items: center;
       gap: 8px;
 
@@ -498,7 +480,6 @@ export default defineComponent({
 
     .adjusters {
       display: flex;
-      flex-shrink: 0;
       align-items: center;
       gap: 4px;
 
@@ -586,7 +567,7 @@ export default defineComponent({
     border: none;
     border-radius: v.$border-radius;
     cursor: pointer;
-    font-size: .9rem;
+    font-size: 0.9rem;
     font-weight: 500;
     transition: background-color 0.2s ease;
     width: 140.88px;

@@ -4,7 +4,6 @@
       :layout="layout" 
       :selected-keys="selectedKeys" 
       :profile-max-travel="profileMaxTravel"
-      @update-notification="setNotification" 
       @update-overlay="setOverlay" 
       @refresh-overlays="$emit('refresh-overlays')" 
     />
@@ -13,7 +12,6 @@
       :layout="layout" 
       :base-layout="baseLayout" 
       :profile-max-travel="profileMaxTravel"
-      @update-notification="setNotification" 
       @update-single-overlay="setSingleOverlay" 
       @refresh-overlays="$emit('refresh-overlays')" 
     />
@@ -22,7 +20,6 @@
       :layout="layout" 
       :base-layout="baseLayout"
       :profile-max-travel="profileMaxTravel"
-      @update-notification="setNotification" 
     />
   </div>
 </template>
@@ -30,7 +27,6 @@
 <script lang="ts">
 import { defineComponent, computed, PropType } from 'vue';
 import type { IDefKeyInfo } from '@/types/types';
-import { Ref } from 'vue';
 import GlobalTravel from './GlobalTravel.vue';
 import SingleKeyTravel from './SingleKeyTravel.vue';
 import SwitchProfiles from './SwitchProfiles.vue';
@@ -53,11 +49,11 @@ export default defineComponent({
       required: true,
     },
     baseLayout: {
-      type: Object as PropType<Ref<IDefKeyInfo[][] | null>>,
-      default: () => ref(null),
+      type: Object as PropType<any>,
+      default: null,
     },
   },
-  emits: ['update-notification', 'update-overlay', 'update-single-overlay', 'refresh-overlays'],
+  emits: ['update-overlay', 'update-single-overlay', 'refresh-overlays'],
   setup(props, { emit }) {
     const store = useTravelProfilesStore();
 
@@ -67,39 +63,30 @@ export default defineComponent({
       return selected ? selected.maxTravel : 4.0; // Default to 4.0 if no profile
     });
 
-    const setNotification = (message: string, isError: boolean) => {
-      emit('update-notification', message, isError);
-    };
-
+    // Forward overlay events
     const setOverlay = (data: { travel: string; pressDead: string; releaseDead: string } | null) => {
-      //console.log(`KeyTravel: Forwarding update-overlay:`, data);
+      console.log(`[KEYTRAVEL] Forwarding update-overlay:`, data);
       emit('update-overlay', data);
     };
 
     const setSingleOverlay = (data: { travel: string; pressDead: string; releaseDead: string } | null) => {
-      //console.log(`KeyTravel: Forwarding update-single-overlay:`, data);
+      console.log(`[KEYTRAVEL] Forwarding update-single-overlay:`, data);
       emit('update-single-overlay', data);
     };
 
     return {
-      setNotification,
+      profileMaxTravel,
       setOverlay,
       setSingleOverlay,
-      profileMaxTravel,
     };
   },
 });
 </script>
 
 <style lang="scss" scoped>
-@use 'sass:color';
 @use '@styles/variables' as v;
 
 .settings-section {
-  h2 {
-    color: v.$primary-color;
-    margin-bottom: 10px;
-    text-decoration: underline;
-  }
+  // Wrapper for sub-components; no additional rules needed
 }
 </style>

@@ -68,7 +68,6 @@ import { useTravelProfilesStore } from '@/store/travelProfilesStore';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
 import { keyMap } from '@utils/keyMap';
 import KeyboardService from '@services/KeyboardService';
-import { useConnectionStore } from '../store/connection';
 import type { IDefKeyInfo } from '../types/types';
 import KeyTravel from '../components/performance/KeyTravel.vue';
 import RapidTrigger from '../components/performance/RapidTrigger.vue';
@@ -82,7 +81,6 @@ export default defineComponent({
     Calibration,
   },
   setup() {
-    const connectionStore = useConnectionStore();
     const selectedSection = ref('key-travel');
     const selectedKeys = ref<IDefKeyInfo[]>([]);
     const notification = ref<{ message: string; isError: boolean } | null>(null);
@@ -122,7 +120,6 @@ export default defineComponent({
                 positionToRemap[item.key] = item.value;
               }
             });
-          await new Promise(resolve => setTimeout(resolve, 100));
         }
 
         layout.value.forEach(row => {
@@ -260,7 +257,6 @@ export default defineComponent({
             .filter((mode): mode is { key: number; touchMode: string } => mode !== null)
             .filter(mode => mode.touchMode === 'single')
             .map(mode => mode.key));
-          await new Promise(resolve => setTimeout(resolve, 100));
         }
 
         if (data === null) {
@@ -307,7 +303,6 @@ export default defineComponent({
                 releaseDead: val.releaseDead
               };
             });
-          await new Promise(resolve => setTimeout(resolve, 100));
         }
 
         if (singleModeKeys.length === 0) {
@@ -349,7 +344,6 @@ export default defineComponent({
               .filter((mode): mode is { key: number; touchMode: string } => mode !== null)
               .filter(mode => mode.touchMode === 'global')
               .map(mode => mode.key));
-            await new Promise(resolve => setTimeout(resolve, 100));
           }
 
           layout.value.flat().forEach(keyInfo => {
@@ -401,7 +395,6 @@ export default defineComponent({
               .filter((mode): mode is { key: number; touchMode: string } => mode !== null)
               .filter(mode => mode.touchMode === 'global')
               .map(mode => mode.key));
-            await new Promise(resolve => setTimeout(resolve, 100));
           }
 
           const keysToClear = Object.keys(overlayData.value).filter(key => 

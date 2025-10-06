@@ -21,38 +21,36 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch, onMounted } from 'vue';
+import { defineComponent, ref, computed, onMounted } from 'vue';
 import { getLayoutConfig } from '@utils/layoutConfigs';
 
 export default defineComponent({
   name: 'LayoutPreview',
   setup() {
     const layout = ref<any[][]>([]);
-    const selectedLayout = ref(82); // Default to 80-key, overridden by localStorage
+    const selectedLayout = ref<number | null>(null); // Initial null to force load from storage
     const layouts = [61, 67, 68, 80, 82, 84, 87]; // Supported layouts
 
+    // Grid computation
     const gridStyle = computed(() => {
-      const { keyPositions, gaps } = getLayoutConfig(selectedLayout.value);
-      //console.log('Grid Style keyPositions:', keyPositions);
+      const { keyPositions, gaps } = getLayoutConfig(selectedLayout.value ?? 82);
       if (!keyPositions || keyPositions.length === 0) {
-        //console.warn('keyPositions is empty or invalid');
-        return { 'height': '0px', 'width': '0px' };
+        return { height: '0px', width: '0px' };
       }
       const containerHeight = keyPositions.reduce((max, row, i) => max + Math.max(...row.map(pos => pos[1] + pos[3])) + (gaps[i] || 0), 0);
       const maxRowWidth = Math.max(...keyPositions.map(row => row.reduce((sum, pos) => sum + pos[2], 0)));
       return {
-        'position': 'relative',
-        'height': `${containerHeight}px`,
-        'width': `${maxRowWidth}px`,
-        'margin': '0 auto', // Center the grid
+        position: 'relative',
+        height: `${containerHeight}px`,
+        width: `${maxRowWidth}px`,
+        margin: '0 auto',
       };
     });
 
     const getKeyStyle = (rowIdx: number, colIdx: number) => {
-      const { keyPositions, gaps } = getLayoutConfig(selectedLayout.value);
+      const { keyPositions, gaps } = getLayoutConfig(selectedLayout.value ?? 82);
       const rowLength = keyPositions[rowIdx]?.length || 0;
       if (!keyPositions || !keyPositions[rowIdx] || !Array.isArray(keyPositions[rowIdx]) || colIdx >= rowLength) {
-        //console.warn(`Invalid key position at row ${rowIdx}, col ${colIdx}: rowLength=${rowLength}, keyPositions[rowIdx]=`, keyPositions[rowIdx]);
         return { width: '0px', height: '0px', left: '0px', top: '0px' };
       }
       const [left, top, width, height] = keyPositions[rowIdx][colIdx];
@@ -68,27 +66,23 @@ export default defineComponent({
       };
     };
 
+    // Layout update
     const updateLayout = () => {
-      const { keyPositions } = getLayoutConfig(selectedLayout.value);
+      const { keyPositions } = getLayoutConfig(selectedLayout.value ?? 82);
       layout.value = keyPositions;
-      localStorage.setItem('lastSelectedLayout', selectedLayout.value.toString());
+      localStorage.setItem('lastSelectedLayout', selectedLayout.value?.toString() ?? '82');
     };
 
-    const resetLayout = () => {
-      updateLayout();
-    };
-
-    // Restore last selected layout from localStorage on mount
+    // Restore from localStorage on mount
     onMounted(() => {
       const savedLayout = localStorage.getItem('lastSelectedLayout');
       if (savedLayout && layouts.includes(parseInt(savedLayout))) {
         selectedLayout.value = parseInt(savedLayout);
+      } else {
+        selectedLayout.value = 82; // Fallback
       }
       updateLayout();
     });
-
-    // Trigger initial update
-    updateLayout();
 
     return {
       layout,
@@ -97,7 +91,6 @@ export default defineComponent({
       gridStyle,
       getKeyStyle,
       updateLayout,
-      resetLayout,
     };
   },
 });
@@ -110,20 +103,24 @@ export default defineComponent({
 .layout-preview-page {
   padding: 20px;
   color: v.$text-color;
+
   h2 {
     color: v.$primary-color;
-    margin-bottom: 10px; // Reduced margin
+    margin-bottom: 10px;
     margin-top: 0px;
   }
+
   .controls {
-    margin-bottom: 10px; // Reduced margin
+    margin-bottom: 10px;
     display: flex;
     gap: 10px;
     align-items: center;
+
     label {
       margin-right: 5px;
       color: v.$text-color;
     }
+
     select {
       padding: 8px;
       border-radius: v.$border-radius;
@@ -133,21 +130,24 @@ export default defineComponent({
       font-size: 1rem;
     }
   }
+
   .key-grid {
     display: block;
     position: relative;
     width: fit-content;
-    margin: 0 auto; // Center the grid
-    min-height: 200px; // Reduced min-height to save space
+    margin: 0 auto;
+    min-height: 200px;
   }
+
   .key-row {
-    display: contents; // Allow positioning of children
+    display: contents;
   }
+
   .key-preview {
     position: absolute;
     border-radius: v.$border-radius * 1;
-    background-color: #444; // Simple gray box for preview
-    box-sizing: border-box; // Include padding
+    background-color: #444;
+    box-sizing: border-box;
   }
 }
 </style>

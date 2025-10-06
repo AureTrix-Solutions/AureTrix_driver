@@ -19,13 +19,21 @@
       <select v-model="selectedLayer" id="layer-select" class="control-select" :disabled="layoutType !== 'mapped'">
         <option v-for="layer in layers" :key="layer" :value="layer">{{ `Fn${layer}` }}</option>
       </select>
-
       <button @click="saveMacro" class="action-btn" :disabled="!currentSequence.length || !macroName || !isRecording">
         Save Macro
       </button>
-      <button @click="clearMacro" class="action-btn secondary" :disabled="!isRecording">
+      <button @click="clearMacro" class="action-btn secondary" :enabled="!isRecording">
         Clear Macro
       </button>
+      <button @click="exportMacros" class="action-btn secondary">Export Macros</button>
+      <input
+        type="file"
+        ref="importFile"
+        accept=".json"
+        @change="importMacros"
+        style="display: none;"
+      />
+      <button @click="$refs.importFile?.click()" class="action-btn secondary">Import Macros</button>
     </div>
     <div v-if="notification" class="notification" :class="{ error: notification.isError }">
       <span>{{ notification.message }}</span>
@@ -81,37 +89,34 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch, onMounted } from 'vue';
-import KeyboardService from '@services/KeyboardService';
+import { defineComponent, ref, watch, onMounted, nextTick } from 'vue';
 import { keyMap } from '@utils/keyMap';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
 import type { IDefKeyInfo } from '../types/types';
-import { useConnectionStore } from '../store/connection';
 
 export default defineComponent({
   name: 'MacroRecording',
   setup() {
-    const connectionStore = useConnectionStore();
     const selectedMacro = ref<string | null>(null);
     const macroName = ref<string>('');
     const layoutType = ref<'default' | 'mapped'>('default');
     const selectedLayer = ref(0);
-    const layers = [0, 1, 2, 3]; // Fn1-Fn4
+    const layers = [0, 1, 2, 3];
     const isRecording = ref(false);
     const currentSequence = ref<{ keyValue: number; action: 'down' | 'up'; delay: number }[]>([]);
     const pressedKeys = ref<Set<number>>(new Set());
     const notification = ref<{ message: string; isError: boolean } | null>(null);
     const macroNameInput = ref<HTMLInputElement | null>(null);
+    const importFile = ref<HTMLInputElement | null>(null);
     const macroList = ref<{ id: number; name: string; date: string; length: number; step: { id: number; keyValue: number; status: number; delay: number }[] }[]>([]);
 
-    // Use reactive layerIndex, null for default layout
-    const layerIndex = ref<number | null>(layoutType.value === 'mapped' ? selectedLayer.value : null);
+    const layerIndex = ref<number | null>(null);
     const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout } = useMappedKeyboard(layerIndex);
 
+    // Macro storage management
     const loadMacroList = () => {
       try {
         const stored = localStorage.getItem('MacroList');
-        //console.log('Loading MacroList from localStorage:', stored);
         if (stored) {
           macroList.value = JSON.parse(stored);
         } else {
@@ -124,21 +129,18 @@ export default defineComponent({
     };
 
     const startNewMacro = () => {
-      //console.log('startNewMacro called');
       selectedMacro.value = 'new';
       currentSequence.value = [];
       pressedKeys.value.clear();
       macroName.value = '';
       notification.value = null;
       isRecording.value = true;
-      if (macroNameInput.value) {
-        macroNameInput.value.focus();
-        //console.log('Focused macro name input');
-      }
+      nextTick(() => {
+        macroNameInput.value?.focus();
+      });
     };
 
     const loadMacro = (id: string) => {
-      //console.log('Loading macro with id:', id);
       const macro = macroList.value.find(m => m.id === parseInt(id));
       if (macro) {
         currentSequence.value = macro.step.map((step, index) => ({
@@ -157,27 +159,22 @@ export default defineComponent({
             pressedKeys.value.delete(event.keyValue);
           }
         });
-        //console.log('Pressed keys after load:', Array.from(pressedKeys.value));
         isRecording.value = true;
-        if (macroNameInput.value) {
-          macroNameInput.value.focus();
-          //console.log('Focused macro name input after load');
-        }
+        nextTick(() => {
+          macroNameInput.value?.focus();
+        });
       } else {
         notification.value = { message: `Macro with ID ${id} not found`, isError: true };
       }
     };
 
     const saveMacro = () => {
-      //console.log('saveMacro called with:', { selectedMacro: selectedMacro.value, currentSequenceLength: currentSequence.value.length, macroName: macroName.value });
       if (!currentSequence.value.length || !macroName.value) {
-        console.warn('saveMacro conditions not met:', { currentSequenceLength: currentSequence.value.length, macroName: macroName.value });
         notification.value = { message: 'Cannot save: Sequence must not be empty and name must be provided', isError: true };
         return;
       }
 
       if (currentSequence.value.length > 64) {
-        console.warn('Macro action limit exceeded:', { currentSequenceLength: currentSequence.value.length });
         notification.value = { message: 'Cannot save: Macro exceeds 64-action limit', isError: true };
         return;
       }
@@ -185,7 +182,6 @@ export default defineComponent({
       if (selectedMacro.value === 'new') {
         const nameExists = macroList.value.some(m => m.name.toLowerCase() === macroName.value.toLowerCase());
         if (nameExists) {
-          console.warn('Duplicate macro name:', macroName.value);
           notification.value = { message: `Cannot save: Macro name "${macroName.value}" already exists`, isError: true };
           return;
         }
@@ -209,12 +205,9 @@ export default defineComponent({
         loadMacroList();
         if (selectedMacro.value !== 'new' && macroList.value.some(m => m.id === id)) {
           macroList.value = macroList.value.map(m => (m.id === id ? newMacro : m));
-          //console.log('Updated existing macro:', newMacro);
         } else {
           macroList.value = [...macroList.value, newMacro];
-          //console.log('Appended new macro:', newMacro);
         }
-        //console.log('Saving updated MacroList to localStorage:', JSON.stringify(macroList.value));
         localStorage.setItem('MacroList', JSON.stringify(macroList.value));
         selectedMacro.value = id.toString();
         notification.value = { message: `Saved macro ${macroName.value} to local storage`, isError: false };
@@ -222,7 +215,6 @@ export default defineComponent({
         pressedKeys.value.clear();
         macroName.value = '';
         isRecording.value = false;
-        //console.log('Virtual keyboard and macro name reset after save');
       } catch (error) {
         console.error('Failed to save macro:', error);
         notification.value = { message: `Failed to save macro: ${(error as Error).message}`, isError: true };
@@ -230,12 +222,9 @@ export default defineComponent({
     };
 
     const deleteMacro = (id: string) => {
-      //console.log('deleteMacro called with id:', id);
       try {
         const macroId = parseInt(id);
         macroList.value = macroList.value.filter(m => m.id !== macroId);
-        //console.log('Deleted macro with id:', id);
-        //console.log('Saving updated MacroList to localStorage:', JSON.stringify(macroList.value));
         localStorage.setItem('MacroList', JSON.stringify(macroList.value));
         notification.value = { message: `Deleted macro`, isError: false };
         if (selectedMacro.value === id) {
@@ -252,14 +241,17 @@ export default defineComponent({
     };
 
     const clearMacro = () => {
-      //console.log('clearMacro called');
       currentSequence.value = [];
       pressedKeys.value.clear();
       macroName.value = '';
       notification.value = null;
       isRecording.value = false;
+      nextTick(() => {
+        pressedKeys.value = new Set();
+      });
     };
 
+    // Sequence management
     const isKeyPressed = (keyValue: number) => {
       const events = currentSequence.value.filter(event => event.keyValue === keyValue);
       if (events.length === 0) return false;
@@ -272,9 +264,7 @@ export default defineComponent({
     };
 
     const toggleKey = (keyInfo: IDefKeyInfo) => {
-      //console.log('toggleKey called with keyInfo:', keyInfo);
       if (currentSequence.value.length >= 64) {
-        console.warn('Cannot add action: Macro has reached 64-action limit');
         notification.value = { message: 'Cannot add action: Macro has reached 64-action limit', isError: true };
         return;
       }
@@ -293,7 +283,6 @@ export default defineComponent({
         currentSequence.value.push({ keyValue, action: 'down', delay: 50 });
         pressedKeys.value.add(keyValue);
       }
-      //console.log('Current sequence after toggle:', currentSequence.value);
     };
 
     const formatEvent = (event: { keyValue: number; action: 'down' | 'up'; delay: number }) => {
@@ -308,7 +297,6 @@ export default defineComponent({
     };
 
     const removeEventFromSequence = (index: number) => {
-      //console.log('removeEventFromSequence called with index:', index);
       const event = currentSequence.value[index];
       currentSequence.value.splice(index, 1);
       const events = currentSequence.value.filter(e => e.keyValue === event.keyValue);
@@ -322,20 +310,68 @@ export default defineComponent({
       } else {
         pressedKeys.value.delete(event.keyValue);
       }
-      //console.log('Current sequence after removal:', currentSequence.value);
-      //console.log('Pressed keys after removal:', Array.from(pressedKeys.value));
     };
 
+    // Macro export/import
+    const exportMacros = () => {
+      try {
+        const blob = new Blob([JSON.stringify(macroList.value, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'macros.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        notification.value = { message: 'Macros exported successfully', isError: false };
+      } catch (error) {
+        console.error('Failed to export macros:', error);
+        notification.value = { message: `Failed to export macros: ${(error as Error).message}`, isError: true };
+      }
+    };
+
+    const importMacros = (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target?.result as string);
+          if (Array.isArray(imported)) {
+            macroList.value = imported;
+            localStorage.setItem('MacroList', JSON.stringify(macroList.value));
+            notification.value = { message: `Imported ${imported.length} macros`, isError: false };
+          } else {
+            throw new Error('Invalid JSON format: Expected array of macros');
+          }
+          target.value = ''; // Reset input
+        } catch (error) {
+          console.error('Failed to import macros:', error);
+          notification.value = { message: `Failed to import macros: ${(error as Error).message}`, isError: true };
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    // Watchers and lifecycle
     watch([layoutType, selectedLayer], () => {
-      //console.log('Layout or layer changed:', { layoutType: layoutType.value, selectedLayer: selectedLayer.value });
       layerIndex.value = layoutType.value === 'mapped' ? selectedLayer.value : null;
       fetchLayerLayout();
+    });
+
+    watch(notification, (newNotification) => {
+      if (newNotification) {
+        setTimeout(() => {
+          if (notification.value === newNotification) {
+            notification.value = null;
+          }
+        }, 3000);
+      }
     });
 
     onMounted(() => {
       loadMacroList();
       fetchLayerLayout();
-      //console.log('MacroRecording.vue mounted');
     });
 
     return {
@@ -364,6 +400,10 @@ export default defineComponent({
       layoutType,
       selectedLayer,
       layers,
+      exportMacros,
+      importFile,
+      importMacros,
+      clearMacro,
     };
   }
 });
@@ -399,11 +439,6 @@ export default defineComponent({
     margin-bottom: 24px;
     flex-wrap: wrap;
 
-    .control-label {
-      margin-right: 5px;
-      color: v.$text-color;
-    }
-
     .control-select,
     .text-input,
     .number-input {
@@ -426,7 +461,7 @@ export default defineComponent({
     .action-btn {
       padding: 8px 16px;
       background-color: v.$primary-color;
-      color: #1f2937;
+      color: v.$background-dark;
       border: none;
       border-radius: v.$border-radius;
       cursor: pointer;
@@ -434,17 +469,21 @@ export default defineComponent({
       font-weight: 500;
 
       &.secondary {
-        background-color: #374151;
+        background-color: color.adjust(v.$primary-color, $lightness: -10%);
       }
 
       &:disabled {
-        background-color: color.adjust(v.$background-dark, $lightness: 10%);
+        background-color: color.adjust(v.$primary-color, $lightness: -20%);
         cursor: not-allowed;
-        color: rgba(v.$text-color, 0.4);
+        opacity: 0.6;
       }
 
       &:hover:not(:disabled) {
         background-color: color.adjust(v.$primary-color, $lightness: 10%);
+      }
+
+      &.secondary:hover:not(:disabled) {
+        background-color: color.adjust(#374151, $lightness: 10%);
       }
     }
   }
@@ -592,20 +631,18 @@ export default defineComponent({
       cursor: pointer;
 
       .card-title {
-        text-decoration: underline
-        ;
-        text-transform:uppercase;
+        text-decoration: underline;
+        text-transform: uppercase;
         font-size: 1.125rem;
         font-weight: 600;
         color: v.$primary-color;
-        margin: 0px;
+        margin: 0;
       }
 
-      .card-text {        
+      .card-text {
         font-size: 0.875rem;
         color: rgba(v.$text-color, 0.6);
-        margin-bottom: 0px;
-        margin: 0px;
+        margin: 0 0 0 0;
       }
 
       .card-actions {

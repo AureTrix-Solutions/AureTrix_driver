@@ -674,7 +674,7 @@ export default defineComponent({
     flex-shrink: 0;
     gap: 10px;
     position:relative;
-    margin-right: 650px;
+    margin-right: auto;
     margin-left: auto;
     justify-content:center;
  

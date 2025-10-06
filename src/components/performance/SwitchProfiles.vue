@@ -564,7 +564,7 @@ export default defineComponent({
     border-radius: v.$border-radius;
     border: 1px solid rgba(v.$text-color, 0.2);
     max-width: 400px;
-    width: 90vw; // Responsive for mobile
+    width: 90vw; 
     max-height: 80vh;
     overflow-y: auto;
     text-align: center;

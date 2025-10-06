@@ -92,7 +92,6 @@ export default defineComponent({
 
     const fetchRemappedLabels = async () => {
       if (!layout.value.length || !loaded.value) {
-        //console.log('Skipping fetchRemappedLabels: layout not ready');
         return;
       }
       try {
@@ -133,7 +132,6 @@ export default defineComponent({
             keyInfo.remappedLabel = keyMap[remappedValue] || `Key ${remappedValue}`;
           });
         });
-        //console.log('Remapped labels updated using physicalKeyValue and keyValue');
       } catch (error) {
         console.error('Failed to fetch remapped labels:', error);
         layout.value.forEach(row => {
@@ -147,25 +145,18 @@ export default defineComponent({
     const sectionComponents = {
       'key-travel': 'KeyTravel',
       'rapid-trigger': 'RapidTrigger',
-      'polling-rate': 'PollingRate',
       'calibration': 'Calibration',
     };
 
     const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
       if (selectedSection.value === 'key-travel' || selectedSection.value === 'rapid-trigger') {
-        //console.log(`Selecting key: { keyValue: ${key.keyValue}, type: ${typeof key.keyValue}, location: { row: ${rowIdx}, col: ${colIdx} } }`);
         const physicalKeyValue = key.physicalKeyValue || key.keyValue;
         const existingIndex = selectedKeys.value.findIndex(k => (k.physicalKeyValue || k.keyValue) === physicalKeyValue);
         if (existingIndex > -1) {
           selectedKeys.value.splice(existingIndex, 1);
-          //console.log(`Deselected physical key ${physicalKeyValue} (display: ${key.keyValue})`);
         } else {
           selectedKeys.value.push(key);
-          //console.log(`Selected physical key ${physicalKeyValue} (display: ${key.keyValue})`);
         }
-        //console.log(`Selected physical keys:`, selectedKeys.value.map(k => k.physicalKeyValue || k.keyValue));
-      } else {
-        //console.log(`Key selection ignored: current section is ${selectedSection.value}`);
       }
     };
 
@@ -174,10 +165,8 @@ export default defineComponent({
         const totalKeys = layout.value.flat().length;
         if (selectedKeys.value.length === totalKeys) {
           selectedKeys.value = [];
-          //console.log('Deselected all keys');
         } else {
           selectedKeys.value = layout.value.flat();
-          //console.log(`Selected all keys: ${selectedKeys.value.length} keys`);
         }
       }
     };
@@ -195,10 +184,8 @@ export default defineComponent({
         const currentlySelectedWASD = selectedKeys.value.filter(k => physicalWASD.includes(k.physicalKeyValue || k.keyValue));
         if (currentlySelectedWASD.length === wasdKeys.length) {
           selectedKeys.value = selectedKeys.value.filter(k => !physicalWASD.includes(k.physicalKeyValue || k.keyValue));
-          //console.log('Deselected WASD keys');
         } else {
           selectedKeys.value = [...selectedKeys.value, ...wasdKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-          //console.log(`Selected WASD keys: ${wasdKeys.map(k => keyMap[k.keyValue] || k.keyValue).join(', ')}`);
         }
       }
     };
@@ -216,31 +203,27 @@ export default defineComponent({
         const currentlySelectedLetters = selectedKeys.value.filter(k => physicalLetters.includes(k.physicalKeyValue || k.keyValue));
         if (currentlySelectedLetters.length === letterKeys.length) {
           selectedKeys.value = selectedKeys.value.filter(k => !physicalLetters.includes(k.physicalKeyValue || k.keyValue));
-          //console.log('Deselected letter keys');
         } else {
           selectedKeys.value = [...selectedKeys.value, ...letterKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-          //console.log(`Selected letter keys: ${letterKeys.map(k => keyMap[k.keyValue] || k.keyValue).join(', ')}`);
         }
       }
     };
 
     const selectNumbers = () => {
       if (selectedSection.value === 'key-travel' || selectedSection.value === 'rapid-trigger') {
-        const numberRegex = /^[0-9]$/;
+        const numberLabels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
         const numberKeys = layout.value
           .flat()
           .filter(keyInfo => {
             const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
-            return numberRegex.test(label);
+            return numberLabels.includes(label);
           });
         const physicalNumbers = numberKeys.map(key => key.physicalKeyValue || key.keyValue);
         const currentlySelectedNumbers = selectedKeys.value.filter(k => physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
         if (currentlySelectedNumbers.length === numberKeys.length) {
           selectedKeys.value = selectedKeys.value.filter(k => !physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
-          //console.log('Deselected number keys');
         } else {
           selectedKeys.value = [...selectedKeys.value, ...numberKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-          //console.log(`Selected number keys: ${numberKeys.map(k => keyMap[k.keyValue] || k.keyValue).join(', ')}`);
         }
       }
     };
@@ -248,20 +231,10 @@ export default defineComponent({
     const selectNone = () => {
       if (selectedSection.value === 'key-travel' || selectedSection.value === 'rapid-trigger') {
         selectedKeys.value = [];
-        //console.log('Cleared all key selections');
       }
     };
 
-    const updateOverlay = () => {
-      overlayData.value = {};
-      selectedKeys.value = [];
-      //console.log(`Section changed to ${selectedSection.value}`);
-    };
-
-    const updateSingleOverlayData = async (trigger: { travel: string; pressDead: string; releaseDead: string } | null) => {
-      //console.log(`Received update-single-overlay trigger:`, trigger);
-      if (selectedSection.value !== 'key-travel') return;
-
+    const updateSingleOverlayData = async (data: { travel: string; pressDead: string; releaseDead: string } | null) => {
       try {
         const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
         const BATCH_SIZE = 80;
@@ -271,7 +244,6 @@ export default defineComponent({
         }
 
         const singleModeKeys: number[] = [];
-        // Poll modes to identify single-mode keys
         for (const batch of batches) {
           const keyModes = await Promise.all(
             batch.map(async (keyId) => {
@@ -291,19 +263,15 @@ export default defineComponent({
           await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        if (trigger === null) {
-          // Clear overlays for single-mode keys
-          const keysToClear = Object.keys(overlayData.value).filter(key => 
-            singleModeKeys.includes(Number(key)));
-          keysToClear.forEach(key => {
-            delete overlayData.value[key];
-          });
-          //console.log('Cleared single mode overlays:', keysToClear);
+        if (data === null) {
+          const keysToClear = Object.keys(overlayData.value).filter(key => singleModeKeys.includes(Number(key)));
+          keysToClear.forEach(key => delete overlayData.value[key]);
+          if (keysToClear.length === 0) {
+            console.log('No single mode overlays to clear');
+          }
           return;
         }
 
-        // Populate actual values for each single-mode key
-        //console.log(`Populating overlays for ${singleModeKeys.length} single-mode keys`);
         const singleBatches = [];
         for (let i = 0; i < singleModeKeys.length; i += BATCH_SIZE) {
           singleBatches.push(singleModeKeys.slice(i, i + BATCH_SIZE));
@@ -313,53 +281,51 @@ export default defineComponent({
           const keyValues = await Promise.all(
             batch.map(async (keyId) => {
               try {
-                const [travelResult, deadzoneResult] = await Promise.all([
-                  KeyboardService.getSingleTravel(keyId),
-                  KeyboardService.getDpDr(keyId)
-                ]);
+                const travelResult = await KeyboardService.getSingleTravel(keyId);
+                const deadzoneResult = await KeyboardService.getDpDr(keyId);
                 if (travelResult instanceof Error || deadzoneResult instanceof Error) {
-                  console.warn(`Failed to fetch values for key ${keyId}:`, travelResult, deadzoneResult);
                   return null;
                 }
-                const travel = Number(travelResult).toFixed(2);
-                const pressDead = Number(deadzoneResult.pressDead).toFixed(2);
-                const releaseDead = Number(deadzoneResult.releaseDead).toFixed(2);
-                return { key: keyId, travel, pressDead, releaseDead };
+                return {
+                  key: keyId,
+                  travel: Number(travelResult).toFixed(2),
+                  pressDead: Number(deadzoneResult.pressDead).toFixed(2),
+                  releaseDead: Number(deadzoneResult.releaseDead).toFixed(2)
+                };
               } catch (error) {
-                console.warn(`Error fetching values for key ${keyId}:`, error);
+                console.warn(`Failed to fetch values for key ${keyId}:`, error);
                 return null;
               }
             })
           );
           keyValues
             .filter((val): val is { key: number; travel: string; pressDead: string; releaseDead: string } => val !== null)
-            .forEach(({ key, travel, pressDead, releaseDead }) => {
-              overlayData.value[key] = { travel, pressDead, releaseDead };
+            .forEach(val => {
+              overlayData.value[val.key] = {
+                travel: val.travel,
+                pressDead: val.pressDead,
+                releaseDead: val.releaseDead
+              };
             });
-          //console.log(`Populated batch of ${batch.length} single-mode keys`);
           await new Promise(resolve => setTimeout(resolve, 100));
         }
 
         if (singleModeKeys.length === 0) {
           notification.value = { message: 'No keys in single mode found', isError: false };
-        } else {
-          //console.log('Single-mode overlays populated with actual device values');
         }
       } catch (error) {
-        console.error('Failed to update single overlays:', error);
+        console.error('Failed to update single mode overlays:', error);
         notification.value = {
-          message: `Failed to update single overlays: ${(error as Error).message}`,
+          message: `Failed to update single mode overlays: ${(error as Error).message}`,
           isError: true,
         };
       }
     };
 
     const updateOverlayData = async (data: { travel: string; pressDead: string; releaseDead: string } | null) => {
-      //console.log(`Received update-overlay:`, data);
-      if (data && selectedSection.value === 'key-travel') {
+      if (data) {
         try {
           const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
-          //console.log(`Processing ${keyIds.length} keys for global mode overlay`);
           const BATCH_SIZE = 80;
           const batches = [];
           for (let i = 0; i < keyIds.length; i += BATCH_SIZE) {
@@ -383,10 +349,8 @@ export default defineComponent({
               .filter((mode): mode is { key: number; touchMode: string } => mode !== null)
               .filter(mode => mode.touchMode === 'global')
               .map(mode => mode.key));
-            //console.log(`Processed batch of ${batch.length} keys, found ${keyModes.filter(m => m?.touchMode === 'global').length} in global mode`);
             await new Promise(resolve => setTimeout(resolve, 100));
           }
-          //console.log(`Found ${globalModeKeys.length} global mode keys:`, globalModeKeys);
 
           layout.value.flat().forEach(keyInfo => {
             const keyId = keyInfo.physicalKeyValue || keyInfo.keyValue;
@@ -398,23 +362,20 @@ export default defineComponent({
               };
             }
           });
-          //console.log('Overlay data updated for global mode keys:', overlayData.value);
           if (globalModeKeys.length === 0) {
-            //console.log('No global mode keys found for overlay');
             notification.value = {
               message: 'No keys in global mode found',
               isError: false,
             };
           }
         } catch (error) {
-          console.error('Failed to fetch global mode keys:', error);
+          console.error('Failed to update global mode overlays:', error);
           notification.value = {
-            message: `Failed to fetch global mode keys: ${(error as Error).message}`,
+            message: `Failed to update global mode overlays: ${(error as Error).message}`,
             isError: true,
           };
         }
       } else {
-        //console.log('Clearing global mode overlays');
         try {
           const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
           const BATCH_SIZE = 80;
@@ -440,7 +401,6 @@ export default defineComponent({
               .filter((mode): mode is { key: number; touchMode: string } => mode !== null)
               .filter(mode => mode.touchMode === 'global')
               .map(mode => mode.key));
-            //console.log(`Processed batch of ${batch.length} keys for clearing, found ${keyModes.filter(m => m?.touchMode === 'global').length} in global mode`);
             await new Promise(resolve => setTimeout(resolve, 100));
           }
 
@@ -449,9 +409,8 @@ export default defineComponent({
           keysToClear.forEach(key => {
             delete overlayData.value[key];
           });
-          //console.log('Cleared global mode overlays:', keysToClear);
           if (keysToClear.length === 0) {
-            //console.log('No global mode overlays to clear');
+            console.log('No global mode overlays to clear');
           }
         } catch (error) {
           console.error('Failed to clear global mode overlays:', error);
@@ -463,33 +422,32 @@ export default defineComponent({
       }
     };
 
+    const updateOverlay = () => {
+      overlayData.value = {};
+      selectedKeys.value = [];
+    };
+
     watch(notification, (newNotification) => {
       if (newNotification) {
         setTimeout(() => {
           if (notification.value === newNotification) {
             notification.value = null;
-            //console.log('Notification auto-cleared after 3 seconds');
           }
         }, 3000);
       }
     });
 
     watch([layout, loaded, baseLayout, selectedKeys], () => {
-      //console.log(`Layout updated: length=${layout.value.length}, loaded=${loaded.value}, baseLayout=${baseLayout.value ? 'defined' : 'null'}, selectedKeys=${selectedKeys.value.map(k => k.keyValue).join(', ') || 'none'}`);
-      //console.log(`Grid style:`, gridStyle.value);
       if (layout.value.length && loaded.value) {
-        //console.log(`Key grid data:`, layout.value);
         fetchRemappedLabels();
       }
     });
 
     watch(() => useTravelProfilesStore().selectedProfile, (profile) => {
-      //console.log('Performance: Profile changed:', profile?.switchName, 'Max Travel:', profile?.maxTravel);
-    }, { immediate: true 
-    });
+      console.log('Performance: Profile changed:', profile?.switchName, 'Max Travel:', profile?.maxTravel);
+    }, { immediate: true });
 
     onMounted(() => {
-      //console.log('Performance page mounted, calling fetchLayerLayout');
       fetchLayerLayout();
     });
 

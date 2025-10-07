@@ -6,26 +6,21 @@ import { useConnectionStore } from '../store/connection';
 
 const mmToPx = (mm: number) => Math.round(mm * 4);
 
-// console('MappedKeyboard.ts loaded');
-
 export function useMappedKeyboard(layerIndex: Ref<number | null>) {
-  // console(`useMappedKeyboard called with layerIndex: ${layerIndex.value}`);
   const connectionStore = useConnectionStore();
   const layout = ref<IDefKeyInfo[][]>([]);
   const loaded = ref(false);
   const baseLayout = ref<IDefKeyInfo[][] | null>(null);
   const error = ref<string | null>(null);
 
+  // Grid computation
   const gridStyle = computed(() => {
     if (!baseLayout.value) {
-      console.warn('baseLayout.value is undefined, returning empty style');
       return {};
     }
     const totalKeys = baseLayout.value.flat().length;
     const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value);
-    // console('Grid Style keyPositions:', keyPositions);
     if (!keyPositions || keyPositions.length === 0) {
-      console.warn('keyPositions is empty or invalid');
       return { height: '0px', width: '0px' };
     }
     const containerHeight = keyPositions.reduce((max, row, i) => max + Math.max(...row.map(pos => pos[1] + pos[3])) + (gaps[i] || 0), 0);
@@ -34,25 +29,22 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
       position: 'relative',
       height: `${containerHeight}px`,
       width: `${maxRowWidth}px`,
-      margin: '0 auto'
+      margin: '0 auto',
     };
   });
 
   const getKeyStyle = (rowIdx: number, colIdx: number) => {
     if (!baseLayout.value) {
-      console.warn('baseLayout.value is undefined in getKeyStyle');
       return {};
     }
     const totalKeys = baseLayout.value.flat().length;
     const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value);
     const rowLength = baseLayout.value[rowIdx]?.length || 0;
     if (!keyPositions || !keyPositions[rowIdx] || !Array.isArray(keyPositions[rowIdx]) || colIdx >= rowLength) {
-      console.warn(`Invalid key position at row ${rowIdx}, col ${colIdx}: rowLength=${rowLength}, keyPositions[rowIdx]=`, keyPositions[rowIdx]);
       return { width: '0px', height: '0px', left: '0px', top: '0px' };
     }
     const [left, top, width, height] = keyPositions[rowIdx][colIdx];
     const topGapPx = gaps[rowIdx] || 0;
-    // console.log(`Rendered style for row ${rowIdx}, col ${colIdx}:`, { left, top, width, height });
     return {
       position: 'absolute',
       left: `${left}px`,
@@ -61,40 +53,26 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
       height: `${height}px`,
       marginBottom: `${mmToPx(1)}px`,
       boxSizing: 'border-box',
-      'data-overlay': ''
+      'data-overlay': '',
     };
   };
 
+  // Batch key setting with retries
   async function batchSetKey(config: { key: number; layout: number; value: number }[], batchSize: number = 10) {
-    const maxAttempts = 3;
     for (let i = 0; i < config.length; i += batchSize) {
       const batch = config.slice(i, i + batchSize);
-      let attempts = 0;
-      while (attempts < maxAttempts) {
-        try {
-          // Pass batch directly for bulk handling in setKey (uses cmdKey(true, ...))
-          await KeyboardService.setKey(batch);
-          break;
-        } catch (error) {
-          console.error(`Batch setKey attempt ${attempts + 1} failed for keys ${batch[0].key} to ${batch[batch.length - 1].key}:`, error);
-          attempts++;
-          if (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          } else {
-            throw new Error(`Failed to set key batch after ${maxAttempts} attempts`);
-          }
-        }
-      }
-      // Add inter-batch delay to prevent overload
-      if (i + batchSize < config.length) {
-        await new Promise(resolve => setTimeout(resolve, 150));
+      try {
+        await KeyboardService.setKey(batch);
+      } catch (error) {
+        console.error(`Batch setKey failed for keys ${batch[0].key} to ${batch[batch.length - 1].key}:`, error);
+        throw new Error(`Failed to set key batch`);
       }
     }
   }
 
+  // Fetch layout for current layer
   async function fetchLayerLayout() {
     if (!connectionStore.isConnected) {
-      console.warn('No device connected');
       error.value = 'No keyboard connected';
       layout.value = [];
       loaded.value = false;
@@ -105,7 +83,6 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
     let attempt = 0;
     while (attempt < maxRetries) {
       try {
-        // console.log(`Fetching base layout with KeyboardService.defKey (attempt ${attempt + 1})`);
         const newBaseLayout = await KeyboardService.defKey();
         if (!newBaseLayout || newBaseLayout.length === 0) {
           throw new Error('Empty or invalid base layout received');
@@ -113,21 +90,16 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
         if (!baseLayout.value) {
           baseLayout.value = newBaseLayout;
           const totalKeys = newBaseLayout.flat().length;
-          // console.log(`Detected ${totalKeys} keys, baseLayout:`, newBaseLayout);
         }
         const totalKeys = newBaseLayout.flat().length;
-        // console.log(`Base layout key count: ${totalKeys} (template for layer ${layerIndex.value !== null ? layerIndex.value + 1 : 'default'})`, newBaseLayout);
 
         if (layerIndex.value === null) {
           layout.value = baseLayout.value;
           loaded.value = true;
-          // console.log(`Fetched default layout:`, layout.value);
           return;
         }
 
-        // console.log(`Reloading parameters with KeyboardService.reloadParameters (attempt ${attempt + 1})`);
         await KeyboardService.reloadParameters();
-        // console.log(`Reloaded parameters for layer ${layerIndex.value + 1}`);
 
         const batchSize = 10;
         const requests = [];
@@ -140,15 +112,12 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
         const allLayerData = [];
         for (const request of requests) {
           try {
-            // console(`Fetching layout key info for batch: keys ${request[0].key} to ${request[request.length - 1].key} (attempt ${attempt + 1})`);
             const layerData = await KeyboardService.getLayoutKeyInfo(request);
             allLayerData.push(...layerData);
-            // console(`Raw fetched batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex.value + 1}:`, layerData);
           } catch (error) {
             console.error(`Failed to fetch batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex.value + 1}:`, error);
           }
         }
-        // console(`Raw allLayerData for layer ${layerIndex.value + 1} before processing:`, allLayerData);
 
         if (allLayerData.length === 0) {
           throw new Error('No layer data received');
@@ -158,10 +127,8 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
         allLayerData.forEach(item => {
           if (item && typeof item === 'object' && 'key' in item && 'value' in item) {
             uniqueLayerData.set(item.key, { key: item.key, value: item.value });
-            // console(`Unique mapping for key ${item.key}: value ${item.value} in layer ${layerIndex.value + 1}`);
           }
         });
-        // console(`Unique layer data key count for layer ${layerIndex.value + 1}: ${uniqueLayerData.size}`, Array.from(uniqueLayerData.values()));
 
         const layerLayout: IDefKeyInfo[][] = newBaseLayout.map(row =>
           row.map(baseKey => {
@@ -169,38 +136,26 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
             let keyValue = baseKey.keyValue;
             if (layerKey) {
               keyValue = layerKey.value;
-              if (layerKey.value === 0 && layerIndex.value === 0) {
-                // console(`Base layer ${layerIndex.value + 1}: Using default ${keyValue} for unmapped key ${baseKey.keyValue}`);
-              } else if (layerKey.value === 0 || layerKey.value === 1) {
-                // console(`Layer ${layerIndex.value + 1}: Preserving unmapped value ${keyValue} for key ${baseKey.keyValue}`);
-              } else {
-                // console(`Layer ${layerIndex.value + 1}: Applied remapped value ${keyValue} for key ${baseKey.keyValue}`);
-                if (baseKey.keyValue === 57) {
-                  // console(`Caps Lock (key 57) remapped to ${keyValue} in layer ${layerIndex.value + 1}`);
-                }
+              if (keyValue === 1) {
+                keyValue = 0;
               }
             } else {
               console.warn(`No unique mapping found for key ${baseKey.keyValue} in layer ${layerIndex.value + 1}, using base value: ${keyValue}`);
-            }
-            if (keyValue === 1) {
-              keyValue = 0;
-              // console(`Visual remap: Changed key ${baseKey.keyValue} from value 1 to 0 in layer ${layerIndex.value + 1}`);
             }
             if (keyValue < 0 || keyValue > 65535) {
               console.warn(`Invalid value ${keyValue} for key ${baseKey.keyValue} in layer ${layerIndex.value + 1}, using default: ${baseKey.keyValue}`);
               keyValue = baseKey.keyValue;
             }
             return {
-              keyValue, 
-              physicalKeyValue: baseKey.keyValue, 
-              location: baseKey.location 
+              keyValue,
+              physicalKeyValue: baseKey.keyValue,
+              location: baseKey.location
             };
           })
         );
 
         layout.value = layerLayout;
         loaded.value = true;
-        // console(`Fetched and transformed layout for layer ${layerIndex.value + 1}:`, layerLayout);
         return;
       } catch (error) {
         console.error(`Failed to fetch layout for layer ${layerIndex.value !== null ? layerIndex.value + 1 : 'default'} (attempt ${attempt + 1}):`, error);
@@ -210,7 +165,6 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
       }
       attempt++;
       if (attempt < maxRetries) {
-        // console(`Retrying fetchLayerLayout in 1000ms (attempt ${attempt + 1})`);
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }

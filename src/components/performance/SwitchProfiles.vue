@@ -204,7 +204,7 @@ export default defineComponent({
           }
         } catch (error) {
         }
-      }, 50);
+      }, 0);
 
       setTimeout(() => {
         if (isCapturing.value) {

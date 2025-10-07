@@ -1,3 +1,4 @@
+// KeyboardService.ts
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
 import type { DeviceInit, Device } from '@sparklinkplayjoy/sdk-keyboard';
 import { IDefKeyInfo } from '../types/types';
@@ -7,18 +8,27 @@ class KeyboardService {
   private keyboard: XDKeyboard;
   private connectedDevice: Device | null = null;
 
+  // Initialization
   constructor() {
     this.keyboard = new XDKeyboard({
       usage: 1,
       usagePage: 65440,
     });
     if ('hid' in navigator) {
-      navigator.hid.addEventListener('connect', this.handleConnect.bind(this));
-      navigator.hid.addEventListener('disconnect', this.handleDisconnect.bind(this));
+      navigator.hid.addEventListener('connect', this.handleConnect);
+      navigator.hid.addEventListener('disconnect', this.handleDisconnect);
+    }
+    this.reconnectIfPaired();
+  }
+
+  private reconnectIfPaired(): void {
+    const savedStableId = localStorage.getItem('pairedStableId');
+    if (savedStableId) {
+      this.reconnect(savedStableId);
     }
   }
 
-  // Device Management
+  // Connection Management
   async getDevices(): Promise<Device[]> {
     try {
       const devices = await this.keyboard.getDevices();
@@ -29,29 +39,90 @@ class KeyboardService {
     }
   }
 
+  async reconnect(stableId: string): Promise<void | Error> {
+    try {
+      const savedDeviceData = localStorage.getItem(`pairedDeviceData_${stableId}`);
+      if (!savedDeviceData) {
+        throw new Error('No saved device data for reconnection');
+      }
+      const device = JSON.parse(savedDeviceData) as Device;
+      await this.keyboard.reconnection(device.data, device.id);
+      this.connectedDevice = device;
+      const connectionStore = useConnectionStore();
+      await connectionStore.onAutoConnectSuccess(device);
+    } catch (error) {
+      console.error('Failed to reconnect:', error);
+      return error as Error;
+    }
+  }
+
+  async requestDevice(): Promise<Device> {
+    try {
+      if (!('hid' in navigator)) {
+        throw new Error('WebHID not supported in this browser');
+      }
+      const devices = await navigator.hid.requestDevice({ filters: [] });
+      if (devices.length === 0) {
+        throw new Error('No HID device selected. Please ensure a keyboard is connected and select it.');
+      }
+      const device = devices[0];
+      console.log('Selected raw HID device:', device); // Essential for debugging device properties
+      if (!device.opened) {
+        await device.open();
+      }
+      const sdkDevices = await this.getDevices();
+      const existingDevice = sdkDevices.find(d => d.data.vendorId === device.vendorId && d.data.productId === device.productId && d.data.serialNumber === device.serialNumber);
+      const fallbackId = device.id || `${device.vendorId}-${device.productId}-${device.serialNumber || 'unknown'}`;
+      const result = existingDevice || { id: fallbackId, data: device, productName: device.productName || 'Unknown' };
+      console.log('Constructed result device:', result); // Essential for debugging constructed device
+      await this.init(result.id);
+      this.connectedDevice = result;
+      localStorage.setItem('pairedStableId', fallbackId);
+      localStorage.setItem(`pairedDeviceData_${fallbackId}`, JSON.stringify(result));
+      localStorage.removeItem('pairedDeviceId');
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('pairedDeviceData_') && !key.endsWith(fallbackId)) {
+          localStorage.removeItem(key);
+        }
+      });
+      return result;
+    } catch (error) {
+      console.error('Failed to request device:', error);
+      throw new Error(`Failed to request device: ${(error as Error).message}`);
+    }
+  }
+
   async autoConnect(): Promise<Device | null> {
     try {
       if (!('hid' in navigator)) {
         console.error('WebHID not supported in this browser');
         return null;
       }
+      const savedStableId = localStorage.getItem('pairedStableId');
+      if (!savedStableId) return null;
+
       let attempts = 0;
       const maxAttempts = 3;
       while (attempts < maxAttempts) {
         try {
-          const devices = await navigator.hid.getDevices();
-          const targetDevice = devices.find(
-            d => d.vendorId === 7331 && d.productId === 1793 && d.collections.some(c => c.usagePage === 65440 && c.usage === 1)
-          );
-          if (targetDevice) {
-            if (!targetDevice.opened) {
-              await targetDevice.open();
+          const hidDevices = await navigator.hid.getDevices();
+          const targetHidDevice = hidDevices.find(d => {
+            const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
+            return fallbackId === savedStableId;
+          });
+          if (targetHidDevice) {
+            if (!targetHidDevice.opened) {
+              await targetHidDevice.open();
             }
             const sdkDevices = await this.getDevices();
-            const existingDevice = sdkDevices.find(d => d.id === targetDevice.id);
-            const device = existingDevice || { id: targetDevice.id, data: targetDevice, productName: targetDevice.productName || 'Unknown' };
+            const targetSdkDevice = sdkDevices.find(d => d.data.vendorId === targetHidDevice.vendorId && d.data.productId === targetHidDevice.productId && d.data.serialNumber === targetHidDevice.serialNumber);
+            const fallbackId = targetHidDevice.id || `${targetHidDevice.vendorId}-${targetHidDevice.productId}-${targetHidDevice.serialNumber || 'unknown'}`;
+            const device = targetSdkDevice || { id: fallbackId, data: targetHidDevice, productName: targetHidDevice.productName || 'Unknown' };
+            console.log('Auto-connect SDK matched device:', device); // Essential for debugging auto-connect
             await this.init(device.id);
             this.connectedDevice = device;
+            const connectionStore = useConnectionStore();
+            await connectionStore.onAutoConnectSuccess(device);
             return device;
           }
 
@@ -76,33 +147,6 @@ class KeyboardService {
     }
   }
 
-  async requestDevice(): Promise<Device> {
-    try {
-      if (!('hid' in navigator)) {
-        throw new Error('WebHID not supported in this browser');
-      }
-      const devices = await navigator.hid.requestDevice({
-        filters: [{ usagePage: 65440, usage: 1 }],
-      });
-      if (devices.length === 0) {
-        throw new Error('No compatible keyboard found. Please ensure a supported device is connected.');
-      }
-      const device = devices[0];
-      if (!device.opened) {
-        await device.open();
-      }
-      const sdkDevices = await this.getDevices();
-      const existingDevice = sdkDevices.find(d => d.id === device.id);
-      const result = existingDevice || { id: device.id, data: device, productName: device.productName || 'Unknown' };
-      await this.init(result.id);
-      this.connectedDevice = result;
-      return result;
-    } catch (error) {
-      console.error('Failed to request device:', error);
-      throw new Error(`Failed to request device: ${(error as Error).message}`);
-    }
-  }
-
   private async init(deviceId: string): Promise<Device> {
     try {
       const result = await this.keyboard.init(deviceId);
@@ -113,25 +157,41 @@ class KeyboardService {
     }
   }
 
-  private handleConnect(event: HIDConnectionEvent): void {
-    this.autoConnect(); // Fire-and-forget for event handler
+  private handleConnect = (event: HIDConnectionEvent): void => {
+    this.autoConnect();
   }
 
-  private handleDisconnect(event: HIDConnectionEvent): void {
+  private handleDisconnect = (event: HIDConnectionEvent): void => {
     this.connectedDevice = null;
     const connectionStore = useConnectionStore();
-    connectionStore.setDisconnected();
+    connectionStore.disconnect();
+    localStorage.removeItem('pairedDeviceId');
   }
 
-  // Basic Info and Layout
+  // Base Info and Layout
   async getBaseInfo(): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const baseInfo = await this.keyboard.getBaseInfo();
-      if (baseInfo instanceof Error) return baseInfo;
-      return baseInfo;
+      let attempts = 0;
+      const maxAttempts = 3;
+      while (attempts < maxAttempts) {
+        try {
+          const baseInfo = await this.keyboard.getBaseInfo();
+          if (baseInfo instanceof Error) throw baseInfo;
+          return baseInfo;
+        } catch (error) {
+          console.warn(`getBaseInfo attempt ${attempts + 1} failed:`, error);
+          if (attempts === maxAttempts - 1) {
+            console.error('Failed to fetch base info after retries:', error);
+            return error as Error;
+          }
+          attempts++;
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+      return new Error('Failed to fetch base info: max retries exceeded');
     } catch (error) {
       console.error('Failed to fetch base info:', error);
       return error as Error;
@@ -196,15 +256,12 @@ class KeyboardService {
     }
   }
 
-  // Key and Parameter Management
+  // Key Configuration
   async setKey(keyConfigs: { key: number; layout: number; value: number }[]): Promise<void | Error> {
     try {
-      const setResult = await this.keyboard.setKey(keyConfigs);
-      if (setResult instanceof Error) return setResult;
-      const saveResult = await this.saveParameters();
-      if (saveResult instanceof Error) return saveResult;
-      const reloadResult = await this.reloadParameters();
-      if (reloadResult instanceof Error) return reloadResult;
+      await this.keyboard.setKey(keyConfigs);
+      await this.saveParameters();
+      await this.reloadParameters();
       return;
     } catch (error) {
       console.error('Failed to set key:', error);
@@ -214,8 +271,7 @@ class KeyboardService {
 
   async saveParameters(): Promise<void | Error> {
     try {
-      const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-      if (result instanceof Error) return result;
+      await this.keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
       return;
     } catch (error) {
       console.error('Failed to save parameters:', error);
@@ -225,8 +281,7 @@ class KeyboardService {
 
   async reloadParameters(): Promise<void | Error> {
     try {
-      const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
-      if (result instanceof Error) return result;
+      await this.keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
       return;
     } catch (error) {
       console.error('Failed to reload parameters:', error);
@@ -234,7 +289,6 @@ class KeyboardService {
     }
   }
 
-  // Macro Management
   async getMacro(key: number): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {
@@ -249,19 +303,14 @@ class KeyboardService {
     }
   }
 
-  async setMacro(param: any, macros: any[], touchMode: string = 'single'): Promise<void | Error> {
+  async setMacro(param: any, macros: any[]): Promise<void | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setMacro(param, macros, touchMode);
-      if (result instanceof Error) return result;
-
-      // Post-set sync
-      const saveResult = await this.saveParameters();
-      if (saveResult instanceof Error) return saveResult;
-      const reloadResult = await this.reloadParameters();
-      if (reloadResult instanceof Error) return reloadResult;
+      await this.keyboard.setMacro(param, macros);
+      await this.saveParameters();
+      await this.reloadParameters();
       await new Promise(resolve => setTimeout(resolve, 1000));
       return;
     } catch (error) {
@@ -271,7 +320,7 @@ class KeyboardService {
   }
 
   // Global Touch Travel
-  async getGlobalTouchTravel(): Promise<any | Error> {
+  async getGlobalTouchTravel(): Promise<{ globalTouchTravel: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -285,7 +334,7 @@ class KeyboardService {
     }
   }
 
-  async setGlobalTouchTravel(param: any): Promise<any | Error> {
+  async setGlobalTouchTravel(param: any): Promise<{ globalTouchTravel: number; pressDead: number; releaseDead: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -300,13 +349,10 @@ class KeyboardService {
   }
 
   // Performance Mode
-  async getPerformanceMode(key: number): Promise<any | Error> {
+  async getPerformanceMode(key: number): Promise<{ touchMode: string; advancedKeyMode: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
-      }
-      if (!key || typeof key !== 'number' || key <= 0) {
-        return new Error('Key must be a positive number');
       }
       const result = await this.keyboard.getPerformanceMode(key);
       if (result instanceof Error) return result;
@@ -317,16 +363,10 @@ class KeyboardService {
     }
   }
 
-  async setPerformanceMode(key: number, mode: string, advancedKeyMode: number): Promise<any | Error> {
+  async setPerformanceMode(key: number, mode: string, advancedKeyMode: number): Promise<{ touchMode: string; advancedKeyMode: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
-      }
-      if (!key || typeof key !== 'number' || key <= 0) {
-        return new Error('Key must be a positive number');
-      }
-      if (advancedKeyMode < 0 || advancedKeyMode > 9) {
-        return new Error('Advanced key mode must be 0-9');
       }
       const result = await this.keyboard.setPerformanceMode(key, mode, advancedKeyMode);
       if (result instanceof Error) return result;
@@ -338,7 +378,7 @@ class KeyboardService {
   }
 
   // DB Travel
-  async getDbTravel(key: number, dbLayout: string = 'Layout_DB1'): Promise<any | Error> {
+  async getDbTravel(key: number, dbLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -352,7 +392,7 @@ class KeyboardService {
     }
   }
 
-  async setDbTravel(key: number, value: number, dbLayout: string = 'Layout_DB1'): Promise<any | Error> {
+  async setDbTravel(key: number, value: number, dbLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -367,7 +407,7 @@ class KeyboardService {
   }
 
   // RT Travel
-  async getRtTravel(key: number): Promise<any | Error> {
+  async getRtTravel(key: number): Promise<{ pressTravel: number; releaseTravel: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -381,7 +421,7 @@ class KeyboardService {
     }
   }
 
-  async setRtPressTravel(key: number, value: number): Promise<any | Error> {
+  async setRtPressTravel(key: number, value: number): Promise<{ pressTravel: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -395,7 +435,7 @@ class KeyboardService {
     }
   }
 
-  async setRtReleaseTravel(key: number, value: number): Promise<any | Error> {
+  async setRtReleaseTravel(key: number, value: number): Promise<{ releaseTravel: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -410,7 +450,7 @@ class KeyboardService {
   }
 
   // DP/DR Thresholds
-  async getDpDr(key: number): Promise<any | Error> {
+  async getDpDr(key: number): Promise<{ dpThreshold: number; drThreshold: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -424,7 +464,7 @@ class KeyboardService {
     }
   }
 
-  async setDp(key: number, value: number): Promise<any | Error> {
+  async setDp(key: number, value: number): Promise<{ pressDead: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -438,7 +478,7 @@ class KeyboardService {
     }
   }
 
-  async setDr(key: number, value: number): Promise<any | Error> {
+  async setDr(key: number, value: number): Promise<{ releaseDead: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -453,7 +493,7 @@ class KeyboardService {
   }
 
   // Axis Settings
-  async getAxis(key: number): Promise<any | Error> {
+  async getAxis(key: number): Promise<{ axis: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -467,7 +507,7 @@ class KeyboardService {
     }
   }
 
-  async setAxis(key: number, value: number): Promise<any | Error> {
+  async setAxis(key: number, value: number): Promise<{ axis: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -511,7 +551,7 @@ class KeyboardService {
   }
 
   // DKS Travel
-  async getDksTravel(key: number, dksLayout: string = 'Layout_DB1'): Promise<any | Error> {
+  async getDksTravel(key: number, dksLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -525,7 +565,7 @@ class KeyboardService {
     }
   }
 
-  async setDksTravel(key: number, value: number, dksLayout: string = 'Layout_DB1'): Promise<any | Error> {
+  async setDksTravel(key: number, value: number, dksLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -540,7 +580,7 @@ class KeyboardService {
   }
 
   // Calibration
-  async calibrationStart(): Promise<any | Error> {
+  async calibrationStart(): Promise<Calibration | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -554,7 +594,7 @@ class KeyboardService {
     }
   }
 
-  async calibrationEnd(): Promise<any | Error> {
+  async calibrationEnd(): Promise<Calibration | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -569,7 +609,7 @@ class KeyboardService {
   }
 
   // Advanced Calibration and Travel
-  async getRm6X21Calibration(): Promise<any | Error> {
+  async getRm6X21Calibration(): Promise<{ calibrations: number[]; travels: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -583,7 +623,7 @@ class KeyboardService {
     }
   }
 
-  async getAxisList(): Promise<any | Error> {
+  async getAxisList(): Promise<{ hasAxisSetting: boolean; axisList: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -597,7 +637,7 @@ class KeyboardService {
     }
   }
 
-  async getRm6X21Travel(): Promise<any | Error> {
+  async getRm6X21Travel(): Promise<{ status: any; travels: number[]; maxTravel: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -605,8 +645,8 @@ class KeyboardService {
       const result = await this.keyboard.getRm6X21Travel();
       if (result instanceof Error) return result;
       const travels = result.travels || [];
-      const flatTravels = travels.flat(); // Flatten nested arrays
-      const maxTravel = flatTravels.length > 0 ? Math.max(...flatTravels.filter(t => t > 0)) : 4.0; // Max non-zero, fallback 4.0
+      const flatTravels = travels.flat();
+      const maxTravel = flatTravels.length > 0 ? Math.max(...flatTravels.filter(t => t > 0)) : 4.0;
       return { status: result.status, travels: flatTravels, maxTravel };
     } catch (error) {
       console.error('Failed to fetch RM6X21 travel data:', error);

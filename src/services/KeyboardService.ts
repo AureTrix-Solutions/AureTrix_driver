@@ -1,13 +1,6 @@
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
-import type { DeviceInit, Device } from '@sparklinkplayjoy/sdk-keyboard';
 import { IDefKeyInfo } from '../types/types';
 import { useConnectionStore } from '../store/connection';
-
-interface AxisConfig {
-  key: number;
-  actuationPoint: number;
-  sensitivity: number;
-}
 
 interface IMacroMode {
   key: number;
@@ -45,10 +38,10 @@ class KeyboardService {
     }
   }
 
+  // Device Management
   async getDevices(): Promise<Device[]> {
     try {
       const devices = await this.keyboard.getDevices();
-      //console.log('SDK devices:', devices);
       return devices;
     } catch (error) {
       console.error('Failed to get devices:', error);
@@ -62,20 +55,17 @@ class KeyboardService {
         console.error('WebHID not supported in this browser');
         return null;
       }
-      //console.log('Checking for previously paired devices...');
       let attempts = 0;
       const maxAttempts = 3;
       while (attempts < maxAttempts) {
         try {
           const devices = await navigator.hid.getDevices();
-          //console.log('Paired devices:', devices);
           const targetDevice = devices.find(
             d => d.vendorId === 7331 && d.productId === 1793 && d.collections.some(c => c.usagePage === 65440 && c.usage === 1)
           );
           if (targetDevice) {
             if (!targetDevice.opened) {
               await targetDevice.open();
-
             }
             const sdkDevices = await this.getDevices();
             const existingDevice = sdkDevices.find(d => d.id === targetDevice.id);
@@ -111,18 +101,15 @@ class KeyboardService {
       if (!('hid' in navigator)) {
         throw new Error('WebHID not supported in this browser');
       }
-      //console.log('Attempting to request device with filter: [{ usagePage: 65440, usage: 1 }]');
       const devices = await navigator.hid.requestDevice({
         filters: [{ usagePage: 65440, usage: 1 }],
       });
-      //console.log('Requested devices:', devices);
       if (devices.length === 0) {
         throw new Error('No compatible keyboard found. Please ensure a supported device is connected.');
       }
       const device = devices[0];
       if (!device.opened) {
         await device.open();
-        //console.log('Device opened:', device.productName || 'Unknown', 'VendorID:', device.vendorId, 'ProductID:', device.productId, 'DeviceID:', device.id);
       }
       const sdkDevices = await this.getDevices();
       const existingDevice = sdkDevices.find(d => d.id === device.id);
@@ -138,9 +125,7 @@ class KeyboardService {
 
   private async init(deviceId: string): Promise<Device> {
     try {
-      //console.log('Initializing device with ID:', deviceId);
       const result = await this.keyboard.init(deviceId);
-      //console.log('Initialization result:', result);
       return result;
     } catch (error) {
       console.error('Failed to initialize device:', error);
@@ -149,24 +134,22 @@ class KeyboardService {
   }
 
   private handleConnect(event: HIDConnectionEvent): void {
-    //console.log('Device connected:', event.device);
     this.autoConnect();
   }
 
   private handleDisconnect(event: HIDConnectionEvent): void {
-    //console.log('Device disconnected:', event.device);
     this.connectedDevice = null;
     const connectionStore = useConnectionStore();
     connectionStore.setDisconnected();
   }
 
+  // Basic Info and Layout
   async getBaseInfo(): Promise<any> {
     try {
       if (!this.connectedDevice) {
         throw new Error('No device connected');
       }
       const baseInfo = await this.keyboard.getBaseInfo();
-      //console.log('Base info:', baseInfo);
       return baseInfo;
     } catch (error) {
       console.error('Failed to fetch base info:', error);
@@ -184,7 +167,6 @@ class KeyboardService {
       while (attempt < maxRetries) {
         try {
           const layout = await this.keyboard.defKey();
-          //console.log('Fetched keyboard layout:', layout);
           return layout;
         } catch (error) {
           console.warn(`defKey attempt ${attempt + 1} failed:`, error);
@@ -213,7 +195,6 @@ class KeyboardService {
       while (attempt < maxRetries) {
         try {
           const layoutInfo = await this.keyboard.getLayoutKeyInfo(params);
-          //console.log('Fetched layout key info:', layoutInfo);
           return layoutInfo;
         } catch (error) {
           console.warn(`getLayoutKeyInfo attempt ${attempt + 1} failed:`, error);
@@ -232,6 +213,7 @@ class KeyboardService {
     }
   }
 
+  // Key and Parameter Management
   async setKey(keyConfigs: { key: number; layout: number; value: number }[]): Promise<void> {
     try {
       await this.keyboard.setKey(keyConfigs);
@@ -246,7 +228,6 @@ class KeyboardService {
   async saveParameters(): Promise<void> {
     try {
       await this.keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-      //console.log('Parameters saved successfully');
     } catch (error) {
       console.error('Failed to save parameters:', error);
       throw new Error(`Failed to save parameters: ${(error as Error).message}`);
@@ -256,20 +237,19 @@ class KeyboardService {
   async reloadParameters(): Promise<void> {
     try {
       await this.keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
-      //console.log('Parameters reloaded successfully');
     } catch (error) {
       console.error('Failed to reload parameters:', error);
       throw new Error(`Failed to reload parameters: ${(error as Error).message}`);
     }
   }
 
+  // Macro Management
   async getMacro(key: number): Promise<IMacroMode> {
     try {
       if (!this.connectedDevice) {
         throw new Error('No device connected');
       }
       const result = await this.keyboard.getMacro(key);
-      //console.log(`Fetched macro settings for key ${key}:`, result);
       return result;
     } catch (error) {
       console.error(`Failed to fetch macro for key ${key}:`, error);
@@ -283,25 +263,22 @@ class KeyboardService {
         throw new Error('No device connected');
       }
       await this.keyboard.setMacro(param, macros);
-      //console.log(`Set macro for key ${param.key}:`, { param, macros });
       await this.saveParameters();
-      //console.log('Parameters saved after macro configuration');
       await this.reloadParameters();
       await new Promise(resolve => setTimeout(resolve, 1000));
-      //console.log('Parameters reloaded and synced after macro configuration');
     } catch (error) {
       console.error(`Failed to set macro for key ${param.key}:`, error);
       throw new Error(`Failed to set macro: ${(error as Error).message}`);
     }
   }
 
+  // Global Touch Travel
   async getGlobalTouchTravel(): Promise<{ globalTouchTravel: number }> {
     try {
       if (!this.connectedDevice) {
         throw new Error('No device connected');
       }
       const result = await this.keyboard.getGlobalTouchTravel();
-      //console.log('Fetched global touch travel:', result);
       return result;
     } catch (error) {
       console.error('Failed to fetch global touch travel:', error);
@@ -309,142 +286,123 @@ class KeyboardService {
     }
   }
 
-    async setGlobalTouchTravel(param: IDB): Promise<{ globalTouchTravel: number; pressDead: number; releaseDead: number } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+  async setGlobalTouchTravel(param: IDB): Promise<{ globalTouchTravel: number; pressDead: number; releaseDead: number } | Error> {
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.setDB(param);
+      return result;
+    } catch (error) {
+      console.error(`Failed to set global touch travel:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.setDB(param);
-    //console.log(`Set global touch travel to ${param.globalTouchTravel} mm (dead zones: press ${param.pressDead}, release ${param.releaseDead}); raw response:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to set global touch travel:`, error);
-    return error as Error;
   }
-}
 
+  // Performance Mode
   async getPerformanceMode(key: number): Promise<{ touchMode: string; advancedKeyMode: number } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      if (!key || typeof key !== 'number') {
+        throw new Error('Key parameter is required and must be a number');
+      }
+      const result = await this.keyboard.getPerformanceMode(key);
+      return result;
+    } catch (error) {
+      console.error(`Failed to fetch performance mode for key ${key}:`, error);
+      return error as Error;
     }
-    if (!key || typeof key !== 'number') {
-      throw new Error('Key parameter is required and must be a number');
-    }
-    const result = await this.keyboard.getPerformanceMode(key);
-    //console.log(`Fetched performance mode for key ${key}:`, result);
-    // Optional: Decode advancedKeyMode for logging
-    const modeMeanings = {
-      0: 'none',
-      1: 'DKS (dual key stroke)',
-      2: 'MPT (multi-point trigger)',
-      3: 'MT (multi trigger)',
-      4: 'TGL (toggle mode)',
-      5: 'END (end mode)',
-      6: 'MCR (macro)',
-      8: 'SOCD (simultaneous opposite cardinal directions)',
-      9: 'RS (rapid switch)',
-    };
-    const meaning = modeMeanings[result.advancedKeyMode] || 'unknown';
-    //console.log(`Advanced mode ${result.advancedKeyMode} for key ${key}: ${meaning}`);
-    return result;
-  } catch (error) {
-    console.error(`Failed to fetch performance mode for key ${key}:`, error);
-    return error as Error;
   }
-}
 
   async setPerformanceMode(key: number, mode: string, advancedKeyMode: number): Promise<{ touchMode: string; advancedKeyMode: number } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.setPerformanceMode(key, mode, advancedKeyMode);
+      return result;
+    } catch (error) {
+      console.error(`Failed to set performance mode for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.setPerformanceMode(key, mode, advancedKeyMode);
-    //console.log(`Set performance mode for key ${key} (mode: ${mode}, advanced: ${advancedKeyMode}); raw response:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to set performance mode for key ${key}:`, error);
-    return error as Error;
   }
-}
 
+  // DB Travel
   async getDbTravel(key: number, dbLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.getDbTravel(key, dbLayout);
+      return result;
+    } catch (error) {
+      console.error(`Failed to fetch DB travel for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.getDbTravel(key, dbLayout);
-    //console.log(`Fetched DB travel for key ${key} (layout: ${dbLayout}):`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to fetch DB travel for key ${key}:`, error);
-    return error as Error;
   }
-}
 
   async setDbTravel(key: number, value: number, dbLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.setDbTravel(key, value, dbLayout);
+      return result;
+    } catch (error) {
+      console.error(`Failed to set DB travel for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.setDbTravel(key, value, dbLayout);
-    //console.log(`Set DB travel for key ${key} to ${value} mm (layout: ${dbLayout}); raw response:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to set DB travel for key ${key}:`, error);
-    return error as Error;
   }
-}
 
+  // RT Travel
   async getRtTravel(key: number): Promise<{ pressTravel: number; releaseTravel: number } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.getRtTravel(key);
+      return result;
+    } catch (error) {
+      console.error(`Failed to fetch RT travel for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.getRtTravel(key);
-    //console.log(`Fetched RT travel for key ${key}:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to fetch RT travel for key ${key}:`, error);
-    return error as Error;
   }
-}
 
   async setRtPressTravel(key: number, value: number): Promise<{ pressTravel: number } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.setRtPressTravel(key, value);
+      return result;
+    } catch (error) {
+      console.error(`Failed to set RT press travel for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.setRtPressTravel(key, value);
-    //console.log(`Set RT press travel for key ${key} to ${value} mm; raw response:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to set RT press travel for key ${key}:`, error);
-    return error as Error;
   }
-}
 
   async setRtReleaseTravel(key: number, value: number): Promise<{ releaseTravel: number } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.setRtReleaseTravel(key, value);
+      return result;
+    } catch (error) {
+      console.error(`Failed to set RT release travel for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.setRtReleaseTravel(key, value);
-    //console.log(`Set RT release travel for key ${key} to ${value} mm; raw response:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to set RT release travel for key ${key}:`, error);
-    return error as Error;
   }
-}
 
+  // DP/DR Thresholds
   async getDpDr(key: number): Promise<{ dpThreshold: number; drThreshold: number } | Error> {
     try {
       if (!this.connectedDevice) {
         throw new Error('No device connected');
       }
       const result = await this.keyboard.getDpDr(key);
-      //console.log(`Fetched DP/DR for key ${key} (mm):`, result);
       return result;
     } catch (error) {
       console.error(`Failed to fetch DP/DR for key ${key}:`, error);
@@ -452,159 +410,153 @@ class KeyboardService {
     }
   }
 
-    async setDp(key: number, value: number): Promise<{ pressDead: number } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+  async setDp(key: number, value: number): Promise<{ pressDead: number } | Error> {
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.setDp(key, value);
+      return result;
+    } catch (error) {
+      console.error(`Failed to set press dead zone for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.setDp(key, value);
-    //console.log(`Set press dead zone for key ${key} to ${value} mm; raw response:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to set press dead zone for key ${key}:`, error);
-    return error as Error;
   }
-}
 
   async setDr(key: number, value: number): Promise<{ releaseDead: number } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.setDr(key, value);
+      return result;
+    } catch (error) {
+      console.error(`Failed to set release dead zone for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.setDr(key, value);
-    //console.log(`Set release dead zone for key ${key} to ${value} mm; raw response:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to set release dead zone for key ${key}:`, error);
-    return error as Error;
   }
-}
 
+  // Axis Settings
   async getAxis(key: number): Promise<{ axis: number } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.getAxis(key);
+      return result;
+    } catch (error) {
+      console.error(`Failed to fetch axis for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.getAxis(key);
-    //console.log(`Raw SDK axis response for key ${key}:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to fetch axis for key ${key}:`, error);
-    return error as Error;
   }
-}
 
   async setAxis(key: number, value: number): Promise<{ axis: number } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.setAxis(key, value);
+      return result;
+    } catch (error) {
+      console.error(`Failed to set axis for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.setAxis(key, value);
-    //console.log(`Set axis for key ${key} to ${value} (state); raw response:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to set axis for key ${key}:`, error);
-    return error as Error;
   }
-}
 
+  // Single Travel
   async getSingleTravel(key: number, decimal: number = 2): Promise<number | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.getSingleTravel(key, decimal);
+      return result;
+    } catch (error) {
+      console.error(`Failed to fetch single key travel for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.getSingleTravel(key, decimal);
-    //console.log(`Fetched single key travel for key ${key}:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to fetch single key travel for key ${key}:`, error);
-    return error as Error;
   }
-}s
 
   async setSingleTravel(key: number, value: number, decimal: number = 2): Promise<number | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.setSingleTravel(key, value, decimal);
+      return result;
+    } catch (error) {
+      console.error(`Failed to set single travel for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.setSingleTravel(key, value, decimal);
-    //console.log(`Set single travel for key ${key} to ${value} mm (precision: ${decimal}); raw response:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to set single travel for key ${key}:`, error);
-    return error as Error;
   }
-}
 
+  // DKS Travel
   async getDksTravel(key: number, dksLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.getDksTravel(key, dksLayout);
+      return result;
+    } catch (error) {
+      console.error(`Failed to fetch DKS travel for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.getDksTravel(key, dksLayout);
-    //console.log(`Fetched DKS travel for key ${key} (layout: ${dksLayout}, mm):`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to fetch DKS travel for key ${key}:`, error);
-    return error as Error;
   }
-}
 
   async setDksTravel(key: number, value: number, dksLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.setDksTravel(key, value, dksLayout);
+      return result;
+    } catch (error) {
+      console.error(`Failed to set DKS travel for key ${key}:`, error);
+      return error as Error;
     }
-    const result = await this.keyboard.setDksTravel(key, value, dksLayout);
-    //console.log(`Set DKS travel for key ${key} to ${value} mm (layout: ${dksLayout}); raw response:`, result);
-    return result;
-  } catch (error) {
-    console.error(`Failed to set DKS travel for key ${key}:`, error);
-    return error as Error;
   }
-}
 
+  // Calibration
   async calibrationStart(): Promise<Calibration | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.calibrationStart();
+      return result;
+    } catch (error) {
+      console.error('Failed to start calibration:', error);
+      return error as Error;
     }
-    const result = await this.keyboard.calibrationStart();
-    //console.log('Started calibration; raw response:', result);
-    return result;
-  } catch (error) {
-    console.error('Failed to start calibration:', error);
-    return error as Error;
   }
-}
 
   async calibrationEnd(): Promise<Calibration | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.calibrationEnd();
+      return result;
+    } catch (error) {
+      console.error('Failed to end calibration:', error);
+      return error as Error;
     }
-    const result = await this.keyboard.calibrationEnd();
-    //console.log('Ended calibration; raw response:', result);
-    return result;
-  } catch (error) {
-    console.error('Failed to end calibration:', error);
-    return error as Error;
   }
-}
 
+  // Advanced Calibration and Travel
   async getRm6X21Calibration(): Promise<{ calibrations: number[]; travels: number[] } | Error> {
-  try {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      const result = await this.keyboard.getRm6X21Calibration();
+      return result;
+    } catch (error) {
+      console.error('Failed to fetch RM6X21 calibration data:', error);
+      return error as Error;
     }
-    const result = await this.keyboard.getRm6X21Calibration();
-    //console.log('Fetched RM6X21 calibration data; raw response:', result);
-    return result;
-  } catch (error) {
-    console.error('Failed to fetch RM6X21 calibration data:', error);
-    return error as Error;
   }
-}
 
   async getAxisList(): Promise<{ hasAxisSetting: boolean; axisList: number[] } | Error> {
     try {
@@ -612,7 +564,6 @@ class KeyboardService {
         throw new Error('No device connected');
       }
       const result = await this.keyboard.getAxisList();
-      //console.log('Fetched axis list; raw response:', result);
       return result;
     } catch (error) {
       console.error('Failed to fetch axis list:', error);
@@ -632,7 +583,6 @@ class KeyboardService {
       const travels = result.travels || [];
       const flatTravels = travels.flat(); // Flatten nested arrays
       const maxTravel = flatTravels.length > 0 ? Math.max(...flatTravels.filter(t => t > 0)) : 4.0; // Max non-zero, fallback 4.0
-      //console.log('Fetched RM6X21 travel data:', { status: result.status, travels: flatTravels, maxTravel });
       return { status: result.status, travels: flatTravels, maxTravel };
     } catch (error) {
       console.error('Failed to fetch RM6X21 travel data:', error);

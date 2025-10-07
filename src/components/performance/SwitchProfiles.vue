@@ -53,7 +53,7 @@
     <div v-if="showKeyTestModal" class="modal-overlay" @click="closeKeyTestModal">
       <div class="modal-content key-test-modal" @click.stop>
         <h4>Key Test Monitor</h4>
-        <p>Press the selected key to monitor travel and trigger. Press slow for better accuracy.</p>
+        <p>Press the selected key to monitor travel and trigger.<br></br> Press slow for better accuracy.</p>
         <table class="key-test-table">
           <thead>
             <tr>

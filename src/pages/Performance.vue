@@ -408,7 +408,9 @@ export default defineComponent({
     }, { immediate: true });
 
     onMounted(() => {
-      fetchLayerLayout();
+      setTimeout(() => {
+        fetchLayerLayout();
+      }, 100);
     });
 
     const setNotification = (message: string, isError: boolean) => {
@@ -454,12 +456,13 @@ export default defineComponent({
     margin-bottom: 10px;
     margin-top: 0px;
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: 600;
+    font-family: v.$font-style;
   }
 
   .notification {
     padding: 10px;
-    margin-bottom: 16px;
+    margin-bottom: 0px;
     border-radius: v.$border-radius;
     background-color: rgba(v.$background-dark, 1.1);
     color: v.$text-color;
@@ -478,6 +481,7 @@ export default defineComponent({
       color: v.$text-color;
       cursor: pointer;
       font-size: 1rem;
+      font-family: v.$font-style;
 
       &:hover {
         color: rgba(v.$text-color, 0.6);
@@ -495,6 +499,7 @@ export default defineComponent({
     text-align: center;
     color: v.$text-color;
     font-size: 1rem;
+    font-family: v.$font-style;
     padding: 20px;
   }
 
@@ -517,7 +522,7 @@ export default defineComponent({
   .key-btn {
     position: absolute;
     padding: 4px;
-    border: 2px solid rgba(v.$text-color, 0.3);
+    border: v.$border-style;
     border-radius: v.$border-radius;
     background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
@@ -527,6 +532,7 @@ export default defineComponent({
     box-sizing: border-box;
     user-select: none;
     text-align: center;
+    font-family: v.$font-style;
     visibility: visible !important;
     z-index: 2;
 
@@ -592,16 +598,17 @@ export default defineComponent({
 
     .select-btn {
       padding: 8px 8px;
-      background-color: v.$accent-color;
-      color: v.$background-dark;
-      border: none;
+      background-color: color.adjust(v.$background-dark, $lightness: -100%);
+      color: v.$accent-color;
+      border: v.$border-style;
       border-radius: v.$border-radius;
       cursor: pointer;
       font-size: 0.9rem;
-      font-weight: 500;
+      font-weight: 200px;
       transition: background-color 0.2s ease;
       width: 120px;
       text-align: center;
+      font-family: v.$font-style;
 
       &:hover {
         background-color: color.adjust(v.$accent-color, $lightness: 10%);
@@ -621,15 +628,12 @@ export default defineComponent({
     justify-content:center;
  
   }
-
-
-
   .settings-panel {
     width: 1425px;
     padding: 10px;
     border: 1px solid rgba(v.$text-color, 0.2);
     border-radius: v.$border-radius;
-    background-color: rgba(v.$background-dark, 0.98);
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
   }
 }
 </style>

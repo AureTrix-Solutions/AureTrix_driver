@@ -5,11 +5,14 @@
       <div class="sidebar-header">
         <img src="@/assets/logo.png" alt="Keyboard Driver Logo" class="logo">
         <div v-if="connectionStore.status" class="status">
-          <ul v-if="connectionStore.isConnected">
+          <ul v-if="connectionStore.isConnected && isStatusReady">
             <li>Connected: {{ connectionStore.deviceInfo?.productName || 'Unknown Device' }}</li>
-            <li>SN: {{ connectionStore.deviceInfo?.KeyboardSN || 'N/A' }}</li>
+            <li>SN: {{ decodeString(connectionStore.deviceInfo?.KeyboardSN) || 'N/A' }}</li>
             <li v-if="connectionStore.deviceInfo?.BoardID">Board ID: {{ connectionStore.deviceInfo.BoardID }}</li>
-            <li v-if="connectionStore.deviceInfo?.appVersion">Version: {{ connectionStore.deviceInfo.appVersion }}</li>
+            <li v-if="connectionStore.deviceInfo?.appVersion">Version: {{ decodeString(connectionStore.deviceInfo?.appVersion) || 'N/A' }}</li>
+          </ul>
+          <ul v-else-if="connectionStore.isConnected">
+            <li>Loading device info...</li>
           </ul>
           <p v-else>{{ connectionStore.status }}</p>
         </div>
@@ -23,24 +26,31 @@
           >
             {{ item.name }}
           </router-link>
-          <div v-else class="nav-item category-header" @click="toggleCategory(item.name)">
+          <div v-else class="nav-item category-header" @click="handleCategoryClick(item, $event)">
             {{ item.name }}
-            <span class="arrow" :class="{ open: isOpen(item.name) }">▶</span>
-          </div>
-          <div v-if="isOpen(item.name)" class="submenu">
-            <router-link
-              v-for="sub in item.items"
-              :key="sub.name"
-              :to="sub.path"
-              class="nav-item subitem"
-            >
-              {{ sub.name }}
-            </router-link>
+            <span class="arrow" :class="{ open: openCategory === item }">></span>
           </div>
         </template>
       </nav>
-      <p class="copyright">Copyright©2025 BlastHappy82</p>
+      <p class="copyright">Copyright©2025 AureTrix</p>
     </aside>
+
+    <!-- Flyout Submenu -->
+    <div v-if="openCategory" class="flyout-menu" :style="{ top: flyoutTop + 'px' }" @click.self="closeCategory">
+      <div class="flyout-content">
+        <nav class="flyout-nav">
+          <router-link
+            v-for="sub in openCategory.items"
+            :key="sub.name"
+            :to="sub.path"
+            class="flyout-item"
+            @click="closeCategory"
+          >
+            {{ sub.name }}
+          </router-link>
+        </nav>
+      </div>
+    </div>
 
     <!-- Main Content Area -->
     <main class="main-content">
@@ -50,7 +60,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, computed } from 'vue';
 import { RouterLink, RouterView } from 'vue-router';
 import { useConnectionStore } from './store/connection';
 
@@ -97,15 +107,45 @@ export default defineComponent({
         { name: 'Profiles', path: '/profiles', isCategory: false },
         { name: 'Debug', path: '/debug', isCategory: false }
       ],
-      openCategory: null as string | null
+      openCategory: null as any,
+      flyoutTop: 0
     };
   },
+  computed: {
+    isStatusReady() {
+      const info = this.connectionStore.deviceInfo;
+      return info && 
+             typeof info.KeyboardSN !== 'undefined' && 
+             (typeof info.KeyboardSN === 'string' || (info.KeyboardSN instanceof Uint8Array && info.KeyboardSN.length > 0)) &&
+             typeof info.appVersion !== 'undefined' &&
+             (typeof info.appVersion === 'string' || (info.appVersion instanceof Uint8Array && info.appVersion.length > 0));
+    }
+  },
   methods: {
-    toggleCategory(name: string) {
-      this.openCategory = this.openCategory === name ? null : name;
+    decodeString(value: string | Uint8Array | null | undefined): string {
+      if (!value) return '';
+      if (typeof value === 'string') return value;
+      if (value instanceof Uint8Array) {
+        try {
+          return new TextDecoder('utf-8').decode(value);
+        } catch {
+          return '[Decode Error]';
+        }
+      }
+      return String(value);
     },
-    isOpen(name: string) {
-      return this.openCategory === name;
+    handleCategoryClick(item: any, event: MouseEvent) {
+      console.log('Category clicked:', item.name); // Debug log
+      if (this.openCategory === item) {
+        this.closeCategory();
+        return;
+      }
+      const target = event.currentTarget as HTMLElement;
+      this.flyoutTop = target.offsetTop - 50; // Raise by 50px; adjust value as needed
+      this.openCategory = item;
+    },
+    closeCategory() {
+      this.openCategory = null;
     }
   }
 });
@@ -121,6 +161,7 @@ export default defineComponent({
   background-color: color.adjust(v.$background-dark, $lightness: -100%);
   color: v.$text-color;
   font-family: Arial, sans-serif;
+  position: relative; // For flyout positioning
 }
 
 .sidebar {
@@ -130,6 +171,8 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 10;
+  position: relative;
 }
 
 .sidebar-header {
@@ -142,13 +185,15 @@ export default defineComponent({
   }
   .status {
     margin-top: -30px;
-    font-size: 0.9rem;
+    margin-bottom: 50px;
+    font-size: 1rem;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     width: 250px;
     height: 69.13px;
     color: v.$accent-color;
     ul {
-      list-style-type: disc;
-      padding-left: 10px;
+      list-style-type:none;
+      padding-left: 0px;
       margin: 0;
       li {
         margin: 0;
@@ -170,8 +215,10 @@ export default defineComponent({
 
 .nav-item {
   text-decoration: none;
-  color: v.$text-color;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: v.$primary-color;
   padding: 10px;
+  border: 1px solid rgba(v.$text-color, 0.2);
   border-radius: v.$border-radius;
   transition: background-color 0.3s;
   &:hover {
@@ -190,10 +237,64 @@ export default defineComponent({
   justify-content: space-between;
   align-items: center;
   text-decoration: none;
-  color: v.$text-color;
+  color: v.$primary-color;
   padding: 10px;
+  border: 1px solid rgba(v.$text-color, 0.2);
   border-radius: v.$border-radius;
   transition: background-color 0.3s;
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.arrow {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+  &.open {
+    transform: rotate(90deg);
+  }
+}
+
+.flyout-menu {
+  position: absolute;
+  left: 290px;
+  top: 20px; // Base offset for sidebar padding
+  width: 220px;
+  height: auto;
+  min-height: 100px;
+  max-height: 500px;
+  overflow-y: auto;
+  border: 1px solid rgba(v.$text-color, 0.2);
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  border-radius: 15px;
+  z-index: 20;
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.flyout-content {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+
+.flyout-nav {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  gap: 3px;
+}
+
+.flyout-item {
+  text-decoration: none;
+  color: v.$primary-color;
+  padding: 8px 10px;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  border: 1px solid rgba(v.$text-color, 0.2);
+  border-radius: v.$border-radius;
+  transition: background-color 0.3s;
+  font-size: 0.95rem;
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
@@ -204,42 +305,14 @@ export default defineComponent({
   }
 }
 
-.arrow {
-  transition: transform 0.3s ease;
-  font-size: 0.8rem;
-  &.open {
-    transform: rotate(90deg);
-  }
-}
-
-.submenu {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding-left: 20px;
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
+@keyframes slideInRight {
   from {
+    transform: translateX(100%);
     opacity: 0;
-    max-height: 0;
-    padding-left: 0;
   }
   to {
+    transform: translateX(0);
     opacity: 1;
-    max-height: 200px;
-    padding-left: 20px;
-  }
-}
-
-.subitem {
-  padding: 8px 10px;
-  font-size: 0.95rem;
-  &.router-link-active {
-    background-color: rgba(v.$primary-color, 0.3);
-    color: v.$primary-color;
-    font-weight: bold;
   }
 }
 
@@ -248,6 +321,7 @@ export default defineComponent({
   padding: 20px;
   overflow-y: auto;
   scrollbar-gutter: stable both-edges;
+  transition: margin-left 0.3s ease; // Smooth shift if needed
 }
 
 .copyright {

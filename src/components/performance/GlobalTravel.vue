@@ -376,31 +376,34 @@ export default defineComponent({
     display: flex;
     align-items: center;
     margin-bottom: 16px;
+    font-family: v.$font-style;
   }
 
   h3 {
     color: v.$primary-color;
     width: auto;
     font-size: 1.5rem;
-    text-decoration: underline;
     margin: 0;
+    margin-bottom: -5px;
     margin-right: 10px;
+    font-weight: 400;
   }
 
   .show-btn {
     padding: 3px 8px;
-    background-color: v.$accent-color;
-    color: v.$background-dark;
-    border: none;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+    color: v.$accent-color;
+    border: v.$border-style;
     border-radius: v.$border-radius;
     cursor: pointer;
     font-size: 0.7rem;
     font-weight: 500;
     transition: background-color 0.2s ease;
     align-self: left;
+    margin-bottom: -10px;
 
     &:hover:not(:disabled) {
-      background-color: color.adjust(v.$accent-color, $lightness: 10%);
+      background-color: color.adjust(v.$background-dark, $lightness: 10%);
     }
 
     &:disabled {
@@ -416,6 +419,7 @@ export default defineComponent({
     gap: 0px;
     margin-bottom: 20px;
     align-items: center;
+    font-family: v.$font-style;
   }
 
   .input-group {
@@ -426,9 +430,10 @@ export default defineComponent({
     padding: 10px;
     width: 600px;
     height: 30px;
-    border: 1px solid rgba(v.$text-color, 0.1);
+    border: v.$border-style;
     border-radius: v.$border-radius;
     background-color: rgba(v.$background-dark, 0.5);
+    font-family: v.$font-style;
 
     &.global-mode-group {
       display: inline;
@@ -444,31 +449,42 @@ export default defineComponent({
       text-align: center;
       color: v.$text-color;
       font-size: 0.95rem;
-      font-weight: 500;
+      font-weight: 300;
     }
 
     .slider-container {
       flex: 1;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 0px;
 
       input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
         flex: 1;
         max-width: 200px;
         cursor: pointer;
         height: 6px;
+        background: transparent; // clear default track
+
+        &::-webkit-slider-runnable-track {
+          background-color: color.adjust(v.$background-dark, $lightness: 10%); // track color
+          height: 6px;
+          border-radius: 3px;
+        }
 
         &::-webkit-slider-thumb {
           appearance: none;
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          background-color: v.$accent-color;
+          opacity: 1;
+          width: 12px;
+          height: 12px;
+          border-radius: 4%;
+          background-color: v.$primary-color; // thumb color
           cursor: pointer;
+          margin-top: -3px; // centers thumb vertically
         }
       }
-
+      
       .value-display {
         min-width: 60px;
         color: v.$accent-color;
@@ -500,15 +516,16 @@ export default defineComponent({
       }
 
       .adjust-btn {
-        width: 28px;
-        height: 28px;
+        width: 20px;
+        height: 20px;
         border: none;
-        border-radius: 50%;
+        border-radius: 4%;
         background-color: rgba(v.$text-color, 0.2);
         color: v.$text-color;
         cursor: pointer;
         font-size: 1rem;
-        font-weight: bold;
+        font-weight: 400;
+        padding: 0px;
         transition: background-color 0.2s ease;
 
         &:hover:not(:disabled) {
@@ -541,17 +558,18 @@ export default defineComponent({
 
   .link-btn {
     padding: 8px 16px;
-    background-color: v.$accent-color;
-    color: v.$background-dark;
-    border: none;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+    color: v.$primary-color;
+    border: v.$border-style;
     border-radius: v.$border-radius;
     cursor: pointer;
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 400;
+    height: 32px;
     transition: background-color 0.2s ease;
 
     &:hover:not(:disabled) {
-      background-color: color.adjust(v.$accent-color, $lightness: 10%);
+      background-color: color.adjust(v.$background-dark, $lightness: 10%);
     }
 
     &:disabled {
@@ -562,13 +580,13 @@ export default defineComponent({
 
   .global-mode-btn {
     padding: 8px 16px;
-    background-color: v.$primary-color;
-    color: v.$background-dark;
-    border: none;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+    color: v.$primary-color;
+    border: v.$border-style;
     border-radius: v.$border-radius;
     cursor: pointer;
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 400;
     transition: background-color 0.2s ease;
     width: 140.88px;
     height: 32px;
@@ -576,11 +594,11 @@ export default defineComponent({
     margin-top: 0px;
 
     &:hover:not(:disabled) {
-      background-color: color.adjust(v.$primary-color, $lightness: 10%);
+      background-color: color.adjust(v.$background-dark, $lightness: 10%);
     }
 
     &:disabled {
-      background-color: color.adjust(v.$primary-color, $lightness: -20%);
+      background-color: color.adjust(v.$background-dark, $lightness: -20%);
       opacity: 0.6;
       cursor: not-allowed;
     }

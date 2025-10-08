@@ -471,6 +471,7 @@ export default defineComponent({
     flex-direction: column;
     gap: 0px;
     overflow-y: auto;
+    margin-top: 20px;
     height: calc(100% - 60px);
   }
 
@@ -478,6 +479,7 @@ export default defineComponent({
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 1px;
     margin-bottom: 10px;
 
     label {

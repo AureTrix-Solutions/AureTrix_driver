@@ -4,7 +4,6 @@ interface TravelProfile {
   id: string;
   switchName: string;
   maxTravel: number;
-  // Add more fields as needed (e.g., deadzoneTop: number)
 }
 
 export const useTravelProfilesStore = defineStore('travelProfiles', {

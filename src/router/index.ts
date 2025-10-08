@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Connect from '@/pages/Connect.vue'; // Updated to alias for consistency
+import Connect from '@/pages/Connect.vue'; 
 
 const routes = [
   { path: '/', component: Connect, name: 'Connect' },
@@ -11,6 +11,8 @@ const routes = [
   { path: '/layout-preview', component: () => import('@/pages/LayoutPreview.vue'), name: 'LayoutPreview' },
   { path: '/performance', component: () => import('@/pages/Performance.vue'), name: 'Performance' },
   { path: '/debug', component: () => import('@/pages/Debug.vue'), name: 'Debug' },
+  { path: '/rapid-trigger', component: () => import('@/pages/RapidTrigger.vue'), name: 'RapidTrigger' },
+  { path: '/calibration', component: () => import('@/pages/Calibration.vue'), name: 'Calibration' },
 ];
 
 const router = createRouter({

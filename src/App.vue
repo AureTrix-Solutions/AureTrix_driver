@@ -16,9 +16,11 @@
       </div>
       <nav class="sidebar-nav">
         <router-link to="/" class="nav-item">Connect</router-link>
-        <router-link to="/performance" class="nav-item">Performance</router-link>
-        <router-link to="/key-mapping" class="nav-item">Key Mapping</router-link>
+        <router-link to="/calibration" class="nav-item">Calibration</router-link>
+        <router-link to="/performance" class="nav-item">Key Travels</router-link>
+        <router-link to="/rapid-trigger" class="nav-item">Rapid Trigger</router-link>
         <router-link to="/macros" class="nav-item">Macro Recording</router-link>
+        <router-link to="/key-mapping" class="nav-item">Key Mapping</router-link>
         <router-link to="/lighting" class="nav-item">Lighting</router-link>
         <router-link to="/advanced-config" class="nav-item">Advanced Config</router-link>
         <router-link to="/layout-preview" class="nav-item">Layout Preview</router-link>

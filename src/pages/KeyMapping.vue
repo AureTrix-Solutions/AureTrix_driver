@@ -379,6 +379,9 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     gap: 24px;
+    margin-bottom: auto;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .no-layout {
@@ -429,11 +432,11 @@ export default defineComponent({
 
   .key-config {
     position: relative;
-    margin-top: -30px;
+    margin-top: -50px;
+    margin-bottom: auto;
     padding-top: 5px;
     display: flex;
     flex-direction: column;
-    height: 500px;
     width: 1156px;
     align-self: center;
     gap: 10px;

@@ -268,6 +268,9 @@ export default defineComponent({
           : `${props.selectedKeys.length} keys`;
         console.log(`[SINGLETRAVEL] Updated dead zones (top: ${topDeadZone.value.toFixed(2)}, bottom: ${bottomDeadZone.value.toFixed(2)}) for ${keyDisplay}`);
         
+        // Sync travel (clamped or current) to SDK after dead zones
+        await updateSingleKeyTravel();
+        
         // Clear overlays for re-poll
         emit('update-overlay', null);
         emit('update-single-overlay', null);

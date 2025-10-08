@@ -1,23 +1,19 @@
 <template>
   <div class="performance-page">
-    <h2 class="title">Performance Settings</h2>
-    <div class="controls">
-      <label for="section-select">Section: </label>
-      <select v-model="selectedSection" id="section-select" @change="updateOverlay">
-        <option value="key-travel">Key Travel</option>
-        <option value="rapid-trigger">Rapid Trigger</option>
-        <option value="calibration">Calibration</option>
-      </select>
+    <h2 class="title">Key Travel Settings</h2>
+    <div v-if="notification" class="notification" :class="{ error: notification.isError }">
+      {{ notification.message }}
+      <button @click="notification = null" class="dismiss-btn">&times;</button>
     </div>
 
     <div class="performance-container">
-      <div v-if="layout.length && loaded && (selectedSection === 'key-travel' || selectedSection === 'rapid-trigger')" class="key-grid" :style="gridStyle">
+      <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
         <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
           <div
             v-for="(keyInfo, cIdx) in row"
             :key="`k-${rIdx}-${cIdx}`"
             class="key-btn"
-            :class="{ 'performance-key-selected': loaded && selectedKeys.some(k => (k.physicalKeyValue || k.keyValue) === (keyInfo.physicalKeyValue || keyInfo.keyValue)) && (selectedSection === 'key-travel' || selectedSection === 'rapid-trigger') }"
+            :class="{ 'performance-key-selected': loaded && selectedKeys.some(k => (k.physicalKeyValue || k.keyValue) === (keyInfo.physicalKeyValue || keyInfo.keyValue)) }"
             :style="getKeyStyle(rIdx, cIdx)"
             @click="selectKey(keyInfo, rIdx, cIdx)"
           >
@@ -32,12 +28,12 @@
           </div>
         </div>
       </div>
-      <div v-else-if="selectedSection === 'key-travel' || selectedSection === 'rapid-trigger'" class="no-layout">
+      <div v-else class="no-layout">
         <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
-        <p>Debug: layout.length={{ layout.length }}, loaded={{ loaded }}, baseLayout={{ baseLayout?.value ? 'defined' : 'null' }}, selectedSection={{ selectedSection }}</p>
+        <p>Debug: layout.length={{ layout.length }}, loaded={{ loaded }}, baseLayout={{ baseLayout?.value ? 'defined' : 'null' }}</p>
       </div>
       <div class="bottom-section">
-        <div class="selection-buttons" v-if="selectedSection === 'key-travel' || selectedSection === 'rapid-trigger'">
+        <div class="selection-buttons">
           <button @click="selectAll" class="select-btn">Select All</button>
           <button @click="selectWASD" class="select-btn">Select WASD</button>
           <button @click="selectLetters" class="select-btn">Select Letters</button>
@@ -46,15 +42,14 @@
         </div>
         <div class="parent">
           <div class="settings-panel">
-            <component
-              :is="sectionComponents[selectedSection]"
+            <KeyTravel
               :selected-keys="selectedKeys"
               :layout="layout"
               :base-layout="baseLayout"
               @update-single-overlay="updateSingleOverlayData"
               @update-overlay="updateOverlayData"
               @update-notification="setNotification"
-            ></component>
+            />
           </div>
         </div>
       </div>
@@ -70,18 +65,13 @@ import { keyMap } from '@utils/keyMap';
 import KeyboardService from '@services/KeyboardService';
 import type { IDefKeyInfo } from '../types/types';
 import KeyTravel from '../components/performance/KeyTravel.vue';
-import RapidTrigger from '../components/performance/RapidTrigger.vue';
-import Calibration from '../components/performance/Calibration.vue';
 
 export default defineComponent({
   name: 'Performance',
   components: {
     KeyTravel,
-    RapidTrigger,
-    Calibration,
   },
   setup() {
-    const selectedSection = ref('key-travel');
     const selectedKeys = ref<IDefKeyInfo[]>([]);
     const notification = ref<{ message: string; isError: boolean } | null>(null);
     const overlayData = ref<{ [key: number]: { travel: string; pressDead: string; releaseDead: string } }>({});
@@ -139,96 +129,78 @@ export default defineComponent({
       }
     };
 
-    const sectionComponents = {
-      'key-travel': 'KeyTravel',
-      'rapid-trigger': 'RapidTrigger',
-      'calibration': 'Calibration',
-    };
-
     const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
-      if (selectedSection.value === 'key-travel' || selectedSection.value === 'rapid-trigger') {
-        const physicalKeyValue = key.physicalKeyValue || key.keyValue;
-        const existingIndex = selectedKeys.value.findIndex(k => (k.physicalKeyValue || k.keyValue) === physicalKeyValue);
-        if (existingIndex > -1) {
-          selectedKeys.value.splice(existingIndex, 1);
-        } else {
-          selectedKeys.value.push(key);
-        }
+      const physicalKeyValue = key.physicalKeyValue || key.keyValue;
+      const existingIndex = selectedKeys.value.findIndex(k => (k.physicalKeyValue || k.keyValue) === physicalKeyValue);
+      if (existingIndex > -1) {
+        selectedKeys.value.splice(existingIndex, 1);
+      } else {
+        selectedKeys.value.push(key);
       }
     };
 
     const selectAll = () => {
-      if (selectedSection.value === 'key-travel' || selectedSection.value === 'rapid-trigger') {
-        const totalKeys = layout.value.flat().length;
-        if (selectedKeys.value.length === totalKeys) {
-          selectedKeys.value = [];
-        } else {
-          selectedKeys.value = layout.value.flat();
-        }
+      const totalKeys = layout.value.flat().length;
+      if (selectedKeys.value.length === totalKeys) {
+        selectedKeys.value = [];
+      } else {
+        selectedKeys.value = layout.value.flat();
       }
     };
 
     const selectWASD = () => {
-      if (selectedSection.value === 'key-travel' || selectedSection.value === 'rapid-trigger') {
-        const wasdLabels = ['W', 'A', 'S', 'D'];
-        const wasdKeys = layout.value
-          .flat()
-          .filter(keyInfo => {
-            const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
-            return wasdLabels.includes(label.toUpperCase());
-          });
-        const physicalWASD = wasdKeys.map(key => key.physicalKeyValue || key.keyValue);
-        const currentlySelectedWASD = selectedKeys.value.filter(k => physicalWASD.includes(k.physicalKeyValue || k.keyValue));
-        if (currentlySelectedWASD.length === wasdKeys.length) {
-          selectedKeys.value = selectedKeys.value.filter(k => !physicalWASD.includes(k.physicalKeyValue || k.keyValue));
-        } else {
-          selectedKeys.value = [...selectedKeys.value, ...wasdKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-        }
+      const wasdLabels = ['W', 'A', 'S', 'D'];
+      const wasdKeys = layout.value
+        .flat()
+        .filter(keyInfo => {
+          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
+          return wasdLabels.includes(label.toUpperCase());
+        });
+      const physicalWASD = wasdKeys.map(key => key.physicalKeyValue || key.keyValue);
+      const currentlySelectedWASD = selectedKeys.value.filter(k => physicalWASD.includes(k.physicalKeyValue || k.keyValue));
+      if (currentlySelectedWASD.length === wasdKeys.length) {
+        selectedKeys.value = selectedKeys.value.filter(k => !physicalWASD.includes(k.physicalKeyValue || k.keyValue));
+      } else {
+        selectedKeys.value = [...selectedKeys.value, ...wasdKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
       }
     };
 
     const selectLetters = () => {
-      if (selectedSection.value === 'key-travel' || selectedSection.value === 'rapid-trigger') {
-        const letterRegex = /^[A-Z]$/;
-        const letterKeys = layout.value
-          .flat()
-          .filter(keyInfo => {
-            const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
-            return letterRegex.test(label.toUpperCase());
-          });
-        const physicalLetters = letterKeys.map(key => key.physicalKeyValue || key.keyValue);
-        const currentlySelectedLetters = selectedKeys.value.filter(k => physicalLetters.includes(k.physicalKeyValue || k.keyValue));
-        if (currentlySelectedLetters.length === letterKeys.length) {
-          selectedKeys.value = selectedKeys.value.filter(k => !physicalLetters.includes(k.physicalKeyValue || k.keyValue));
-        } else {
-          selectedKeys.value = [...selectedKeys.value, ...letterKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-        }
+      const letterRegex = /^[A-Z]$/;
+      const letterKeys = layout.value
+        .flat()
+        .filter(keyInfo => {
+          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
+          return letterRegex.test(label.toUpperCase());
+        });
+      const physicalLetters = letterKeys.map(key => key.physicalKeyValue || key.keyValue);
+      const currentlySelectedLetters = selectedKeys.value.filter(k => physicalLetters.includes(k.physicalKeyValue || k.keyValue));
+      if (currentlySelectedLetters.length === letterKeys.length) {
+        selectedKeys.value = selectedKeys.value.filter(k => !physicalLetters.includes(k.physicalKeyValue || k.keyValue));
+      } else {
+        selectedKeys.value = [...selectedKeys.value, ...letterKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
       }
     };
 
     const selectNumbers = () => {
-      if (selectedSection.value === 'key-travel' || selectedSection.value === 'rapid-trigger') {
-        const numberLabels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-        const numberKeys = layout.value
-          .flat()
-          .filter(keyInfo => {
-            const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
-            return numberLabels.includes(label);
-          });
-        const physicalNumbers = numberKeys.map(key => key.physicalKeyValue || key.keyValue);
-        const currentlySelectedNumbers = selectedKeys.value.filter(k => physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
-        if (currentlySelectedNumbers.length === numberKeys.length) {
-          selectedKeys.value = selectedKeys.value.filter(k => !physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
-        } else {
-          selectedKeys.value = [...selectedKeys.value, ...numberKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-        }
+      const numberLabels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+      const numberKeys = layout.value
+        .flat()
+        .filter(keyInfo => {
+          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
+          return numberLabels.includes(label);
+        });
+      const physicalNumbers = numberKeys.map(key => key.physicalKeyValue || key.keyValue);
+      const currentlySelectedNumbers = selectedKeys.value.filter(k => physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
+      if (currentlySelectedNumbers.length === numberKeys.length) {
+        selectedKeys.value = selectedKeys.value.filter(k => !physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
+      } else {
+        selectedKeys.value = [...selectedKeys.value, ...numberKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
       }
     };
 
     const selectNone = () => {
-      if (selectedSection.value === 'key-travel' || selectedSection.value === 'rapid-trigger') {
-        selectedKeys.value = [];
-      }
+      selectedKeys.value = [];
     };
 
     const updateSingleOverlayData = async (data: { travel: string; pressDead: string; releaseDead: string } | null) => {
@@ -415,11 +387,6 @@ export default defineComponent({
       }
     };
 
-    const updateOverlay = () => {
-      overlayData.value = {};
-      selectedKeys.value = [];
-    };
-
     watch(notification, (newNotification) => {
       if (newNotification) {
         setTimeout(() => {
@@ -449,7 +416,6 @@ export default defineComponent({
     };
 
     return {
-      selectedSection,
       layout,
       loaded,
       gridStyle,
@@ -463,10 +429,8 @@ export default defineComponent({
       selectNone,
       selectedKeys,
       overlayData,
-      updateOverlay,
       updateSingleOverlayData,
       notification,
-      sectionComponents,
       setNotification,
       error,
       baseLayout,
@@ -491,29 +455,6 @@ export default defineComponent({
     margin-top: 0px;
     font-size: 1.5rem;
     font-weight: 700;
-  }
-
-  .controls {
-    width: 500px;
-    gap: 0px;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-
-    label {
-      margin-right: 10px;
-      color: v.$text-color;
-      font-size: 1rem;
-    }
-
-    select {
-      padding: 8px;
-      border-radius: v.$border-radius;
-      background-color: v.$background-dark;
-      color: v.$text-color;
-      border: 1px solid rgba(v.$text-color, 0.2);
-      font-size: 1rem;
-    }
   }
 
   .notification {
@@ -676,6 +617,7 @@ export default defineComponent({
     position:relative;
     margin-right: auto;
     margin-left: auto;
+    margin-top: -50px;
     justify-content:center;
  
   }

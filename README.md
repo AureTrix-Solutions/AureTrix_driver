@@ -2,7 +2,7 @@
 
 A modern, web-based driver for hall effect keyboards compatible with the SparkLink SDK, built with Vue.js, TypeScript, and the `@sparklinkplayjoy/sdk-keyboard` package. This driver provides a professional interface for key remapping, macro editing, profile management, and per-key analog axis control, designed for intuitive navigation and a polished user experience.
 
-Hosted at: [https://github.com/BlastHappy82/Keyboard_driver](https://github.com/BlastHappy82/Keyboard_driver)
+Hosted at: [https://github.com/BlastHappy82/AureTrix_driver](https://github.com/BlastHappy82/AureTrix_driver.gitr)
 
 ## Features
 
@@ -26,7 +26,7 @@ Hosted at: [https://github.com/BlastHappy82/Keyboard_driver](https://github.com/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/BlastHappy82/Keyboard_driver.git
+   git clone https://github.com/BlastHappy82/AureTrix_driver.git
    cd Keyboard_driver
    ```
 
@@ -112,4 +112,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 
-For issues, feature requests, or questions, please open an issue on the [GitHub repository](https://github.com/BlastHappy82/Keyboard_driver/issues).
+For issues, feature requests, or questions, please open an issue on the [GitHub repository](https://github.com/BlastHappy82/AureTrix_driver/issues).

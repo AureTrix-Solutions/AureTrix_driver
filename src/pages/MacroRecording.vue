@@ -416,24 +416,34 @@ export default defineComponent({
 .macros-page {
   padding: 20px;
   color: v.$text-color;
+  font-family: v.$font-style;
+  border: v.$border-style;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
 
   .title {
     color: v.$primary-color;
     margin-bottom: 10px;
     margin-top: 0px;
     font-size: 1.5rem;
-    font-weight: 700;
+    margin: 0;
+    margin-bottom: -5px;
+    margin-right: 10px;
+    font-weight: 400;
   }
 
   .subtitle {
     color: v.$primary-color;
     margin-bottom: 8px;
     font-size: 1.2rem;
-    font-weight: 600;
+    margin: 0;
+    margin-bottom: -5px;
+    margin-right: 10px;
+    font-weight: 400;
   }
 
   .controls {
     display: flex;
+    margin-top: 10px;
     gap: 10px;
     align-items: center;
     margin-bottom: 24px;
@@ -442,12 +452,19 @@ export default defineComponent({
     .control-select,
     .text-input,
     .number-input {
-      padding: 8px;
+      padding: 4px 6px;
       border-radius: v.$border-radius;
       background-color: v.$background-dark;
       color: v.$text-color;
-      border: 1px solid rgba(v.$text-color, 0.2);
-      font-size: 1rem;
+      border: v.$border-style;
+      font-size: 0.9rem;
+      text-align: center;
+      font-family: v.$font-style;
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
+      }
     }
 
     .text-input {
@@ -460,30 +477,32 @@ export default defineComponent({
 
     .action-btn {
       padding: 8px 16px;
-      background-color: v.$primary-color;
-      color: v.$background-dark;
-      border: none;
+      width: 150px;
+      background-color: color.adjust(v.$background-dark, $lightness: -100%);
+      color: v.$primary-color;
+      border: v.$border-style;
       border-radius: v.$border-radius;
       cursor: pointer;
-      font-size: 1rem;
-      font-weight: 500;
+      font-size: 0.9rem;
+      font-weight: 400;
+      transition: background-color 0.2s ease;
+      font-family: v.$font-style;
 
       &.secondary {
-        background-color: color.adjust(v.$primary-color, $lightness: -10%);
+        color: v.$accent-color;
       }
 
       &:disabled {
-        background-color: color.adjust(v.$primary-color, $lightness: -20%);
-        cursor: not-allowed;
         opacity: 0.6;
+        cursor: not-allowed;
       }
 
       &:hover:not(:disabled) {
-        background-color: color.adjust(v.$primary-color, $lightness: 10%);
+        background-color: color.adjust(v.$background-dark, $lightness: 10%);
       }
 
       &.secondary:hover:not(:disabled) {
-        background-color: color.adjust(#374151, $lightness: 10%);
+        background-color: color.adjust(v.$background-dark, $lightness: 10%);
       }
     }
   }
@@ -492,10 +511,12 @@ export default defineComponent({
     padding: 10px;
     margin-bottom: 16px;
     border-radius: v.$border-radius;
-    background-color: rgba(v.$background-dark, 1.1);
+    background-color: rgba(v.$background-dark, 0.5);
     color: v.$text-color;
     display: flex;
     align-items: center;
+    border: v.$border-style;
+    font-family: v.$font-style;
 
     &.error {
       background-color: color.mix(#ef4444, v.$background-dark, 50%);
@@ -509,6 +530,7 @@ export default defineComponent({
       color: v.$text-color;
       cursor: pointer;
       font-size: 1rem;
+      transition: color 0.2s ease;
 
       &:hover {
         color: rgba(v.$text-color, 0.6);
@@ -541,9 +563,9 @@ export default defineComponent({
   .key-btn {
     position: absolute;
     padding: 4px;
-    border: 2px solid rgba(v.$text-color, 0.3);
+    border: v.$border-style;
     border-radius: v.$border-radius;
-    background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
+    background-color: v.$background-dark;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
     color: v.$text-color;
     cursor: pointer;
@@ -551,6 +573,9 @@ export default defineComponent({
     box-sizing: border-box;
     user-select: none;
     text-align: center;
+    font-family: v.$font-style;
+    font-size: 0.875rem;
+    font-weight: 300;
 
     &.pressed {
       border-color: v.$accent-color;
@@ -560,52 +585,60 @@ export default defineComponent({
 
   .macro-sequence {
     padding: 10px;
-    border: 1px solid rgba(v.$text-color, 0.2);
+    border: v.$border-style;
     border-radius: v.$border-radius;
-    background-color: rgba(v.$background-dark, 0.98);
+    background-color: rgba(v.$background-dark, 0.5);
+    font-family: v.$font-style;
 
     .sequence-list {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+      margin-top: 10px;
 
       .sequence-item {
         display: flex;
         align-items: center;
         padding: 6px 12px;
         background-color: color.adjust(v.$background-dark, $lightness: -5%);
-        border: 1px solid rgba(v.$text-color, 0.2);
+        border: v.$border-style;
         border-radius: v.$border-radius;
         color: v.$text-color;
+        font-size: 0.875rem;
+        font-weight: 300;
 
         .delay-input {
           width: 60px;
           margin-left: 8px;
           padding: 2px;
-          border: 1px solid rgba(v.$text-color, 0.2);
+          border: v.$border-style;
           border-radius: v.$border-radius;
           background-color: v.$background-dark;
           color: v.$text-color;
           font-size: 0.875rem;
           text-align: center;
+          font-family: v.$font-style;
 
           &:focus {
             outline: none;
-            box-shadow: 0 0 0 2px rgba(v.$primary-color, 0.5);
+            box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
           }
         }
 
         .remove-btn {
           margin-left: 8px;
           padding: 0 6px;
-          background-color: rgba(v.$background-dark, 1.1);
-          border: 1px solid rgba(v.$text-color, 0.2);
+          background-color: rgba(v.$text-color, 0.2);
+          border: v.$border-style;
           border-radius: v.$border-radius;
           color: v.$text-color;
           cursor: pointer;
+          transition: background-color 0.2s ease;
+          font-family: v.$font-style;
+          font-weight: 400;
 
           &:hover {
-            background-color: rgba(v.$background-dark, 1.2);
+            background-color: rgba(v.$accent-color, 0.3);
           }
         }
       }
@@ -613,28 +646,30 @@ export default defineComponent({
 
     .empty-text {
       color: rgba(v.$text-color, 0.6);
+      font-weight: 300;
     }
   }
 
   .macro-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
+    gap: 8px;
 
     .macro-card {
       padding: 8px 12px;
       background-color: v.$background-dark;
-      border: 1px solid rgba(v.$text-color, 0.2);
+      border: v.$border-style;
       border-radius: v.$border-radius;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       transition: box-shadow 0.3s ease;
       cursor: pointer;
+      font-family: v.$font-style;
 
       .card-title {
         text-decoration: underline;
         text-transform: uppercase;
         font-size: 1.125rem;
-        font-weight: 600;
+        font-weight: 400;
         color: v.$primary-color;
         margin: 0;
       }
@@ -643,6 +678,7 @@ export default defineComponent({
         font-size: 0.875rem;
         color: rgba(v.$text-color, 0.6);
         margin: 0 0 0 0;
+        font-weight: 300;
       }
 
       .card-actions {
@@ -653,18 +689,19 @@ export default defineComponent({
 
       .card-btn {
         padding: 2px 8px;
-        background-color: v.$primary-color;
-        color: #1f2937;
-        font-weight: 500;
-        border: none;
+        background-color: color.adjust(v.$background-dark, $lightness: -100%);
+        color: v.$primary-color;
+        font-weight: 400;
+        border: v.$border-style;
         border-radius: v.$border-radius;
         width: 48%;
         cursor: pointer;
         font-size: 0.875rem;
-        font-weight: bolder;
+        transition: background-color 0.2s ease;
+        font-family: v.$font-style;
 
         &:hover {
-          background-color: color.adjust(v.$primary-color, $lightness: 10%);
+          background-color: color.adjust(v.$background-dark, $lightness: 10%);
         }
 
         &:focus {
@@ -673,10 +710,10 @@ export default defineComponent({
         }
 
         &.delete {
-          background-color: #ef4444a2;
+          color: #ef4444;
 
           &:hover {
-            background-color: color.adjust(#ef4444a2, $lightness: 10%);
+            background-color: color.mix(#ef4444, v.$background-dark, 20%);
           }
         }
       }

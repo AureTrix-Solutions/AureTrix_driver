@@ -50,7 +50,9 @@
             :class="{ pressed: isKeyPressed(keyInfo.keyValue) }"
             @click="toggleKey(keyInfo)"
           >
-            {{ keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
+            <div class="key-label">
+              {{ keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
+            </div>
           </div>
         </div>
       </div>
@@ -417,8 +419,6 @@ export default defineComponent({
   padding: 20px;
   color: v.$text-color;
   font-family: v.$font-style;
-  border: v.$border-style;
-  background-color: color.adjust(v.$background-dark, $lightness: -100%);
 
   .title {
     color: v.$primary-color;
@@ -431,48 +431,53 @@ export default defineComponent({
     font-weight: 400;
   }
 
-  .subtitle {
-    color: v.$primary-color;
-    margin-bottom: 8px;
-    font-size: 1.2rem;
-    margin: 0;
-    margin-bottom: -5px;
-    margin-right: 10px;
-    font-weight: 400;
-  }
-
   .controls {
     display: flex;
-    margin-top: 10px;
     gap: 10px;
     align-items: center;
+    margin-top: 10px;
     margin-bottom: 24px;
     flex-wrap: wrap;
 
-    .control-select,
-    .text-input,
-    .number-input {
-      padding: 4px 6px;
+    .text-input {
+      padding: 8px 12px;
       border-radius: v.$border-radius;
       background-color: v.$background-dark;
       color: v.$text-color;
       border: v.$border-style;
       font-size: 0.9rem;
-      text-align: center;
+      width: 150px;
       font-family: v.$font-style;
 
       &:focus {
         outline: none;
         box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
       }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
     }
 
-    .text-input {
-      width: 150px;
-    }
+    .control-select {
+      padding: 8px 12px;
+      border-radius: v.$border-radius;
+      background-color: v.$background-dark;
+      color: v.$text-color;
+      border: v.$border-style;
+      font-size: 0.9rem;
+      font-family: v.$font-style;
 
-    .number-input {
-      width: 60px;
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
     }
 
     .action-btn {
@@ -576,10 +581,21 @@ export default defineComponent({
     font-family: v.$font-style;
     font-size: 0.875rem;
     font-weight: 300;
+    position: relative;
 
     &.pressed {
       border-color: v.$accent-color;
       box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
+    }
+
+    .key-label {
+      position: absolute;
+      top: 2px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 300;
     }
   }
 

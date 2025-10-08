@@ -17,7 +17,9 @@
             :style="getKeyStyle(rIdx, cIdx)"
             @click="selectKey(keyInfo, rIdx, cIdx)"
           >
-            {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
+            <div class="key-label">
+              {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
+            </div>
             <div v-if="overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]" class="overlay">
               <div class="overlay-values">
                 <div class="overlay-center">{{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.travel || '0.00' }}</div>
@@ -524,10 +526,21 @@ export default defineComponent({
     font-family: v.$font-style;
     visibility: visible !important;
     z-index: 2;
+    position: relative;
 
     &.performance-key-selected {
       border-color: v.$accent-color;
       box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
+    }
+
+    .key-label {
+      position: absolute;
+      top: 2px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 300;
     }
 
     .overlay {

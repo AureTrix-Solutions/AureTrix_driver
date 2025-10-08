@@ -39,7 +39,9 @@
             @drop="onDrop(keyInfo, rIdx, cIdx)"
             @click="handleKeyClick(keyInfo, rIdx, cIdx)"
           >
-            {{ keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
+            <div class="key-label">
+              {{ keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
+            </div>
           </div>
         </div>
       </div>
@@ -427,7 +429,7 @@ export default defineComponent({
     padding: 4px;
     border: v.$border-style;
     border-radius: v.$border-radius;
-    background-color: v.$background-dark;
+    background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
     color: v.$text-color;
     cursor: pointer;
@@ -436,17 +438,28 @@ export default defineComponent({
     user-select: none;
     text-align: center;
     font-family: v.$font-style;
-    font-size: 0.875rem;
-    font-weight: 300;
+    visibility: visible !important;
+    z-index: 2;
+    position: relative;
 
     &.drop-target {
       outline-offset: -2px;
-      background-color: color.adjust(v.$background-dark, $lightness: 5%, $alpha: 0.7);
+      background-color: color.adjust(v.$background-dark, $lightness: -100%, $alpha: 0.7);
     }
 
     &.selected {
       border-color: v.$accent-color;
       box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
+    }
+
+    .key-label {
+      position: absolute;
+      top: 2px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 300;
     }
   }
 
@@ -536,8 +549,6 @@ export default defineComponent({
         }
 
         &.key-selected {
-          background-color: v.$accent-color;
-          color: v.$background-dark;
           border-color: v.$accent-color;
         }
 

@@ -133,6 +133,8 @@ export default defineComponent({
     const releaseDead = ref(0.2);
     const deadZonesLinked = ref(false);
     const showOverlay = ref(false);
+    const prevPressDead = ref(pressDead.value);
+    const prevReleaseDead = ref(releaseDead.value);
 
     // Computed Bounds
     const minTravel = computed(() => Math.max(0.1, pressDead.value));
@@ -153,6 +155,8 @@ export default defineComponent({
             releaseDead.value = Number(settings.releaseDead.toFixed(2));
           }
         }
+        prevPressDead.value = pressDead.value;
+        prevReleaseDead.value = releaseDead.value;
       } catch (error) {
       }
     };
@@ -183,9 +187,27 @@ export default defineComponent({
     // Update global settings
     const updateGlobalSettings = async () => {
       try {
+        // Clamp travel before setting
+        let clamped = false;
+        const oldTravel = globalTravel.value;
+        if (globalTravel.value < minTravel.value) {
+          globalTravel.value = Number(minTravel.value.toFixed(2));
+          clamped = true;
+        } else if (globalTravel.value > maxTravel.value) {
+          globalTravel.value = Number(maxTravel.value.toFixed(2));
+          clamped = true;
+        }
+
         const param = { globalTouchTravel: globalTravel.value, pressDead: pressDead.value, releaseDead: releaseDead.value };
         await KeyboardService.setGlobalTouchTravel(param);
-        await updateGlobalDeadZones();
+
+        // Only update deadzones if they changed
+        const deadChanged = pressDead.value !== prevPressDead.value || releaseDead.value !== prevReleaseDead.value;
+        if (deadChanged) {
+          await updateGlobalDeadZones();
+          prevPressDead.value = pressDead.value;
+          prevReleaseDead.value = releaseDead.value;
+        }
       } catch (error) {
       }
       if (showOverlay.value) {
@@ -272,9 +294,6 @@ export default defineComponent({
       } else if (globalTravel.value > maxTravel.value) {
         globalTravel.value = Number(maxTravel.value.toFixed(2));
         clamped = true;
-      }
-      if (clamped && globalTravel.value !== oldTravel) {
-        updateGlobalSettings();
       }
       if (deadZonesLinked.value) {
         releaseDead.value = pressDead.value;

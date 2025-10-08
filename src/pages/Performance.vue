@@ -600,7 +600,7 @@ export default defineComponent({
       font-family: v.$font-style;
 
       &:hover {
-        background-color: color.adjust(v.$accent-color, $lightness: 10%);
+        background-color: color.adjust(v.$background-dark, $lightness: 10%);
       }
     }
   }

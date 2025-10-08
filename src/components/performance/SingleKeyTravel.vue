@@ -142,15 +142,56 @@ export default defineComponent({
     const bottomDeadZone = ref(0.0);
     const deadZonesLinked = ref(false);
     const showOverlay = ref(false);
+    const prevSingleKeyTravel = ref(2.0);
+    const prevTopDeadZone = ref(0.0);
+    const prevBottomDeadZone = ref(0.0);
 
     // Computed Bounds
     const minTravel = computed(() => Math.max(0.1, topDeadZone.value));
     const maxTravel = computed(() => Math.min(props.profileMaxTravel, props.profileMaxTravel - bottomDeadZone.value));
 
+    // Unified update for single key settings
+    const updateSingleKeyAll = async () => {
+      if (props.selectedKeys.length === 0) return;
+      const travelChanged = singleKeyTravel.value !== prevSingleKeyTravel.value;
+      const deadChanged = topDeadZone.value !== prevTopDeadZone.value || bottomDeadZone.value !== prevBottomDeadZone.value;
+      if (!travelChanged && !deadChanged) return;
+      const keys = props.selectedKeys.map(key => ({
+        physicalKeyValue: key.physicalKeyValue || key.keyValue,
+      }));
+      try {
+        await processBatches(keys, async (physicalKeyValue) => {
+          await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);
+          if (travelChanged) {
+            await KeyboardService.setSingleTravel(physicalKeyValue, singleKeyTravel.value);
+          }
+          if (deadChanged) {
+            await KeyboardService.setDp(physicalKeyValue, topDeadZone.value);
+            await KeyboardService.setDr(physicalKeyValue, bottomDeadZone.value);
+          }
+        });
+      } catch (error) {
+      }
+      prevSingleKeyTravel.value = singleKeyTravel.value;
+      prevTopDeadZone.value = topDeadZone.value;
+      prevBottomDeadZone.value = bottomDeadZone.value;
+      emit('update-overlay', null);
+      emit('update-single-overlay', null);
+      if (showOverlay.value) {
+        setTimeout(() => emit('update-single-overlay', {}), 300);
+      }
+    };
+
+    // Update travel to selected keys
+    const updateSingleKeyTravel = async () => {
+      await updateSingleKeyAll();
+    };
+
     // Load current single key travel
     const loadSingleKeyTravel = async () => {
       if (props.selectedKeys.length === 0) {
         singleKeyTravel.value = 2.0;
+        prevSingleKeyTravel.value = 2.0;
         return;
       }
       const physicalKeyValue = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
@@ -160,11 +201,14 @@ export default defineComponent({
           const loadedValue = Number(result);
           if (loadedValue >= 0.1 && loadedValue <= 4.0) {
             singleKeyTravel.value = Number(loadedValue.toFixed(2));
+            prevSingleKeyTravel.value = singleKeyTravel.value;
+            return;
           }
         }
       } catch (error) {
-        singleKeyTravel.value = 2.0;
       }
+      singleKeyTravel.value = 2.0;
+      prevSingleKeyTravel.value = 2.0;
     };
 
     // Load current dead zones
@@ -172,6 +216,8 @@ export default defineComponent({
       if (props.selectedKeys.length === 0) {
         topDeadZone.value = 0.2;
         bottomDeadZone.value = 0.2;
+        prevTopDeadZone.value = 0.2;
+        prevBottomDeadZone.value = 0.2;
         return;
       }
       const physicalKeyValue = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
@@ -180,35 +226,20 @@ export default defineComponent({
         if (!(result instanceof Error)) {
           if (result.pressDead >= 0 && result.pressDead <= 1.0) {
             topDeadZone.value = Number(result.pressDead.toFixed(2));
+            prevTopDeadZone.value = topDeadZone.value;
           }
           if (result.releaseDead >= 0 && result.releaseDead <= 1.0) {
             bottomDeadZone.value = Number(result.releaseDead.toFixed(2));
+            prevBottomDeadZone.value = bottomDeadZone.value;
           }
+          return;
         }
       } catch (error) {
-        topDeadZone.value = 0.2;
-        bottomDeadZone.value = 0.2;
       }
-    };
-
-    // Update travel to selected keys
-    const updateSingleKeyTravel = async () => {
-      if (props.selectedKeys.length === 0) return;
-      const keys = props.selectedKeys.map(key => ({
-        physicalKeyValue: key.physicalKeyValue || key.keyValue,
-      }));
-      try {
-        await processBatches(keys, async (physicalKeyValue) => {
-          await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);
-          await KeyboardService.setSingleTravel(physicalKeyValue, singleKeyTravel.value);
-        });
-      } catch (error) {
-      }
-      emit('update-overlay', null);
-      emit('update-single-overlay', null);
-      if (showOverlay.value) {
-        setTimeout(() => emit('update-single-overlay', {}), 300);
-      }
+      topDeadZone.value = 0.2;
+      bottomDeadZone.value = 0.2;
+      prevTopDeadZone.value = 0.2;
+      prevBottomDeadZone.value = 0.2;
     };
 
     // Update dead zones to selected keys
@@ -216,7 +247,7 @@ export default defineComponent({
       if (deadZonesLinked.value && topDeadZone.value !== bottomDeadZone.value) {
         bottomDeadZone.value = topDeadZone.value;
       }
-      // Force clamp travel to new bounds
+      // Clamp travel to new bounds
       let clamped = false;
       const oldTravel = singleKeyTravel.value;
       if (singleKeyTravel.value < minTravel.value) {
@@ -226,26 +257,8 @@ export default defineComponent({
         singleKeyTravel.value = Number(maxTravel.value.toFixed(2));
         clamped = true;
       }
-      if (clamped && props.selectedKeys.length > 0 && singleKeyTravel.value !== oldTravel) {
-        await updateSingleKeyTravel();
-      }
       if (props.selectedKeys.length === 0) return;
-      const keys = props.selectedKeys.map(key => ({
-        physicalKeyValue: key.physicalKeyValue || key.keyValue,
-      }));
-      try {
-        await updateSingleKeyTravel();
-        await processBatches(keys, async (physicalKeyValue) => {
-          await KeyboardService.setDp(physicalKeyValue, topDeadZone.value);
-          await KeyboardService.setDr(physicalKeyValue, bottomDeadZone.value);
-        });
-      } catch (error) {
-      }
-      emit('update-overlay', null);
-      emit('update-single-overlay', null);
-      if (showOverlay.value) {
-        setTimeout(() => emit('update-single-overlay', {}), 300);
-      }
+      await updateSingleKeyAll();
     };
 
     // Adjust travel
@@ -278,6 +291,8 @@ export default defineComponent({
       if (deadZonesLinked.value) {
         bottomDeadZone.value = topDeadZone.value;
         updateDeadZones();
+      } else {
+        updateDeadZones();
       }
     };
 
@@ -296,9 +311,6 @@ export default defineComponent({
         singleKeyTravel.value = Number(minTravel.value.toFixed(2));
         clamped = true;
       }
-      if (clamped && props.selectedKeys.length > 0 && singleKeyTravel.value !== oldTravel) {
-        updateSingleKeyTravel();
-      }
     });
 
     watch(bottomDeadZone, (newVal, oldVal) => {
@@ -308,9 +320,6 @@ export default defineComponent({
         if (singleKeyTravel.value > maxTravel.value) {
           singleKeyTravel.value = Number(maxTravel.value.toFixed(2));
           clamped = true;
-        }
-        if (clamped && props.selectedKeys.length > 0 && singleKeyTravel.value !== oldTravel) {
-          updateSingleKeyTravel();
         }
       }
     });

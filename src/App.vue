@@ -300,8 +300,8 @@ export default defineComponent({
     background-color: rgba(255, 255, 255, 0.1);
   }
   &.router-link-active {
-    background-color: v.$primary-color;
-    color: v.$background-dark;
+    background-color: rgba($color: #a088242e, $alpha: 1.0);;
+    color: rgba($color: #000000, $alpha: 1.0);
     font-weight: bold;
   }
 }

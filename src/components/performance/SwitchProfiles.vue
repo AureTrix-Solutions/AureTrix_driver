@@ -30,7 +30,7 @@
       <!-- Key Test Toggle -->
       <div class="input-group">
         <label for="key-test-toggle">Enable Key Test:</label>
-        <input type="checkbox" v-model="keyTestEnabled" id="key-test-toggle" :disabled="selectedKeys.length === 0" />
+        <input type="checkbox" v-model="keyTestEnabled" id="key-test-toggle" :disabled="selectedKeys.length === 0" @change="console.log('Checkbox changed to', $event.target.checked)" />
       </div>
     </div>
 
@@ -564,7 +564,7 @@ export default defineComponent({
   }
 
   .modal-content {
-    background-color: v.$background-dark;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
     padding: 20px;
     border-radius: v.$border-radius;
     border: v.$border-style;
@@ -577,14 +577,17 @@ export default defineComponent({
     h4 {
       color: v.$primary-color;
       margin-bottom: 10px;
+      margin-top: 0px;
       font-weight: 400;
+      font-size:x-large;
+      font-family: v.$font-style;
     }
 
     p {
-      color: v.$text-color;
+      color: white;
       margin-bottom: 10px;
       font-family: v.$font-style;
-      font-weight: 300;
+      font-weight: 200;
     }
 
     .modal-buttons {
@@ -618,16 +621,24 @@ export default defineComponent({
 
     th, td {
       padding: 8px;
+      width: 100px;
       border: v.$border-style;
       font-weight: 300;
       text-align: center;
-      color: v.$text-color;
       font-family: v.$font-style;
       font-size: 1.1rem;
+      
     }
 
     th {
-      background-color: rgba(v.$background-dark, 0.8);
+      background-color: rgba(v.$background-dark, 0.0);
+      color: v.$text-color
+    }
+
+    td{
+      color: v.$accent-color;
+      font-family: v.$font-style;
+      font-weight: 500;
     }
 
     .live {

@@ -63,6 +63,7 @@ import { useTravelProfilesStore } from '@/store/travelProfilesStore';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
 import { keyMap } from '@utils/keyMap';
 import KeyboardService from '@services/KeyboardService';
+import { useBatchProcessing } from '@/composables/useBatchProcessing'; // New import for batch fetching
 import type { IDefKeyInfo } from '../types/types';
 import KeyTravel from '../components/performance/KeyTravel.vue';
 
@@ -72,6 +73,7 @@ export default defineComponent({
     KeyTravel,
   },
   setup() {
+    const { processBatches } = useBatchProcessing(); // Use composable for batching
     const selectedKeys = ref<IDefKeyInfo[]>([]);
     const notification = ref<{ message: string; isError: boolean } | null>(null);
     const overlayData = ref<{ [key: number]: { travel: string; pressDead: string; releaseDead: string } }>({});
@@ -203,7 +205,7 @@ export default defineComponent({
       selectedKeys.value = [];
     };
 
-    const updateSingleOverlayData = async (data: { travel: string; pressDead: string; releaseDead: string } | null) => {
+    const updateSingleOverlayData = async (data: { travel: string; pressDead: string; releaseDead: string } | null | {}) => {
       try {
         const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
         const BATCH_SIZE = 80;
@@ -231,55 +233,42 @@ export default defineComponent({
             .map(mode => mode.key));
         }
 
-        if (data === null) {
-          const keysToClear = Object.keys(overlayData.value).filter(key => singleModeKeys.includes(Number(key)));
-          keysToClear.forEach(key => delete overlayData.value[key]);
-          if (keysToClear.length === 0) {
+        if (!data) {
+          // Clear overlays for single mode keys
+          singleModeKeys.forEach(keyId => {
+            delete overlayData.value[keyId];
+          });
+          if (singleModeKeys.length === 0) {
             console.log('No single mode overlays to clear');
           }
           return;
         }
 
-        const singleBatches = [];
-        for (let i = 0; i < singleModeKeys.length; i += BATCH_SIZE) {
-          singleBatches.push(singleModeKeys.slice(i, i + BATCH_SIZE));
-        }
-
-        for (const batch of singleBatches) {
-          const keyValues = await Promise.all(
-            batch.map(async (keyId) => {
-              try {
-                const travelResult = await KeyboardService.getSingleTravel(keyId);
-                const deadzoneResult = await KeyboardService.getDpDr(keyId);
-                if (travelResult instanceof Error || deadzoneResult instanceof Error) {
-                  return null;
-                }
-                return {
-                  key: keyId,
-                  travel: Number(travelResult).toFixed(2),
-                  pressDead: Number(deadzoneResult.pressDead).toFixed(2),
-                  releaseDead: Number(deadzoneResult.releaseDead).toFixed(2)
-                };
-              } catch (error) {
-                console.warn(`Failed to fetch values for key ${keyId}:`, error);
-                return null;
-              }
-            })
-          );
-          keyValues
-            .filter((val): val is { key: number; travel: string; pressDead: string; releaseDead: string } => val !== null)
-            .forEach(val => {
-              overlayData.value[val.key] = {
-                travel: val.travel,
-                pressDead: val.pressDead,
-                releaseDead: val.releaseDead
-              };
-            });
-        }
-
+        // Fetch actual per-key values for single mode keys
         if (singleModeKeys.length === 0) {
           notification.value = { message: 'No keys in single mode found', isError: false };
+          return;
         }
+
+        await processBatches(singleModeKeys, async (keyId) => {
+          try {
+            const travelResult = await KeyboardService.getSingleTravel(keyId);
+            const deadzoneResult = await KeyboardService.getDpDr(keyId);
+            if (travelResult instanceof Error || deadzoneResult instanceof Error) {
+              console.warn(`Failed to fetch values for single key ${keyId}`);
+              return;
+            }
+            overlayData.value[keyId] = {
+              travel: Number(travelResult).toFixed(2),
+              pressDead: Number(deadzoneResult.pressDead).toFixed(2),
+              releaseDead: Number(deadzoneResult.releaseDead).toFixed(2),
+            };
+          } catch (fetchError) {
+            console.error(`Failed to fetch single key data for ${keyId}:`, fetchError);
+          }
+        });
+
+        console.log(`[PERFORMANCE] Refreshed overlays for ${singleModeKeys.length} single mode keys`);
       } catch (error) {
         console.error('Failed to update single mode overlays:', error);
         notification.value = {

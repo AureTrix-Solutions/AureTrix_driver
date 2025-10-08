@@ -169,6 +169,7 @@ export default defineComponent({
   background-color: color.adjust(v.$background-dark, $lightness: -100%);
   padding: 20px;
   display: flex;
+  width: 200px;
   flex-direction: column;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 10;
@@ -184,10 +185,10 @@ export default defineComponent({
     margin-bottom: 10px;
   }
   .status {
-    margin-top: -30px;
-    margin-bottom: 50px;
+    margin-top: -40px;
+    margin-bottom: 40px;
     font-size: 1rem;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: v.$font-style;
     width: 250px;
     height: 69.13px;
     color: v.$accent-color;
@@ -215,7 +216,7 @@ export default defineComponent({
 
 .nav-item {
   text-decoration: none;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: v.$font-style;
   color: v.$primary-color;
   padding: 10px;
   border: 1px solid rgba(v.$text-color, 0.2);
@@ -225,8 +226,8 @@ export default defineComponent({
     background-color: rgba(255, 255, 255, 0.1);
   }
   &.router-link-active {
-    background-color: v.$primary-color;
-    color: v.$background-dark;
+    background-color: rgba($color: #a088242e, $alpha: 1.0);
+    color: rgba($color: #000000, $alpha: 1.0);
     font-weight: bold;
   }
 }
@@ -257,7 +258,7 @@ export default defineComponent({
 
 .flyout-menu {
   position: absolute;
-  left: 290px;
+  left: 225px;
   top: 20px; // Base offset for sidebar padding
   width: 220px;
   height: auto;
@@ -282,7 +283,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   text-align: center;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: v.$font-style;
   gap: 3px;
 }
 

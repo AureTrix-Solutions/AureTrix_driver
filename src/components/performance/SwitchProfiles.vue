@@ -453,17 +453,16 @@ export default defineComponent({
 .settings-section {
   flex-shrink: 0;
   border: 1px solid rgba(v.$text-color, 0.2);
-  height: 190px;
+  height: fit-content;
   padding-left: 8px;
 
   h3 {
     color: v.$primary-color;
-    flex-shrink: 0;
     width: auto;
     font-size: 1.5rem;
-    text-decoration: underline;
     margin: 0;
-    margin-bottom: 10px;
+    margin-bottom: -5px;
+    font-weight: 400;
   }
 
   .profile-management {
@@ -473,19 +472,21 @@ export default defineComponent({
     overflow-y: auto;
     margin-top: 20px;
     height: calc(100% - 60px);
+    font-family: v.$font-style;
   }
 
   .input-group {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 1px;
+    padding: 0px;
     margin-bottom: 10px;
 
     label {
       color: v.$text-color;
       font-size: 1rem;
       min-width: 150px;
+      font-weight: 300;
     }
 
     input[type="text"],
@@ -494,13 +495,15 @@ export default defineComponent({
       border-radius: v.$border-radius;
       background-color: v.$background-dark;
       color: v.$text-color;
-      border: 1px solid rgba(v.$text-color, 0.2);
+      border: v.$border-style;
       font-size: 1rem;
       width: 250px;
       box-sizing: border-box;
+      font-family: v.$font-style;
+
       &:focus {
         outline: none;
-        box-shadow: 0 0 0 2px rgba(v.$primary-color, 0.5);
+        box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
       }
     }
 
@@ -516,24 +519,24 @@ export default defineComponent({
     }
 
     .action-btn {
-      padding: 8px 16px;
-      background-color: v.$accent-color;
-      color: v.$background-dark;
-      border: none;
+      padding: 8px 8px;
+      background-color: color.adjust(v.$background-dark, $lightness: -100%);
+      color: v.$primary-color;
+      border: v.$border-style;
       border-radius: v.$border-radius;
       cursor: pointer;
       font-size: 0.9rem;
-      font-weight: 500;
+      font-weight: 400;
       transition: background-color 0.2s ease;
       width: 120px;
       text-align: center;
 
       &:hover:not(:disabled) {
-        background-color: color.adjust(v.$accent-color, $lightness: 10%);
+        background-color: color.adjust(v.$background-dark, $lightness: 10%);
       }
 
       &:disabled {
-        background-color: color.adjust(v.$accent-color, $lightness: -20%);
+        background-color: color.adjust(v.$background-dark, $lightness: -20%);
         cursor: not-allowed;
         opacity: 0.5;
       }
@@ -564,7 +567,7 @@ export default defineComponent({
     background-color: v.$background-dark;
     padding: 20px;
     border-radius: v.$border-radius;
-    border: 1px solid rgba(v.$text-color, 0.2);
+    border: v.$border-style;
     max-width: 400px;
     width: 90vw; 
     max-height: 80vh;
@@ -574,12 +577,13 @@ export default defineComponent({
     h4 {
       color: v.$primary-color;
       margin-bottom: 10px;
+      font-weight: 400;
     }
 
     p {
-      color: whitesmoke;
+      color: v.$text-color;
       margin-bottom: 10px;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-family: v.$font-style;
       font-weight: 300;
     }
 
@@ -592,16 +596,17 @@ export default defineComponent({
 
     .stop-btn {
       padding: 8px 12px;
-      background-color: #ef4444bc;
-      color: v.$background-dark;
-      font-weight: bold;
-      border: none;
+      background-color: color.adjust(v.$background-dark, $lightness: -100%);
+      color: #ef4444;
+      font-weight: 400;
+      border: v.$border-style;
       border-radius: v.$border-radius;
       cursor: pointer;
       font-size: 0.9rem;
+      transition: background-color 0.2s ease;
 
       &:hover:not(:disabled) {
-        background-color: color.adjust(#ef4444, $lightness: 10%);
+        background-color: color.adjust(v.$background-dark, $lightness: 10%);
       }
     }
   }
@@ -613,11 +618,11 @@ export default defineComponent({
 
     th, td {
       padding: 8px;
-      border: 1px solid rgba(v.$text-color, 0.2);
-      font-weight: lighter;
+      border: v.$border-style;
+      font-weight: 300;
       text-align: center;
       color: v.$text-color;
-      font-family: monospace;
+      font-family: v.$font-style;
       font-size: 1.1rem;
     }
 

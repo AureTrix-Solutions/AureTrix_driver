@@ -3,7 +3,7 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <img src="@/assets/logo.png" alt="Keyboard Driver Logo" class="logo">
+        <img src="@/assets/logo cropped.svg" alt="Keyboard Driver Logo" class="logo">
         <div v-if="connectionStore.status" class="status">
           <ul v-if="connectionStore.isConnected && isStatusReady">
             <li>Connected: {{ connectionStore.deviceInfo?.productName || 'Unknown Device' }}</li>
@@ -185,11 +185,11 @@ export default defineComponent({
     margin-bottom: 10px;
   }
   .status {
-    margin-top: -40px;
+    margin-top: 10x;
     margin-bottom: 40px;
     font-size: 1rem;
     font-family: v.$font-style;
-    width: 250px;
+    width: 220px;
     height: 69.13px;
     color: v.$accent-color;
     ul {

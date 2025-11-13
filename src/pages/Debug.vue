@@ -43,7 +43,6 @@
             <button @click="() => fetchMethod('getLogoLighting')" class="getter-btn" :disabled="isLoading">Logo Lighting</button>
             <button @click="() => fetchMethod('getCustomLighting')" class="getter-btn" :disabled="isLoading || !selectedKey">Custom Lighting</button>
             <button @click="() => fetchMethod('getSpecialLighting')" class="getter-btn" :disabled="isLoading">Special Lighting</button>
-            <button @click="() => fetchMethod('getSaturation')" class="getter-btn" :disabled="isLoading">Saturation</button>
             <button @click="() => fetchMethod('getRm6x21Travel')" class="getter-btn" :disabled="isLoading">RM6x21 Travel</button>
             <button @click="() => fetchMethod('getRm6x21Calibration')" class="getter-btn" :disabled="isLoading">RM6x21 Calibration</button>
           </div>
@@ -91,7 +90,7 @@ export default defineComponent({
     const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, baseLayout, error: layoutError } = useMappedKeyboard(ref(0));
 
     const fetchMethod = async (method: string) => {
-      if (!selectedKey.value && method !== 'getGlobalTouchTravel' && method !== 'getAxisList' && method !== 'getLighting' && method !== 'getLogoLighting' && method !== 'getSpecialLighting' && method !== 'getSaturation' && method !== 'getRm6x21Travel' && method !== 'getRm6x21Calibration') {
+      if (!selectedKey.value && method !== 'getGlobalTouchTravel' && method !== 'getAxisList' && method !== 'getLighting' && method !== 'getLogoLighting' && method !== 'getSpecialLighting' && method !== 'getRm6x21Travel' && method !== 'getRm6x21Calibration') {
         error.value = 'Select a key first';
         return;
       }
@@ -140,9 +139,6 @@ export default defineComponent({
           case 'getSpecialLighting':
             result = await debugKeyboardService.getSpecialLighting();
             break;
-          case 'getSaturation':
-            result = await debugKeyboardService.getSaturation();
-            break;
           case 'getRm6x21Travel':
             result = await debugKeyboardService.getRm6x21Travel();
             break;
@@ -181,7 +177,6 @@ export default defineComponent({
           fetchMethod('getLogoLighting'),
           fetchMethod('getCustomLighting'),
           fetchMethod('getSpecialLighting'),
-          fetchMethod('getSaturation'),
           fetchMethod('getRm6x21Travel'),
           fetchMethod('getRm6x21Calibration'),
         ]);

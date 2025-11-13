@@ -6,8 +6,8 @@ Hosted at: [https://github.com/BlastHappy82/AureTrix_driver](https://github.com/
 
 ## Features
 
-- **Key Remapping**: Customize key assignments across multiple layers (Fn1–Fn4) with support for advanced keys (DKS, MPT, SOCD, etc.).
-- **Macro Editing**: Create and assign macros using a key picker UI or text-based input to avoid OS interference (e.g., Windows key issues).
+- **Key Remapping**: Customize key assignments across multiple layers (Fn1–Fn4).
+- **Macro Editing**: Create and assign macros using a key picker UI to avoid OS interference (e.g., Windows key issues).
 - **Profile Management**: Easily rename, import, and export up to four configuration profiles.
 - **Per-Key Analog Axis**: Emulate controller inputs with analog axis support for precise control (inspired by Wooting).
 - **Professional UI**: Intuitive sidebar navigation and a responsive design built with Vue.js and Tailwind CSS.
@@ -59,34 +59,7 @@ Hosted at: [https://github.com/BlastHappy82/AureTrix_driver](https://github.com/
      - **Profile Management**: Rename, save, import, or export profiles.
      - **Lighting**: Adjust per-key RGB and logo lighting settings.
      - **Analog Axis**: Configure per-key analog axis for controller emulation.
-   - Save changes to apply configurations to the keyboard.
 
-3. **Advanced Features**:
-   - **Macros**: Assign custom macros (M0–M22) to any key, supporting single-run, toggle, or hold modes.
-   - **Analog Axis**: Enable analog axis support for keys to emulate controller inputs, with configurable travel distances.
-   - **Profile Switching**: Switch between profiles (1–4) using `ServiceKeyboard.switchConfig()` or the UI.
-
-## Project Structure
-
-```
-Keyboard_driver/
-├── src/
-│   ├── components/    # Reusable UI components (e.g., KeyPicker, SidebarNav)
-│   ├── pages/        # Page components (Connect, KeyMapping, Macros, Profiles, Lighting)
-│   ├── services/     # SDK integration (KeyboardService.ts)
-│   ├── styles/       # SCSS and Tailwind CSS for professional styling
-│   ├── assets/       # Images, fonts, and other static assets
-│   ├── types/        # TypeScript interfaces (e.g., IDefKeyInfo, LightMode, IMacroMode)
-│   ├── utils/        # Utility functions (e.g., keycode parsing, profile export)
-│   └── App.vue       # Main app component with sidebar navigation
-├── public/           # Static assets (e.g., favicon)
-├── tests/            # Unit and integration tests
-├── .gitignore        # Git ignore file
-├── package.json      # Dependencies and scripts
-├── vite.config.ts    # Vite configuration
-├── tsconfig.json     # TypeScript configuration
-└── README.md         # This file
-```
 
 ## Contributing
 
@@ -107,7 +80,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Acknowledgments
 
 - Built with the `@sparklinkplayjoy/sdk-keyboard` package for robust keyboard communication.
-- Powered by Vue.js, TypeScript, and Tailwind CSS for a modern, responsive UI.
+- Powered by Vue.js, TypeScript.
 - Inspired by professional keyboard driver interfaces and WebHID technology.
 
 ## Contact

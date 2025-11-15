@@ -217,8 +217,8 @@ export default defineComponent({
         });
 
         // Save and reload
-        await KeyboardService.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-        await KeyboardService.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
+        await KeyboardService.saveParameters();
+        await KeyboardService.reloadParameters();
 
         prevPressTravel.value = pressTravel.value;
         prevReleaseTravel.value = releaseTravel.value;
@@ -256,8 +256,8 @@ export default defineComponent({
         });
 
         // Save and reload
-        await KeyboardService.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-        await KeyboardService.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
+        await KeyboardService.saveParameters();
+        await KeyboardService.reloadParameters();
 
         prevPressDeadzone.value = pressDeadzone.value;
         prevReleaseDeadzone.value = releaseDeadzone.value;

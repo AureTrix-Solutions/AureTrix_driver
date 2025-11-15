@@ -314,220 +314,238 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use 'sass:color';
 @use '@styles/variables' as v;
 
 .rapid-trigger-page {
   padding: 20px;
-  color: v.$text-primary;
+  color: v.$text-color;
   height: 100%;
   display: flex;
   flex-direction: column;
-}
 
-.title {
-  font-size: 2rem;
-  margin-bottom: 20px;
-  color: v.$accent-primary;
-}
-
-.notification {
-  background: v.$accent-secondary;
-  color: #fff;
-  padding: 12px 16px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  &.error {
-    background: #d32f2f;
-  }
-
-  .dismiss-btn {
-    background: none;
-    border: none;
-    color: #fff;
+  .title {
+    width: 500px;
+    color: v.$primary-color;
+    margin-bottom: 10px;
+    margin-top: 0px;
     font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0;
-    margin-left: 10px;
-  }
-}
-
-.rapid-trigger-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.key-grid {
-  position: relative;
-  flex-shrink: 0;
-  margin-bottom: 20px;
-}
-
-.key-row {
-  position: relative;
-}
-
-.key-btn {
-  position: absolute;
-  background: v.$bg-tertiary;
-  border: 2px solid v.$border-color;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  overflow: hidden;
-
-  &:hover {
-    background: lighten(v.$bg-tertiary, 5%);
-    border-color: v.$accent-primary;
+    font-weight: 600;
+    font-family: v.$font-style;
   }
 
-  &.rt-key-selected {
-    background: v.$accent-primary;
-    border-color: v.$accent-primary;
-    color: #fff;
+  .notification {
+    padding: 10px;
+    margin-bottom: 0px;
+    border-radius: v.$border-radius;
+    background-color: rgba(v.$background-dark, 1.1);
+    color: v.$text-color;
+    display: flex;
+    align-items: center;
 
-    .key-label {
-      color: #fff;
+    &.error {
+      background-color: color.mix(#ef4444, v.$background-dark, 50%);
+    }
+
+    .dismiss-btn {
+      margin-left: 10px;
+      padding: 0 6px;
+      background: none;
+      border: none;
+      color: v.$text-color;
+      cursor: pointer;
+      font-size: 1rem;
+      font-family: v.$font-style;
+
+      &:hover {
+        color: rgba(v.$text-color, 0.6);
+      }
     }
   }
 
-  .key-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: v.$text-primary;
+  .rapid-trigger-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .no-layout {
     text-align: center;
+    color: v.$text-color;
+    font-size: 1rem;
+    font-family: v.$font-style;
+    padding: 20px;
+  }
+
+  .key-grid {
+    display: block !important;
     position: relative;
+    width: fit-content;
+    margin: 0 auto;
+    min-height: 300px;
+    max-height: 500px;
+    flex-shrink: 0;
+    visibility: visible !important;
     z-index: 1;
   }
 
-  .overlay {
+  .key-row {
+    display: contents;
+  }
+
+  .key-btn {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  .overlay-values {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    font-size: 0.65rem;
-    font-weight: 500;
-    color: v.$accent-secondary;
-
-    .overlay-center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.7);
-      padding: 2px 4px;
-      border-radius: 2px;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .overlay-top-left {
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      background: rgba(76, 175, 80, 0.8);
-      padding: 1px 3px;
-      border-radius: 2px;
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .overlay-top-right {
-      position: absolute;
-      top: 2px;
-      right: 2px;
-      background: rgba(33, 150, 243, 0.8);
-      padding: 1px 3px;
-      border-radius: 2px;
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .overlay-bottom-left {
-      position: absolute;
-      bottom: 2px;
-      left: 2px;
-      background: rgba(255, 152, 0, 0.8);
-      padding: 1px 3px;
-      border-radius: 2px;
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .overlay-bottom-right {
-      position: absolute;
-      bottom: 2px;
-      right: 2px;
-      background: rgba(156, 39, 176, 0.8);
-      padding: 1px 3px;
-      border-radius: 2px;
-      color: #fff;
-      font-weight: 600;
-    }
-  }
-}
-
-.no-layout {
-  padding: 40px;
-  text-align: center;
-  color: v.$text-secondary;
-}
-
-.bottom-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.selection-buttons {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-
-  .select-btn {
-    background: v.$bg-tertiary;
-    color: v.$text-primary;
-    border: 1px solid v.$border-color;
-    padding: 10px 20px;
-    border-radius: 4px;
+    padding: 4px;
+    border: v.$border-style;
+    border-radius: v.$border-radius;
+    background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
+    color: v.$text-color;
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    user-select: none;
+    text-align: center;
+    font-family: v.$font-style;
+    visibility: visible !important;
+    z-index: 2;
+    position: relative;
 
-    &:hover {
-      background: v.$accent-primary;
-      color: #fff;
-      border-color: v.$accent-primary;
+    &.rt-key-selected {
+      border-color: v.$accent-color;
+      box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
+    }
+
+    .key-label {
+      position: absolute;
+      top: 2px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 300;
+    }
+
+    .overlay {
+      position: absolute !important;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      font-size: 0.75rem;
+      background-color: transparent;
+      padding: 0px 0px;
+      border-radius: 3px;
+      pointer-events: none;
+      z-index: 3;
+
+      .overlay-values {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        font-size: 0.65rem;
+        font-weight: 500;
+      }
+
+      .overlay-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.7);
+        padding: 2px 4px;
+        border-radius: 2px;
+        font-weight: 700;
+        color: #fff;
+        font-size: 0.8rem;
+      }
+
+      .overlay-top-left {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        background: rgba(76, 175, 80, 0.8);
+        padding: 1px 3px;
+        border-radius: 2px;
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .overlay-top-right {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        background: rgba(33, 150, 243, 0.8);
+        padding: 1px 3px;
+        border-radius: 2px;
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .overlay-bottom-left {
+        position: absolute;
+        bottom: 2px;
+        left: 2px;
+        background: rgba(255, 152, 0, 0.8);
+        padding: 1px 3px;
+        border-radius: 2px;
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .overlay-bottom-right {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        background: rgba(156, 39, 176, 0.8);
+        padding: 1px 3px;
+        border-radius: 2px;
+        color: #fff;
+        font-weight: 600;
+      }
     }
   }
-}
 
-.parent {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-}
+  .bottom-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
 
-.settings-panel {
-  // Will be styled by child component
+  .selection-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    font-family: v.$font-style;
+
+    .select-btn {
+      background-color: color.adjust(v.$background-dark, $lightness: 10%);
+      color: v.$text-color;
+      border: v.$border-style;
+      border-radius: v.$border-radius;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: color.adjust(v.$background-dark, $lightness: 20%);
+        border-color: v.$accent-color;
+      }
+    }
+  }
+
+  .parent {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  .settings-panel {
+    // Will be styled by child component
+  }
 }
 </style>

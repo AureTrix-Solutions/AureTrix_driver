@@ -398,109 +398,139 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+@use 'sass:color';
 @use '@styles/variables' as v;
 
 .settings-section {
-  background: v.$bg-secondary;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  flex-shrink: 0;
+  border: v.$border-style;
+  padding: 15px;
+  margin-bottom: 10px;
 }
 
 .header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  font-family: v.$font-style;
 
   h3 {
     margin: 0;
-    color: v.$text-primary;
-    font-size: 1.2rem;
+    color: v.$primary-color;
+    font-size: 1.5rem;
+    font-weight: 400;
   }
 }
 
 .show-btn {
-  background: v.$accent-primary;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 3px 8px;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  color: v.$accent-color;
+  border: v.$border-style;
+  border-radius: v.$border-radius;
   cursor: pointer;
+  font-size: 0.7rem;
   font-weight: 500;
-  transition: background 0.2s;
+  transition: background-color 0.2s ease;
 
-  &:hover {
-    background: lighten(v.$accent-primary, 10%);
+  &:hover:not(:disabled) {
+    background-color: color.adjust(v.$background-dark, $lightness: 10%);
   }
 
   &:disabled {
-    background: #555;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 }
 
 .travel-row {
   margin-bottom: 20px;
+  font-family: v.$font-style;
 }
 
 .deadzone-group {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 0px;
 }
 
 .input-group {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 0px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: v.$border-style;
+  border-radius: v.$border-radius;
+  background-color: rgba(v.$background-dark, 0.5);
+  font-family: v.$font-style;
 
   .label {
-    color: v.$text-secondary;
-    font-size: 0.9rem;
-    font-weight: 500;
+    min-width: 220px;
+    text-align: center;
+    color: v.$text-color;
+    font-size: 0.95rem;
+    font-weight: 300;
 
     .travel-unit,
     .t-dzone {
-      color: v.$accent-primary;
+      color: v.$accent-color;
     }
   }
 }
 
 .slider-container {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0px;
 
   .value-display {
-    min-width: 45px;
+    min-width: 40px;
     text-align: center;
-    color: v.$text-secondary;
+    color: v.$text-color;
     font-size: 0.85rem;
+    padding: 0 8px;
   }
 
   input[type='range'] {
-    flex: 1;
-    height: 6px;
-    background: v.$bg-tertiary;
-    border-radius: 3px;
-    outline: none;
     -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    max-width: 200px;
+    cursor: pointer;
+    height: 6px;
+    background: transparent;
+
+    &::-webkit-slider-runnable-track {
+      background-color: color.adjust(v.$background-dark, $lightness: 10%);
+      height: 6px;
+      border-radius: 3px;
+    }
 
     &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
-      background: v.$accent-primary;
-      border-radius: 50%;
+      appearance: none;
+      opacity: 1;
+      width: 12px;
+      height: 12px;
+      border-radius: 4%;
+      background-color: v.$primary-color;
       cursor: pointer;
+      margin-top: -3px;
+    }
+
+    &::-moz-range-track {
+      background-color: color.adjust(v.$background-dark, $lightness: 10%);
+      height: 6px;
+      border-radius: 3px;
     }
 
     &::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      background: v.$accent-primary;
-      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      border-radius: 4%;
+      background-color: v.$primary-color;
       cursor: pointer;
       border: none;
     }
@@ -516,19 +546,21 @@ export default defineComponent({
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: 10px;
 
   .adjust-btn {
-    background: v.$bg-tertiary;
-    color: v.$text-primary;
-    border: 1px solid v.$border-color;
-    padding: 6px 12px;
-    border-radius: 4px;
+    background-color: color.adjust(v.$background-dark, $lightness: 10%);
+    color: v.$text-color;
+    border: v.$border-style;
+    border-radius: v.$border-radius;
+    padding: 4px 10px;
     cursor: pointer;
     font-weight: 600;
-    transition: background 0.2s;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
 
     &:hover:not(:disabled) {
-      background: lighten(v.$bg-tertiary, 10%);
+      background-color: color.adjust(v.$background-dark, $lightness: 20%);
     }
 
     &:disabled {
@@ -538,18 +570,24 @@ export default defineComponent({
   }
 
   input[type='number'] {
-    width: 80px;
-    background: v.$bg-tertiary;
-    color: v.$text-primary;
-    border: 1px solid v.$border-color;
-    padding: 6px;
-    border-radius: 4px;
+    width: 70px;
+    background-color: rgba(v.$background-dark, 0.5);
+    color: v.$text-color;
+    border: v.$border-style;
+    border-radius: v.$border-radius;
+    padding: 4px;
     text-align: center;
     font-size: 0.9rem;
 
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
   }
 }

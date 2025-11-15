@@ -29,7 +29,17 @@ export default defineConfig({
     sourcemap: true,
   },
   server: {
-    port: 3000,
-    open: true,
+    host: '0.0.0.0',
+    port: 5000,
+    strictPort: true,
+    hmr: {
+      protocol: 'wss',
+      host: undefined,
+      clientPort: 443,
+    },
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 5000,
   },
 });

@@ -52,6 +52,26 @@ Each page document includes:
 **Placeholder Pages (4 pages)**:
 - Lighting, Profiles, RapidTrigger, AdvancedConfig (planned features)
 
+### SDK Documentation
+Complete API reference for the SparkLink SDK is available:
+
+- **SDK Reference**: `docs/SDK_REFERENCE.md` - Comprehensive API documentation for @sparklinkplayjoy/sdk-keyboard
+  - Installation and setup instructions
+  - Connection management and device pairing patterns
+  - Complete API coverage: remapping, macros, travel, calibration, lighting, axis
+  - Real-world code examples from AureTrix implementation
+  - Error handling patterns and retry strategies
+  - Best practices for batch processing and state management
+  - Quick reference tables for all SDK methods
+
+The SDK documentation includes practical examples for:
+- WebHID device connection and auto-reconnect
+- Multi-layer key remapping with batch processing
+- Macro creation (up to 64 actions)
+- Hall effect travel distance configuration (global and per-key)
+- Sensor calibration workflows
+- Lighting control and axis configuration
+
 ## System Architecture
 
 ### Frontend Architecture

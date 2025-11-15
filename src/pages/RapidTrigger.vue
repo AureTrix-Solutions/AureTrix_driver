@@ -391,6 +391,7 @@ export default defineComponent({
 
       try {
         await processBatches(keys, async (physicalKeyValue) => {
+          await KeyboardService.setPerformanceMode(physicalKeyValue, 'rt', 0);
           if (pressChanged) {
             await KeyboardService.setRtPressTravel(physicalKeyValue, pressTravel.value);
           }
@@ -428,6 +429,7 @@ export default defineComponent({
 
       try {
         await processBatches(keys, async (physicalKeyValue) => {
+          await KeyboardService.setPerformanceMode(physicalKeyValue, 'rt', 0);
           if (dpChanged) {
             await KeyboardService.setDp(physicalKeyValue, pressDeadzone.value);
           }

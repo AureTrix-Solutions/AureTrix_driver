@@ -427,10 +427,6 @@ export default defineComponent({
           await KeyboardService.setDr(physicalKeyValue, Number(releaseDeadzone.value));
         });
 
-        // TEST: Commenting out to see if these are necessary
-        // await KeyboardService.saveParameters();
-        // await KeyboardService.reloadParameters();
-
         prevInitialActuation.value = initialActuation.value;
         prevPressTravel.value = pressTravel.value;
         prevReleaseTravel.value = releaseTravel.value;

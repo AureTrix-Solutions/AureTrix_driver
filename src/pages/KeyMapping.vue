@@ -181,9 +181,6 @@ export default defineComponent({
           }
         }
 
-        // TEST: Commenting out to see if this is necessary
-        // await KeyboardService.reloadParameters();
-
         const numKeys = selectedKeys.value.length;
         selectedKeys.value = [];
         await fetchLayerLayout();
@@ -214,9 +211,6 @@ export default defineComponent({
             await new Promise(resolve => setTimeout(resolve, delayMs.value));
           }
         }
-
-        // TEST: Commenting out to see if this is necessary
-        // await KeyboardService.reloadParameters();
 
         await fetchLayerLayout();
       } catch (error) {

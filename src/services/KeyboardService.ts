@@ -260,8 +260,9 @@ class KeyboardService {
   async setKey(keyConfigs: { key: number; layout: number; value: number }[]): Promise<void | Error> {
     try {
       await this.keyboard.setKey(keyConfigs);
-      await this.saveParameters();
-      await this.reloadParameters();
+      // TEST: Commenting out to see if these are necessary
+      // await this.saveParameters();
+      // await this.reloadParameters();
       return;
     } catch (error) {
       console.error('Failed to set key:', error);
@@ -309,8 +310,9 @@ class KeyboardService {
         return new Error('No device connected');
       }
       await this.keyboard.setMacro(param, macros);
-      await this.saveParameters();
-      await this.reloadParameters();
+      // TEST: Commenting out to see if these are necessary
+      // await this.saveParameters();
+      // await this.reloadParameters();
       await new Promise(resolve => setTimeout(resolve, 1000));
       return;
     } catch (error) {

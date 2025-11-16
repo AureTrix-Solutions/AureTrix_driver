@@ -309,6 +309,28 @@ export default defineComponent({
       console.log('Performance: Profile changed:', profile?.switchName, 'Max Travel:', profile?.maxTravel);
     }, { immediate: true });
 
+    // Debug watchers
+    watch(keyModeMap, (newMap, oldMap) => {
+      console.log('[PERFORMANCE] keyModeMap changed:', { newMap, oldMap });
+    }, { deep: true });
+
+    watch(globalOverlayValues, (newVal, oldVal) => {
+      console.log('[PERFORMANCE] globalOverlayValues changed:', { newVal, oldVal });
+    });
+
+    watch(singleOverlayByKey, (newVal, oldVal) => {
+      console.log('[PERFORMANCE] singleOverlayByKey changed:', { newVal, oldVal });
+    }, { deep: true });
+
+    watch(overlayData, (newVal, oldVal) => {
+      console.log('[PERFORMANCE] overlayData (computed) changed:', { 
+        newKeys: Object.keys(newVal),
+        oldKeys: Object.keys(oldVal || {}),
+        newCount: Object.keys(newVal).length,
+        oldCount: Object.keys(oldVal || {}).length
+      });
+    });
+
     onMounted(() => {
       setTimeout(async () => {
         await fetchLayerLayout();

@@ -226,8 +226,10 @@ export default defineComponent({
         await processBatches(keys, async (physicalKeyValue) => KeyboardService.setPerformanceMode(physicalKeyValue, 'global', 0));
         await updateGlobalSettings();
         // Emit mode change so parent can update keyModeMap
+        console.log(`[GLOBALTRAVEL] Emitting mode-changed event:`, keyIds, 'global');
         emit('mode-changed', keyIds, 'global');
       } catch (error) {
+        console.error(`[GLOBALTRAVEL] Error in setKeyToGlobalMode:`, error);
       }
       // Refresh global overlays if showing
       if (showOverlay.value) {

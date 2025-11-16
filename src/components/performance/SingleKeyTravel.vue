@@ -172,8 +172,10 @@ export default defineComponent({
           }
         });
         // Emit mode change so parent can update keyModeMap
+        console.log(`[SINGLEKEYTRAVEL] Emitting mode-changed event:`, keyIds, 'single');
         emit('mode-changed', keyIds, 'single');
       } catch (error) {
+        console.error(`[SINGLEKEYTRAVEL] Error in updateSingleKeyAll:`, error);
       }
       prevSingleKeyTravel.value = singleKeyTravel.value;
       prevTopDeadZone.value = topDeadZone.value;

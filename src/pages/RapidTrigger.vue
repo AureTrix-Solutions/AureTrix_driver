@@ -447,10 +447,13 @@ export default defineComponent({
       const physicalKeyValue = selectedKeys.value[0].physicalKeyValue || selectedKeys.value[0].keyValue;
       try {
         const result = await KeyboardService.getSingleTravel(physicalKeyValue);
-        if (!(result instanceof Error)) {
-          initialActuation.value = Number(result.toFixed(2));
-          prevInitialActuation.value = initialActuation.value;
-          return;
+        if (!(result instanceof Error) && result !== undefined && result !== null) {
+          const travelNum = Number(result);
+          if (!isNaN(travelNum)) {
+            initialActuation.value = Number(travelNum.toFixed(2));
+            prevInitialActuation.value = initialActuation.value;
+            return;
+          }
         }
       } catch (error) {
         console.error('Failed to load initial actuation:', error);
@@ -502,8 +505,23 @@ export default defineComponent({
       try {
         const result = await KeyboardService.getDpDr(physicalKeyValue);
         if (!(result instanceof Error)) {
-          pressDeadzone.value = Number(result.dpThreshold.toFixed(2));
-          releaseDeadzone.value = Number(result.drThreshold.toFixed(2));
+          const pressDead = (result as any).pressDead;
+          const releaseDead = (result as any).releaseDead;
+          
+          if (pressDead !== undefined && pressDead !== null) {
+            const pressNum = Number(pressDead);
+            if (!isNaN(pressNum)) {
+              pressDeadzone.value = Number(pressNum.toFixed(2));
+            }
+          }
+          
+          if (releaseDead !== undefined && releaseDead !== null) {
+            const releaseNum = Number(releaseDead);
+            if (!isNaN(releaseNum)) {
+              releaseDeadzone.value = Number(releaseNum.toFixed(2));
+            }
+          }
+          
           prevPressDeadzone.value = pressDeadzone.value;
           prevReleaseDeadzone.value = releaseDeadzone.value;
           return;

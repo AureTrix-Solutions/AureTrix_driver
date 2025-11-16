@@ -260,32 +260,9 @@ class KeyboardService {
   async setKey(keyConfigs: { key: number; layout: number; value: number }[]): Promise<void | Error> {
     try {
       await this.keyboard.setKey(keyConfigs);
-      // TEST: Commenting out to see if these are necessary
-      // await this.saveParameters();
-      // await this.reloadParameters();
       return;
     } catch (error) {
       console.error('Failed to set key:', error);
-      return error as Error;
-    }
-  }
-
-  async saveParameters(): Promise<void | Error> {
-    try {
-      await this.keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-      return;
-    } catch (error) {
-      console.error('Failed to save parameters:', error);
-      return error as Error;
-    }
-  }
-
-  async reloadParameters(): Promise<void | Error> {
-    try {
-      await this.keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
-      return;
-    } catch (error) {
-      console.error('Failed to reload parameters:', error);
       return error as Error;
     }
   }
@@ -310,9 +287,6 @@ class KeyboardService {
         return new Error('No device connected');
       }
       await this.keyboard.setMacro(param, macros);
-      // TEST: Commenting out to see if these are necessary
-      // await this.saveParameters();
-      // await this.reloadParameters();
       await new Promise(resolve => setTimeout(resolve, 1000));
       return;
     } catch (error) {

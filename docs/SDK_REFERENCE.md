@@ -684,22 +684,34 @@ Retrieves per-key travel distance (only for keys in single mode).
 async getSingleTravel(
   key: number,
   decimal: number = 2
-): Promise<number>
+): Promise<string>
 ```
 
 **Parameters:**
 - `key` (number): Key value to query
 - `decimal` (number, optional): Decimal precision (default: 2)
 
-**Returns:** Travel distance in millimeters
+**Returns:** Travel distance in millimeters **as a string** (e.g., `"1.50"`, `"2.05"`)
+
+**⚠️ Important:** This method returns a **string**, not a number. Always use `Number()` conversion for numeric operations.
 
 **Example:**
 
 ```typescript
 // Get travel for 'W' key (HID code 26)
-const travel = await keyboard.getSingleTravel(26, 2);
+const travelStr = await keyboard.getSingleTravel(26, 2);
+const travel = Number(travelStr); // Convert string to number
 console.log('W key travel:', travel, 'mm');
 // Output: W key travel: 1.5 mm
+
+// Full example with validation (from AureTrix)
+const result = await keyboard.getSingleTravel(26);
+if (!(result instanceof Error)) {
+  const travelValue = Number(result);
+  if (!isNaN(travelValue) && travelValue >= 0.1 && travelValue <= 4.0) {
+    console.log('Valid travel:', travelValue.toFixed(2), 'mm');
+  }
+}
 ```
 
 ### setSingleTravel()
@@ -1320,13 +1332,14 @@ Always verify connection before operations:
 class KeyboardService {
   private connectedDevice: Device | null = null;
   
-  async getSingleTravel(key: number): Promise<number | Error> {
+  async getSingleTravel(key: number): Promise<string | Error> {
     if (!this.connectedDevice) {
       return new Error('No device connected');
     }
     
     try {
       const result = await this.keyboard.getSingleTravel(key);
+      // Note: result is a string like "2.05", not a number
       return result;
     } catch (error) {
       console.error('Failed to get travel:', error);
@@ -1488,8 +1501,8 @@ await keyboard.calibrationEnd();
 |--------|---------|---------|
 | `getGlobalTouchTravel()` | Get global travel | `{ globalTouchTravel }` |
 | `setDB(param)` | Set global travel | `{ globalTouchTravel, pressDead, releaseDead }` |
-| `getSingleTravel(key)` | Get per-key travel | `number` |
-| `setSingleTravel(key, value)` | Set per-key travel | `number` |
+| `getSingleTravel(key)` | Get per-key travel | `string` ⚠️ |
+| `setSingleTravel(key, value)` | Set per-key travel (also sets initial travel in RT mode) | `number` |
 | `getDpDr(key)` | Get deadzones | `{ pressDead, releaseDead }` |
 | `setDp(key, value)` | Set press deadzone | `{ pressDead }` |
 | `setDr(key, value)` | Set release deadzone | `{ releaseDead }` |

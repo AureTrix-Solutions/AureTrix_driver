@@ -563,6 +563,14 @@ export default defineComponent({
 
         await processBatches(keyIds, async (keyId) => {
           try {
+            // First check if this key is in RT mode
+            const modeResult = await KeyboardService.getPerformanceMode(keyId);
+            if (modeResult instanceof Error || modeResult.touchMode !== 'rt') {
+              // Not in RT mode, skip this key (don't show overlay)
+              delete overlayData.value[keyId];
+              return;
+            }
+
             const initialActuationResult = await KeyboardService.getSingleTravel(keyId);
             const rtResult = await KeyboardService.getRtTravel(keyId);
             const dzResult = await KeyboardService.getDpDr(keyId);

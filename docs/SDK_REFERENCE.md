@@ -1274,6 +1274,131 @@ async getSaturation(): Promise<{ saturation: number }>
 
 **Returns:** Saturation value
 
+### setLighting()
+
+Sets global RGB lighting mode and effects.
+
+```typescript
+async setLighting(lightModeConfig: LightModeConfigs): Promise<any>
+```
+
+**Parameters:**
+- `lightModeConfig` (LightModeConfigs): Lighting configuration object with mode, brightness, speed, and color settings
+
+**Example:**
+
+```typescript
+// Set lighting to breathing effect
+await keyboard.setLighting({
+  mode: 'breathing',
+  brightness: 80,
+  speed: 50,
+  color: { r: 255, g: 0, b: 0 }
+});
+```
+
+### setCustomLighting()
+
+Sets per-key RGB colors for custom lighting.
+
+```typescript
+async setCustomLighting(param: IKRGBDesc): Promise<any>
+```
+
+**Parameters:**
+- `param` (IKRGBDesc): Custom lighting descriptor with key-color mappings
+
+**Example:**
+
+```typescript
+// Set custom colors for WASD keys
+await keyboard.setCustomLighting({
+  keys: [
+    { key: 26, r: 255, g: 0, b: 0 },    // W - Red
+    { key: 4,  r: 0, g: 255, b: 0 },    // A - Green
+    { key: 22, r: 0, g: 0, b: 255 },    // S - Blue
+    { key: 7,  r: 255, g: 255, b: 0 }   // D - Yellow
+  ]
+});
+```
+
+### setLogoLighting()
+
+Sets keyboard logo RGB lighting.
+
+```typescript
+async setLogoLighting(lightModeConfig: ILoGoLightMode): Promise<any>
+```
+
+**Parameters:**
+- `lightModeConfig` (ILoGoLightMode): Logo lighting configuration
+
+**Example:**
+
+```typescript
+// Set logo to static purple
+await keyboard.setLogoLighting({
+  mode: 'static',
+  color: { r: 128, g: 0, b: 128 }
+});
+```
+
+### setLightingSaturation()
+
+Sets RGB saturation level for all lighting.
+
+```typescript
+async setLightingSaturation(param: number[]): Promise<any>
+```
+
+**Parameters:**
+- `param` (number[]): Saturation values array
+
+**Example:**
+
+```typescript
+// Set saturation to 75%
+await keyboard.setLightingSaturation([75]);
+```
+
+### setSpecialLighting()
+
+Sets special lighting effects and patterns.
+
+```typescript
+async setSpecialLighting(lightModeConfig: LightModeConfigs): Promise<any>
+```
+
+**Parameters:**
+- `lightModeConfig` (LightModeConfigs): Special lighting configuration
+
+**Example:**
+
+```typescript
+// Set reactive lighting effect
+await keyboard.setSpecialLighting({
+  mode: 'reactive',
+  brightness: 100,
+  speed: 75
+});
+```
+
+### saveCustomLighting()
+
+Saves custom lighting configuration to firmware.
+
+```typescript
+async saveCustomLighting(): Promise<any>
+```
+
+**Example:**
+
+```typescript
+// Set custom colors then save
+await keyboard.setCustomLighting({ /* colors */ });
+await keyboard.saveCustomLighting();
+```
+
 ---
 
 ## Configuration Management

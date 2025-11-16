@@ -175,10 +175,8 @@ export default defineComponent({
       prevSingleKeyTravel.value = singleKeyTravel.value;
       prevTopDeadZone.value = topDeadZone.value;
       prevBottomDeadZone.value = bottomDeadZone.value;
-      emit('update-overlay', null);
-      emit('update-single-overlay', null);
       if (showOverlay.value) {
-        setTimeout(() => emit('update-single-overlay', {}), 300);
+        emit('update-single-overlay', {});
       }
     };
 

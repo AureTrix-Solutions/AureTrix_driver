@@ -1748,10 +1748,16 @@ await keyboard.calibrationEnd();
 | Method | Purpose | Returns |
 |--------|---------|---------|
 | `getLighting()` | Get global lighting | `LightingConfig` |
+| `setLighting(config)` | Set global lighting mode | `any` |
 | `getLogoLighting()` | Get logo lighting | `LogoLightingConfig` |
+| `setLogoLighting(config)` | Set logo lighting | `any` |
 | `getCustomLighting(key?)` | Get per-key color | `CustomLightingConfig` |
+| `setCustomLighting(param)` | Set per-key RGB colors | `any` |
 | `getSpecialLighting()` | Get special effects | `SpecialLightingConfig` |
+| `setSpecialLighting(config)` | Set special lighting effects | `any` |
 | `getSaturation()` | Get saturation | `{ saturation }` |
+| `setLightingSaturation(param)` | Set saturation level | `any` |
+| `saveCustomLighting()` | Save custom lighting to firmware | `any` |
 
 ### Configuration
 | Method | Purpose | Returns |

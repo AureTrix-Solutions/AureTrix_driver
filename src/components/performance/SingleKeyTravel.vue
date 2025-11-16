@@ -175,6 +175,7 @@ export default defineComponent({
       prevSingleKeyTravel.value = singleKeyTravel.value;
       prevTopDeadZone.value = topDeadZone.value;
       prevBottomDeadZone.value = bottomDeadZone.value;
+      emit('update-overlay', null);
       if (showOverlay.value) {
         emit('update-single-overlay', {});
       }

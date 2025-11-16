@@ -186,10 +186,6 @@ const updateAllSettings = async () => {
       );
     });
     
-    // Single save after all keys updated
-    await KeyboardService.saveParameters();
-    await KeyboardService.reloadParameters();
-    
     // Update overlays
     setTimeout(() => updateOverlayData(), 500);
   } catch (error) {
@@ -425,8 +421,6 @@ const adjustDeadzone = (delta: number, type: 'press' | 'release') => {
   - `getDpDr(keyId)`: Get press/release deadzones
   - `setDp(keyId, value)`: Set top deadzone
   - `setDr(keyId, value)`: Set bottom deadzone
-  - `saveParameters()`: Save to keyboard memory
-  - `reloadParameters()`: Reload from keyboard
 
 ### Utilities
 - **useBatchProcessing**: Batch keyboard operations
@@ -466,8 +460,6 @@ Batch Process All Selected Keys
   - setRtReleaseTravel(reset)
   - setDp(top deadzone)
   - setDr(bottom deadzone)
-    ↓
-saveParameters() + reloadParameters()
     ↓
 updateOverlayData() - Fetch all keys' RT values
     ↓

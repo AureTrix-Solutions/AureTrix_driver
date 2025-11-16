@@ -113,7 +113,6 @@ const applyBulkRemap = async () => {
     await delay(delayMs.value);  // Prevent hardware overload
   }
   
-  await KeyboardService.reloadParameters();
   await fetchLayerLayout();
 }
 ```
@@ -184,8 +183,6 @@ User Clicks/Drops on Keyboard Key
 remapKey() or applyBulkRemap()
     ↓
 batchSetKey() - Send to hardware
-    ↓
-KeyboardService.reloadParameters()
     ↓
 fetchLayerLayout() - Refresh display
     ↓

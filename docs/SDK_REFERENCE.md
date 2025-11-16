@@ -473,10 +473,7 @@ async setKey(
 await keyboard.setKey([
   { key: 4, layout: 1, value: 5 }
 ]);
-
-// Must save and reload for changes to take effect
-await keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-await keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
+// Changes take effect immediately
 ```
 
 **Example (Bulk Remap with Batching):**
@@ -499,10 +496,7 @@ for (let i = 0; i < remapConfigs.length; i += BATCH_SIZE) {
   // Delay between batches
   await new Promise(resolve => setTimeout(resolve, 100));
 }
-
-// Save and reload
-await keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-await keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
+// Changes take effect immediately
 ```
 
 **Reset Layer to Defaults:**
@@ -522,9 +516,7 @@ for (let i = 0; i < resetConfigs.length; i += 80) {
   await keyboard.setKey(batch);
   await new Promise(resolve => setTimeout(resolve, 100));
 }
-
-await keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-await keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
+// Changes take effect immediately
 ```
 
 ---
@@ -604,12 +596,9 @@ const loginMacro = [
 // Assign to F1 key (HID code 58)
 await keyboard.setMacro({ key: 58 }, loginMacro);
 
-// Save changes
-await keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-await keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
-
 // Wait for changes to apply
 await new Promise(resolve => setTimeout(resolve, 1000));
+// Changes take effect immediately
 ```
 
 **Macro Limitations:**
@@ -1409,51 +1398,6 @@ await keyboard.saveCustomLighting();
 
 ## Configuration Management
 
-### getApi()
-
-Generic API call for special commands.
-
-```typescript
-async getApi(param: { type: string }): Promise<any>
-```
-
-**Common Commands:**
-
-#### Save Parameters
-
-Saves all configuration changes to keyboard firmware.
-
-```typescript
-await keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-```
-
-#### Reload Parameters
-
-Reloads parameters from firmware (applies saved changes).
-
-```typescript
-await keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
-```
-
-**Standard Save/Reload Pattern:**
-
-```typescript
-// Make configuration changes
-await keyboard.setKey([{ key: 4, layout: 0, value: 5 }]);
-await keyboard.setSingleTravel(26, 1.5);
-
-// Save to firmware
-await keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-
-// Reload to apply
-await keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
-
-// Wait for changes to take effect
-await new Promise(resolve => setTimeout(resolve, 500));
-
-console.log('Configuration saved and applied');
-```
-
 ### exportEncryptedJSON()
 
 Exports complete keyboard configuration as encrypted JSON file.
@@ -1768,8 +1712,6 @@ await keyboard.calibrationEnd();
 ### Configuration
 | Method | Purpose | Returns |
 |--------|---------|---------|
-| `getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' })` | Save config | `any` |
-| `getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' })` | Reload config | `any` |
 | `exportEncryptedJSON(filename?)` | Export config | `void` |
 
 ---
@@ -1818,10 +1760,6 @@ class MyKeyboardApp {
       await this.keyboard.setSingleTravel(key, 1.5);
     }
     
-    // Save
-    await this.keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-    await this.keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
-    
     console.log('Gaming profile configured');
   }
   
@@ -1835,8 +1773,6 @@ class MyKeyboardApp {
     ];
     
     await this.keyboard.setMacro({ key: 58 }, macro);  // F1
-    await this.keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-    await this.keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
     
     console.log('Macro assigned to F1');
   }

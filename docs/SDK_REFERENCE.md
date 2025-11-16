@@ -864,7 +864,7 @@ async setDbTravel(
 
 #### getRtTravel() / setRtPressTravel() / setRtReleaseTravel()
 
-Rapid Trigger travel configuration.
+Rapid Trigger travel configuration for keys in RT performance mode.
 
 ```typescript
 async getRtTravel(key: number): Promise<{
@@ -883,15 +883,73 @@ async setRtReleaseTravel(
 ): Promise<{ releaseTravel: number }>
 ```
 
-**Example:**
+**Parameters:**
+- `key` (number): Key to configure/query
+- `value` (number): Travel distance in mm (typically 0.1 - 4.0)
+
+**Returns:**
+- `getRtTravel()`: Object with `pressTravel` (re-trigger distance) and `releaseTravel` (reset distance)
+- `setRtPressTravel()`: Object with updated `pressTravel` value
+- `setRtReleaseTravel()`: Object with updated `releaseTravel` value
+
+**⚠️ Important:** Return values may need `.toFixed()` then `Number()` conversion for consistent decimal precision.
+
+**Rapid Trigger Behavior:**
+- **pressTravel**: How much the key must press down from the reset point to re-trigger
+- **releaseTravel**: How much the key must release up from the trigger point to reset
+
+**Example 1: Basic Configuration**
 
 ```typescript
 // Configure rapid trigger for gaming keys
 const rtConfig = await keyboard.getRtTravel(26);  // W key
 console.log('Current RT:', rtConfig);
+// Output: { pressTravel: 0.3, releaseTravel: 0.3 }
 
 await keyboard.setRtPressTravel(26, 0.1);   // 0.1mm press
 await keyboard.setRtReleaseTravel(26, 0.1); // 0.1mm release
+```
+
+**Example 2: Real-World Usage from AureTrix**
+
+```typescript
+// Fetch current RT values with proper conversion
+const result = await keyboard.getRtTravel(keyId);
+if (!(result instanceof Error)) {
+  // Convert to consistent 2-decimal precision
+  const pressTravel = Number(result.pressTravel.toFixed(2));
+  const releaseTravel = Number(result.releaseTravel.toFixed(2));
+  
+  console.log(`RT Config: Press=${pressTravel}mm, Release=${releaseTravel}mm`);
+  
+  // Update UI state
+  state.pressTravel = pressTravel;
+  state.releaseTravel = releaseTravel;
+}
+
+// Set new RT values
+await keyboard.setRtPressTravel(keyId, Number(newPressValue));
+await keyboard.setRtReleaseTravel(keyId, Number(newReleaseValue));
+```
+
+**Example 3: Complete RT Setup**
+
+```typescript
+const key = 26;  // 'W' key
+
+// Step 1: Set key to RT performance mode
+await keyboard.setPerformanceMode(key, 'rt', 0);
+
+// Step 2: Set initial trigger travel
+await keyboard.setSingleTravel(key, 2.0);  // Initial actuation at 2.0mm
+
+// Step 3: Configure RT dynamics
+await keyboard.setRtPressTravel(key, 0.3);   // Re-trigger after 0.3mm press
+await keyboard.setRtReleaseTravel(key, 0.3); // Reset after 0.3mm release
+
+// Step 4: Verify configuration
+const rtConfig = await keyboard.getRtTravel(key);
+console.log('RT configured:', rtConfig);
 ```
 
 ---

@@ -46,11 +46,11 @@ Each page document includes:
 - Future enhancement ideas
 
 ### Functional vs Placeholder Pages
-**Fully Functional (7 pages)**:
-- Connect, KeyMapping, MacroRecording, Performance, Calibration, Debug, LayoutPreview
+**Fully Functional (8 pages)**:
+- Connect, KeyMapping, MacroRecording, Performance, Calibration, Debug, LayoutPreview, RapidTrigger
 
-**Placeholder Pages (4 pages)**:
-- Lighting, Profiles, RapidTrigger, AdvancedConfig (planned features)
+**Placeholder Pages (3 pages)**:
+- Lighting, Profiles, AdvancedConfig (planned features)
 
 ### SDK Documentation
 Complete API reference for the SparkLink SDK is available:

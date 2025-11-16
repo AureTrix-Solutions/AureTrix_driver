@@ -126,9 +126,26 @@ This document provides a comprehensive index of all functional pages in the Aure
 
 ---
 
+### 8. [Rapid Trigger Page](./pages/RapidTrigger.md)
+**Purpose**: Configure rapid trigger settings for ultra-responsive key actuation
+
+**Key Features**:
+- 5-slider configuration system (Initial Trigger, Re-Trigger, Reset, Top/Bottom Deadzones)
+- RT Travel and Deadzone linking
+- Automatic clamping of Initial Trigger Travel
+- Real-time visual overlays with 5 color-coded values
+- Quick selection presets (WASD, letters, numbers)
+- Batch processing for multiple keys
+
+**Primary Use Case**: Optimizing keyboard responsiveness for competitive gaming and high-speed typing
+
+**Dependencies**: KeyboardService RT APIs, useBatchProcessing, MappedKeyboard utility
+
+---
+
 ## Page Status
 
-### Fully Functional Pages (7)
+### Fully Functional Pages (8)
 ✅ Connect  
 ✅ Key Mapping  
 ✅ Macro Recording  
@@ -136,11 +153,11 @@ This document provides a comprehensive index of all functional pages in the Aure
 ✅ Calibration  
 ✅ Debug  
 ✅ Layout Preview  
+✅ Rapid Trigger  
 
-### Placeholder Pages (4)
+### Placeholder Pages (3)
 ⏳ Lighting - RGB control (planned)  
 ⏳ Profiles - Configuration management (planned)  
-⏳ Rapid Trigger - Fast actuation settings (planned)  
 ⏳ Advanced Config - Advanced features (planned)  
 
 ---
@@ -162,6 +179,7 @@ This document provides a comprehensive index of all functional pages in the Aure
 - **All Pages**: Study implementation patterns
 
 #### Gamers
+- **Rapid Trigger**: Configure ultra-responsive RT settings for competitive advantage
 - **Performance**: Tune WASD travel for faster inputs
 - **Key Mapping**: Create gaming-specific layers
 - **Macro Recording**: Build combo macros
@@ -341,8 +359,9 @@ This documentation is maintained alongside the codebase. When making changes to 
 ## Version History
 
 - **v1.0** (November 2025): Initial comprehensive documentation for 7 functional pages
-- Future versions will document placeholder pages as they're implemented
+- **v1.1** (November 2025): Added Rapid Trigger page documentation (8 functional pages total)
+- Future versions will document remaining placeholder pages as they're implemented
 
 ---
 
-*Last Updated: November 15, 2025*
+*Last Updated: November 16, 2025*

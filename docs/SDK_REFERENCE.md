@@ -700,8 +700,8 @@ Gets press/release deadzones for a specific key.
 
 ```typescript
 async getDpDr(key: number): Promise<{
-  dpThreshold: number;
-  drThreshold: number;
+  pressDead: number;
+  releaseDead: number;
 }>
 ```
 
@@ -709,15 +709,22 @@ async getDpDr(key: number): Promise<{
 - `key` (number): Key to query
 
 **Returns:**
-- `dpThreshold` (number): Press deadzone (mm)
-- `drThreshold` (number): Release deadzone (mm)
+- `pressDead` (number): Press deadzone (top deadzone) in mm
+- `releaseDead` (number): Release deadzone (bottom deadzone) in mm
+
+**Important Note:** The SDK returns `pressDead` and `releaseDead` properties (not `dpThreshold` and `drThreshold`). Values may be returned as strings in some cases and should be explicitly converted to numbers.
 
 **Example:**
 
 ```typescript
 const deadzones = await keyboard.getDpDr(4);  // 'A' key
-console.log('Press deadzone:', deadzones.dpThreshold);
-console.log('Release deadzone:', deadzones.drThreshold);
+console.log('Press deadzone:', deadzones.pressDead);
+console.log('Release deadzone:', deadzones.releaseDead);
+
+// Real-world example from RapidTrigger.vue
+const result = await KeyboardService.getDpDr(keyId);
+const pressDead = Number(result.pressDead);    // Explicit conversion
+const releaseDead = Number(result.releaseDead);
 ```
 
 ### setDp() / setDr()
@@ -1439,7 +1446,7 @@ await keyboard.calibrationEnd();
 | `setDB(param)` | Set global travel | `{ globalTouchTravel, pressDead, releaseDead }` |
 | `getSingleTravel(key)` | Get per-key travel | `number` |
 | `setSingleTravel(key, value)` | Set per-key travel | `number` |
-| `getDpDr(key)` | Get deadzones | `{ dpThreshold, drThreshold }` |
+| `getDpDr(key)` | Get deadzones | `{ pressDead, releaseDead }` |
 | `setDp(key, value)` | Set press deadzone | `{ pressDead }` |
 | `setDr(key, value)` | Set release deadzone | `{ releaseDead }` |
 

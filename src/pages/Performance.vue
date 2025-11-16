@@ -51,7 +51,7 @@
               @update-single-overlay="updateSingleOverlayData"
               @update-overlay="updateOverlayData"
               @update-notification="setNotification"
-              @refresh-overlays="refreshAllOverlays"
+              @mode-changed="handleModeChange"
             />
           </div>
         </div>
@@ -61,7 +61,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch, onMounted } from 'vue';
+import { defineComponent, ref, watch, onMounted, computed } from 'vue';
 import { useTravelProfilesStore } from '@/store/travelProfilesStore';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
 import { keyMap } from '@utils/keyMap';
@@ -79,7 +79,27 @@ export default defineComponent({
     const { processBatches } = useBatchProcessing(); // Use composable for batching
     const selectedKeys = ref<IDefKeyInfo[]>([]);
     const notification = ref<{ message: string; isError: boolean } | null>(null);
-    const overlayData = ref<{ [key: number]: { travel: string; pressDead: string; releaseDead: string } }>({});
+    
+    // Separate overlay state for global and single modes
+    const keyModeMap = ref<{ [key: number]: 'global' | 'single' }>({});
+    const globalOverlayValues = ref<{ travel: string; pressDead: string; releaseDead: string } | null>(null);
+    const singleOverlayByKey = ref<{ [key: number]: { travel: string; pressDead: string; releaseDead: string } }>({});
+    
+    // Computed overlay data that merges based on current key modes
+    const overlayData = computed(() => {
+      const merged: { [key: number]: { travel: string; pressDead: string; releaseDead: string } } = {};
+      
+      for (const [keyIdStr, mode] of Object.entries(keyModeMap.value)) {
+        const keyId = Number(keyIdStr);
+        if (mode === 'global' && globalOverlayValues.value) {
+          merged[keyId] = globalOverlayValues.value;
+        } else if (mode === 'single' && singleOverlayByKey.value[keyId]) {
+          merged[keyId] = singleOverlayByKey.value[keyId];
+        }
+      }
+      
+      return merged;
+    });
 
     const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, baseLayout, error } = useMappedKeyboard(ref(0));
 
@@ -208,51 +228,24 @@ export default defineComponent({
       selectedKeys.value = [];
     };
 
-    const updateSingleOverlayData = async (data: { travel: string; pressDead: string; releaseDead: string } | null | {}) => {
+    const updateSingleOverlayData = async (shouldRefresh: boolean) => {
+      if (!shouldRefresh) {
+        // Clear all single overlays
+        singleOverlayByKey.value = {};
+        return;
+      }
+
       try {
-        const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
-        const BATCH_SIZE = 80;
-        const batches = [];
-        for (let i = 0; i < keyIds.length; i += BATCH_SIZE) {
-          batches.push(keyIds.slice(i, i + BATCH_SIZE));
-        }
+        // Get all keys in single mode from keyModeMap
+        const singleModeKeys = Object.entries(keyModeMap.value)
+          .filter(([_, mode]) => mode === 'single')
+          .map(([keyIdStr, _]) => Number(keyIdStr));
 
-        const singleModeKeys: number[] = [];
-        for (const batch of batches) {
-          const keyModes = await Promise.all(
-            batch.map(async (keyId) => {
-              try {
-                const mode = await KeyboardService.getPerformanceMode(keyId);
-                return { key: keyId, touchMode: mode.touchMode };
-              } catch (error) {
-                console.warn(`Failed to fetch performance mode for key ${keyId}:`, error);
-                return null;
-              }
-            })
-          );
-          singleModeKeys.push(...keyModes
-            .filter((mode): mode is { key: number; touchMode: string } => mode !== null)
-            .filter(mode => mode.touchMode === 'single')
-            .map(mode => mode.key));
-        }
-
-        if (!data) {
-          // Clear overlays for single mode keys
-          singleModeKeys.forEach(keyId => {
-            delete overlayData.value[keyId];
-          });
-          if (singleModeKeys.length === 0) {
-            console.log('No single mode overlays to clear');
-          }
+        if (singleModeKeys.length === 0) {
           return;
         }
 
         // Fetch actual per-key values for single mode keys
-        if (singleModeKeys.length === 0) {
-          notification.value = { message: 'No keys in single mode found', isError: false };
-          return;
-        }
-
         await processBatches(singleModeKeys, async (keyId) => {
           try {
             const travelResult = await KeyboardService.getSingleTravel(keyId);
@@ -261,7 +254,7 @@ export default defineComponent({
               console.warn(`Failed to fetch values for single key ${keyId}`);
               return;
             }
-            overlayData.value[keyId] = {
+            singleOverlayByKey.value[keyId] = {
               travel: Number(travelResult).toFixed(2),
               pressDead: Number(deadzoneResult.pressDead).toFixed(2),
               releaseDead: Number(deadzoneResult.releaseDead).toFixed(2),
@@ -283,99 +276,11 @@ export default defineComponent({
 
     const updateOverlayData = async (data: { travel: string; pressDead: string; releaseDead: string } | null) => {
       if (data) {
-        try {
-          const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
-          const BATCH_SIZE = 80;
-          const batches = [];
-          for (let i = 0; i < keyIds.length; i += BATCH_SIZE) {
-            batches.push(keyIds.slice(i, i + BATCH_SIZE));
-          }
-
-          const globalModeKeys: number[] = [];
-          for (const batch of batches) {
-            const keyModes = await Promise.all(
-              batch.map(async (keyId) => {
-                try {
-                  const mode = await KeyboardService.getPerformanceMode(keyId);
-                  return { key: keyId, touchMode: mode.touchMode };
-                } catch (error) {
-                  console.warn(`Failed to fetch performance mode for key ${keyId}:`, error);
-                  return null;
-                }
-              })
-            );
-            globalModeKeys.push(...keyModes
-              .filter((mode): mode is { key: number; touchMode: string } => mode !== null)
-              .filter(mode => mode.touchMode === 'global')
-              .map(mode => mode.key));
-          }
-
-          layout.value.flat().forEach(keyInfo => {
-            const keyId = keyInfo.physicalKeyValue || keyInfo.keyValue;
-            if (globalModeKeys.includes(keyId)) {
-              overlayData.value[keyId] = {
-                travel: data.travel,
-                pressDead: data.pressDead,
-                releaseDead: data.releaseDead,
-              };
-            }
-          });
-          if (globalModeKeys.length === 0) {
-            notification.value = {
-              message: 'No keys in global mode found',
-              isError: false,
-            };
-          }
-        } catch (error) {
-          console.error('Failed to update global mode overlays:', error);
-          notification.value = {
-            message: `Failed to update global mode overlays: ${(error as Error).message}`,
-            isError: true,
-          };
-        }
+        // Set global overlay values for all keys in global mode
+        globalOverlayValues.value = data;
       } else {
-        try {
-          const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
-          const BATCH_SIZE = 80;
-          const batches = [];
-          for (let i = 0; i < keyIds.length; i += BATCH_SIZE) {
-            batches.push(keyIds.slice(i, i + BATCH_SIZE));
-          }
-
-          const globalModeKeys: number[] = [];
-          for (const batch of batches) {
-            const keyModes = await Promise.all(
-              batch.map(async (keyId) => {
-                try {
-                  const mode = await KeyboardService.getPerformanceMode(keyId);
-                  return { key: keyId, touchMode: mode.touchMode };
-                } catch (error) {
-                  console.warn(`Failed to fetch performance mode for key ${keyId}:`, error);
-                  return null;
-                }
-              })
-            );
-            globalModeKeys.push(...keyModes
-              .filter((mode): mode is { key: number; touchMode: string } => mode !== null)
-              .filter(mode => mode.touchMode === 'global')
-              .map(mode => mode.key));
-          }
-
-          const keysToClear = Object.keys(overlayData.value).filter(key => 
-            globalModeKeys.includes(Number(key)));
-          keysToClear.forEach(key => {
-            delete overlayData.value[key];
-          });
-          if (keysToClear.length === 0) {
-            console.log('No global mode overlays to clear');
-          }
-        } catch (error) {
-          console.error('Failed to clear global mode overlays:', error);
-          notification.value = {
-            message: `Failed to clear global mode overlays: ${(error as Error).message}`,
-            isError: true,
-          };
-        }
+        // Clear global overlay values
+        globalOverlayValues.value = null;
       }
     };
 
@@ -400,8 +305,9 @@ export default defineComponent({
     }, { immediate: true });
 
     onMounted(() => {
-      setTimeout(() => {
-        fetchLayerLayout();
+      setTimeout(async () => {
+        await fetchLayerLayout();
+        await initializeKeyModes();
       }, 100);
     });
 
@@ -409,16 +315,38 @@ export default defineComponent({
       notification.value = { message, isError };
     };
 
-    const refreshAllOverlays = async () => {
+    // Initialize key mode map
+    const initializeKeyModes = async () => {
       try {
-        // Clear overlays for keys that changed modes
-        // Then refresh both overlay types
-        await updateOverlayData(null);
-        await updateSingleOverlayData(null);
-        await updateSingleOverlayData({});
+        const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
+        
+        await processBatches(keyIds, async (keyId) => {
+          try {
+            const mode = await KeyboardService.getPerformanceMode(keyId);
+            keyModeMap.value[keyId] = mode.touchMode as 'global' | 'single';
+          } catch (error) {
+            console.warn(`Failed to fetch performance mode for key ${keyId}:`, error);
+            // Default to global if fetch fails
+            keyModeMap.value[keyId] = 'global';
+          }
+        });
+        
+        console.log(`[PERFORMANCE] Initialized modes for ${keyIds.length} keys`);
       } catch (error) {
-        console.error('Failed to refresh overlays:', error);
+        console.error('Failed to initialize key modes:', error);
       }
+    };
+
+    // Handle mode changes from child components
+    const handleModeChange = (keyIds: number[], newMode: 'global' | 'single') => {
+      keyIds.forEach(keyId => {
+        keyModeMap.value[keyId] = newMode;
+        
+        // Clear old overlay data for this key
+        if (newMode === 'global') {
+          delete singleOverlayByKey.value[keyId];
+        }
+      });
     };
 
     return {

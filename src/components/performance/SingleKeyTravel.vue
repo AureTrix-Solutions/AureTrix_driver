@@ -132,7 +132,7 @@ export default defineComponent({
       default: 4.0,
     },
   },
-  emits: ['update-single-overlay', 'update-overlay', 'refresh-overlays'],
+  emits: ['update-single-overlay', 'update-overlay', 'mode-changed'],
   setup(props, { emit }) {
     const { processBatches } = useBatchProcessing();
 
@@ -159,6 +159,7 @@ export default defineComponent({
       const keys = props.selectedKeys.map(key => ({
         physicalKeyValue: key.physicalKeyValue || key.keyValue,
       }));
+      const keyIds = keys.map(k => k.physicalKeyValue);
       try {
         await processBatches(keys, async (physicalKeyValue) => {
           await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);
@@ -170,12 +171,17 @@ export default defineComponent({
             await KeyboardService.setDr(physicalKeyValue, bottomDeadZone.value);
           }
         });
+        // Emit mode change so parent can update keyModeMap
+        emit('mode-changed', keyIds, 'single');
       } catch (error) {
       }
       prevSingleKeyTravel.value = singleKeyTravel.value;
       prevTopDeadZone.value = topDeadZone.value;
       prevBottomDeadZone.value = bottomDeadZone.value;
-      emit('refresh-overlays');
+      // Refresh single overlays if showing
+      if (showOverlay.value) {
+        emit('update-single-overlay', true);
+      }
     };
 
     // Update travel to selected keys
@@ -295,8 +301,7 @@ export default defineComponent({
     // Toggle overlay
     const toggleOverlay = () => {
       showOverlay.value = !showOverlay.value;
-      const refreshData = showOverlay.value ? {} : null;
-      emit('update-single-overlay', refreshData);
+      emit('update-single-overlay', showOverlay.value);
     };
 
     // Watchers

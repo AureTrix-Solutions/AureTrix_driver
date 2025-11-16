@@ -5,7 +5,7 @@
       :selected-keys="selectedKeys" 
       :profile-max-travel="profileMaxTravel"
       @update-overlay="setOverlay" 
-      @refresh-overlays="$emit('refresh-overlays')" 
+      @mode-changed="handleModeChange"
     />
     <SingleKeyTravel 
       :selected-keys="selectedKeys" 
@@ -13,7 +13,7 @@
       :base-layout="baseLayout" 
       :profile-max-travel="profileMaxTravel"
       @update-single-overlay="setSingleOverlay" 
-      @refresh-overlays="$emit('refresh-overlays')" 
+      @mode-changed="handleModeChange"
     />
     <SwitchProfiles 
       :selected-keys="selectedKeys" 
@@ -53,7 +53,7 @@ export default defineComponent({
       default: null,
     },
   },
-  emits: ['update-overlay', 'update-single-overlay', 'refresh-overlays'],
+  emits: ['update-overlay', 'update-single-overlay', 'mode-changed'],
   setup(props, { emit }) {
     const store = useTravelProfilesStore();
 
@@ -74,10 +74,16 @@ export default defineComponent({
       emit('update-single-overlay', data);
     };
 
+    const handleModeChange = (keyIds: number[], newMode: 'global' | 'single') => {
+      console.log(`[KEYTRAVEL] Forwarding mode-changed:`, keyIds, newMode);
+      emit('mode-changed', keyIds, newMode);
+    };
+
     return {
       profileMaxTravel,
       setOverlay,
       setSingleOverlay,
+      handleModeChange,
     };
   },
 });

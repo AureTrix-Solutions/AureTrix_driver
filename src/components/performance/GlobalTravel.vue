@@ -86,7 +86,7 @@ export default defineComponent({
       default: 4.0,
     },
   },
-  emits: ['update-overlay', 'update-single-overlay'],
+  emits: ['update-overlay', 'update-single-overlay', 'mode-changed'],
   setup(props, { emit }) {
     const { processBatches } = useBatchProcessing();
 
@@ -221,19 +221,21 @@ export default defineComponent({
       const keys = props.selectedKeys.map(key => ({
         physicalKeyValue: key.physicalKeyValue || key.keyValue,
       }));
+      const keyIds = keys.map(k => k.physicalKeyValue);
       try {
         await processBatches(keys, async (physicalKeyValue) => KeyboardService.setPerformanceMode(physicalKeyValue, 'global', 0));
         await updateGlobalSettings();
+        // Emit mode change so parent can update keyModeMap
+        emit('mode-changed', keyIds, 'global');
       } catch (error) {
       }
-      emit('update-single-overlay', null);
-      emit('update-overlay', null);
+      // Refresh global overlays if showing
       if (showOverlay.value) {
-        setTimeout(() => emit('update-overlay', {
+        emit('update-overlay', {
           travel: globalTravel.value.toFixed(2),
           pressDead: pressDead.value.toFixed(2),
           releaseDead: releaseDead.value.toFixed(2),
-        }), 0);
+        });
       }
     };
 

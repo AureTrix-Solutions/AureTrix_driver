@@ -99,7 +99,8 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
           return;
         }
 
-        await KeyboardService.reloadParameters();
+        // TEST: Commenting out to see if this is necessary
+        // await KeyboardService.reloadParameters();
 
         const batchSize = 10;
         const requests = [];

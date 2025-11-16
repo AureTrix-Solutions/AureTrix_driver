@@ -1538,21 +1538,7 @@ await batchProcess(remapConfigs, async (batch) => {
 });
 ```
 
-### 2. Always Save and Reload
-
-Configuration changes require explicit save/reload:
-
-```typescript
-// WRONG: Changes won't persist
-await keyboard.setKey([{ key: 4, layout: 0, value: 5 }]);
-
-// CORRECT: Save and reload
-await keyboard.setKey([{ key: 4, layout: 0, value: 5 }]);
-await keyboard.getApi({ type: 'ORDER_TYPE_SAVING_PARAMETER' });
-await keyboard.getApi({ type: 'ORDER_TYPE_RELOAD_PARAMETERS' });
-```
-
-### 3. Implement Auto-Reconnect
+### 2. Implement Auto-Reconnect
 
 Save device info for seamless reconnection:
 
@@ -1569,7 +1555,7 @@ if (savedId) {
 }
 ```
 
-### 4. Handle WebHID Events
+### 3. Handle WebHID Events
 
 Listen for device connect/disconnect:
 
@@ -1587,7 +1573,7 @@ if ('hid' in navigator) {
 }
 ```
 
-### 5. Use TypeScript Types
+### 4. Use TypeScript Types
 
 Import SDK types for type safety:
 

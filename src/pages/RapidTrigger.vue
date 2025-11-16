@@ -184,7 +184,7 @@
                   </div>
                 </div>
                 <div class="link-container">
-                  <button @click="toggleLinkDeadZones" class="link-btn">{{ deadZonesLinked ? 'Unlink' : 'Link' }} Zones</button>
+                  <button @click="toggleLinkDeadZones" class="link-btn">{{ deadZonesLinked ? 'Unlink' : 'Link' }} </button>
                 </div>
                 <div class="input-group">
                   <div class="label">Bottom Deadzone (<span class="bottom-deadzone-unit">mm</span>)</div>
@@ -1027,7 +1027,7 @@ export default defineComponent({
     .travel-row {
       display: flex;
       gap: 0px;
-      margin-bottom: 15px;
+      margin-bottom: 0px;
       align-items: center;
       font-family: v.$font-style;
     }
@@ -1036,7 +1036,7 @@ export default defineComponent({
       display: flex;
       flex-direction: row;
       gap: 15px;
-      margin-bottom: 20px;
+      margin-bottom: 0px;
       align-items: center;
     }
 
@@ -1050,9 +1050,12 @@ export default defineComponent({
 
     .link-container {
       display: flex;
+      width: 50px;
       justify-content: center;
       align-items: center;
       margin: 0;
+      padding: 10px;
+      padding-bottom: 20px;
 
       .link-btn {
         padding: 6px 12px;
@@ -1061,8 +1064,9 @@ export default defineComponent({
         border: v.$border-style;
         border-radius: v.$border-radius;
         cursor: pointer;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         font-weight: 400;
+        height: 32px;
         transition: background-color 0.2s ease;
         font-family: v.$font-style;
         white-space: nowrap;
@@ -1077,7 +1081,7 @@ export default defineComponent({
       display: flex;
       align-items: center;
       gap: 0px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       padding: 10px;
       width: 600px;
       height: 30px;

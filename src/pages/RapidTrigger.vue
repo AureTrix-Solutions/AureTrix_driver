@@ -1034,23 +1034,25 @@ export default defineComponent({
 
     .rt-travel-group {
       display: flex;
-      flex-direction: column;
-      gap: 0px;
+      flex-direction: row;
+      gap: 15px;
       margin-bottom: 20px;
+      align-items: center;
     }
 
     .deadzone-group {
       display: flex;
-      flex-direction: column;
-      gap: 0px;
+      flex-direction: row;
+      gap: 15px;
       margin-bottom: 20px;
+      align-items: center;
     }
 
     .link-container {
       display: flex;
       justify-content: center;
       align-items: center;
-      margin: 10px 0;
+      margin: 0;
 
       .link-btn {
         padding: 6px 12px;
@@ -1063,6 +1065,7 @@ export default defineComponent({
         font-weight: 400;
         transition: background-color 0.2s ease;
         font-family: v.$font-style;
+        white-space: nowrap;
 
         &:hover {
           background-color: color.adjust(v.$background-dark, $lightness: 10%);

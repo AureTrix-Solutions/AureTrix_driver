@@ -71,10 +71,18 @@ This document provides a comprehensive index of all functional pages in the Aure
 - Batch processing for multiple keys
 - Remapped label display
 - Press/release deadzone control
+- Switch profile management with max travel capture
+- Key test monitor for validating trigger points
 
 **Primary Use Case**: Fine-tuning actuation points for gaming or typing performance
 
-**Dependencies**: KeyboardService, useBatchProcessing, KeyTravel component
+**Dependencies**: KeyboardService, useBatchProcessing, KeyTravel container component
+
+**Component Documentation**:
+- [KeyTravel.md](./pages/KeyTravel.md) - Container component
+- [GlobalTravel.md](./pages/GlobalTravel.md) - Global travel settings
+- [SingleKeyTravel.md](./pages/SingleKeyTravel.md) - Per-key travel configuration
+- [SwitchProfiles.md](./pages/SwitchProfiles.md) - Profile management and testing
 
 ---
 
@@ -356,10 +364,26 @@ This documentation is maintained alongside the codebase. When making changes to 
 
 ---
 
+## Component-Level Documentation
+
+Some pages have complex component hierarchies with dedicated documentation for each sub-component:
+
+### Performance Page Components
+The Performance page uses four sub-components, each with comprehensive documentation:
+- **[KeyTravel.md](./pages/KeyTravel.md)** - Container component that orchestrates the three main sub-components
+- **[GlobalTravel.md](./pages/GlobalTravel.md)** - Global travel and deadzone configuration for all keys in global mode
+- **[SingleKeyTravel.md](./pages/SingleKeyTravel.md)** - Per-key travel and deadzone configuration for individual keys
+- **[SwitchProfiles.md](./pages/SwitchProfiles.md)** - Profile management, max travel capture, and key test monitor
+
+These component docs provide detailed technical implementation, SDK integration patterns, data flows, and user workflows specific to each sub-component.
+
+---
+
 ## Version History
 
 - **v1.0** (November 2025): Initial comprehensive documentation for 7 functional pages
 - **v1.1** (November 2025): Added Rapid Trigger page documentation (8 functional pages total)
+- **v1.1.1** (November 2025): Added Performance component documentation (GlobalTravel, SingleKeyTravel, KeyTravel, SwitchProfiles)
 - Future versions will document remaining placeholder pages as they're implemented
 
 ---

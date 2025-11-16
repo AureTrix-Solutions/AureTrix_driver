@@ -62,13 +62,40 @@ The Performance page provides advanced control over key travel distances, allowi
 - **Select None**: Clear selection
 
 ### Settings Panel (Bottom)
-- **KeyTravel Component**: Main control interface
-  - Global travel controls
-  - Single key travel controls
-  - Mode switching
-  - Apply/reset buttons
+- **KeyTravel Component**: Main control interface container
+  - GlobalTravel: Global mode travel and deadzone controls
+  - SingleKeyTravel: Per-key travel and deadzone controls
+  - SwitchProfiles: Profile management and key testing
 - Panel shows current selection count
 - Disabled when no keys selected
+
+## Component Architecture
+
+The Performance page uses a modular component structure for travel configuration:
+
+```
+Performance.vue (main page)
+  └─ KeyTravel.vue (container component)
+       ├─ GlobalTravel.vue (global mode settings)
+       ├─ SingleKeyTravel.vue (per-key settings)
+       └─ SwitchProfiles.vue (profile management)
+```
+
+### Component Responsibilities
+
+- **Performance.vue**: Keyboard grid rendering, key selection, overlay management, event coordination
+- **KeyTravel.vue**: Props delegation, profile max travel computation, event routing ([docs](./KeyTravel.md))
+- **GlobalTravel.vue**: Global travel/deadzone settings, batch updates to global-mode keys ([docs](./GlobalTravel.md))
+- **SingleKeyTravel.vue**: Per-key travel/deadzone settings, batch updates to single-mode keys ([docs](./SingleKeyTravel.md))
+- **SwitchProfiles.vue**: Switch profile CRUD, max travel capture, key test monitor ([docs](./SwitchProfiles.md))
+
+### Component Documentation
+
+Each sub-component has comprehensive documentation:
+- [KeyTravel.md](./KeyTravel.md) - Container component with profile max travel computation
+- [GlobalTravel.md](./GlobalTravel.md) - Global travel settings with deadzone linking
+- [SingleKeyTravel.md](./SingleKeyTravel.md) - Per-key travel configuration
+- [SwitchProfiles.md](./SwitchProfiles.md) - Profile management and key testing
 
 ## Technical Implementation
 

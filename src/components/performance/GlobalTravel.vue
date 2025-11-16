@@ -9,26 +9,14 @@
         <div class="label">Global Travel (mm)</div>
         <div class="slider-container">
           <div class="value-display">{{ minTravel.toFixed(2) }}</div>
-          <input
-            type="range"
-            v-model.number="globalTravel"
-            :min="minTravel"
-            :max="maxTravel"
-            step="0.01"
-            @change="updateGlobalSettings"
-          />
+          <input type="range" v-model.number="globalTravel" :min="minTravel" :max="maxTravel" step="0.01"
+            @change="updateGlobalSettings" />
           <div class="value-display">{{ maxTravel.toFixed(2) }}</div>
         </div>
         <div class="adjusters">
           <button @click="adjustTravel(-0.01)" class="adjust-btn">-</button>
-          <input
-            type="number"
-            v-model.number="globalTravel"
-            :min="minTravel"
-            :max="maxTravel"
-            step="0.01"
-            @change="updateGlobalSettings"
-          />
+          <input type="number" v-model.number="globalTravel" :min="minTravel" :max="maxTravel" step="0.01"
+            @change="updateGlobalSettings" />
           <button @click="adjustTravel(0.01)" class="adjust-btn">+</button>
         </div>
       </div>
@@ -43,26 +31,13 @@
         <div class="label">Top Dead Zone (mm)</div>
         <div class="slider-container">
           <div class="value-display">0.00</div>
-          <input
-            type="range"
-            v-model.number="pressDead"
-            min="0.0"
-            max="1.0"
-            step="0.01"
-            @change="updateGlobalSettings"
-          />
+          <input type="range" v-model.number="pressDead" min="0.0" max="1.0" step="0.01" @change="updateGlobalSettings" />
           <div class="value-display">1.00</div>
         </div>
         <div class="adjusters">
           <button @click="adjustDeadZone(-0.01, 'press')" class="adjust-btn">-</button>
-          <input
-            type="number"
-            v-model.number="pressDead"
-            min="0.0"
-            max="1.0"
-            step="0.01"
-            @change="updateGlobalSettings"
-          />
+          <input type="number" v-model.number="pressDead" min="0.0" max="1.0" step="0.01"
+            @change="updateGlobalSettings" />
           <button @click="adjustDeadZone(0.01, 'press')" class="adjust-btn">+</button>
         </div>
       </div>
@@ -73,26 +48,14 @@
         <div class="label">Bottom Dead Zone (mm)</div>
         <div class="slider-container">
           <div class="value-display">0.00</div>
-          <input
-            type="range"
-            v-model.number="releaseDead"
-            min="0.0"
-            max="1.0"
-            step="0.01"
-            @change="updateGlobalSettings"
-          />
+          <input type="range" v-model.number="releaseDead" min="0.0" max="1.0" step="0.01"
+            @change="updateGlobalSettings" />
           <div class="value-display">1.00</div>
         </div>
         <div class="adjusters">
           <button @click="adjustDeadZone(-0.01, 'release')" class="adjust-btn">-</button>
-          <input
-            type="number"
-            v-model.number="releaseDead"
-            min="0.0"
-            max="1.0"
-            step="0.01"
-            @change="updateGlobalSettings"
-          />
+          <input type="number" v-model.number="releaseDead" min="0.0" max="1.0" step="0.01"
+            @change="updateGlobalSettings" />
           <button @click="adjustDeadZone(0.01, 'release')" class="adjust-btn">+</button>
         </div>
       </div>
@@ -270,7 +233,7 @@ export default defineComponent({
           travel: globalTravel.value.toFixed(2),
           pressDead: pressDead.value.toFixed(2),
           releaseDead: releaseDead.value.toFixed(2),
-        }), 300);
+        }), 0);
       }
     };
 
@@ -446,7 +409,7 @@ export default defineComponent({
           margin-top: -3px; // centers thumb vertically
         }
       }
-      
+
       .value-display {
         min-width: 60px;
         color: v.$accent-color;

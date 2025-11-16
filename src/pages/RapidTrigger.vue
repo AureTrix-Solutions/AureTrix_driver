@@ -572,12 +572,39 @@ export default defineComponent({
               return;
             }
 
+            let initialActuationValue = 0.00;
+            if (!(initialActuationResult instanceof Error) && typeof initialActuationResult === 'number') {
+              initialActuationValue = Number(initialActuationResult.toFixed(2));
+            }
+
+            let pressValue = 0.00;
+            let releaseValue = 0.00;
+            if (!(rtResult instanceof Error) && typeof rtResult === 'object' && rtResult !== null) {
+              if (typeof rtResult.pressTravel === 'number') {
+                pressValue = Number(rtResult.pressTravel.toFixed(2));
+              }
+              if (typeof rtResult.releaseTravel === 'number') {
+                releaseValue = Number(rtResult.releaseTravel.toFixed(2));
+              }
+            }
+
+            let pressDeadValue = 0.00;
+            let releaseDeadValue = 0.00;
+            if (!(dzResult instanceof Error) && typeof dzResult === 'object' && dzResult !== null) {
+              if (typeof (dzResult as any).pressDead === 'number') {
+                pressDeadValue = Number((dzResult as any).pressDead.toFixed(2));
+              }
+              if (typeof (dzResult as any).releaseDead === 'number') {
+                releaseDeadValue = Number((dzResult as any).releaseDead.toFixed(2));
+              }
+            }
+
             overlayData.value[keyId] = {
-              travel: initialActuationResult.toFixed(2),
-              press: rtResult.pressTravel.toFixed(2),
-              release: rtResult.releaseTravel.toFixed(2),
-              pressDead: dzResult.dpThreshold.toFixed(2),
-              releaseDead: dzResult.drThreshold.toFixed(2),
+              travel: initialActuationValue.toFixed(2),
+              press: pressValue.toFixed(2),
+              release: releaseValue.toFixed(2),
+              pressDead: pressDeadValue.toFixed(2),
+              releaseDead: releaseDeadValue.toFixed(2),
             };
           } catch (fetchError) {
             console.error(`Failed to fetch RT data for ${keyId}:`, fetchError);

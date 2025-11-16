@@ -55,12 +55,12 @@
                 <div class="input-group">
                   <div class="label">Initial Trigger Travel (<span class="initial-trigger-unit">mm</span>)</div>
                   <div class="slider-container">
-                    <div class="value-display">0.10</div>
+                    <div class="value-display">{{ minInitialActuation.toFixed(2) }}</div>
                     <input
                       type="range"
                       v-model.number="initialActuation"
                       id="initial-actuation-slider"
-                      min="0.1"
+                      :min="minInitialActuation"
                       :max="maxInitialActuation"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
@@ -74,7 +74,7 @@
                       type="number"
                       v-model.number="initialActuation"
                       id="initial-actuation-input"
-                      min="0.1"
+                      :min="minInitialActuation"
                       :max="maxInitialActuation"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
@@ -85,7 +85,7 @@
                 </div>
               </div>
 
-              <div class="travel-row">
+              <div class="rt-travel-group">
                 <div class="input-group">
                   <div class="label">Key Re-Trigger (<span class="key-retrigger-unit">mm</span>)</div>
                   <div class="slider-container">
@@ -117,9 +117,9 @@
                     <button @click="adjustPress(0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
                   </div>
                 </div>
-              </div>
-
-              <div class="travel-row">
+                <div class="link-container">
+                  <button @click="toggleLinkRtTravel" class="link-btn">{{ rtTravelLinked ? 'Unlink' : 'Link' }}</button>
+                </div>
                 <div class="input-group">
                   <div class="label">Key Reset (<span class="key-reset-unit">mm</span>)</div>
                   <div class="slider-container">
@@ -183,7 +183,9 @@
                     <button @click="adjustDeadzone(0.01, 'press')" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
                   </div>
                 </div>
-
+                <div class="link-container">
+                  <button @click="toggleLinkDeadZones" class="link-btn">{{ deadZonesLinked ? 'Unlink' : 'Link' }} Zones</button>
+                </div>
                 <div class="input-group">
                   <div class="label">Bottom Deadzone (<span class="bottom-deadzone-unit">mm</span>)</div>
                   <div class="slider-container">
@@ -268,7 +270,13 @@ export default defineComponent({
     const prevPressDeadzone = ref(0.1);
     const prevReleaseDeadzone = ref(0.1);
 
-    const maxInitialActuation = computed(() => profileMaxTravel.value);
+    // Link states
+    const rtTravelLinked = ref(false);
+    const deadZonesLinked = ref(false);
+
+    // Computed bounds with deadzone clamping
+    const minInitialActuation = computed(() => Math.max(0.1, pressDeadzone.value));
+    const maxInitialActuation = computed(() => Math.min(profileMaxTravel.value, profileMaxTravel.value - releaseDeadzone.value));
     const maxPressTravel = computed(() => profileMaxTravel.value);
     const maxReleaseTravel = computed(() => profileMaxTravel.value);
 
@@ -547,7 +555,7 @@ export default defineComponent({
     };
 
     const adjustInitialActuation = (delta: number) => {
-      const newValue = Math.min(Math.max(initialActuation.value + delta, 0.1), maxInitialActuation.value);
+      const newValue = Math.min(Math.max(initialActuation.value + delta, minInitialActuation.value), maxInitialActuation.value);
       initialActuation.value = Number(newValue.toFixed(2));
       updateAllSettings();
     };
@@ -555,24 +563,58 @@ export default defineComponent({
     const adjustPress = (delta: number) => {
       const newValue = Math.min(Math.max(pressTravel.value + delta, 0.1), maxPressTravel.value);
       pressTravel.value = Number(newValue.toFixed(2));
+      if (rtTravelLinked.value) {
+        releaseTravel.value = pressTravel.value;
+      }
       updateAllSettings();
     };
 
     const adjustRelease = (delta: number) => {
       const newValue = Math.min(Math.max(releaseTravel.value + delta, 0.1), maxReleaseTravel.value);
       releaseTravel.value = Number(newValue.toFixed(2));
+      if (rtTravelLinked.value) {
+        pressTravel.value = releaseTravel.value;
+      }
       updateAllSettings();
     };
 
     const adjustDeadzone = (delta: number, type: 'press' | 'release') => {
+      if (deadZonesLinked.value && type === 'release') return; // Skip if linked
+      let newValue = type === 'press' ? pressDeadzone.value + delta : releaseDeadzone.value + delta;
+      newValue = Math.min(Math.max(newValue, 0.0), 1.0);
       if (type === 'press') {
-        const newValue = Math.min(Math.max(pressDeadzone.value + delta, 0.0), 1.0);
         pressDeadzone.value = Number(newValue.toFixed(2));
       } else {
-        const newValue = Math.min(Math.max(releaseDeadzone.value + delta, 0.0), 1.0);
         releaseDeadzone.value = Number(newValue.toFixed(2));
       }
+      if (deadZonesLinked.value) {
+        const otherType = type === 'press' ? 'release' : 'press';
+        (otherType === 'press' ? pressDeadzone : releaseDeadzone).value = Number(newValue.toFixed(2));
+      }
       updateAllSettings();
+    };
+
+    // Toggle link functions
+    const toggleLinkRtTravel = () => {
+      rtTravelLinked.value = !rtTravelLinked.value;
+      if (rtTravelLinked.value) {
+        // Sync to the smaller value to ensure both stay within bounds
+        const targetValue = Math.min(pressTravel.value, releaseTravel.value, maxPressTravel.value, maxReleaseTravel.value);
+        pressTravel.value = Number(targetValue.toFixed(2));
+        releaseTravel.value = Number(targetValue.toFixed(2));
+        updateAllSettings();
+      }
+    };
+
+    const toggleLinkDeadZones = () => {
+      deadZonesLinked.value = !deadZonesLinked.value;
+      if (deadZonesLinked.value) {
+        // Sync to the smaller value to ensure both stay within bounds
+        const targetValue = Math.min(pressDeadzone.value, releaseDeadzone.value, 1.0);
+        pressDeadzone.value = Number(targetValue.toFixed(2));
+        releaseDeadzone.value = Number(targetValue.toFixed(2));
+        updateAllSettings();
+      }
     };
 
     const updateOverlayData = async () => {
@@ -655,6 +697,32 @@ export default defineComponent({
       }
     });
 
+    // Watch RT travel to sync when linked
+    watch([pressTravel, releaseTravel], () => {
+      if (rtTravelLinked.value) {
+        releaseTravel.value = pressTravel.value;
+      }
+    });
+
+    // Watch deadzones to clamp initialActuation, update keyboard keys, and sync when linked
+    watch([pressDeadzone, releaseDeadzone], () => {
+      let clamped = false;
+      if (initialActuation.value < minInitialActuation.value) {
+        initialActuation.value = Number(minInitialActuation.value.toFixed(2));
+        clamped = true;
+      } else if (initialActuation.value > maxInitialActuation.value) {
+        initialActuation.value = Number(maxInitialActuation.value.toFixed(2));
+        clamped = true;
+      }
+      if (deadZonesLinked.value) {
+        releaseDeadzone.value = pressDeadzone.value;
+      }
+      // If clamped, update keyboard keys with new value
+      if (clamped && selectedKeys.value.length > 0) {
+        updateAllSettings();
+      }
+    });
+
     onMounted(async () => {
       await fetchLayerLayout();
       if (loaded.value && layout.value.length > 0) {
@@ -686,6 +754,9 @@ export default defineComponent({
       releaseTravel,
       pressDeadzone,
       releaseDeadzone,
+      rtTravelLinked,
+      deadZonesLinked,
+      minInitialActuation,
       maxInitialActuation,
       maxPressTravel,
       maxReleaseTravel,
@@ -694,6 +765,8 @@ export default defineComponent({
       adjustPress,
       adjustRelease,
       adjustDeadzone,
+      toggleLinkRtTravel,
+      toggleLinkDeadZones,
     };
   },
 });
@@ -959,11 +1032,42 @@ export default defineComponent({
       font-family: v.$font-style;
     }
 
+    .rt-travel-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0px;
+      margin-bottom: 20px;
+    }
+
     .deadzone-group {
       display: flex;
       flex-direction: column;
       gap: 0px;
       margin-bottom: 20px;
+    }
+
+    .link-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px 0;
+
+      .link-btn {
+        padding: 6px 12px;
+        background-color: color.adjust(v.$background-dark, $lightness: -100%);
+        color: v.$accent-color;
+        border: v.$border-style;
+        border-radius: v.$border-radius;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 400;
+        transition: background-color 0.2s ease;
+        font-family: v.$font-style;
+
+        &:hover {
+          background-color: color.adjust(v.$background-dark, $lightness: 10%);
+        }
+      }
     }
 
     .input-group {

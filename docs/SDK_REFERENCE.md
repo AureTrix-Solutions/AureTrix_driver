@@ -23,7 +23,9 @@ The `@sparklinkplayjoy/sdk-keyboard` package (v1.0.14) is the official SDK for c
 
 **Methods That Return Strings:**
 - `getSingleTravel(key)` - Returns `"2.05"` not `2.05`
-- Rapid Trigger travel methods may return strings (always use `Number()` conversion)
+- `setSingleTravel(key, value)` - Returns `"1.50"` not `1.50`
+- `setRtPressTravel(key, value)` - Returns string confirmation value
+- `setRtReleaseTravel(key, value)` - Returns string confirmation value
 
 **Always Use Number() Conversion:**
 ```typescript
@@ -723,7 +725,7 @@ async setSingleTravel(
   key: number,
   value: number,
   decimal: number = 2
-): Promise<number>
+): Promise<string>
 ```
 
 **Parameters:**
@@ -731,7 +733,9 @@ async setSingleTravel(
 - `value` (number): Travel distance in mm (0.1 - 4.0)
 - `decimal` (number, optional): Decimal precision
 
-**Returns:** Confirmed travel value
+**Returns:** Confirmed travel value **as a string** (e.g., `"1.50"`, `"2.00"`)
+
+**⚠️ Important:** Like `getSingleTravel()`, this method returns a **string**. Convert with `Number()` if you need the numeric value for calculations.
 
 **⚠️ Dual Purpose:** This method serves **two different purposes** depending on the key's performance mode:
 1. **Single Mode**: Sets the travel distance for actuation
@@ -875,12 +879,12 @@ async getRtTravel(key: number): Promise<{
 async setRtPressTravel(
   key: number,
   value: number
-): Promise<{ pressTravel: number }>
+): Promise<string>
 
 async setRtReleaseTravel(
   key: number,
   value: number
-): Promise<{ releaseTravel: number }>
+): Promise<string>
 ```
 
 **Parameters:**
@@ -888,11 +892,13 @@ async setRtReleaseTravel(
 - `value` (number): Travel distance in mm (typically 0.1 - 4.0)
 
 **Returns:**
-- `getRtTravel()`: Object with `pressTravel` (re-trigger distance) and `releaseTravel` (reset distance)
-- `setRtPressTravel()`: Object with updated `pressTravel` value
-- `setRtReleaseTravel()`: Object with updated `releaseTravel` value
+- `getRtTravel()`: Object with `pressTravel` (re-trigger distance) and `releaseTravel` (reset distance) as numbers
+- `setRtPressTravel()`: Confirmed press travel value **as a string**
+- `setRtReleaseTravel()`: Confirmed release travel value **as a string**
 
-**⚠️ Important:** Return values may need `.toFixed()` then `Number()` conversion for consistent decimal precision.
+**⚠️ Important:** 
+- `getRtTravel()` returns numeric values but may need `.toFixed()` then `Number()` conversion for consistent decimal precision
+- `setRtPressTravel()` and `setRtReleaseTravel()` return **strings** - convert with `Number()` if needed for calculations
 
 **Rapid Trigger Behavior:**
 - **pressTravel**: How much the key must press down from the reset point to re-trigger
@@ -1707,7 +1713,7 @@ await keyboard.calibrationEnd();
 | `getGlobalTouchTravel()` | Get global travel | `{ globalTouchTravel }` |
 | `setDB(param)` | Set global travel | `{ globalTouchTravel, pressDead, releaseDead }` |
 | `getSingleTravel(key)` | Get per-key travel | `string` ⚠️ |
-| `setSingleTravel(key, value)` | Set per-key travel (also sets initial travel in RT mode) | `number` |
+| `setSingleTravel(key, value)` | Set per-key travel (also sets initial travel in RT mode) | `string` ⚠️ |
 | `getDpDr(key)` | Get deadzones | `{ pressDead, releaseDead }` |
 | `setDp(key, value)` | Set press deadzone | `{ pressDead }` |
 | `setDr(key, value)` | Set release deadzone | `{ releaseDead }` |
@@ -1720,8 +1726,8 @@ await keyboard.calibrationEnd();
 | `getDbTravel(key, layout)` | Get DB travel | `{ travel, dbs? }` |
 | `setDbTravel(key, value, layout)` | Set DB travel | `{ travel, dbs? }` |
 | `getRtTravel(key)` | Get RT travel | `{ pressTravel, releaseTravel }` |
-| `setRtPressTravel(key, value)` | Set RT press | `{ pressTravel }` |
-| `setRtReleaseTravel(key, value)` | Set RT release | `{ releaseTravel }` |
+| `setRtPressTravel(key, value)` | Set RT press travel | `string` ⚠️ |
+| `setRtReleaseTravel(key, value)` | Set RT release travel | `string` ⚠️ |
 
 ### Performance
 | Method | Purpose | Returns |
@@ -1866,6 +1872,36 @@ await app.createQuickMacro();
 
 ---
 
+## Documentation Version History
+
+### v2.0.0 - November 16, 2025
+
+**Major Corrections & Additions** - Comprehensive review and accuracy improvements based on actual SDK implementation analysis.
+
+**Critical Fixes:**
+- ✅ **Added string return type warnings** - Documented that `getSingleTravel()` returns **string** values (e.g., `"2.05"`), not numbers
+- ✅ **Fixed getSingleTravel() documentation** - Updated return type from `number` to `string` with Number() conversion examples
+- ✅ **Documented setSingleTravel() dual purpose** - Clarified it works for both Single mode AND RT mode (sets initial trigger travel in RT)
+- ✅ **Enhanced getRtTravel() documentation** - Added complete return type structure `{pressTravel, releaseTravel}` with real-world examples
+- ✅ **Updated RT setter methods** - Documented setRtPressTravel() and setRtReleaseTravel() with proper conversion patterns
+
+**New API Documentation:**
+- ✅ **Added 6 lighting setter methods** - Complete documentation for `setLighting()`, `setCustomLighting()`, `setLogoLighting()`, `setLightingSaturation()`, `setSpecialLighting()`, `saveCustomLighting()`
+- ✅ **Updated Quick Reference tables** - Added all newly documented methods and corrected return types
+
+**Examples & Best Practices:**
+- ✅ **Added "⚠️ Important Notes" section** at document start with critical type conversion warnings
+- ✅ **Real-world code examples** from AureTrix implementation showing proper Number() conversions
+- ✅ **Complete RT setup workflow** demonstrating setSingleTravel() → setRtPressTravel() → setRtReleaseTravel() pattern
+
+**Impact:** These corrections prevent type-related bugs, incorrect string/number comparisons, and provide accurate API usage patterns validated against production code.
+
+### v1.0.0 - November 15, 2025
+
+Initial comprehensive SDK documentation with examples from AureTrix keyboard driver implementation.
+
+---
+
 ## Support & Resources
 
 - **Package Version**: 1.0.14
@@ -1877,4 +1913,4 @@ For implementation examples, see the AureTrix keyboard driver source code in thi
 
 ---
 
-*Last Updated: November 15, 2025*
+*Last Updated: November 16, 2025*

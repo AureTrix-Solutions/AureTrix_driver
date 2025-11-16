@@ -915,49 +915,33 @@ export default defineComponent({
   .settings-panel {
     .settings-section {
       flex-shrink: 0;
-      border: v.$border-style;
+      border: 1px solid rgba(v.$text-color, 0.2);
       padding: 15px;
       margin-bottom: 10px;
     }
 
     .header-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
       font-family: v.$font-style;
-
-      h3 {
-        margin: 0;
-        color: v.$primary-color;
-        font-size: 1.5rem;
-        font-weight: 400;
-      }
     }
 
-    .show-btn {
-      padding: 3px 8px;
-      background-color: color.adjust(v.$background-dark, $lightness: -100%);
-      color: v.$accent-color;
-      border: v.$border-style;
-      border-radius: v.$border-radius;
-      cursor: pointer;
-      font-size: 0.7rem;
-      font-weight: 500;
-      transition: background-color 0.2s ease;
-
-      &:hover:not(:disabled) {
-        background-color: color.adjust(v.$background-dark, $lightness: 10%);
-      }
-
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
+    h3 {
+      color: v.$primary-color;
+      width: auto;
+      font-size: 1.5rem;
+      margin: 0;
+      margin-bottom: -5px;
+      margin-right: 10px;
+      font-weight: 400;
     }
 
     .travel-row {
-      margin-bottom: 20px;
+      display: flex;
+      gap: 0px;
+      margin-bottom: 15px;
+      align-items: center;
       font-family: v.$font-style;
     }
 
@@ -965,6 +949,7 @@ export default defineComponent({
       display: flex;
       flex-direction: column;
       gap: 0px;
+      margin-bottom: 20px;
     }
 
     .input-group {
@@ -973,13 +958,15 @@ export default defineComponent({
       gap: 0px;
       margin-bottom: 20px;
       padding: 10px;
+      width: 600px;
+      height: 30px;
       border: v.$border-style;
       border-radius: v.$border-radius;
       background-color: rgba(v.$background-dark, 0.5);
       font-family: v.$font-style;
 
       .label {
-        min-width: 220px;
+        min-width: 180px;
         text-align: center;
         color: v.$text-color;
         font-size: 0.95rem;
@@ -990,116 +977,91 @@ export default defineComponent({
           color: v.$accent-color;
         }
       }
-    }
 
-    .slider-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 0px;
-
-      .value-display {
-        min-width: 40px;
-        text-align: center;
-        color: v.$text-color;
-        font-size: 0.85rem;
-        padding: 0 8px;
-      }
-
-      input[type='range'] {
-        -webkit-appearance: none;
-        appearance: none;
+      .slider-container {
         flex: 1;
-        max-width: 200px;
-        cursor: pointer;
-        height: 6px;
-        background: transparent;
+        display: flex;
+        align-items: center;
+        gap: 0px;
 
-        &::-webkit-slider-runnable-track {
-          background-color: color.adjust(v.$background-dark, $lightness: 10%);
-          height: 6px;
-          border-radius: 3px;
-        }
-
-        &::-webkit-slider-thumb {
-          appearance: none;
-          opacity: 1;
-          width: 12px;
-          height: 12px;
-          border-radius: 4%;
-          background-color: v.$primary-color;
-          cursor: pointer;
-          margin-top: -3px;
-        }
-
-        &::-moz-range-track {
-          background-color: color.adjust(v.$background-dark, $lightness: 10%);
-          height: 6px;
-          border-radius: 3px;
-        }
-
-        &::-moz-range-thumb {
-          width: 12px;
-          height: 12px;
-          border-radius: 4%;
-          background-color: v.$primary-color;
-          cursor: pointer;
-          border: none;
-        }
-
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-      }
-    }
-
-    .adjusters {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-left: 10px;
-
-      .adjust-btn {
-        background-color: color.adjust(v.$background-dark, $lightness: 10%);
-        color: v.$text-color;
-        border: v.$border-style;
-        border-radius: v.$border-radius;
-        padding: 4px 10px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 0.9rem;
-        transition: background-color 0.2s ease;
-
-        &:hover:not(:disabled) {
-          background-color: color.adjust(v.$background-dark, $lightness: 20%);
-        }
-
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-      }
-
-      input[type='number'] {
-        width: 70px;
-        background-color: rgba(v.$background-dark, 0.5);
-        color: v.$text-color;
-        border: v.$border-style;
-        border-radius: v.$border-radius;
-        padding: 4px;
-        text-align: center;
-        font-size: 0.9rem;
-
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        &::-webkit-inner-spin-button,
-        &::-webkit-outer-spin-button {
+        input[type="range"] {
           -webkit-appearance: none;
-          margin: 0;
+          appearance: none;
+          flex: 1;
+          max-width: 200px;
+          cursor: pointer;
+          height: 6px;
+          background: transparent;
+
+          &::-webkit-slider-runnable-track {
+            background-color: color.adjust(v.$background-dark, $lightness: 10%);
+            height: 6px;
+            border-radius: 3px;
+          }
+
+          &::-webkit-slider-thumb {
+            appearance: none;
+            opacity: 1;
+            width: 12px;
+            height: 12px;
+            border-radius: 4%;
+            background-color: v.$primary-color;
+            cursor: pointer;
+            margin-top: -3px;
+          }
+        }
+        
+        .value-display {
+          min-width: 60px;
+          color: v.$accent-color;
+          font-size: 0.95rem;
+          font-weight: 500;
+          text-align: center;
+        }
+      }
+
+      .adjusters {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        input[type="number"] {
+          width: 60px;
+          padding: 4px 6px;
+          border-radius: v.$border-radius;
+          background-color: v.$background-dark;
+          color: v.$text-color;
+          border: 1px solid rgba(v.$text-color, 0.2);
+          font-size: 0.9rem;
+          text-align: center;
+
+          &:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
+          }
+        }
+
+        .adjust-btn {
+          width: 20px;
+          height: 20px;
+          border: none;
+          border-radius: 4%;
+          background-color: rgba(v.$text-color, 0.2);
+          color: v.$text-color;
+          cursor: pointer;
+          font-size: 1rem;
+          font-weight: 400;
+          padding: 0px;
+          transition: background-color 0.2s ease;
+
+          &:hover:not(:disabled) {
+            background-color: rgba(v.$accent-color, 0.3);
+          }
+
+          &:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+          }
         }
       }
     }

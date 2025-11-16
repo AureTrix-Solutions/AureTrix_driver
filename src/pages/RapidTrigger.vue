@@ -53,7 +53,7 @@
 
               <div class="travel-row">
                 <div class="input-group">
-                  <div class="label">Initial Actuation (<span class="travel-unit">mm</span>)</div>
+                  <div class="label">Initial Trigger Travel (<span class="travel-unit">mm</span>)</div>
                   <div class="slider-container">
                     <div class="value-display">0.10</div>
                     <input
@@ -87,7 +87,7 @@
 
               <div class="travel-row">
                 <div class="input-group">
-                  <div class="label">Press Actuation (<span class="travel-unit">mm</span>)</div>
+                  <div class="label">Key Re-Trigger (<span class="travel-unit">mm</span>)</div>
                   <div class="slider-container">
                     <div class="value-display">0.10</div>
                     <input
@@ -121,7 +121,7 @@
 
               <div class="travel-row">
                 <div class="input-group">
-                  <div class="label">Release Actuation (<span class="travel-unit">mm</span>)</div>
+                  <div class="label">Key Reset (<span class="travel-unit">mm</span>)</div>
                   <div class="slider-container">
                     <div class="value-display">0.10</div>
                     <input
@@ -826,10 +826,10 @@ export default defineComponent({
       .overlay-top-left {
         font-size: 0.7rem;
         font-weight: bold;
-        color: rgba(76, 175, 80, 0.8) !important;
+        color: rgba(255, 43, 79, 0.548) !important;
         position: absolute;
-        top: 10px;
-        left: calc(50% - 25px);
+        top: 5px;
+        left: calc(50% - 30px);
         text-align: left;
       }
 
@@ -838,8 +838,8 @@ export default defineComponent({
         font-weight: bold;
         color: rgba(33, 150, 243, 0.8) !important;
         position: absolute;
-        top: 10px;
-        right: calc(50% - 25px);
+        top: 5px;
+        right: calc(50% - 30px);
         text-align: right;
       }
 
@@ -890,7 +890,7 @@ export default defineComponent({
       border-radius: v.$border-radius;
       cursor: pointer;
       font-size: 0.9rem;
-      font-weight: 500;
+      font-weight: 200px;
       transition: background-color 0.2s ease;
       width: 120px;
       text-align: center;

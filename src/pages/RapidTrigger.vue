@@ -805,114 +805,110 @@ export default defineComponent({
       padding: 0px 0px;
       border-radius: 3px;
       pointer-events: none;
-      z-index: 3;
 
       .overlay-values {
         width: 100%;
         height: 100%;
         position: relative;
-        font-size: 0.65rem;
-        font-weight: 500;
       }
 
       .overlay-center {
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: rgba(5, 205, 165, 0.684) !important;
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        background: rgba(0, 0, 0, 0.7);
-        padding: 2px 4px;
-        border-radius: 2px;
-        font-weight: 700;
-        color: #fff;
-        font-size: 0.8rem;
+        text-align: center;
       }
 
       .overlay-top-left {
+        font-size: 0.7rem;
+        font-weight: bold;
+        color: rgba(76, 175, 80, 0.8) !important;
         position: absolute;
-        top: 2px;
-        left: 2px;
-        background: rgba(76, 175, 80, 0.8);
-        padding: 1px 3px;
-        border-radius: 2px;
-        color: #fff;
-        font-weight: 600;
+        top: 10px;
+        left: calc(50% - 25px);
+        text-align: left;
       }
 
       .overlay-top-right {
+        font-size: 0.7rem;
+        font-weight: bold;
+        color: rgba(33, 150, 243, 0.8) !important;
         position: absolute;
-        top: 2px;
-        right: 2px;
-        background: rgba(33, 150, 243, 0.8);
-        padding: 1px 3px;
-        border-radius: 2px;
-        color: #fff;
-        font-weight: 600;
+        top: 10px;
+        right: calc(50% - 25px);
+        text-align: right;
       }
 
       .overlay-bottom-left {
+        font-size: 0.7rem;
+        font-weight: bold;
+        color: green !important;
         position: absolute;
-        bottom: 2px;
-        left: 2px;
-        background: rgba(255, 152, 0, 0.8);
-        padding: 1px 3px;
-        border-radius: 2px;
-        color: #fff;
-        font-weight: 600;
+        bottom: 10px;
+        left: calc(50% - 25px);
+        text-align: left;
       }
 
       .overlay-bottom-right {
+        font-size: 0.7rem;
+        font-weight: bold;
+        color: rgba(255, 140, 0, 0.679) !important;
         position: absolute;
-        bottom: 2px;
-        right: 2px;
-        background: rgba(156, 39, 176, 0.8);
-        padding: 1px 3px;
-        border-radius: 2px;
-        color: #fff;
-        font-weight: 600;
+        bottom: 10px;
+        right: calc(50% - 25px);
+        text-align: right;
       }
     }
   }
 
   .bottom-section {
-    flex: 1;
     display: flex;
-    flex-direction: column;
-    min-height: 0;
+    flex: 1;
+    flex-shrink: 0;
+    gap: 10px;
+    position: relative;
+    margin-right: auto;
+    margin-left: auto;
+    margin-top: -50px;
+    justify-content: center;
   }
 
   .selection-buttons {
     display: flex;
+    flex-direction: column;
     gap: 10px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-    font-family: v.$font-style;
 
     .select-btn {
-      background-color: color.adjust(v.$background-dark, $lightness: 10%);
-      color: v.$text-color;
+      padding: 8px 8px;
+      background-color: color.adjust(v.$background-dark, $lightness: -100%);
+      color: v.$accent-color;
       border: v.$border-style;
       border-radius: v.$border-radius;
-      padding: 8px 16px;
       cursor: pointer;
-      font-weight: 500;
       font-size: 0.9rem;
-      transition: all 0.2s ease;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+      width: 120px;
+      text-align: center;
+      font-family: v.$font-style;
 
       &:hover {
-        background-color: color.adjust(v.$background-dark, $lightness: 20%);
-        border-color: v.$accent-color;
+        background-color: color.adjust(v.$background-dark, $lightness: 10%);
       }
     }
   }
 
-  .parent {
-    flex: 1;
-    overflow-y: auto;
-    min-height: 0;
-  }
-
   .settings-panel {
+    width: 1425px;
+    padding: 10px;
+    border: 1px solid rgba(v.$text-color, 0.2);
+    border-radius: v.$border-radius;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+
     .settings-section {
       flex-shrink: 0;
       border: 1px solid rgba(v.$text-color, 0.2);

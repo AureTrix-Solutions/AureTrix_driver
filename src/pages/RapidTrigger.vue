@@ -49,12 +49,45 @@
             <div class="settings-section">
               <div class="header-row">
                 <h3>Rapid Trigger Settings</h3>
-                <button @click="toggleOverlay" class="show-btn">{{ showOverlay ? 'Hide' : 'Show' }}</button>
               </div>
 
               <div class="travel-row">
                 <div class="input-group">
-                  <div class="label">Press Travel (<span class="travel-unit">mm</span>)</div>
+                  <div class="label">Initial Actuation (<span class="travel-unit">mm</span>)</div>
+                  <div class="slider-container">
+                    <div class="value-display">0.10</div>
+                    <input
+                      type="range"
+                      v-model.number="initialActuation"
+                      id="initial-actuation-slider"
+                      min="0.1"
+                      :max="maxInitialActuation"
+                      step="0.01"
+                      :disabled="selectedKeys.length === 0"
+                      @change="updateAllSettings"
+                    />
+                    <div class="value-display">{{ maxInitialActuation.toFixed(2) }}</div>
+                  </div>
+                  <div class="adjusters">
+                    <button @click="adjustInitialActuation(-0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">-</button>
+                    <input
+                      type="number"
+                      v-model.number="initialActuation"
+                      id="initial-actuation-input"
+                      min="0.1"
+                      :max="maxInitialActuation"
+                      step="0.01"
+                      :disabled="selectedKeys.length === 0"
+                      @change="updateAllSettings"
+                    />
+                    <button @click="adjustInitialActuation(0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="travel-row">
+                <div class="input-group">
+                  <div class="label">Press Actuation (<span class="travel-unit">mm</span>)</div>
                   <div class="slider-container">
                     <div class="value-display">0.10</div>
                     <input
@@ -65,7 +98,7 @@
                       :max="maxPressTravel"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
-                      @change="updateRTSettings"
+                      @change="updateAllSettings"
                     />
                     <div class="value-display">{{ maxPressTravel.toFixed(2) }}</div>
                   </div>
@@ -79,7 +112,7 @@
                       :max="maxPressTravel"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
-                      @change="updateRTSettings"
+                      @change="updateAllSettings"
                     />
                     <button @click="adjustPress(0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
                   </div>
@@ -88,7 +121,7 @@
 
               <div class="travel-row">
                 <div class="input-group">
-                  <div class="label">Release Travel (<span class="travel-unit">mm</span>)</div>
+                  <div class="label">Release Actuation (<span class="travel-unit">mm</span>)</div>
                   <div class="slider-container">
                     <div class="value-display">0.10</div>
                     <input
@@ -99,7 +132,7 @@
                       :max="maxReleaseTravel"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
-                      @change="updateRTSettings"
+                      @change="updateAllSettings"
                     />
                     <div class="value-display">{{ maxReleaseTravel.toFixed(2) }}</div>
                   </div>
@@ -113,7 +146,7 @@
                       :max="maxReleaseTravel"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
-                      @change="updateRTSettings"
+                      @change="updateAllSettings"
                     />
                     <button @click="adjustRelease(0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
                   </div>
@@ -122,7 +155,7 @@
 
               <div class="deadzone-group">
                 <div class="input-group">
-                  <div class="label">Press Deadzone (Dp) (<span class="t-dzone">mm</span>)</div>
+                  <div class="label">Top Deadzone (<span class="t-dzone">mm</span>)</div>
                   <div class="slider-container">
                     <div class="value-display">0.00</div>
                     <input
@@ -132,7 +165,7 @@
                       max="1.0"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
-                      @change="updateDeadzones"
+                      @change="updateAllSettings"
                     />
                     <div class="value-display">1.00</div>
                   </div>
@@ -145,14 +178,14 @@
                       max="1.0"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
-                      @change="updateDeadzones"
+                      @change="updateAllSettings"
                     />
                     <button @click="adjustDeadzone(0.01, 'press')" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
                   </div>
                 </div>
 
                 <div class="input-group">
-                  <div class="label">Release Deadzone (Dr) (mm)</div>
+                  <div class="label">Bottom Deadzone (mm)</div>
                   <div class="slider-container">
                     <div class="value-display">0.00</div>
                     <input
@@ -162,7 +195,7 @@
                       max="1.0"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
-                      @change="updateDeadzones"
+                      @change="updateAllSettings"
                     />
                     <div class="value-display">1.00</div>
                   </div>
@@ -175,7 +208,7 @@
                       max="1.0"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
-                      @change="updateDeadzones"
+                      @change="updateAllSettings"
                     />
                     <button @click="adjustDeadzone(0.01, 'release')" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
                   </div>
@@ -223,17 +256,19 @@ export default defineComponent({
     });
 
     // Settings refs
+    const initialActuation = ref(2.0);
     const pressTravel = ref(0.1);
     const releaseTravel = ref(0.1);
     const pressDeadzone = ref(0.1);
     const releaseDeadzone = ref(0.1);
-    const showOverlay = ref(false);
 
+    const prevInitialActuation = ref(2.0);
     const prevPressTravel = ref(0.1);
     const prevReleaseTravel = ref(0.1);
     const prevPressDeadzone = ref(0.1);
     const prevReleaseDeadzone = ref(0.1);
 
+    const maxInitialActuation = computed(() => profileMaxTravel.value);
     const maxPressTravel = computed(() => profileMaxTravel.value);
     const maxReleaseTravel = computed(() => profileMaxTravel.value);
 
@@ -369,90 +404,60 @@ export default defineComponent({
       }, 5000);
     };
 
-    const toggleOverlay = () => {
-      showOverlay.value = !showOverlay.value;
-      if (showOverlay.value) {
-        updateOverlayData(null);
-        setTimeout(() => loadAllSettings(), 300);
-      } else {
-        updateOverlayData({});
-      }
-    };
-
-    const updateRTSettings = async () => {
+    const updateAllSettings = async () => {
       if (selectedKeys.value.length === 0) return;
-
-      const pressChanged = pressTravel.value !== prevPressTravel.value;
-      const releaseChanged = releaseTravel.value !== prevReleaseTravel.value;
-
-      if (!pressChanged && !releaseChanged) return;
 
       const keys = selectedKeys.value.map(key => key.physicalKeyValue || key.keyValue);
 
       try {
         await processBatches(keys, async (physicalKeyValue) => {
           await KeyboardService.setPerformanceMode(physicalKeyValue, 'rt', 0);
-          if (pressChanged) {
-            await KeyboardService.setRtPressTravel(physicalKeyValue, pressTravel.value);
-          }
-          if (releaseChanged) {
-            await KeyboardService.setRtReleaseTravel(physicalKeyValue, releaseTravel.value);
-          }
+          await KeyboardService.setSingleTravel(physicalKeyValue, Number(initialActuation.value));
+          await KeyboardService.setRtPressTravel(physicalKeyValue, Number(pressTravel.value));
+          await KeyboardService.setRtReleaseTravel(physicalKeyValue, Number(releaseTravel.value));
+          await KeyboardService.setDp(physicalKeyValue, Number(pressDeadzone.value));
+          await KeyboardService.setDr(physicalKeyValue, Number(releaseDeadzone.value));
         });
 
         await KeyboardService.saveParameters();
         await KeyboardService.reloadParameters();
 
+        prevInitialActuation.value = initialActuation.value;
         prevPressTravel.value = pressTravel.value;
         prevReleaseTravel.value = releaseTravel.value;
+        prevPressDeadzone.value = pressDeadzone.value;
+        prevReleaseDeadzone.value = releaseDeadzone.value;
 
         setNotification('Rapid trigger settings updated successfully', false);
         
-        if (showOverlay.value) {
-          setTimeout(() => updateOverlayData(null), 500);
-        }
+        setTimeout(() => updateOverlayData(), 500);
       } catch (error) {
         console.error('Failed to update RT settings:', error);
         setNotification('Failed to update rapid trigger settings', true);
       }
     };
 
-    const updateDeadzones = async () => {
-      if (selectedKeys.value.length === 0) return;
+    const loadInitialActuation = async () => {
+      if (selectedKeys.value.length === 0) {
+        initialActuation.value = 2.0;
+        prevInitialActuation.value = 2.0;
+        return;
+      }
 
-      const dpChanged = pressDeadzone.value !== prevPressDeadzone.value;
-      const drChanged = releaseDeadzone.value !== prevReleaseDeadzone.value;
-
-      if (!dpChanged && !drChanged) return;
-
-      const keys = selectedKeys.value.map(key => key.physicalKeyValue || key.keyValue);
-
+      const physicalKeyValue = selectedKeys.value[0].physicalKeyValue || selectedKeys.value[0].keyValue;
       try {
-        await processBatches(keys, async (physicalKeyValue) => {
-          await KeyboardService.setPerformanceMode(physicalKeyValue, 'rt', 0);
-          if (dpChanged) {
-            await KeyboardService.setDp(physicalKeyValue, pressDeadzone.value);
-          }
-          if (drChanged) {
-            await KeyboardService.setDr(physicalKeyValue, releaseDeadzone.value);
-          }
-        });
-
-        await KeyboardService.saveParameters();
-        await KeyboardService.reloadParameters();
-
-        prevPressDeadzone.value = pressDeadzone.value;
-        prevReleaseDeadzone.value = releaseDeadzone.value;
-
-        setNotification('Deadzones updated successfully', false);
-        
-        if (showOverlay.value) {
-          setTimeout(() => updateOverlayData(null), 500);
+        const result = await KeyboardService.getSingleTravel(physicalKeyValue);
+        if (!(result instanceof Error)) {
+          initialActuation.value = Number(result.toFixed(2));
+          prevInitialActuation.value = initialActuation.value;
+          return;
         }
       } catch (error) {
-        console.error('Failed to update deadzones:', error);
-        setNotification('Failed to update deadzones', true);
+        console.error('Failed to load initial actuation:', error);
       }
+
+      initialActuation.value = 2.0;
+      prevInitialActuation.value = 2.0;
     };
 
     const loadRTTravel = async () => {
@@ -515,25 +520,30 @@ export default defineComponent({
 
     const loadAllSettings = async () => {
       await Promise.all([
+        loadInitialActuation(),
         loadRTTravel(),
         loadDeadzones()
       ]);
       
-      if (showOverlay.value) {
-        updateOverlayData(null);
-      }
+      updateOverlayData();
+    };
+
+    const adjustInitialActuation = (delta: number) => {
+      const newValue = Math.min(Math.max(initialActuation.value + delta, 0.1), maxInitialActuation.value);
+      initialActuation.value = Number(newValue.toFixed(2));
+      updateAllSettings();
     };
 
     const adjustPress = (delta: number) => {
       const newValue = Math.min(Math.max(pressTravel.value + delta, 0.1), maxPressTravel.value);
       pressTravel.value = Number(newValue.toFixed(2));
-      updateRTSettings();
+      updateAllSettings();
     };
 
     const adjustRelease = (delta: number) => {
       const newValue = Math.min(Math.max(releaseTravel.value + delta, 0.1), maxReleaseTravel.value);
       releaseTravel.value = Number(newValue.toFixed(2));
-      updateRTSettings();
+      updateAllSettings();
     };
 
     const adjustDeadzone = (delta: number, type: 'press' | 'release') => {
@@ -544,57 +554,51 @@ export default defineComponent({
         const newValue = Math.min(Math.max(releaseDeadzone.value + delta, 0.0), 1.0);
         releaseDeadzone.value = Number(newValue.toFixed(2));
       }
-      updateDeadzones();
+      updateAllSettings();
     };
 
-    const updateOverlayData = async (data: any) => {
-      if (data === null) {
-        try {
-          const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
+    const updateOverlayData = async () => {
+      try {
+        const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
 
-          await processBatches(keyIds, async (keyId) => {
-            try {
-              const rtResult = await KeyboardService.getRtTravel(keyId);
-              const dzResult = await KeyboardService.getDpDr(keyId);
-              
-              if (rtResult instanceof Error || dzResult instanceof Error) {
-                console.warn(`Failed to fetch RT values for key ${keyId}`);
-                return;
-              }
-
-              const totalTravel = Math.max(rtResult.pressTravel, rtResult.releaseTravel);
-
-              overlayData.value[keyId] = {
-                travel: totalTravel.toFixed(2),
-                press: rtResult.pressTravel.toFixed(2),
-                release: rtResult.releaseTravel.toFixed(2),
-                pressDead: dzResult.dpThreshold.toFixed(2),
-                releaseDead: dzResult.drThreshold.toFixed(2),
-              };
-            } catch (fetchError) {
-              console.error(`Failed to fetch RT data for ${keyId}:`, fetchError);
+        await processBatches(keyIds, async (keyId) => {
+          try {
+            const initialActuationResult = await KeyboardService.getSingleTravel(keyId);
+            const rtResult = await KeyboardService.getRtTravel(keyId);
+            const dzResult = await KeyboardService.getDpDr(keyId);
+            
+            if (initialActuationResult instanceof Error || rtResult instanceof Error || dzResult instanceof Error) {
+              console.warn(`Failed to fetch RT values for key ${keyId}`);
+              return;
             }
-          });
 
-          console.log(`[RAPID-TRIGGER] Refreshed overlays for ${keyIds.length} keys`);
-        } catch (error) {
-          console.error('Failed to update RT overlays:', error);
-          setNotification(`Failed to update overlays: ${(error as Error).message}`, true);
-        }
-      } else {
-        overlayData.value = {};
+            overlayData.value[keyId] = {
+              travel: initialActuationResult.toFixed(2),
+              press: rtResult.pressTravel.toFixed(2),
+              release: rtResult.releaseTravel.toFixed(2),
+              pressDead: dzResult.dpThreshold.toFixed(2),
+              releaseDead: dzResult.drThreshold.toFixed(2),
+            };
+          } catch (fetchError) {
+            console.error(`Failed to fetch RT data for ${keyId}:`, fetchError);
+          }
+        });
+
+        console.log(`[RAPID-TRIGGER] Refreshed overlays for ${keyIds.length} keys`);
+      } catch (error) {
+        console.error('Failed to update RT overlays:', error);
+        setNotification(`Failed to update overlays: ${(error as Error).message}`, true);
       }
     };
 
     watch(() => selectedKeys.value, async () => {
-      if (showOverlay.value) {
-        await loadAllSettings();
-      }
+      await loadAllSettings();
     }, { deep: true });
 
     watch(loaded, async (newLoaded) => {
       if (newLoaded && layout.value.length > 0) {
         await fetchRemappedLabels();
+        await loadAllSettings();
       }
     });
 
@@ -602,6 +606,7 @@ export default defineComponent({
       await fetchLayerLayout();
       if (loaded.value && layout.value.length > 0) {
         await fetchRemappedLabels();
+        await loadAllSettings();
       }
     });
 
@@ -623,16 +628,16 @@ export default defineComponent({
       selectLetters,
       selectNumbers,
       selectNone,
+      initialActuation,
       pressTravel,
       releaseTravel,
       pressDeadzone,
       releaseDeadzone,
-      showOverlay,
+      maxInitialActuation,
       maxPressTravel,
       maxReleaseTravel,
-      toggleOverlay,
-      updateRTSettings,
-      updateDeadzones,
+      updateAllSettings,
+      adjustInitialActuation,
       adjustPress,
       adjustRelease,
       adjustDeadzone,

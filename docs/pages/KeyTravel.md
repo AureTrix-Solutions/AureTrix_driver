@@ -24,7 +24,7 @@ The component's primary responsibilities are:
 1. **Event Routing**
    - Forwards `update-overlay` events from GlobalTravel to Performance.vue
    - Forwards `update-single-overlay` events from SingleKeyTravel to Performance.vue
-   - Forwards `refresh-overlays` events from child components to parent
+   - Forwards `mode-changed` events from GlobalTravel/SingleKeyTravel to Performance.vue
 
 2. **Reactive Profile Max Travel**
    - Computes `profileMaxTravel` from the Pinia travel profiles store
@@ -79,9 +79,21 @@ interface Props {
 emits: [
   'update-overlay',         // Global travel overlay data
   'update-single-overlay',  // Per-key travel overlay data
-  'refresh-overlays'        // Request to refresh all overlays
+  'mode-changed'            // Keys switched between global/single mode
 ]
 ```
+
+**Event Details**:
+
+- **`update-overlay`**: Forwarded from GlobalTravel when global travel or deadzones change
+  - Payload: `{ travel: string, pressDead: string, releaseDead: string }` or `null`
+  
+- **`update-single-overlay`**: Forwarded from SingleKeyTravel when per-key overlay visibility toggles
+  - Payload: `null` or `{ refresh: true }`
+  
+- **`mode-changed`**: Forwarded from GlobalTravel/SingleKeyTravel when keys switch modes
+  - Payload: `{ keyIds: number[], newMode: 'global' | 'single' }`
+  - Critical for overlay reactivity - triggers parent to update keyModeMap tracking
 
 ### Store Integration
 
@@ -149,6 +161,30 @@ KeyTravel forwards null to Performance.vue
 Performance.vue clears overlay from keyboard grid
 ```
 
+### Mode Change Event Flow
+
+```
+GlobalTravel.vue: User clicks "Select to Global" button
+  ↓
+GlobalTravel switches selected keys to global mode via SDK
+  ↓
+GlobalTravel emits 'mode-changed' with { keyIds: [4, 17, 30, 31], newMode: 'global' }
+  ↓
+KeyTravel.handleModeChange() receives event
+  ↓
+Console log: "[KEYTRAVEL] Forwarding mode-changed: { keyIds: [...], newMode: 'global' }"
+  ↓
+KeyTravel emits 'mode-changed' to Performance.vue
+  ↓
+Performance.vue updates keyModeMap tracking
+  ↓
+Computed overlayData automatically recalculates
+  ↓
+UI updates with correct overlay values on affected keys
+```
+
+**Reactivity Importance**: This event flow is critical for preventing overlay persistence bugs. Without the `mode-changed` event, keys switching between global and single modes would retain incorrect overlay values until page refresh. The event ensures the parent's `keyModeMap` tracking stays synchronized with actual SDK key modes.
+
 ---
 
 ## Template Structure
@@ -161,7 +197,7 @@ Performance.vue clears overlay from keyboard grid
       :selected-keys="selectedKeys" 
       :profile-max-travel="profileMaxTravel"
       @update-overlay="setOverlay" 
-      @refresh-overlays="$emit('refresh-overlays')" 
+      @mode-changed="handleModeChange"
     />
     <SingleKeyTravel 
       :selected-keys="selectedKeys" 
@@ -169,7 +205,7 @@ Performance.vue clears overlay from keyboard grid
       :base-layout="baseLayout" 
       :profile-max-travel="profileMaxTravel"
       @update-single-overlay="setSingleOverlay" 
-      @refresh-overlays="$emit('refresh-overlays')" 
+      @mode-changed="handleModeChange"
     />
     <SwitchProfiles 
       :selected-keys="selectedKeys" 
@@ -204,7 +240,17 @@ const setSingleOverlay = (data: { travel: string; pressDead: string; releaseDead
   console.log(`[KEYTRAVEL] Forwarding update-single-overlay:`, data);
   emit('update-single-overlay', data);
 };
+
+const handleModeChange = (data: { keyIds: number[]; newMode: 'global' | 'single' }) => {
+  console.log(`[KEYTRAVEL] Forwarding mode-changed:`, data);
+  emit('mode-changed', data);
+};
 ```
+
+**Handler Responsibilities**:
+- All handlers are simple forwarders - they add debug logging and emit to parent
+- No business logic or data transformation
+- `handleModeChange` is critical for overlay reactivity, ensuring parent tracks mode changes
 
 Console logging helps debug event flow during development. Logs appear in browser console with `[KEYTRAVEL]` prefix.
 

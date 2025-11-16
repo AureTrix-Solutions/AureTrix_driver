@@ -104,13 +104,41 @@ Each sub-component has comprehensive documentation:
 <script lang="ts">
 setup() {
   const selectedKeys = ref<IDefKeyInfo[]>([]);
-  const overlayData = ref<{ 
-    [key: number]: { 
+  
+  // Overlay Architecture: Separated by mode with tracking
+  const keyModeMap = ref<{ [keyId: number]: 'global' | 'single' }>({});
+  const globalOverlayValues = ref<{ travel: string; pressDead: string; releaseDead: string } | null>(null);
+  const singleOverlayByKey = ref<{ 
+    [keyId: number]: { 
       travel: string; 
       pressDead: string; 
       releaseDead: string 
     } 
   }>({});
+  
+  // Computed merger: Combines global/single overlays based on mode
+  const overlayData = computed(() => {
+    const result: { [keyId: number]: { travel: string; pressDead: string; releaseDead: string } } = {};
+    
+    // Apply global values to keys in global mode
+    if (globalOverlayValues.value) {
+      Object.entries(keyModeMap.value).forEach(([keyId, mode]) => {
+        if (mode === 'global') {
+          result[Number(keyId)] = globalOverlayValues.value!;
+        }
+      });
+    }
+    
+    // Apply per-key values to keys in single mode
+    Object.entries(singleOverlayByKey.value).forEach(([keyId, values]) => {
+      if (keyModeMap.value[Number(keyId)] === 'single') {
+        result[Number(keyId)] = values;
+      }
+    });
+    
+    return result;
+  });
+  
   const { processBatches } = useBatchProcessing();
   ...
 }
@@ -156,56 +184,56 @@ const fetchRemappedLabels = async () => {
 ```typescript
 const updateOverlayData = async (data) => {
   if (data) {
-    // Fetch all keys in global mode
-    const globalModeKeys = await batchFetchPerformanceModes()
-      .filter(mode => mode.touchMode === 'global')
-      .map(mode => mode.key);
-    
-    // Apply same values to all global keys
-    layout.value.flat().forEach(keyInfo => {
-      if (globalModeKeys.includes(keyInfo.physicalKeyValue)) {
-        overlayData.value[keyInfo.physicalKeyValue] = {
-          travel: data.travel,
-          pressDead: data.pressDead,
-          releaseDead: data.releaseDead
-        };
-      }
-    });
+    // Store global values once - applies to all keys in global mode
+    globalOverlayValues.value = {
+      travel: data.travel,
+      pressDead: data.pressDead,
+      releaseDead: data.releaseDead
+    };
   } else {
     // Clear global overlays
+    globalOverlayValues.value = null;
   }
+  // overlayData computed property automatically updates UI
 }
 ```
+
+**Simplified Design**: Instead of fetching all global-mode keys and updating each individually, the new architecture stores global values once. The computed `overlayData` property automatically applies these values to all keys tracked as 'global' in `keyModeMap`.
 
 #### 3. **Update Single Mode Overlays**
 ```typescript
 const updateSingleOverlayData = async (data) => {
-  // Find all keys in single mode
-  const singleModeKeys = await batchFetchPerformanceModes()
-    .filter(mode => mode.touchMode === 'single')
-    .map(mode => mode.key);
-  
   if (!data) {
-    // Clear single mode overlays
-    singleModeKeys.forEach(keyId => {
-      delete overlayData.value[keyId];
-    });
+    // Clear all single mode overlays
+    singleOverlayByKey.value = {};
     return;
   }
   
-  // Fetch actual per-key values
+  // Fetch all keys currently in single mode
+  const singleModeKeys = layout.value.flat()
+    .map(k => k.physicalKeyValue || k.keyValue)
+    .filter(keyId => keyModeMap.value[keyId] === 'single');
+  
+  // Batch fetch actual per-key values
   await processBatches(singleModeKeys, async (keyId) => {
     const travelResult = await KeyboardService.getSingleTravel(keyId);
     const deadzoneResult = await KeyboardService.getDpDr(keyId);
     
-    overlayData.value[keyId] = {
+    // Build new object with updated values
+    const updated = { ...singleOverlayByKey.value };
+    updated[keyId] = {
       travel: Number(travelResult).toFixed(2),
       pressDead: Number(deadzoneResult.pressDead).toFixed(2),
       releaseDead: Number(deadzoneResult.releaseDead).toFixed(2)
     };
+    
+    // Vue reactivity: Reassign entire object instead of mutating in place
+    singleOverlayByKey.value = updated;
   });
 }
 ```
+
+**Vue Reactivity Pattern**: This code demonstrates the critical pattern of object reassignment. Instead of `singleOverlayByKey.value[keyId] = newValue` (mutation), we create a new object with spread operator and reassign. This ensures Vue's computed properties detect the change and re-render overlays.
 
 #### 4. **Selection Presets**
 ```typescript
@@ -224,6 +252,50 @@ const selectWASD = () => {
   }
 }
 ```
+
+#### 5. **Handle Mode Change Events**
+```typescript
+const handleModeChange = (data: { keyIds: number[]; newMode: 'global' | 'single' }) => {
+  console.log(`[Performance] Mode change event received:`, data);
+  
+  // Update keyModeMap with new mode assignments
+  // Vue reactivity: Create new object instead of mutating in place
+  const updatedMap = { ...keyModeMap.value };
+  
+  data.keyIds.forEach(keyId => {
+    updatedMap[keyId] = data.newMode;
+  });
+  
+  // Reassign triggers computed overlayData to re-evaluate
+  keyModeMap.value = updatedMap;
+  
+  // Update appropriate overlay storage
+  if (data.newMode === 'global') {
+    // Remove from single overlay storage (now tracked as global)
+    const updatedSingle = { ...singleOverlayByKey.value };
+    data.keyIds.forEach(keyId => {
+      delete updatedSingle[keyId];
+    });
+    singleOverlayByKey.value = updatedSingle;
+    
+    // Refresh global overlay values to show on newly converted keys
+    updateOverlayData(globalOverlayValues.value);
+  } else {
+    // Keys switched to single mode - fetch their individual values
+    updateSingleOverlayData({ refresh: true });
+  }
+}
+```
+
+**Critical for Overlay Reactivity**: This handler responds to `mode-changed` events emitted by child components (GlobalTravel, SingleKeyTravel) when keys switch between global and single modes. Without this, overlays would persist incorrect values after mode changes until a manual page refresh. The object reassignment pattern ensures Vue's reactivity system detects the change and triggers the computed `overlayData` to re-render.
+
+**Event Flow**: 
+1. User clicks "Select to Global" or applies Single mode settings
+2. Child component switches key modes via SDK (`setPerformanceMode`)
+3. Child component emits `mode-changed` with affected key IDs and new mode
+4. Parent `handleModeChange` updates `keyModeMap` tracking
+5. Computed `overlayData` automatically recalculates based on new mode map
+6. UI re-renders with correct overlay values on all affected keys
 
 ## Dependencies
 
@@ -254,24 +326,49 @@ fetchLayerLayout() - Get keyboard layout
     ↓
 fetchRemappedLabels() - Get current key mappings
     ↓
+batchFetchPerformanceModes() - Initialize keyModeMap tracking
+    ↓
 User Selects Keys (click or preset buttons)
     ↓
 selectedKeys array updated
     ↓
 User Adjusts Settings in KeyTravel Component
     ↓
-KeyTravel emits events:
-  - @update-overlay (global mode change)
-  - @update-single-overlay (single mode change)
+Child Component (GlobalTravel/SingleKeyTravel) Updates SDK
+    ↓
+Child Component emits events:
+  - @update-overlay (global overlay values changed)
+  - @update-single-overlay (single key overlay refresh needed)
+  - @mode-changed (keys switched between global/single mode)
   - @update-notification (status messages)
     ↓
-Event Handlers Update Overlay Data
+Event Handlers Process Events
     ↓
-Batch Fetch Current Travel Values
+┌─────────────────────────────────────────────────────┐
+│ handleModeChange (mode-changed event)               │
+│   1. Update keyModeMap with new mode assignments    │
+│   2. Clear inappropriate overlay storage            │
+│   3. Computed overlayData auto-recalculates         │
+└─────────────────────────────────────────────────────┘
     ↓
-overlayData updated
+┌─────────────────────────────────────────────────────┐
+│ updateOverlayData (update-overlay event)            │
+│   - Store global values in globalOverlayValues     │
+│   - Computed overlayData applies to global keys     │
+└─────────────────────────────────────────────────────┘
     ↓
-UI Re-renders with New Overlay Values
+┌─────────────────────────────────────────────────────┐
+│ updateSingleOverlayData (update-single-overlay)     │
+│   - Batch fetch per-key SDK values                  │
+│   - Store in singleOverlayByKey (object reassign)   │
+│   - Computed overlayData applies to single keys     │
+└─────────────────────────────────────────────────────┘
+    ↓
+Computed overlayData merges global + single overlays
+    ↓
+Vue Reactivity Triggers Re-render
+    ↓
+UI Updates with Correct Overlay Values on All Keys
 ```
 
 ## User Workflows
@@ -391,6 +488,79 @@ This determines:
 - Overlays position-absolute, center-aligned
 - Color-coded overlay values
 - Settings panel bordered, full-width
+
+## Vue Reactivity Patterns
+
+### Critical Design Principle: Object Reassignment vs Mutation
+
+The Performance page overlay system demonstrates a critical Vue 3 reactivity pattern required for computed properties to properly detect changes.
+
+### ❌ **Anti-Pattern: In-Place Mutation (Doesn't Work)**
+```typescript
+// WRONG - Computed properties won't detect this change
+const keyModeMap = ref<{ [keyId: number]: 'global' | 'single' }>({});
+
+// This mutation won't trigger computed overlayData to recalculate
+keyModeMap.value[keyId] = 'global';
+
+// Similarly for nested objects:
+singleOverlayByKey.value[keyId] = { travel: '2.50', pressDead: '0.10', releaseDead: '0.20' };
+```
+
+**Problem**: Vue's reactivity system tracks changes to the ref itself, not deep mutations within the ref's value. When you mutate properties directly, computed properties that depend on them won't re-evaluate.
+
+### ✅ **Correct Pattern: Object Reassignment (Works)**
+```typescript
+// CORRECT - Create new object and reassign
+const updatedMap = { ...keyModeMap.value };
+updatedMap[keyId] = 'global';
+keyModeMap.value = updatedMap; // Reassignment triggers reactivity
+
+// For nested updates:
+const updated = { ...singleOverlayByKey.value };
+updated[keyId] = { travel: '2.50', pressDead: '0.10', releaseDead: '0.20' };
+singleOverlayByKey.value = updated; // Triggers computed overlayData
+```
+
+**Why This Works**: Reassigning the entire ref value creates a new reference, which Vue's reactivity system detects. This triggers all computed properties that depend on it to recalculate.
+
+### Real-World Impact
+
+**Before Implementing This Pattern** (Bug):
+1. User switches key from single to global mode
+2. Child component emits `mode-changed` event
+3. Parent updates `keyModeMap.value[keyId] = 'global'` (mutation)
+4. Computed `overlayData` doesn't recalculate
+5. UI still shows old single-mode overlay on the key
+6. Bug persists until page refresh
+
+**After Implementing This Pattern** (Fixed):
+1. User switches key from single to global mode
+2. Child component emits `mode-changed` event
+3. Parent creates new object and reassigns `keyModeMap.value = updatedMap`
+4. Computed `overlayData` immediately recalculates
+5. UI instantly updates with correct global overlay
+6. No page refresh needed
+
+### Where This Pattern Is Used
+
+The Performance page uses object reassignment in these critical locations:
+- `handleModeChange()`: Updates keyModeMap when modes switch
+- `updateSingleOverlayData()`: Updates singleOverlayByKey with per-key values
+- Both prevent overlay persistence bugs that previously required page refreshes
+
+### Alternative Approach: Reactive()
+
+Vue also offers `reactive()` instead of `ref()` for objects, which provides deep reactivity:
+```typescript
+const keyModeMap = reactive<{ [keyId: number]: 'global' | 'single' }>({});
+keyModeMap[keyId] = 'global'; // Would work with reactive()
+```
+
+However, `ref()` with object reassignment was chosen for this implementation because:
+- More explicit about when reactivity triggers
+- Consistent pattern across all state updates
+- Easier to debug (can log before/after reassignment)
 
 ## Known Limitations
 - Overlay values are display-only (not editable inline)

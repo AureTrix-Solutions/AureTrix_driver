@@ -105,9 +105,23 @@ interface Props {
 ```typescript
 emits: [
   'update-overlay',         // Sends global overlay data or null
-  'update-single-overlay'   // Clears single-key overlay when switching modes
+  'update-single-overlay',  // Clears single-key overlay when switching modes
+  'mode-changed'            // Notifies parent when keys switch to global mode
 ]
 ```
+
+**Event Details**:
+
+- **`update-overlay`**: Emitted when global travel or deadzones change, or when toggling overlay visibility
+  - Payload: `{ travel: string, pressDead: string, releaseDead: string }` or `null` to hide
+  
+- **`update-single-overlay`**: Emitted when keys switch to global mode to clear their per-key overlays
+  - Payload: `null` (clears all single-mode overlays)
+  
+- **`mode-changed`**: Critical for overlay reactivity - emitted when selected keys are converted to global mode
+  - Payload: `{ keyIds: number[], newMode: 'global' }`
+  - Triggers parent to update `keyModeMap` tracking
+  - Ensures overlays switch from single to global values without page refresh
 
 ### Core State
 
@@ -186,12 +200,18 @@ Map selectedKeys to physical key values
   ↓
 processBatches: setPerformanceMode(key, 'global', 0) for each selected key
   ↓
+Emit 'mode-changed' event with { keyIds: [...], newMode: 'global' }
+  ↓
+Parent updates keyModeMap tracking (critical for overlay reactivity)
+  ↓
 updateGlobalSettings() - applies current global travel and deadzones
   ↓
 Clear overlays: emit null for both overlays
   ↓
 If overlay enabled: Re-emit global overlay data after 300ms
 ```
+
+**Critical Event**: The `mode-changed` emission is essential for preventing overlay persistence bugs. When keys switch from single to global mode, the parent Performance page must immediately update its `keyModeMap` tracking so the computed `overlayData` knows to apply global values instead of per-key values. Without this event, keys would show stale single-mode overlay values until page refresh.
 
 ### Deadzone Linking
 

@@ -53,7 +53,7 @@
 
               <div class="travel-row">
                 <div class="input-group">
-                  <div class="label">Initial Trigger Travel (<span class="travel-unit">mm</span>)</div>
+                  <div class="label">Initial Trigger Travel (<span class="initial-trigger-unit">mm</span>)</div>
                   <div class="slider-container">
                     <div class="value-display">0.10</div>
                     <input
@@ -87,7 +87,7 @@
 
               <div class="travel-row">
                 <div class="input-group">
-                  <div class="label">Key Re-Trigger (<span class="travel-unit">mm</span>)</div>
+                  <div class="label">Key Re-Trigger (<span class="key-retrigger-unit">mm</span>)</div>
                   <div class="slider-container">
                     <div class="value-display">0.10</div>
                     <input
@@ -121,7 +121,7 @@
 
               <div class="travel-row">
                 <div class="input-group">
-                  <div class="label">Key Reset (<span class="travel-unit">mm</span>)</div>
+                  <div class="label">Key Reset (<span class="key-reset-unit">mm</span>)</div>
                   <div class="slider-container">
                     <div class="value-display">0.10</div>
                     <input
@@ -155,7 +155,7 @@
 
               <div class="deadzone-group">
                 <div class="input-group">
-                  <div class="label">Top Deadzone (<span class="t-dzone">mm</span>)</div>
+                  <div class="label">Top Deadzone (<span class="top-deadzone-unit">mm</span>)</div>
                   <div class="slider-container">
                     <div class="value-display">0.00</div>
                     <input
@@ -185,7 +185,7 @@
                 </div>
 
                 <div class="input-group">
-                  <div class="label">Bottom Deadzone (mm)</div>
+                  <div class="label">Bottom Deadzone (<span class="bottom-deadzone-unit">mm</span>)</div>
                   <div class="slider-container">
                     <div class="value-display">0.00</div>
                     <input
@@ -428,7 +428,7 @@ export default defineComponent({
         prevPressDeadzone.value = pressDeadzone.value;
         prevReleaseDeadzone.value = releaseDeadzone.value;
 
-        setNotification('Rapid trigger settings updated successfully', false);
+        // setNotification('Rapid trigger settings updated successfully', false);
         
         setTimeout(() => updateOverlayData(), 500);
       } catch (error) {
@@ -986,9 +986,29 @@ export default defineComponent({
         font-size: 0.95rem;
         font-weight: 300;
 
-        .travel-unit,
-        .t-dzone {
-          color: v.$accent-color;
+        .initial-trigger-unit {
+          color: rgba(5, 205, 165, 0.684);
+          font-weight: 500;
+        }
+
+        .key-retrigger-unit {
+          color: rgba(255, 43, 79, 0.548);
+          font-weight: 500;
+        }
+
+        .key-reset-unit {
+          color: rgba(33, 150, 243, 0.8);
+          font-weight: 500;
+        }
+
+        .top-deadzone-unit {
+          color: green;
+          font-weight: 500;
+        }
+
+        .bottom-deadzone-unit {
+          color: rgba(255, 140, 0, 0.679);
+          font-weight: 500;
         }
       }
 

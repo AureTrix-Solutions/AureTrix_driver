@@ -581,8 +581,8 @@ export default defineComponent({
             }
 
             let initialActuationValue = 0.00;
-            if (!(initialActuationResult instanceof Error) && typeof initialActuationResult === 'number') {
-              initialActuationValue = Number(initialActuationResult.toFixed(2));
+            if (!(initialActuationResult instanceof Error)) {
+              initialActuationValue = Number(initialActuationResult);
             }
 
             let pressValue = 0.00;

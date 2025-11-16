@@ -410,6 +410,7 @@ export default defineComponent({
       error,
       baseLayout,
       updateOverlayData,
+      handleModeChange,
     };
   },
 });

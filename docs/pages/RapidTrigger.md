@@ -42,8 +42,8 @@ The RapidTrigger page provides advanced configuration for rapid trigger function
 - Color-coded overlay positions:
   - **Top Left**: Key Re-Trigger (red/pink)
   - **Top Right**: Key Reset (blue)
-  - **Center**: Initial Trigger Travel (cyan)
-  - **Bottom Left**: Top Deadzone (green)
+  - **Center**: Initial Trigger Travel (white)
+  - **Bottom Left**: Top Deadzone (yellow)
   - **Bottom Right**: Bottom Deadzone (orange)
 
 ### 5. **Quick Selection Presets**
@@ -77,8 +77,8 @@ The RapidTrigger page provides advanced configuration for rapid trigger function
 - RT overlays display 5 values per key:
   - Top-left: Re-trigger distance (red/pink)
   - Top-right: Reset distance (blue)
-  - Center: Initial trigger travel (cyan)
-  - Bottom-left: Top deadzone (green)
+  - Center: Initial trigger travel (white)
+  - Bottom-left: Top deadzone (yellow)
   - Bottom-right: Bottom deadzone (orange)
 
 ### Selection Buttons (Left Sidebar)

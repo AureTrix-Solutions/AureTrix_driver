@@ -245,6 +245,9 @@ export default defineComponent({
           return;
         }
 
+        // Build new overlay object to trigger reactivity
+        const newSingleOverlays: { [key: number]: { travel: string; pressDead: string; releaseDead: string } } = {};
+        
         // Fetch actual per-key values for single mode keys
         await processBatches(singleModeKeys, async (keyId) => {
           try {
@@ -254,7 +257,7 @@ export default defineComponent({
               console.warn(`Failed to fetch values for single key ${keyId}`);
               return;
             }
-            singleOverlayByKey.value[keyId] = {
+            newSingleOverlays[keyId] = {
               travel: Number(travelResult).toFixed(2),
               pressDead: Number(deadzoneResult.pressDead).toFixed(2),
               releaseDead: Number(deadzoneResult.releaseDead).toFixed(2),
@@ -264,6 +267,8 @@ export default defineComponent({
           }
         });
 
+        // Assign the new object to trigger reactivity
+        singleOverlayByKey.value = newSingleOverlays;
         console.log(`[PERFORMANCE] Refreshed overlays for ${singleModeKeys.length} single mode keys`);
       } catch (error) {
         console.error('Failed to update single mode overlays:', error);
@@ -319,18 +324,21 @@ export default defineComponent({
     const initializeKeyModes = async () => {
       try {
         const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
+        const newKeyModeMap: { [key: number]: 'global' | 'single' } = {};
         
         await processBatches(keyIds, async (keyId) => {
           try {
             const mode = await KeyboardService.getPerformanceMode(keyId);
-            keyModeMap.value[keyId] = mode.touchMode as 'global' | 'single';
+            newKeyModeMap[keyId] = mode.touchMode as 'global' | 'single';
           } catch (error) {
             console.warn(`Failed to fetch performance mode for key ${keyId}:`, error);
             // Default to global if fetch fails
-            keyModeMap.value[keyId] = 'global';
+            newKeyModeMap[keyId] = 'global';
           }
         });
         
+        // Assign the complete map to trigger reactivity
+        keyModeMap.value = newKeyModeMap;
         console.log(`[PERFORMANCE] Initialized modes for ${keyIds.length} keys`);
       } catch (error) {
         console.error('Failed to initialize key modes:', error);
@@ -339,14 +347,25 @@ export default defineComponent({
 
     // Handle mode changes from child components
     const handleModeChange = (keyIds: number[], newMode: 'global' | 'single') => {
+      console.log(`[PERFORMANCE] handleModeChange called:`, keyIds, newMode);
+      
+      // Create new object for keyModeMap to trigger reactivity
+      const newKeyModeMap = { ...keyModeMap.value };
       keyIds.forEach(keyId => {
-        keyModeMap.value[keyId] = newMode;
-        
-        // Clear old overlay data for this key
-        if (newMode === 'global') {
-          delete singleOverlayByKey.value[keyId];
-        }
+        newKeyModeMap[keyId] = newMode;
       });
+      keyModeMap.value = newKeyModeMap;
+      
+      // Clear old single overlay data when switching to global
+      if (newMode === 'global') {
+        const newSingleOverlays = { ...singleOverlayByKey.value };
+        keyIds.forEach(keyId => {
+          delete newSingleOverlays[keyId];
+        });
+        singleOverlayByKey.value = newSingleOverlays;
+      }
+      
+      console.log(`[PERFORMANCE] Updated keyModeMap:`, keyModeMap.value);
     };
 
     return {

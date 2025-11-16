@@ -57,7 +57,7 @@ The RapidTrigger page provides advanced configuration for rapid trigger function
 - Process large key selections without overwhelming hardware
 - Automatic batching with configurable size (80 keys default)
 - Delay mechanism prevents command flooding
-- Single save/reload after all keys updated
+- Changes take effect immediately
 
 ### 7. **Remapped Label Display**
 - Shows current key mappings (not just physical labels)
@@ -581,7 +581,7 @@ const pressDead = Number(dzResult.pressDead);
 - 80 keys per batch (configurable)
 - 100ms delay between batches
 - Prevents hardware overwhelm
-- Single save/reload after all batches
+- Changes take effect immediately
 
 ## Known Limitations
 

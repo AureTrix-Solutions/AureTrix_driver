@@ -51,6 +51,7 @@
               @update-single-overlay="updateSingleOverlayData"
               @update-overlay="updateOverlayData"
               @update-notification="setNotification"
+              @refresh-overlays="refreshAllOverlays"
             />
           </div>
         </div>
@@ -406,6 +407,18 @@ export default defineComponent({
 
     const setNotification = (message: string, isError: boolean) => {
       notification.value = { message, isError };
+    };
+
+    const refreshAllOverlays = async () => {
+      try {
+        // Clear overlays for keys that changed modes
+        // Then refresh both overlay types
+        await updateOverlayData(null);
+        await updateSingleOverlayData(null);
+        await updateSingleOverlayData({});
+      } catch (error) {
+        console.error('Failed to refresh overlays:', error);
+      }
     };
 
     return {

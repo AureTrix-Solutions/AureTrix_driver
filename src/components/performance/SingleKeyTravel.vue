@@ -132,7 +132,7 @@ export default defineComponent({
       default: 4.0,
     },
   },
-  emits: ['update-single-overlay', 'update-overlay'],
+  emits: ['update-single-overlay', 'update-overlay', 'refresh-overlays'],
   setup(props, { emit }) {
     const { processBatches } = useBatchProcessing();
 
@@ -175,10 +175,7 @@ export default defineComponent({
       prevSingleKeyTravel.value = singleKeyTravel.value;
       prevTopDeadZone.value = topDeadZone.value;
       prevBottomDeadZone.value = bottomDeadZone.value;
-      emit('update-overlay', null);
-      if (showOverlay.value) {
-        emit('update-single-overlay', {});
-      }
+      emit('refresh-overlays');
     };
 
     // Update travel to selected keys

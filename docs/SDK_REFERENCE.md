@@ -15,6 +15,50 @@ The `@sparklinkplayjoy/sdk-keyboard` package (v1.0.14) is the official SDK for c
 
 ---
 
+## ⚠️ Important Notes
+
+### String Return Types and Type Conversions
+
+**Critical:** Several SDK methods return **string values** instead of numbers, requiring explicit type conversion in your application code. Failure to convert these values will cause type-related bugs and incorrect comparisons.
+
+**Methods That Return Strings:**
+- `getSingleTravel(key)` - Returns `"2.05"` not `2.05`
+- Rapid Trigger travel methods may return strings (always use `Number()` conversion)
+
+**Always Use Number() Conversion:**
+```typescript
+// ❌ WRONG - Will cause bugs
+const travel = await keyboard.getSingleTravel(keyId);
+if (travel > 2.0) { } // String comparison fails!
+
+// ✅ CORRECT - Explicit conversion
+const travel = await keyboard.getSingleTravel(keyId);
+const travelNum = Number(travel); // Convert string to number
+if (travelNum > 2.0) { } // Numeric comparison works correctly
+```
+
+**Best Practice Pattern from AureTrix:**
+```typescript
+const result = await keyboard.getSingleTravel(keyId);
+if (!(result instanceof Error)) {
+  const travelValue = Number(result); // Always convert
+  if (!isNaN(travelValue) && travelValue >= 0.1 && travelValue <= 4.0) {
+    // Use validated numeric value
+    myState.value = Number(travelValue.toFixed(2));
+  }
+}
+```
+
+### Dual-Purpose Methods
+
+**setSingleTravel()** works for **two different performance modes:**
+1. **Single Mode**: Sets the travel distance for keys in single performance mode
+2. **RT Mode**: Sets the initial trigger travel for keys in Rapid Trigger (RT) mode
+
+When a key is set to RT mode, `setSingleTravel()` configures its initial actuation point, while RT-specific methods (`setRtPressTravel`, `setRtReleaseTravel`) control the dynamic trigger behavior.
+
+---
+
 ## Table of Contents
 
 1. [Installation & Setup](#installation--setup)

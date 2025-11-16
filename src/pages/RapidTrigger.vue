@@ -435,7 +435,7 @@ export default defineComponent({
 
         // setNotification('Rapid trigger settings updated successfully', false);
         
-        setTimeout(() => updateOverlayData(), 500);
+        setTimeout(() => updateOverlayData(), 0);
       } catch (error) {
         console.error('Failed to update RT settings:', error);
         setNotification('Failed to update rapid trigger settings', true);
@@ -903,9 +903,9 @@ export default defineComponent({
       .overlay-center {
         font-size: 0.8rem;
         font-weight: bold;
-        color: rgba(5, 205, 165, 0.684) !important;
+        color: rgba(252, 252, 252, 0.684) !important;
         position: absolute;
-        top: 50%;
+        top: 65%;
         left: 50%;
         transform: translate(-50%, -50%);
         text-align: center;
@@ -916,7 +916,7 @@ export default defineComponent({
         font-weight: bold;
         color: rgba(255, 43, 79, 0.548) !important;
         position: absolute;
-        top: 5px;
+        top: 22px;
         left: calc(50% - 30px);
         text-align: left;
       }
@@ -926,7 +926,7 @@ export default defineComponent({
         font-weight: bold;
         color: rgba(33, 150, 243, 0.8) !important;
         position: absolute;
-        top: 5px;
+        top: 22px;
         right: calc(50% - 30px);
         text-align: right;
       }
@@ -934,10 +934,10 @@ export default defineComponent({
       .overlay-bottom-left {
         font-size: 0.7rem;
         font-weight: bold;
-        color: green !important;
+        color: rgba(198, 201, 0, 0.842) !important;
         position: absolute;
-        bottom: 10px;
-        left: calc(50% - 25px);
+        bottom: 0px;
+        left: calc(50% - 30px);
         text-align: left;
       }
 
@@ -946,8 +946,8 @@ export default defineComponent({
         font-weight: bold;
         color: rgba(255, 140, 0, 0.679) !important;
         position: absolute;
-        bottom: 10px;
-        right: calc(50% - 25px);
+        bottom: 0px;
+        right: calc(50% - 30px);
         text-align: right;
       }
     }
@@ -1095,7 +1095,7 @@ export default defineComponent({
         font-weight: 300;
 
         .initial-trigger-unit {
-          color: rgba(5, 205, 165, 0.684);
+          color: rgba(252, 252, 252, 0.684);
           font-weight: 500;
         }
 
@@ -1110,7 +1110,7 @@ export default defineComponent({
         }
 
         .top-deadzone-unit {
-          color: green;
+          color: rgba(198, 201, 0, 0.842);
           font-weight: 500;
         }
 

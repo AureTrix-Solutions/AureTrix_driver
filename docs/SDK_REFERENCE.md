@@ -716,7 +716,7 @@ if (!(result instanceof Error)) {
 
 ### setSingleTravel()
 
-Sets per-key travel distance (key must be in single mode).
+Sets per-key travel distance. **Works for both Single mode AND Rapid Trigger (RT) mode.**
 
 ```typescript
 async setSingleTravel(
@@ -733,7 +733,13 @@ async setSingleTravel(
 
 **Returns:** Confirmed travel value
 
-**Example (Configure WASD for Gaming):**
+**⚠️ Dual Purpose:** This method serves **two different purposes** depending on the key's performance mode:
+1. **Single Mode**: Sets the travel distance for actuation
+2. **RT Mode**: Sets the **initial trigger travel** (the first actuation point before rapid trigger takes over)
+
+When a key is in RT mode, use `setSingleTravel()` for the initial trigger travel, and use `setRtPressTravel()` / `setRtReleaseTravel()` for the dynamic rapid trigger behavior.
+
+**Example 1: Configure WASD for Gaming (Single Mode)**
 
 ```typescript
 const gamingKeys = [26, 4, 22, 7];  // W, A, S, D
@@ -748,6 +754,22 @@ for (const key of gamingKeys) {
 }
 
 console.log('WASD configured for fast actuation');
+```
+
+**Example 2: Configure Key for RT Mode (from AureTrix)**
+
+```typescript
+const key = 26;  // 'W' key
+
+// Set to RT mode
+await keyboard.setPerformanceMode(key, 'rt', 0);
+
+// Set initial trigger travel using setSingleTravel()
+await keyboard.setSingleTravel(key, 2.0);  // Initial actuation at 2.0mm
+
+// Set RT-specific behavior
+await keyboard.setRtPressTravel(key, 0.3);   // Re-trigger after 0.3mm press
+await keyboard.setRtReleaseTravel(key, 0.3); // Reset after 0.3mm release
 ```
 
 ### getDpDr()

@@ -84,7 +84,7 @@
                   </div>
                 </div>
                 <div class="global-btn-container">
-                  <button @click="setToGlobal" class="global-btn" :disabled="selectedKeys.length === 0">Set to Global</button>
+                  <button @click="setToGlobal" class="global-btn" :disabled="selectedKeys.length === 0">Reset</button>
                 </div>
               </div>
 

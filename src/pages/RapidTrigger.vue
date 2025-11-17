@@ -418,10 +418,44 @@ export default defineComponent({
       console.log(`[RAPID-TRIGGER] Setting ${keys.length} keys to global mode`);
 
       try {
+        const globalSettingsResult = await KeyboardService.getGlobalTouchTravel();
+        if (globalSettingsResult instanceof Error) {
+          throw new Error('Failed to fetch global settings');
+        }
+
+        const globalSettings = globalSettingsResult;
+        
+        if (typeof globalSettings.globalTouchTravel !== 'number' || 
+            typeof globalSettings.pressDead !== 'number' || 
+            typeof globalSettings.releaseDead !== 'number') {
+          throw new Error('Invalid global settings format');
+        }
+
+        const globalTravel = Number(globalSettings.globalTouchTravel);
+        const globalPressDead = Number(globalSettings.pressDead);
+        const globalReleaseDead = Number(globalSettings.releaseDead);
+        
+        console.log(`[RAPID-TRIGGER] Global settings: travel=${globalTravel}, pressDead=${globalPressDead}, releaseDead=${globalReleaseDead}`);
+
         await processBatches(keys, async (physicalKeyValue) => {
-          const result = await KeyboardService.setPerformanceMode(physicalKeyValue, 'global', 0);
-          if (result instanceof Error) {
-            throw result;
+          const travelResult = await KeyboardService.setSingleTravel(physicalKeyValue, globalTravel);
+          if (travelResult instanceof Error) {
+            throw new Error(`Failed to set travel for key ${physicalKeyValue}: ${travelResult.message}`);
+          }
+          
+          const dpResult = await KeyboardService.setDp(physicalKeyValue, globalPressDead);
+          if (dpResult instanceof Error) {
+            throw new Error(`Failed to set top deadzone for key ${physicalKeyValue}: ${dpResult.message}`);
+          }
+          
+          const drResult = await KeyboardService.setDr(physicalKeyValue, globalReleaseDead);
+          if (drResult instanceof Error) {
+            throw new Error(`Failed to set bottom deadzone for key ${physicalKeyValue}: ${drResult.message}`);
+          }
+          
+          const modeResult = await KeyboardService.setPerformanceMode(physicalKeyValue, 'global', 0);
+          if (modeResult instanceof Error) {
+            throw new Error(`Failed to set performance mode for key ${physicalKeyValue}: ${modeResult.message}`);
           }
         });
         

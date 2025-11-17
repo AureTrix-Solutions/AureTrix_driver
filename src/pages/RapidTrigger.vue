@@ -424,6 +424,12 @@ export default defineComponent({
             throw result;
           }
         });
+        
+        keys.forEach(keyId => {
+          delete overlayData.value[keyId];
+        });
+        console.log(`[RAPID-TRIGGER] Cleared overlay data for ${keys.length} keys`);
+        
         setNotification(`Set ${keys.length} key(s) to global mode successfully`, false);
         console.log(`[RAPID-TRIGGER] Successfully set ${keys.length} keys to global mode`);
       } catch (error) {

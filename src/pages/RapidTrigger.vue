@@ -83,6 +83,9 @@
                     <button @click="adjustInitialActuation(0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
                   </div>
                 </div>
+                <div class="global-btn-container">
+                  <button @click="setToGlobal" class="global-btn" :disabled="selectedKeys.length === 0">Set to Global</button>
+                </div>
               </div>
 
               <div class="rt-travel-group">
@@ -403,6 +406,30 @@ export default defineComponent({
 
     const selectNone = () => {
       selectedKeys.value = [];
+    };
+
+    const setToGlobal = async () => {
+      if (selectedKeys.value.length === 0) {
+        setNotification('Please select keys first', true);
+        return;
+      }
+
+      const keys = selectedKeys.value.map(key => key.physicalKeyValue || key.keyValue);
+      console.log(`[RAPID-TRIGGER] Setting ${keys.length} keys to global mode`);
+
+      try {
+        await processBatches(keys, async (physicalKeyValue) => {
+          const result = await KeyboardService.setPerformanceMode(physicalKeyValue, 'global', 0);
+          if (result instanceof Error) {
+            throw result;
+          }
+        });
+        setNotification(`Set ${keys.length} key(s) to global mode successfully`, false);
+        console.log(`[RAPID-TRIGGER] Successfully set ${keys.length} keys to global mode`);
+      } catch (error) {
+        console.error('Failed to set keys to global mode:', error);
+        setNotification('Failed to set keys to global mode', true);
+      }
     };
 
     const setNotification = (message: string, isError: boolean) => {
@@ -746,6 +773,7 @@ export default defineComponent({
       selectLetters,
       selectNumbers,
       selectNone,
+      setToGlobal,
       initialActuation,
       pressTravel,
       releaseTravel,
@@ -1023,10 +1051,41 @@ export default defineComponent({
 
     .travel-row {
       display: flex;
-      gap: 0px;
+      gap: 15px;
       margin-bottom: 0px;
       align-items: center;
       font-family: v.$font-style;
+    }
+
+    .global-btn-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 10px;
+
+      .global-btn {
+        padding: 6px 12px;
+        background-color: color.adjust(v.$background-dark, $lightness: -100%);
+        color: v.$accent-color;
+        border: v.$border-style;
+        border-radius: v.$border-radius;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 400;
+        height: 32px;
+        transition: background-color 0.2s ease;
+        font-family: v.$font-style;
+        white-space: nowrap;
+
+        &:hover:not(:disabled) {
+          background-color: color.adjust(v.$background-dark, $lightness: 10%);
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+      }
     }
 
     .rt-travel-group {

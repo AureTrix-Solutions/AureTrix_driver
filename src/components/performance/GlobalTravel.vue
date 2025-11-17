@@ -218,26 +218,80 @@ export default defineComponent({
     // Set selected keys to global mode
     const setKeyToGlobalMode = async () => {
       if (props.selectedKeys.length === 0) return;
+      
       const keys = props.selectedKeys.map(key => ({
         physicalKeyValue: key.physicalKeyValue || key.keyValue,
       }));
       const keyIds = keys.map(k => k.physicalKeyValue);
+      
       try {
-        await processBatches(keys, async (physicalKeyValue) => KeyboardService.setPerformanceMode(physicalKeyValue, 'global', 0));
-        await updateGlobalSettings();
+        console.log(`[GLOBALTRAVEL] Setting ${keyIds.length} keys to global mode`);
+        
+        // Step 1: Fetch current global settings
+        const globalSettingsResult = await KeyboardService.getGlobalTouchTravel();
+        if (globalSettingsResult instanceof Error) {
+          throw new Error('Failed to fetch global settings');
+        }
+        
+        const globalSettings = globalSettingsResult as any;
+        const globalTravelValue = Number(globalSettings.globalTouchTravel);
+        const globalPressDead = Number(globalSettings.pressDead);
+        const globalReleaseDead = Number(globalSettings.releaseDead);
+        
+        if (isNaN(globalTravelValue) || isNaN(globalPressDead) || isNaN(globalReleaseDead)) {
+          throw new Error('Invalid global settings: one or more values are not valid numbers');
+        }
+        
+        console.log(`[GLOBALTRAVEL] Global settings: travel=${globalTravelValue}, pressDead=${globalPressDead}, releaseDead=${globalReleaseDead}`);
+        
+        // Step 2: Apply global values to each key before switching mode
+        await processBatches(keys, async (keyInfo) => {
+          const physicalKeyValue = keyInfo.physicalKeyValue;
+          
+          const travelResult = await KeyboardService.setSingleTravel(physicalKeyValue, globalTravelValue);
+          if (travelResult instanceof Error) {
+            throw new Error(`Failed to set travel for key ${physicalKeyValue}`);
+          }
+          
+          const dpResult = await KeyboardService.setDp(physicalKeyValue, globalPressDead);
+          if (dpResult instanceof Error) {
+            throw new Error(`Failed to set top deadzone for key ${physicalKeyValue}`);
+          }
+          
+          const drResult = await KeyboardService.setDr(physicalKeyValue, globalReleaseDead);
+          if (drResult instanceof Error) {
+            throw new Error(`Failed to set bottom deadzone for key ${physicalKeyValue}`);
+          }
+          
+          const modeResult = await KeyboardService.setPerformanceMode(physicalKeyValue, 'global', 0);
+          if (modeResult instanceof Error) {
+            throw new Error(`Failed to switch performance mode for key ${physicalKeyValue}`);
+          }
+          
+          console.log(`[GLOBALTRAVEL] Successfully set key ${physicalKeyValue} to global mode with values`);
+        });
+        
+        console.log(`[GLOBALTRAVEL] Successfully set all keys to global mode`);
+        
+        // Sync UI state with the values we just applied
+        globalTravel.value = globalTravelValue;
+        pressDead.value = globalPressDead;
+        releaseDead.value = globalReleaseDead;
+        
         // Emit mode change so parent can update keyModeMap
         console.log(`[GLOBALTRAVEL] Emitting mode-changed event:`, keyIds, 'global');
         emit('mode-changed', keyIds, 'global');
+        
+        // Update overlay to show the values we actually applied
+        if (showOverlay.value) {
+          emit('update-overlay', {
+            travel: globalTravelValue.toFixed(2),
+            pressDead: globalPressDead.toFixed(2),
+            releaseDead: globalReleaseDead.toFixed(2),
+          });
+        }
       } catch (error) {
         console.error(`[GLOBALTRAVEL] Error in setKeyToGlobalMode:`, error);
-      }
-      // Refresh global overlays if showing
-      if (showOverlay.value) {
-        emit('update-overlay', {
-          travel: globalTravel.value.toFixed(2),
-          pressDead: pressDead.value.toFixed(2),
-          releaseDead: releaseDead.value.toFixed(2),
-        });
       }
     };
 

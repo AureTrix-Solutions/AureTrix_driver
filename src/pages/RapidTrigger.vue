@@ -423,17 +423,14 @@ export default defineComponent({
           throw new Error('Failed to fetch global settings');
         }
 
-        const globalSettings = globalSettingsResult;
-        
-        if (typeof globalSettings.globalTouchTravel !== 'number' || 
-            typeof globalSettings.pressDead !== 'number' || 
-            typeof globalSettings.releaseDead !== 'number') {
-          throw new Error('Invalid global settings format');
-        }
-
+        const globalSettings = globalSettingsResult as any;
         const globalTravel = Number(globalSettings.globalTouchTravel);
         const globalPressDead = Number(globalSettings.pressDead);
         const globalReleaseDead = Number(globalSettings.releaseDead);
+        
+        if (isNaN(globalTravel) || isNaN(globalPressDead) || isNaN(globalReleaseDead)) {
+          throw new Error('Invalid global settings: one or more values are not valid numbers');
+        }
         
         console.log(`[RAPID-TRIGGER] Global settings: travel=${globalTravel}, pressDead=${globalPressDead}, releaseDead=${globalReleaseDead}`);
 

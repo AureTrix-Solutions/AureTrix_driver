@@ -64,6 +64,14 @@ The RapidTrigger page provides advanced configuration for rapid trigger function
 - Respects active layer mappings
 - Helps identify remapped keys during adjustment
 
+### 8. **Set to Global Button**
+- Converts selected RT keys back to global mode
+- Applies current global settings (travel + deadzones) before mode switch
+- Ensures deadzones are properly configured on converted keys
+- Clears RT-specific overlays automatically
+- Disabled when no keys are selected
+- Syncs UI sliders with applied device values
+
 ## User Interface Elements
 
 ### Title & Notification Bar
@@ -111,6 +119,11 @@ The RapidTrigger page provides advanced configuration for rapid trigger function
 - **Link Buttons**: Toggle synchronized adjustments
   - Shows "Link" when unlinked
   - Shows "Unlink" when linked
+- **Set to Global Button**: Converts selected RT keys back to global mode
+  - Located in settings panel area
+  - Disabled when no keys selected
+  - Applies global travel and deadzones before mode switch
+  - Shows success/error notifications
 
 ## Technical Implementation
 
@@ -407,6 +420,100 @@ const adjustDeadzone = (delta: number, type: 'press' | 'release') => {
 };
 ```
 
+#### 9. **Set to Global Function**
+```typescript
+const setToGlobal = async () => {
+  if (selectedKeys.value.length === 0) {
+    setNotification('Please select keys first', true);
+    return;
+  }
+
+  const keys = selectedKeys.value.map(key => 
+    key.physicalKeyValue || key.keyValue
+  );
+  
+  try {
+    // Step 1: Fetch current global settings from keyboard
+    const globalSettingsResult = await KeyboardService.getGlobalTouchTravel();
+    if (globalSettingsResult instanceof Error) {
+      throw new Error('Failed to fetch global settings');
+    }
+    
+    // Step 2: Extract and validate global values
+    const globalSettings = globalSettingsResult as any;
+    const globalTravel = Number(globalSettings.globalTouchTravel);
+    const globalPressDead = Number(globalSettings.pressDead);
+    const globalReleaseDead = Number(globalSettings.releaseDead);
+    
+    if (isNaN(globalTravel) || isNaN(globalPressDead) || isNaN(globalReleaseDead)) {
+      throw new Error('Invalid global settings: one or more values are not valid numbers');
+    }
+    
+    // Step 3: Apply global values to each key BEFORE switching mode
+    await processBatches(keys, async (physicalKeyValue) => {
+      // Set travel distance
+      const travelResult = await KeyboardService.setSingleTravel(
+        physicalKeyValue, 
+        globalTravel
+      );
+      if (travelResult instanceof Error) {
+        throw new Error(`Failed to set travel for key ${physicalKeyValue}`);
+      }
+      
+      // Set top deadzone
+      const dpResult = await KeyboardService.setDp(
+        physicalKeyValue, 
+        globalPressDead
+      );
+      if (dpResult instanceof Error) {
+        throw new Error(`Failed to set top deadzone for key ${physicalKeyValue}`);
+      }
+      
+      // Set bottom deadzone
+      const drResult = await KeyboardService.setDr(
+        physicalKeyValue, 
+        globalReleaseDead
+      );
+      if (drResult instanceof Error) {
+        throw new Error(`Failed to set bottom deadzone for key ${physicalKeyValue}`);
+      }
+      
+      // Finally, switch performance mode to global
+      const modeResult = await KeyboardService.setPerformanceMode(
+        physicalKeyValue, 
+        'global', 
+        0
+      );
+      if (modeResult instanceof Error) {
+        throw new Error(`Failed to set performance mode for key ${physicalKeyValue}`);
+      }
+    });
+    
+    // Step 4: Clear RT overlays for converted keys
+    keys.forEach(keyId => {
+      delete overlayData.value[keyId];
+    });
+    
+    setNotification(`Set ${keys.length} key(s) to global mode successfully`, false);
+  } catch (error) {
+    console.error('Failed to set keys to global mode:', error);
+    setNotification('Failed to set keys to global mode', true);
+  }
+};
+```
+
+**Critical Implementation Details**:
+
+1. **Fetch-First Pattern**: Fetches current global settings from the keyboard before applying them. Ensures the values written to individual keys match what the global mode will use.
+
+2. **Apply Before Switch**: Each key receives individual travel and deadzone values BEFORE switching to global mode. This prevents a bug where keys would switch to global mode but retain their old RT deadzone values.
+
+3. **NaN Validation**: After casting the SDK response to access `pressDead` and `releaseDead` fields (which aren't in the TypeScript type declaration), validates all three values are valid numbers. Prevents silent failures from malformed SDK responses.
+
+4. **Comprehensive Error Handling**: Each SDK call is validated for errors. If any key fails during batch processing, the entire operation throws and shows an error notification to the user.
+
+5. **Overlay Cleanup**: After successful conversion, RT-specific overlays are removed from the converted keys. This prevents confusion where RT overlay values would persist on keys now in global mode.
+
 ## Dependencies
 
 ### Services
@@ -502,6 +609,23 @@ UI Re-renders with New Overlay Values
 3. Set Bottom Deadzone to 0.2mm (ignore last 0.2mm before bottom)
 4. Notice Initial Trigger Travel automatically adjusts min/max
 5. Keys now ignore accidental light touches
+
+### Convert RT Keys Back to Global Mode
+1. User has configured WASD keys with RT settings for gaming
+2. User decides to return those keys to standard global mode
+3. User selects WASD keys on the keyboard
+4. User clicks "Set to Global" button
+5. Component fetches current global settings from keyboard (e.g., 2.5mm travel, 0.2mm deadzones)
+6. Each WASD key receives:
+   - Travel distance: 2.5mm (applied individually via setSingleTravel)
+   - Top deadzone: 0.2mm (applied via setDp)
+   - Bottom deadzone: 0.2mm (applied via setDr)
+   - Performance mode switched to 'global'
+7. RT overlays clear from WASD keys
+8. Success notification: "Set 4 key(s) to global mode successfully"
+9. WASD keys now behave identically to other global-mode keys
+
+**Why This Workflow Matters**: Without applying individual travel/deadzone values before the mode switch, keys would switch to global mode but retain their old RT deadzone settings, creating inconsistent behavior. The fetch-first pattern ensures the converted keys have the exact same settings as the global configuration.
 
 ## Overlay Display Format
 

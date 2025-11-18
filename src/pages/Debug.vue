@@ -41,7 +41,7 @@
             <!-- Master Toggle -->
             <div class="settings-section">
               <div class="header-row">
-                <h3>closedLighting / setLighting</h3>
+                <h3>setLighting (luminance test)</h3>
               </div>
               <div class="toggle-row">
                 <label class="toggle-label">Lighting</label>
@@ -495,22 +495,17 @@ export default defineComponent({
     const toggleLighting = async () => {
       try {
         if (lightingEnabled.value) {
-          log('Turning off all lighting...');
-          savedLightingState.value = { ...globalLighting.value };
-          await debugKeyboardService.closedLighting();
+          log('Turning off all lighting with luminance: 0...');
+          await debugKeyboardService.setLighting({ luminance: 0 });
           lightingEnabled.value = false;
-          setNotification('Lighting turned OFF', false);
-          log('Lighting turned OFF successfully');
+          setNotification('Lighting turned OFF (luminance: 0)', false);
+          log('Lighting turned OFF successfully with luminance: 0');
         } else {
-          log('Turning on lighting...');
+          log('Turning on lighting with luminance: 4...');
+          await debugKeyboardService.setLighting({ luminance: 4 });
           lightingEnabled.value = true;
-          if (savedLightingState.value) {
-            globalLighting.value = { ...savedLightingState.value };
-            await debugKeyboardService.setLighting({ ...globalLighting.value, open: true });
-            log('Restored previous lighting settings');
-          }
-          setNotification('Lighting turned ON', false);
-          log('Lighting turned ON successfully');
+          setNotification('Lighting turned ON (luminance: 4)', false);
+          log('Lighting turned ON successfully with luminance: 4');
         }
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);

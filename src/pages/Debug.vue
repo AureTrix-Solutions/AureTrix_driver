@@ -496,13 +496,17 @@ export default defineComponent({
       try {
         if (lightingEnabled.value) {
           log('Turning off all lighting with luminance: 0...');
-          await debugKeyboardService.setLighting({ luminance: 0 });
+          const currentSettings = await debugKeyboardService.getLighting();
+          log(`Current settings: ${JSON.stringify(currentSettings)}`);
+          await debugKeyboardService.setLighting({ ...currentSettings, luminance: 0 });
           lightingEnabled.value = false;
           setNotification('Lighting turned OFF (luminance: 0)', false);
           log('Lighting turned OFF successfully with luminance: 0');
         } else {
           log('Turning on lighting with luminance: 4...');
-          await debugKeyboardService.setLighting({ luminance: 4 });
+          const currentSettings = await debugKeyboardService.getLighting();
+          log(`Current settings: ${JSON.stringify(currentSettings)}`);
+          await debugKeyboardService.setLighting({ ...currentSettings, luminance: 4 });
           lightingEnabled.value = true;
           setNotification('Lighting turned ON (luminance: 4)', false);
           log('Lighting turned ON successfully with luminance: 4');

@@ -495,6 +495,14 @@ export default defineComponent({
     const toggleLighting = async () => {
       try {
         if (lightingEnabled.value) {
+          log('Toggle OFF - Syncing SDK cache to prevent glitch...');
+          try {
+            const currentState = await debugKeyboardService.getLighting();
+            log(`SDK cache synced: ${JSON.stringify(currentState)}`);
+          } catch (syncError) {
+            log(`WARNING: Cache sync failed (${(syncError as Error).message}), continuing with closedLighting anyway`);
+          }
+          
           log('Calling closedLighting() to turn off all lighting...');
           await debugKeyboardService.closedLighting();
           lightingEnabled.value = false;

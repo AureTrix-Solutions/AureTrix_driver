@@ -482,7 +482,6 @@ export default defineComponent({
           log('Calling closedLighting() to turn off all lighting...');
           await debugKeyboardService.closedLighting();
           lightingEnabled.value = false;
-          setNotification('Lighting turned OFF via closedLighting()', false);
           log('closedLighting() called successfully - lights should be off');
         } else {
           log('Toggle ON - Fetching current lighting state...');
@@ -500,7 +499,6 @@ export default defineComponent({
           log('Calling setLighting() with filtered parameters...');
           await debugKeyboardService.setLighting(filteredParams);
           lightingEnabled.value = true;
-          setNotification('Lighting turned ON via setLighting()', false);
           log('setLighting() called successfully - lights should be on');
         }
       } catch (error) {
@@ -527,7 +525,6 @@ export default defineComponent({
         log(`Applying lighting with luminance ${masterLuminance.value}: ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
-        setNotification(`RGB brightness set to ${masterLuminance.value}`, false);
         log('Master luminance applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
@@ -553,7 +550,6 @@ export default defineComponent({
         log(`Applying lighting with speed ${masterSpeed.value}: ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
-        setNotification(`Animation speed set to ${masterSpeed.value}`, false);
         log('Master speed applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
@@ -579,8 +575,6 @@ export default defineComponent({
         log(`Applying lighting with sleepDelay ${masterSleepDelay.value}: ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
-        const displayText = masterSleepDelay.value === 0 ? 'Never' : `${masterSleepDelay.value} minutes`;
-        setNotification(`Sleep timer set to ${displayText}`, false);
         log('Master sleep delay applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
@@ -606,8 +600,6 @@ export default defineComponent({
         log(`Applying lighting with direction ${masterDirection.value}: ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
-        const displayText = masterDirection.value ? 'Reversed' : 'Normal';
-        setNotification(`RGB pattern direction set to ${displayText}`, false);
         log('Master direction applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
@@ -729,7 +721,6 @@ export default defineComponent({
           if (currentState.color) globalLighting.value.color = currentState.color;
           
           log('UI synchronized with keyboard state');
-          setNotification('UI synchronized with keyboard', false);
         }
       } catch (error) {
         log(`Failed to initialize from device: ${(error as Error).message}`);

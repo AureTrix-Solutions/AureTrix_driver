@@ -251,44 +251,6 @@
                 <button @click="fetchSpecialLighting" class="fetch-btn">Fetch Current</button>
               </div>
             </div>
-
-            <!-- Saturation -->
-            <div class="settings-section">
-              <div class="header-row">
-                <h3>setLightingSaturation / getSaturation</h3>
-              </div>
-
-              <div class="input-group">
-                <div class="label">Saturation (%)</div>
-                <div class="slider-container">
-                  <div class="value-display">{{ lightingRanges.saturation.min }}</div>
-                  <input 
-                    type="range" 
-                    v-model.number="saturation" 
-                    :min="lightingRanges.saturation.min" 
-                    :max="lightingRanges.saturation.max" 
-                    :disabled="!lightingEnabled"
-                  />
-                  <div class="value-display">{{ lightingRanges.saturation.max }}</div>
-                </div>
-                <div class="adjusters">
-                  <button @click="saturation = Math.max(lightingRanges.saturation.min, saturation - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
-                  <input
-                    type="number"
-                    v-model.number="saturation"
-                    :min="lightingRanges.saturation.min"
-                    :max="lightingRanges.saturation.max"
-                    :disabled="!lightingEnabled"
-                  />
-                  <button @click="saturation = Math.min(lightingRanges.saturation.max, saturation + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
-                </div>
-              </div>
-
-              <div class="button-row">
-                <button @click="applySaturation" class="apply-btn" :disabled="!lightingEnabled">Apply</button>
-                <button @click="fetchSaturation" class="fetch-btn">Fetch Current</button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -339,14 +301,12 @@ export default defineComponent({
       speed: 50
     });
 
-    const saturation = ref(100);
     const savedLightingState = ref<any>(null);
 
     // Lighting range constants (single source of truth)
     const lightingRanges = {
       brightness: { min: 0, max: 100 },
-      speed: { min: 0, max: 100 },
-      saturation: { min: 0, max: 100 }
+      speed: { min: 0, max: 100 }
     };
 
     const log = (message: string) => {
@@ -575,31 +535,6 @@ export default defineComponent({
       }
     };
 
-    const applySaturation = async () => {
-      try {
-        log(`Applying saturation: ${saturation.value}%`);
-        await debugKeyboardService.setLightingSaturation([saturation.value]);
-        setNotification('Saturation applied successfully', false);
-        log('Saturation applied successfully');
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to apply saturation', true);
-      }
-    };
-
-    const fetchSaturation = async () => {
-      try {
-        log('Fetching current saturation...');
-        const result = await debugKeyboardService.getSaturation();
-        log(`Current saturation: ${JSON.stringify(result)}`);
-        if (result.saturation !== undefined) saturation.value = result.saturation;
-        setNotification('Saturation fetched', false);
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to fetch saturation', true);
-      }
-    };
-
     const clearDebugOutput = () => {
       debugOutput.value = 'Lighting Debug Console\n-------------------\n';
     };
@@ -629,7 +564,6 @@ export default defineComponent({
       globalLighting,
       customLighting,
       specialLighting,
-      saturation,
       lightingRanges,
       debugOutput,
       selectedKeys,
@@ -652,8 +586,6 @@ export default defineComponent({
       saveCustomLighting,
       applySpecialLighting,
       fetchSpecialLighting,
-      applySaturation,
-      fetchSaturation,
       clearDebugOutput,
     };
   },

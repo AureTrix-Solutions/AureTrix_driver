@@ -71,6 +71,24 @@
                   <option :value="4">4 - Fastest</option>
                 </select>
               </div>
+              <div class="input-group">
+                <div class="label">Sleep Timer (minutes)</div>
+                <select v-model.number="masterSleepDelay" @change="applyMasterSleepDelay" class="mode-select" :disabled="!lightingEnabled">
+                  <option :value="0">Never</option>
+                  <option :value="1">1 minute</option>
+                  <option :value="2">2 minutes</option>
+                  <option :value="3">3 minutes</option>
+                  <option :value="5">5 minutes</option>
+                  <option :value="10">10 minutes</option>
+                  <option :value="15">15 minutes</option>
+                  <option :value="20">20 minutes</option>
+                  <option :value="25">25 minutes</option>
+                  <option :value="30">30 minutes</option>
+                  <option :value="45">45 minutes</option>
+                  <option :value="60">60 minutes</option>
+                  <option :value="120">120 minutes</option>
+                </select>
+              </div>
             </div>
 
             <!-- Global Lighting -->
@@ -301,6 +319,7 @@ export default defineComponent({
     const lightingEnabled = ref(true);
     const masterLuminance = ref(4);
     const masterSpeed = ref(3);
+    const masterSleepDelay = ref(0);
     const debugOutput = ref('Lighting Debug Console\n-------------------\n');
     const selectedKeys = ref<IDefKeyInfo[]>([]);
 
@@ -522,6 +541,33 @@ export default defineComponent({
       }
     };
 
+    const applyMasterSleepDelay = async () => {
+      try {
+        log(`Applying master sleep delay: ${masterSleepDelay.value}...`);
+        const currentState = await debugKeyboardService.getLighting();
+        log(`Current state retrieved: ${JSON.stringify(currentState)}`);
+        
+        if (!currentState) {
+          throw new Error('getLighting() returned no data');
+        }
+        
+        // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
+        const { open, dynamicColorId, ...filteredParams } = currentState;
+        
+        // Update sleepdelay with the selected value
+        filteredParams.sleepdelay = masterSleepDelay.value;
+        log(`Applying lighting with sleepdelay ${masterSleepDelay.value}: ${JSON.stringify(filteredParams)}`);
+        
+        await debugKeyboardService.setLighting(filteredParams);
+        const displayText = masterSleepDelay.value === 0 ? 'Never' : `${masterSleepDelay.value} minutes`;
+        setNotification(`Sleep timer set to ${displayText}`, false);
+        log('Master sleep delay applied successfully');
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to apply master sleep delay', true);
+      }
+    };
+
     const applyGlobalLighting = async () => {
       try {
         log(`Applying global lighting: ${JSON.stringify(globalLighting.value)}`);
@@ -637,6 +683,7 @@ export default defineComponent({
       lightingEnabled,
       masterLuminance,
       masterSpeed,
+      masterSleepDelay,
       globalLighting,
       customLighting,
       specialLighting,
@@ -658,6 +705,7 @@ export default defineComponent({
       toggleLighting,
       applyMasterLuminance,
       applyMasterSpeed,
+      applyMasterSleepDelay,
       applyGlobalLighting,
       fetchGlobalLighting,
       applyCustomLighting,

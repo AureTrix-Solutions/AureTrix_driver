@@ -1,5 +1,5 @@
 <template>
-  <div class="debug-page">
+  <div class="lighting-debug-page">
     <h2 class="title">Lighting Debug & Testing</h2>
     <div v-if="notification" class="notification" :class="{ error: notification.isError }">
       {{ notification.message }}
@@ -7,245 +7,363 @@
     </div>
 
     <div class="lighting-container">
-      <!-- Section 1: Toggle Lighting On/Off -->
-      <div class="settings-section">
-        <h3>Master Lighting Control</h3>
-        <div class="toggle-row">
-          <label class="toggle-label">Lighting</label>
-          <div class="toggle-switch" @click="toggleLighting">
-            <div class="toggle-slider" :class="{ active: lightingEnabled }">
-              <span class="toggle-text">{{ lightingEnabled ? 'ON' : 'OFF' }}</span>
+      <!-- Keyboard Grid -->
+      <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
+        <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
+          <div
+            v-for="(keyInfo, cIdx) in row"
+            :key="`k-${rIdx}-${cIdx}`"
+            class="key-btn"
+            :class="{ 'lighting-key-selected': loaded && selectedKeys.some(k => (k.physicalKeyValue || k.keyValue) === (keyInfo.physicalKeyValue || keyInfo.keyValue)) }"
+            :style="getKeyStyle(rIdx, cIdx)"
+            @click="selectKey(keyInfo, rIdx, cIdx)"
+          >
+            <div class="key-label">
+              {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else class="no-layout">
+        <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
+      </div>
+
+      <div class="bottom-section">
+        <!-- Selection Buttons -->
+        <div class="selection-buttons">
+          <button @click="selectAll" class="select-btn">Select All</button>
+          <button @click="selectWASD" class="select-btn">Select WASD</button>
+          <button @click="selectLetters" class="select-btn">Select Letters</button>
+          <button @click="selectNumbers" class="select-btn">Select Numbers</button>
+          <button @click="selectNone" class="select-btn">Select None</button>
+        </div>
+
+        <!-- Settings Panel -->
+        <div class="parent">
+          <div class="settings-panel">
+            <!-- Master Toggle -->
+            <div class="settings-section">
+              <div class="header-row">
+                <h3>Master Lighting Control</h3>
+              </div>
+              <div class="toggle-row">
+                <label class="toggle-label">Lighting</label>
+                <div class="toggle-switch" @click="toggleLighting">
+                  <div class="toggle-slider" :class="{ active: lightingEnabled }">
+                    <span class="toggle-text">{{ lightingEnabled ? 'ON' : 'OFF' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Global Lighting -->
+            <div class="settings-section">
+              <div class="header-row">
+                <h3>Global Lighting</h3>
+              </div>
+              
+              <div class="input-group">
+                <div class="label">Mode</div>
+                <select v-model="globalLighting.mode" class="mode-select" :disabled="!lightingEnabled">
+                  <option value="static">Static</option>
+                  <option value="breathing">Breathing</option>
+                  <option value="wave">Wave</option>
+                  <option value="reactive">Reactive</option>
+                  <option value="ripple">Ripple</option>
+                  <option value="rainbow">Rainbow</option>
+                </select>
+              </div>
+
+              <div class="input-group">
+                <div class="label">Brightness</div>
+                <div class="slider-container">
+                  <div class="value-display">0</div>
+                  <input 
+                    type="range" 
+                    v-model.number="globalLighting.brightness" 
+                    min="0" 
+                    max="100" 
+                    :disabled="!lightingEnabled"
+                  />
+                  <div class="value-display">100</div>
+                </div>
+                <div class="adjusters">
+                  <button @click="globalLighting.brightness = Math.max(0, globalLighting.brightness - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
+                  <input
+                    type="number"
+                    v-model.number="globalLighting.brightness"
+                    min="0"
+                    max="100"
+                    :disabled="!lightingEnabled"
+                  />
+                  <button @click="globalLighting.brightness = Math.min(100, globalLighting.brightness + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <div class="label">Speed</div>
+                <div class="slider-container">
+                  <div class="value-display">0</div>
+                  <input 
+                    type="range" 
+                    v-model.number="globalLighting.speed" 
+                    min="0" 
+                    max="100" 
+                    :disabled="!lightingEnabled"
+                  />
+                  <div class="value-display">100</div>
+                </div>
+                <div class="adjusters">
+                  <button @click="globalLighting.speed = Math.max(0, globalLighting.speed - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
+                  <input
+                    type="number"
+                    v-model.number="globalLighting.speed"
+                    min="0"
+                    max="100"
+                    :disabled="!lightingEnabled"
+                  />
+                  <button @click="globalLighting.speed = Math.min(100, globalLighting.speed + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <div class="label">Color (RGB)</div>
+                <div class="color-inputs">
+                  <div class="color-input-group">
+                    <label>R</label>
+                    <input type="number" v-model.number="globalLighting.color.r" min="0" max="255" :disabled="!lightingEnabled" />
+                  </div>
+                  <div class="color-input-group">
+                    <label>G</label>
+                    <input type="number" v-model.number="globalLighting.color.g" min="0" max="255" :disabled="!lightingEnabled" />
+                  </div>
+                  <div class="color-input-group">
+                    <label>B</label>
+                    <input type="number" v-model.number="globalLighting.color.b" min="0" max="255" :disabled="!lightingEnabled" />
+                  </div>
+                  <div class="color-preview" :style="{ backgroundColor: `rgb(${globalLighting.color.r}, ${globalLighting.color.g}, ${globalLighting.color.b})` }"></div>
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button @click="applyGlobalLighting" class="apply-btn" :disabled="!lightingEnabled">Apply</button>
+                <button @click="fetchGlobalLighting" class="fetch-btn">Fetch Current</button>
+              </div>
+            </div>
+
+            <!-- Logo Lighting -->
+            <div class="settings-section">
+              <div class="header-row">
+                <h3>Logo Lighting</h3>
+              </div>
+
+              <div class="input-group">
+                <div class="label">Mode</div>
+                <select v-model="logoLighting.mode" class="mode-select" :disabled="!lightingEnabled">
+                  <option value="static">Static</option>
+                  <option value="breathing">Breathing</option>
+                  <option value="off">Off</option>
+                </select>
+              </div>
+
+              <div class="input-group">
+                <div class="label">Color (RGB)</div>
+                <div class="color-inputs">
+                  <div class="color-input-group">
+                    <label>R</label>
+                    <input type="number" v-model.number="logoLighting.color.r" min="0" max="255" :disabled="!lightingEnabled" />
+                  </div>
+                  <div class="color-input-group">
+                    <label>G</label>
+                    <input type="number" v-model.number="logoLighting.color.g" min="0" max="255" :disabled="!lightingEnabled" />
+                  </div>
+                  <div class="color-input-group">
+                    <label>B</label>
+                    <input type="number" v-model.number="logoLighting.color.b" min="0" max="255" :disabled="!lightingEnabled" />
+                  </div>
+                  <div class="color-preview" :style="{ backgroundColor: `rgb(${logoLighting.color.r}, ${logoLighting.color.g}, ${logoLighting.color.b})` }"></div>
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button @click="applyLogoLighting" class="apply-btn" :disabled="!lightingEnabled">Apply</button>
+                <button @click="fetchLogoLighting" class="fetch-btn">Fetch Current</button>
+              </div>
+            </div>
+
+            <!-- Custom Per-Key Lighting -->
+            <div class="settings-section">
+              <div class="header-row">
+                <h3>Custom Per-Key Lighting</h3>
+              </div>
+
+              <div class="input-group">
+                <div class="label">Selected Keys: {{ selectedKeys.length }}</div>
+                <div class="color-inputs">
+                  <div class="color-input-group">
+                    <label>R</label>
+                    <input type="number" v-model.number="customLighting.color.r" min="0" max="255" :disabled="!lightingEnabled || selectedKeys.length === 0" />
+                  </div>
+                  <div class="color-input-group">
+                    <label>G</label>
+                    <input type="number" v-model.number="customLighting.color.g" min="0" max="255" :disabled="!lightingEnabled || selectedKeys.length === 0" />
+                  </div>
+                  <div class="color-input-group">
+                    <label>B</label>
+                    <input type="number" v-model.number="customLighting.color.b" min="0" max="255" :disabled="!lightingEnabled || selectedKeys.length === 0" />
+                  </div>
+                  <div class="color-preview" :style="{ backgroundColor: `rgb(${customLighting.color.r}, ${customLighting.color.g}, ${customLighting.color.b})` }"></div>
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button @click="applyCustomLighting" class="apply-btn" :disabled="!lightingEnabled || selectedKeys.length === 0">Apply to Selected</button>
+                <button @click="saveCustomLighting" class="save-btn" :disabled="!lightingEnabled">Save to Firmware</button>
+              </div>
+            </div>
+
+            <!-- Special Effects -->
+            <div class="settings-section">
+              <div class="header-row">
+                <h3>Special Effects</h3>
+              </div>
+
+              <div class="input-group">
+                <div class="label">Effect Mode</div>
+                <select v-model="specialLighting.mode" class="mode-select" :disabled="!lightingEnabled">
+                  <option value="reactive">Reactive</option>
+                  <option value="ripple">Ripple</option>
+                  <option value="starlight">Starlight</option>
+                </select>
+              </div>
+
+              <div class="input-group">
+                <div class="label">Brightness</div>
+                <div class="slider-container">
+                  <div class="value-display">0</div>
+                  <input 
+                    type="range" 
+                    v-model.number="specialLighting.brightness" 
+                    min="0" 
+                    max="100" 
+                    :disabled="!lightingEnabled"
+                  />
+                  <div class="value-display">100</div>
+                </div>
+                <div class="adjusters">
+                  <button @click="specialLighting.brightness = Math.max(0, specialLighting.brightness - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
+                  <input
+                    type="number"
+                    v-model.number="specialLighting.brightness"
+                    min="0"
+                    max="100"
+                    :disabled="!lightingEnabled"
+                  />
+                  <button @click="specialLighting.brightness = Math.min(100, specialLighting.brightness + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <div class="label">Speed</div>
+                <div class="slider-container">
+                  <div class="value-display">0</div>
+                  <input 
+                    type="range" 
+                    v-model.number="specialLighting.speed" 
+                    min="0" 
+                    max="100" 
+                    :disabled="!lightingEnabled"
+                  />
+                  <div class="value-display">100</div>
+                </div>
+                <div class="adjusters">
+                  <button @click="specialLighting.speed = Math.max(0, specialLighting.speed - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
+                  <input
+                    type="number"
+                    v-model.number="specialLighting.speed"
+                    min="0"
+                    max="100"
+                    :disabled="!lightingEnabled"
+                  />
+                  <button @click="specialLighting.speed = Math.min(100, specialLighting.speed + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button @click="applySpecialLighting" class="apply-btn" :disabled="!lightingEnabled">Apply</button>
+                <button @click="fetchSpecialLighting" class="fetch-btn">Fetch Current</button>
+              </div>
+            </div>
+
+            <!-- Saturation -->
+            <div class="settings-section">
+              <div class="header-row">
+                <h3>Saturation Control</h3>
+              </div>
+
+              <div class="input-group">
+                <div class="label">Saturation (%)</div>
+                <div class="slider-container">
+                  <div class="value-display">0</div>
+                  <input 
+                    type="range" 
+                    v-model.number="saturation" 
+                    min="0" 
+                    max="100" 
+                    :disabled="!lightingEnabled"
+                  />
+                  <div class="value-display">100</div>
+                </div>
+                <div class="adjusters">
+                  <button @click="saturation = Math.max(0, saturation - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
+                  <input
+                    type="number"
+                    v-model.number="saturation"
+                    min="0"
+                    max="100"
+                    :disabled="!lightingEnabled"
+                  />
+                  <button @click="saturation = Math.min(100, saturation + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button @click="applySaturation" class="apply-btn" :disabled="!lightingEnabled">Apply</button>
+                <button @click="fetchSaturation" class="fetch-btn">Fetch Current</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Section 2: Global Lighting Controls -->
-      <div class="settings-section">
-        <h3>Global Lighting</h3>
-        <div class="control-row">
-          <label>Mode</label>
-          <select v-model="globalLighting.mode" class="mode-select" :disabled="!lightingEnabled">
-            <option value="static">Static</option>
-            <option value="breathing">Breathing</option>
-            <option value="wave">Wave</option>
-            <option value="reactive">Reactive</option>
-            <option value="ripple">Ripple</option>
-            <option value="rainbow">Rainbow</option>
-          </select>
-        </div>
-        
-        <div class="control-row">
-          <label>Brightness ({{ globalLighting.brightness }})</label>
-          <input 
-            type="range" 
-            v-model.number="globalLighting.brightness" 
-            min="0" 
-            max="100" 
-            :disabled="!lightingEnabled"
-            class="slider"
-          />
-        </div>
-
-        <div class="control-row">
-          <label>Speed ({{ globalLighting.speed }})</label>
-          <input 
-            type="range" 
-            v-model.number="globalLighting.speed" 
-            min="0" 
-            max="100" 
-            :disabled="!lightingEnabled"
-            class="slider"
-          />
-        </div>
-
-        <div class="control-row">
-          <label>Color</label>
-          <div class="color-inputs">
-            <div class="color-input-group">
-              <label>R</label>
-              <input type="number" v-model.number="globalLighting.color.r" min="0" max="255" :disabled="!lightingEnabled" />
-            </div>
-            <div class="color-input-group">
-              <label>G</label>
-              <input type="number" v-model.number="globalLighting.color.g" min="0" max="255" :disabled="!lightingEnabled" />
-            </div>
-            <div class="color-input-group">
-              <label>B</label>
-              <input type="number" v-model.number="globalLighting.color.b" min="0" max="255" :disabled="!lightingEnabled" />
-            </div>
-            <div class="color-preview" :style="{ backgroundColor: `rgb(${globalLighting.color.r}, ${globalLighting.color.g}, ${globalLighting.color.b})` }"></div>
-          </div>
-        </div>
-
-        <div class="button-row">
-          <button @click="applyGlobalLighting" class="apply-btn" :disabled="!lightingEnabled">Apply Global Lighting</button>
-          <button @click="fetchGlobalLighting" class="fetch-btn">Fetch Current</button>
-        </div>
-      </div>
-
-      <!-- Section 3: Logo Lighting -->
-      <div class="settings-section">
-        <h3>Logo Lighting</h3>
-        <div class="control-row">
-          <label>Mode</label>
-          <select v-model="logoLighting.mode" class="mode-select" :disabled="!lightingEnabled">
-            <option value="static">Static</option>
-            <option value="breathing">Breathing</option>
-            <option value="off">Off</option>
-          </select>
-        </div>
-
-        <div class="control-row">
-          <label>Color</label>
-          <div class="color-inputs">
-            <div class="color-input-group">
-              <label>R</label>
-              <input type="number" v-model.number="logoLighting.color.r" min="0" max="255" :disabled="!lightingEnabled" />
-            </div>
-            <div class="color-input-group">
-              <label>G</label>
-              <input type="number" v-model.number="logoLighting.color.g" min="0" max="255" :disabled="!lightingEnabled" />
-            </div>
-            <div class="color-input-group">
-              <label>B</label>
-              <input type="number" v-model.number="logoLighting.color.b" min="0" max="255" :disabled="!lightingEnabled" />
-            </div>
-            <div class="color-preview" :style="{ backgroundColor: `rgb(${logoLighting.color.r}, ${logoLighting.color.g}, ${logoLighting.color.b})` }"></div>
-          </div>
-        </div>
-
-        <div class="button-row">
-          <button @click="applyLogoLighting" class="apply-btn" :disabled="!lightingEnabled">Apply Logo Lighting</button>
-          <button @click="fetchLogoLighting" class="fetch-btn">Fetch Current</button>
-        </div>
-      </div>
-
-      <!-- Section 4: Custom Per-Key Lighting -->
-      <div class="settings-section">
-        <h3>Custom Per-Key Lighting</h3>
-        <div class="control-row">
-          <label>Key Number</label>
-          <input 
-            type="number" 
-            v-model.number="customLighting.keyNumber" 
-            min="1" 
-            max="255" 
-            :disabled="!lightingEnabled"
-          />
-        </div>
-
-        <div class="control-row">
-          <label>Color</label>
-          <div class="color-inputs">
-            <div class="color-input-group">
-              <label>R</label>
-              <input type="number" v-model.number="customLighting.color.r" min="0" max="255" :disabled="!lightingEnabled" />
-            </div>
-            <div class="color-input-group">
-              <label>G</label>
-              <input type="number" v-model.number="customLighting.color.g" min="0" max="255" :disabled="!lightingEnabled" />
-            </div>
-            <div class="color-input-group">
-              <label>B</label>
-              <input type="number" v-model.number="customLighting.color.b" min="0" max="255" :disabled="!lightingEnabled" />
-            </div>
-            <div class="color-preview" :style="{ backgroundColor: `rgb(${customLighting.color.r}, ${customLighting.color.g}, ${customLighting.color.b})` }"></div>
-          </div>
-        </div>
-
-        <div class="button-row">
-          <button @click="applyCustomLighting" class="apply-btn" :disabled="!lightingEnabled">Apply Custom Lighting</button>
-          <button @click="saveCustomLighting" class="save-btn" :disabled="!lightingEnabled">Save to Firmware</button>
-          <button @click="fetchCustomLighting" class="fetch-btn">Fetch Key Color</button>
-        </div>
-      </div>
-
-      <!-- Section 5: Special Effects -->
-      <div class="settings-section">
-        <h3>Special Effects</h3>
-        <div class="control-row">
-          <label>Effect Mode</label>
-          <select v-model="specialLighting.mode" class="mode-select" :disabled="!lightingEnabled">
-            <option value="reactive">Reactive</option>
-            <option value="ripple">Ripple</option>
-            <option value="starlight">Starlight</option>
-          </select>
-        </div>
-
-        <div class="control-row">
-          <label>Brightness ({{ specialLighting.brightness }})</label>
-          <input 
-            type="range" 
-            v-model.number="specialLighting.brightness" 
-            min="0" 
-            max="100" 
-            :disabled="!lightingEnabled"
-            class="slider"
-          />
-        </div>
-
-        <div class="control-row">
-          <label>Speed ({{ specialLighting.speed }})</label>
-          <input 
-            type="range" 
-            v-model.number="specialLighting.speed" 
-            min="0" 
-            max="100" 
-            :disabled="!lightingEnabled"
-            class="slider"
-          />
-        </div>
-
-        <div class="button-row">
-          <button @click="applySpecialLighting" class="apply-btn" :disabled="!lightingEnabled">Apply Special Effect</button>
-          <button @click="fetchSpecialLighting" class="fetch-btn">Fetch Current</button>
-        </div>
-      </div>
-
-      <!-- Section 6: Saturation Control -->
-      <div class="settings-section">
-        <h3>Saturation Control</h3>
-        <div class="control-row">
-          <label>Saturation ({{ saturation }}%)</label>
-          <input 
-            type="range" 
-            v-model.number="saturation" 
-            min="0" 
-            max="100" 
-            :disabled="!lightingEnabled"
-            class="slider"
-          />
-        </div>
-
-        <div class="button-row">
-          <button @click="applySaturation" class="apply-btn" :disabled="!lightingEnabled">Apply Saturation</button>
-          <button @click="fetchSaturation" class="fetch-btn">Fetch Current</button>
-        </div>
-      </div>
-
-      <!-- Debug Output Section -->
-      <div class="settings-section">
-        <h3>Debug Output</h3>
+      <!-- Debug Console -->
+      <details class="debug-console" open>
+        <summary>Debug Console (Click to toggle)</summary>
         <div class="debug-output">
           <pre>{{ debugOutput }}</pre>
         </div>
-        <button @click="clearDebugOutput" class="clear-btn">Clear Output</button>
-      </div>
+        <button @click="clearDebugOutput" class="clear-btn">Clear Console</button>
+      </details>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
+import { useMappedKeyboard } from '@utils/MappedKeyboard';
+import { keyMap } from '@utils/keyMap';
 import debugKeyboardService from '@services/DebugKeyboardService';
+import type { IDefKeyInfo } from '../types/types';
 
 export default defineComponent({
-  name: 'Debug',
+  name: 'LightingDebug',
   setup() {
     const notification = ref<{ message: string; isError: boolean } | null>(null);
     const lightingEnabled = ref(true);
     const debugOutput = ref('Lighting Debug Console\n-------------------\n');
+    const selectedKeys = ref<IDefKeyInfo[]>([]);
+
+    const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, error } = useMappedKeyboard(ref(0));
 
     const globalLighting = ref({
       mode: 'static',
@@ -260,7 +378,6 @@ export default defineComponent({
     });
 
     const customLighting = ref({
-      keyNumber: 4,
       color: { r: 255, g: 0, b: 0 }
     });
 
@@ -271,7 +388,6 @@ export default defineComponent({
     });
 
     const saturation = ref(100);
-
     const savedLightingState = ref<any>(null);
 
     const log = (message: string) => {
@@ -286,6 +402,92 @@ export default defineComponent({
       }, 5000);
     };
 
+    // Key selection functions
+    const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
+      const physicalKeyValue = key.physicalKeyValue || key.keyValue;
+      const existingIndex = selectedKeys.value.findIndex(k => (k.physicalKeyValue || k.keyValue) === physicalKeyValue);
+      if (existingIndex > -1) {
+        selectedKeys.value.splice(existingIndex, 1);
+      } else {
+        selectedKeys.value.push(key);
+      }
+      log(`Selected keys: ${selectedKeys.value.length}`);
+    };
+
+    const selectAll = () => {
+      const totalKeys = layout.value.flat().length;
+      if (selectedKeys.value.length === totalKeys) {
+        selectedKeys.value = [];
+        log('Deselected all keys');
+      } else {
+        selectedKeys.value = layout.value.flat();
+        log(`Selected all ${totalKeys} keys`);
+      }
+    };
+
+    const selectWASD = () => {
+      const wasdLabels = ['W', 'A', 'S', 'D'];
+      const wasdKeys = layout.value
+        .flat()
+        .filter(keyInfo => {
+          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
+          return wasdLabels.includes(label.toUpperCase());
+        });
+      const physicalWASD = wasdKeys.map(key => key.physicalKeyValue || key.keyValue);
+      const currentlySelectedWASD = selectedKeys.value.filter(k => physicalWASD.includes(k.physicalKeyValue || k.keyValue));
+      if (currentlySelectedWASD.length === wasdKeys.length) {
+        selectedKeys.value = selectedKeys.value.filter(k => !physicalWASD.includes(k.physicalKeyValue || k.keyValue));
+        log('Deselected WASD keys');
+      } else {
+        selectedKeys.value = [...selectedKeys.value, ...wasdKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
+        log('Selected WASD keys');
+      }
+    };
+
+    const selectLetters = () => {
+      const letterRegex = /^[A-Z]$/;
+      const letterKeys = layout.value
+        .flat()
+        .filter(keyInfo => {
+          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
+          return letterRegex.test(label.toUpperCase());
+        });
+      const physicalLetters = letterKeys.map(key => key.physicalKeyValue || key.keyValue);
+      const currentlySelectedLetters = selectedKeys.value.filter(k => physicalLetters.includes(k.physicalKeyValue || k.keyValue));
+      if (currentlySelectedLetters.length === letterKeys.length) {
+        selectedKeys.value = selectedKeys.value.filter(k => !physicalLetters.includes(k.physicalKeyValue || k.keyValue));
+        log('Deselected letter keys');
+      } else {
+        selectedKeys.value = [...selectedKeys.value, ...letterKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
+        log('Selected letter keys');
+      }
+    };
+
+    const selectNumbers = () => {
+      const numberLabels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+      const numberKeys = layout.value
+        .flat()
+        .filter(keyInfo => {
+          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
+          return numberLabels.includes(label);
+        });
+      const physicalNumbers = numberKeys.map(key => key.physicalKeyValue || key.keyValue);
+      const currentlySelectedNumbers = selectedKeys.value.filter(k => physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
+      if (currentlySelectedNumbers.length === numberKeys.length) {
+        selectedKeys.value = selectedKeys.value.filter(k => !physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
+        log('Deselected number keys');
+      } else {
+        selectedKeys.value = [...selectedKeys.value, ...numberKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
+        log('Selected number keys');
+      }
+    };
+
+    const selectNone = () => {
+      selectedKeys.value = [];
+      log('Deselected all keys');
+    };
+
+    // Lighting control functions
     const toggleLighting = async () => {
       try {
         if (lightingEnabled.value) {
@@ -368,17 +570,17 @@ export default defineComponent({
 
     const applyCustomLighting = async () => {
       try {
-        const param = {
-          keys: [{
-            key: customLighting.value.keyNumber,
-            r: customLighting.value.color.r,
-            g: customLighting.value.color.g,
-            b: customLighting.value.color.b
-          }]
-        };
-        log(`Applying custom lighting: ${JSON.stringify(param)}`);
+        const keys = selectedKeys.value.map(k => ({
+          key: k.physicalKeyValue || k.keyValue,
+          r: customLighting.value.color.r,
+          g: customLighting.value.color.g,
+          b: customLighting.value.color.b
+        }));
+        
+        const param = { keys };
+        log(`Applying custom lighting to ${keys.length} keys: ${JSON.stringify(param)}`);
         await debugKeyboardService.setCustomLighting(param);
-        setNotification('Custom lighting applied successfully', false);
+        setNotification(`Custom lighting applied to ${keys.length} key(s)`, false);
         log('Custom lighting applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
@@ -395,18 +597,6 @@ export default defineComponent({
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
         setNotification('Failed to save custom lighting', true);
-      }
-    };
-
-    const fetchCustomLighting = async () => {
-      try {
-        log(`Fetching custom lighting for key ${customLighting.value.keyNumber}...`);
-        const result = await debugKeyboardService.getCustomLighting(customLighting.value.keyNumber);
-        log(`Custom lighting for key ${customLighting.value.keyNumber}: ${JSON.stringify(result)}`);
-        setNotification('Custom lighting fetched', false);
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to fetch custom lighting', true);
       }
     };
 
@@ -468,6 +658,8 @@ export default defineComponent({
 
     onMounted(async () => {
       log('Debug page mounted, attempting connection...');
+      await fetchLayerLayout();
+      
       try {
         await debugKeyboardService.autoConnect();
         log('Debug service connected successfully');
@@ -492,6 +684,19 @@ export default defineComponent({
       specialLighting,
       saturation,
       debugOutput,
+      selectedKeys,
+      layout,
+      loaded,
+      gridStyle,
+      getKeyStyle,
+      keyMap,
+      error,
+      selectKey,
+      selectAll,
+      selectWASD,
+      selectLetters,
+      selectNumbers,
+      selectNone,
       toggleLighting,
       applyGlobalLighting,
       fetchGlobalLighting,
@@ -499,7 +704,6 @@ export default defineComponent({
       fetchLogoLighting,
       applyCustomLighting,
       saveCustomLighting,
-      fetchCustomLighting,
       applySpecialLighting,
       fetchSpecialLighting,
       applySaturation,
@@ -514,11 +718,9 @@ export default defineComponent({
 @use 'sass:color';
 @use '@styles/variables' as v;
 
-.debug-page {
+.lighting-debug-page {
   padding: 20px;
   color: v.$text-color;
-  max-width: 1200px;
-  margin: 0 auto;
 
   .title {
     color: v.$primary-color;
@@ -559,20 +761,120 @@ export default defineComponent({
 .lighting-container {
   display: flex;
   flex-direction: column;
+  gap: 24px;
+}
+
+.no-layout {
+  text-align: center;
+  color: v.$text-color;
+  font-size: 1rem;
+  padding: 20px;
+}
+
+.key-grid {
+  display: block !important;
+  position: relative;
+  width: fit-content;
+  margin: 0 auto;
+  min-height: 300px;
+  max-height: 500px;
+  flex-shrink: 0;
+  visibility: visible !important;
+  z-index: 1;
+}
+
+.key-row {
+  display: contents;
+}
+
+.key-btn {
+  position: absolute;
+  padding: 4px;
+  border: 2px solid rgba(v.$text-color, 0.3);
+  border-radius: v.$border-radius;
+  background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
+  color: v.$text-color;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  user-select: none;
+  text-align: center;
+  visibility: visible !important;
+  z-index: 2;
+
+  .key-label {
+    font-size: 0.8rem;
+  }
+
+  &.lighting-key-selected {
+    border-color: v.$accent-color;
+    box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
+    background: linear-gradient(to bottom, color.adjust(v.$accent-color, $lightness: -20%) 70%, color.adjust(v.$accent-color, $lightness: -10%) 100%);
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.bottom-section {
+  display: flex;
+  flex-direction: column;
   gap: 20px;
 }
 
-.settings-section {
+.selection-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  .select-btn {
+    padding: 10px 20px;
+    background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 20%) 0%, color.adjust(v.$background-dark, $lightness: 15%) 100%);
+    border: 1px solid rgba(v.$text-color, 0.3);
+    border-radius: v.$border-radius;
+    color: v.$text-color;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 25%) 0%, color.adjust(v.$background-dark, $lightness: 20%) 100%);
+      border-color: v.$accent-color;
+    }
+  }
+}
+
+.parent {
+  display: flex;
+  justify-content: center;
+}
+
+.settings-panel {
+  width: 100%;
+  max-width: 800px;
   background: rgba(v.$background-dark, 0.5);
   border: 1px solid rgba(v.$text-color, 0.1);
   border-radius: v.$border-radius;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
-  h3 {
-    color: v.$primary-color;
-    margin: 0 0 15px 0;
-    font-size: 1.2rem;
-    font-weight: 600;
+.settings-section {
+  .header-row {
+    margin-bottom: 15px;
+
+    h3 {
+      color: v.$primary-color;
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
   }
 }
 
@@ -621,14 +923,14 @@ export default defineComponent({
   }
 }
 
-.control-row {
+.input-group {
   margin-bottom: 15px;
 
-  label {
-    display: block;
+  .label {
     margin-bottom: 8px;
     font-size: 0.9rem;
     color: v.$text-color;
+    font-weight: 500;
   }
 
   .mode-select {
@@ -646,40 +948,84 @@ export default defineComponent({
     }
   }
 
-  .slider {
-    width: 100%;
-    height: 6px;
-    border-radius: 3px;
-    background: rgba(v.$text-color, 0.2);
-    outline: none;
+  .slider-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
 
-    &::-webkit-slider-thumb {
-      appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: v.$accent-color;
-      cursor: pointer;
+    .value-display {
+      min-width: 30px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: rgba(v.$text-color, 0.7);
     }
 
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    input[type="range"] {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(v.$text-color, 0.2);
+      outline: none;
+
+      &::-webkit-slider-thumb {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: v.$accent-color;
+        cursor: pointer;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     }
   }
 
-  input[type="number"] {
-    width: 100%;
-    padding: 8px 12px;
-    background: rgba(v.$background-dark, 0.8);
-    border: 1px solid rgba(v.$text-color, 0.3);
-    border-radius: v.$border-radius;
-    color: v.$text-color;
-    font-size: 0.9rem;
+  .adjusters {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .adjust-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 20%) 0%, color.adjust(v.$background-dark, $lightness: 15%) 100%);
+      border: 1px solid rgba(v.$text-color, 0.3);
+      border-radius: v.$border-radius;
+      color: v.$text-color;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 25%) 0%, color.adjust(v.$background-dark, $lightness: 20%) 100%);
+        border-color: v.$accent-color;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    input[type="number"] {
+      flex: 1;
+      padding: 8px 12px;
+      background: rgba(v.$background-dark, 0.8);
+      border: 1px solid rgba(v.$text-color, 0.3);
+      border-radius: v.$border-radius;
+      color: v.$text-color;
+      font-size: 0.9rem;
+      text-align: center;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     }
   }
 }
@@ -698,6 +1044,7 @@ export default defineComponent({
       margin: 0;
       font-size: 0.75rem;
       color: v.$text-color;
+      font-weight: 600;
     }
 
     input {
@@ -708,6 +1055,7 @@ export default defineComponent({
       border-radius: v.$border-radius;
       color: v.$text-color;
       font-size: 0.85rem;
+      text-align: center;
 
       &:disabled {
         opacity: 0.5;
@@ -727,7 +1075,7 @@ export default defineComponent({
 .button-row {
   display: flex;
   gap: 10px;
-  margin-top: 15px;
+  margin-top: 10px;
 
   button {
     padding: 10px 20px;
@@ -736,6 +1084,7 @@ export default defineComponent({
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.2s;
+    font-weight: 500;
 
     &:disabled {
       opacity: 0.5;
@@ -769,33 +1118,58 @@ export default defineComponent({
       background: color.adjust(#10b981, $lightness: 10%);
     }
   }
-
-  .clear-btn {
-    background: #6b7280;
-    color: white;
-
-    &:hover:not(:disabled) {
-      background: color.adjust(#6b7280, $lightness: 10%);
-    }
-  }
 }
 
-.debug-output {
-  background: rgba(0, 0, 0, 0.4);
+.debug-console {
+  margin-top: 20px;
   border: 1px solid rgba(v.$text-color, 0.2);
   border-radius: v.$border-radius;
-  padding: 15px;
-  max-height: 300px;
-  overflow-y: auto;
-  margin-bottom: 10px;
+  background-color: rgba(v.$background-dark, 0.5);
 
-  pre {
-    margin: 0;
-    font-family: 'Courier New', monospace;
-    font-size: 0.85rem;
-    color: v.$text-color;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+  summary {
+    padding: 12px 15px;
+    cursor: pointer;
+    font-weight: 600;
+    color: v.$accent-color;
+    user-select: none;
+
+    &:hover {
+      background: rgba(v.$accent-color, 0.1);
+    }
+  }
+
+  .debug-output {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(v.$text-color, 0.2);
+    border-radius: v.$border-radius;
+    padding: 15px;
+    margin: 0 15px 15px 15px;
+    max-height: 300px;
+    overflow-y: auto;
+
+    pre {
+      margin: 0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      color: v.$text-color;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  }
+
+  .clear-btn {
+    margin: 0 15px 15px 15px;
+    padding: 8px 16px;
+    background: #6b7280;
+    color: white;
+    border: none;
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    font-size: 0.9rem;
+
+    &:hover {
+      background: color.adjust(#6b7280, $lightness: 10%);
+    }
   }
 }
 </style>

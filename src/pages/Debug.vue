@@ -361,71 +361,6 @@ export default defineComponent({
       }, 5000);
     };
 
-    // Helper function to update UI controls from lighting state
-    const updateUIFromLightingState = (state: any) => {
-      if (!state) return;
-      
-      log(`Updating UI controls from getLighting(): ${JSON.stringify(state)}`);
-      
-      // Update global lighting controls from getLighting() response
-      if (state.mode !== undefined) globalLighting.value.mode = state.mode;
-      
-      // Handle both 'luminance' (SDK) and 'brightness' (UI/some responses)
-      if (state.luminance !== undefined) {
-        globalLighting.value.brightness = state.luminance;
-      } else if (state.brightness !== undefined) {
-        globalLighting.value.brightness = state.brightness;
-      }
-      
-      if (state.speed !== undefined) globalLighting.value.speed = state.speed;
-      
-      // Handle color updates - try colors array first, then fallback to color object
-      let colorUpdated = false;
-      
-      // Try colors array (e.g., ["#ff0000", "#00ff00"])
-      if (state.colors && Array.isArray(state.colors) && state.colors.length > 0) {
-        const firstColor = state.colors[0];
-        
-        // Handle hex string format (e.g., "#ff0000")
-        if (typeof firstColor === 'string' && firstColor.startsWith('#')) {
-          const hex = firstColor.substring(1);
-          if (hex.length === 6) {
-            globalLighting.value.color.r = parseInt(hex.substring(0, 2), 16);
-            globalLighting.value.color.g = parseInt(hex.substring(2, 4), 16);
-            globalLighting.value.color.b = parseInt(hex.substring(4, 6), 16);
-            colorUpdated = true;
-          }
-        }
-        // Handle RGB object format (e.g., { r: 255, g: 0, b: 0 })
-        else if (typeof firstColor === 'object' && 
-                 firstColor.r !== undefined && 
-                 firstColor.g !== undefined && 
-                 firstColor.b !== undefined) {
-          globalLighting.value.color.r = firstColor.r;
-          globalLighting.value.color.g = firstColor.g;
-          globalLighting.value.color.b = firstColor.b;
-          colorUpdated = true;
-        }
-      }
-      
-      // Fallback to color object if colors array didn't work
-      if (!colorUpdated && state.color && typeof state.color === 'object') {
-        if (state.color.r !== undefined && 
-            state.color.g !== undefined && 
-            state.color.b !== undefined) {
-          globalLighting.value.color.r = state.color.r;
-          globalLighting.value.color.g = state.color.g;
-          globalLighting.value.color.b = state.color.b;
-        }
-      }
-      
-      // Note: Special lighting and saturation have their own getter methods if needed
-      // (getSpecialLighting, getSaturation), but all write methods return getLighting()
-      // for consistency. Use the manual "Fetch Current" buttons for special/saturation data.
-      
-      log('Global lighting UI controls updated');
-    };
-
     // Key selection functions
     const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
       const physicalKeyValue = key.physicalKeyValue || key.keyValue;
@@ -542,11 +477,10 @@ export default defineComponent({
           log(`Filtered parameters for setLighting(): ${JSON.stringify(filteredParams)}`);
           
           log('Calling setLighting() with filtered parameters...');
-          const freshState = await debugKeyboardService.setLighting(filteredParams);
-          updateUIFromLightingState(freshState);
+          await debugKeyboardService.setLighting(filteredParams);
           lightingEnabled.value = true;
           setNotification('Lighting turned ON via setLighting()', false);
-          log('setLighting() called successfully - lights on and UI updated');
+          log('setLighting() called successfully - lights should be on');
         }
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
@@ -557,10 +491,9 @@ export default defineComponent({
     const applyGlobalLighting = async () => {
       try {
         log(`Applying global lighting: ${JSON.stringify(globalLighting.value)}`);
-        const freshState = await debugKeyboardService.setLighting(globalLighting.value);
-        updateUIFromLightingState(freshState);
+        await debugKeyboardService.setLighting(globalLighting.value);
         setNotification('Global lighting applied successfully', false);
-        log('Global lighting applied and UI updated');
+        log('Global lighting applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
         setNotification('Failed to apply global lighting', true);
@@ -594,10 +527,9 @@ export default defineComponent({
         
         const param = { keys };
         log(`Applying custom lighting to ${keys.length} keys: ${JSON.stringify(param)}`);
-        const freshState = await debugKeyboardService.setCustomLighting(param);
-        updateUIFromLightingState(freshState);
+        await debugKeyboardService.setCustomLighting(param);
         setNotification(`Custom lighting applied to ${keys.length} key(s)`, false);
-        log('Custom lighting applied and UI updated');
+        log('Custom lighting applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
         setNotification('Failed to apply custom lighting', true);
@@ -607,10 +539,9 @@ export default defineComponent({
     const saveCustomLighting = async () => {
       try {
         log('Saving custom lighting to firmware...');
-        const freshState = await debugKeyboardService.saveCustomLighting();
-        updateUIFromLightingState(freshState);
+        await debugKeyboardService.saveCustomLighting();
         setNotification('Custom lighting saved to firmware', false);
-        log('Custom lighting saved and UI updated');
+        log('Custom lighting saved to firmware successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
         setNotification('Failed to save custom lighting', true);
@@ -620,10 +551,9 @@ export default defineComponent({
     const applySpecialLighting = async () => {
       try {
         log(`Applying special lighting: ${JSON.stringify(specialLighting.value)}`);
-        const freshState = await debugKeyboardService.setSpecialLighting(specialLighting.value);
-        updateUIFromLightingState(freshState);
+        await debugKeyboardService.setSpecialLighting(specialLighting.value);
         setNotification('Special lighting applied successfully', false);
-        log('Special lighting applied - global controls updated from device');
+        log('Special lighting applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
         setNotification('Failed to apply special lighting', true);
@@ -648,10 +578,9 @@ export default defineComponent({
     const applySaturation = async () => {
       try {
         log(`Applying saturation: ${saturation.value}%`);
-        const freshState = await debugKeyboardService.setLightingSaturation([saturation.value]);
-        updateUIFromLightingState(freshState);
+        await debugKeyboardService.setLightingSaturation([saturation.value]);
         setNotification('Saturation applied successfully', false);
-        log('Saturation applied - global controls updated from device');
+        log('Saturation applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
         setNotification('Failed to apply saturation', true);
@@ -682,31 +611,11 @@ export default defineComponent({
       try {
         await debugKeyboardService.autoConnect();
         log('Debug service connected successfully');
-        
-        // Fetch initial lighting state to populate UI controls
-        try {
-          log('Fetching initial lighting state...');
-          const initialState = await debugKeyboardService.getLighting();
-          updateUIFromLightingState(initialState);
-          log('Initial lighting state loaded and UI populated');
-        } catch (lightingError) {
-          log(`WARNING: Failed to fetch initial lighting state: ${(lightingError as Error).message}`);
-        }
       } catch (error) {
         log(`Auto-connect failed: ${(error as Error).message}`);
         try {
           await debugKeyboardService.requestDevice();
           log('Debug service connected via user prompt');
-          
-          // Fetch initial lighting state after manual connection
-          try {
-            log('Fetching initial lighting state...');
-            const initialState = await debugKeyboardService.getLighting();
-            updateUIFromLightingState(initialState);
-            log('Initial lighting state loaded and UI populated');
-          } catch (lightingError) {
-            log(`WARNING: Failed to fetch initial lighting state: ${(lightingError as Error).message}`);
-          }
         } catch (promptError) {
           log(`Connection failed: ${(promptError as Error).message}`);
           setNotification('Debug connection failed', true);

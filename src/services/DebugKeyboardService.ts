@@ -340,10 +340,9 @@ class DebugKeyboardService {
     try {
       if (!this.connectedDevice) throw new Error('Debug: No device connected');
       console.log('Debug setting lighting:', lightModeConfig);
-      await this.keyboard.setLighting(lightModeConfig);
-      console.log('Debug set lighting complete, fetching current state...');
-      const currentState = await this.getLighting();
-      return currentState;
+      const result = await this.keyboard.setLighting(lightModeConfig);
+      console.log('Debug set lighting result:', result);
+      return result;
     } catch (error) {
       console.error('Debug: Set lighting failed:', error);
       throw new Error(`Debug: Set lighting failed: ${(error as Error).message}`);
@@ -354,10 +353,9 @@ class DebugKeyboardService {
     try {
       if (!this.connectedDevice) throw new Error('Debug: No device connected');
       console.log('Debug setting logo lighting:', lightModeConfig);
-      await this.keyboard.setLogoLighting(lightModeConfig);
-      console.log('Debug set logo lighting complete, fetching current state...');
-      const currentState = await this.getLighting();
-      return currentState;
+      const result = await this.keyboard.setLogoLighting(lightModeConfig);
+      console.log('Debug set logo lighting result:', result);
+      return result;
     } catch (error) {
       console.error('Debug: Set logo lighting failed:', error);
       throw new Error(`Debug: Set logo lighting failed: ${(error as Error).message}`);
@@ -368,10 +366,9 @@ class DebugKeyboardService {
     try {
       if (!this.connectedDevice) throw new Error('Debug: No device connected');
       console.log('Debug setting custom lighting:', param);
-      await this.keyboard.setCustomLighting(param);
-      console.log('Debug set custom lighting complete, fetching current state...');
-      const currentState = await this.getLighting();
-      return currentState;
+      const result = await this.keyboard.setCustomLighting(param);
+      console.log('Debug set custom lighting result:', result);
+      return result;
     } catch (error) {
       console.error('Debug: Set custom lighting failed:', error);
       throw new Error(`Debug: Set custom lighting failed: ${(error as Error).message}`);
@@ -381,10 +378,9 @@ class DebugKeyboardService {
   async saveCustomLighting(): Promise<any> {
     try {
       if (!this.connectedDevice) throw new Error('Debug: No device connected');
-      await this.keyboard.saveCustomLighting();
-      console.log('Debug save custom lighting complete, fetching current state...');
-      const currentState = await this.getLighting();
-      return currentState;
+      const result = await this.keyboard.saveCustomLighting();
+      console.log('Debug save custom lighting result:', result);
+      return result;
     } catch (error) {
       console.error('Debug: Save custom lighting failed:', error);
       throw new Error(`Debug: Save custom lighting failed: ${(error as Error).message}`);
@@ -395,10 +391,9 @@ class DebugKeyboardService {
     try {
       if (!this.connectedDevice) throw new Error('Debug: No device connected');
       console.log('Debug setting special lighting:', lightModeConfig);
-      await this.keyboard.setSpecialLighting(lightModeConfig);
-      console.log('Debug set special lighting complete, fetching current state...');
-      const currentState = await this.getLighting();
-      return currentState;
+      const result = await this.keyboard.setSpecialLighting(lightModeConfig);
+      console.log('Debug set special lighting result:', result);
+      return result;
     } catch (error) {
       console.error('Debug: Set special lighting failed:', error);
       throw new Error(`Debug: Set special lighting failed: ${(error as Error).message}`);
@@ -409,10 +404,9 @@ class DebugKeyboardService {
     try {
       if (!this.connectedDevice) throw new Error('Debug: No device connected');
       console.log('Debug setting lighting saturation:', param);
-      await this.keyboard.setLightingSaturation(param);
-      console.log('Debug set lighting saturation complete, fetching current state...');
-      const currentState = await this.getLighting();
-      return currentState;
+      const result = await this.keyboard.setLightingSaturation(param);
+      console.log('Debug set lighting saturation result:', result);
+      return result;
     } catch (error) {
       console.error('Debug: Set lighting saturation failed:', error);
       throw new Error(`Debug: Set lighting saturation failed: ${(error as Error).message}`);

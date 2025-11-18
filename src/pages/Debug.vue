@@ -45,15 +45,15 @@
               </div>
               <div class="toggle-row">
                 <label class="toggle-label">Lighting</label>
-                <div class="toggle-switch" @click="toggleLighting">
+                <div class="toggle-switch" @click="toggleLighting" :class="{ disabled: initializing }">
                   <div class="toggle-slider" :class="{ active: lightingEnabled }">
-                    <span class="toggle-text">{{ lightingEnabled ? 'ON' : 'OFF' }}</span>
+                    <span class="toggle-text">{{ initializing ? 'SYNCING...' : (lightingEnabled ? 'ON' : 'OFF') }}</span>
                   </div>
                 </div>
               </div>
               <div class="input-group">
                 <div class="label">RGB Brightness (Luminance)</div>
-                <select v-model.number="masterLuminance" @change="applyMasterLuminance" class="mode-select" :disabled="!lightingEnabled">
+                <select v-model.number="masterLuminance" @change="applyMasterLuminance" class="mode-select" :disabled="initializing || !lightingEnabled">
                   <option :value="0">0 - Off</option>
                   <option :value="1">1 - Low</option>
                   <option :value="2">2 - Medium</option>
@@ -63,7 +63,7 @@
               </div>
               <div class="input-group">
                 <div class="label">Animation Speed</div>
-                <select v-model.number="masterSpeed" @change="applyMasterSpeed" class="mode-select" :disabled="!lightingEnabled">
+                <select v-model.number="masterSpeed" @change="applyMasterSpeed" class="mode-select" :disabled="initializing || !lightingEnabled">
                   <option :value="0">0 - Slowest</option>
                   <option :value="1">1 - Slow</option>
                   <option :value="2">2 - Medium</option>
@@ -73,7 +73,7 @@
               </div>
               <div class="input-group">
                 <div class="label">Sleep Timer (minutes)</div>
-                <select v-model.number="masterSleepDelay" @change="applyMasterSleepDelay" class="mode-select" :disabled="!lightingEnabled">
+                <select v-model.number="masterSleepDelay" @change="applyMasterSleepDelay" class="mode-select" :disabled="initializing || !lightingEnabled">
                   <option :value="0">Never</option>
                   <option :value="1">1 minute</option>
                   <option :value="2">2 minutes</option>
@@ -316,6 +316,7 @@ export default defineComponent({
   name: 'LightingDebug',
   setup() {
     const notification = ref<{ message: string; isError: boolean } | null>(null);
+    const initializing = ref(false);
     const lightingEnabled = ref(true);
     const masterLuminance = ref(4);
     const masterSpeed = ref(3);
@@ -449,6 +450,12 @@ export default defineComponent({
 
     // Lighting control functions
     const toggleLighting = async () => {
+      // Prevent interaction during initialization
+      if (initializing.value) {
+        log('Toggle blocked: initialization in progress');
+        return;
+      }
+      
       try {
         if (lightingEnabled.value) {
           log('Toggle OFF - Syncing SDK cache to prevent glitch...');
@@ -659,6 +666,38 @@ export default defineComponent({
       debugOutput.value = 'Lighting Debug Console\n-------------------\n';
     };
 
+    const initLightingFromDevice = async () => {
+      try {
+        initializing.value = true;
+        log('Initializing UI from keyboard state...');
+        
+        const currentState = await debugKeyboardService.getLighting();
+        log(`Retrieved lighting state: ${JSON.stringify(currentState)}`);
+        
+        if (currentState) {
+          // Update master controls
+          lightingEnabled.value = currentState.open ?? true;
+          masterLuminance.value = currentState.luminance ?? 4;
+          masterSpeed.value = currentState.speed ?? 3;
+          masterSleepDelay.value = currentState.sleepdelay ?? 0;
+          
+          // Update global lighting form
+          if (currentState.mode) globalLighting.value.mode = currentState.mode;
+          if (currentState.brightness !== undefined) globalLighting.value.brightness = currentState.brightness;
+          if (currentState.speed !== undefined) globalLighting.value.speed = currentState.speed;
+          if (currentState.color) globalLighting.value.color = currentState.color;
+          
+          log('UI synchronized with keyboard state');
+          setNotification('UI synchronized with keyboard', false);
+        }
+      } catch (error) {
+        log(`Failed to initialize from device: ${(error as Error).message}`);
+        setNotification('Using default settings (device not connected)', true);
+      } finally {
+        initializing.value = false;
+      }
+    };
+
     onMounted(async () => {
       log('Debug page mounted, attempting connection...');
       await fetchLayerLayout();
@@ -666,20 +705,28 @@ export default defineComponent({
       try {
         await debugKeyboardService.autoConnect();
         log('Debug service connected successfully');
+        
+        // Sync UI with keyboard state after connection
+        await initLightingFromDevice();
       } catch (error) {
         log(`Auto-connect failed: ${(error as Error).message}`);
         try {
           await debugKeyboardService.requestDevice();
           log('Debug service connected via user prompt');
+          
+          // Sync UI with keyboard state after connection
+          await initLightingFromDevice();
         } catch (promptError) {
           log(`Connection failed: ${(promptError as Error).message}`);
           setNotification('Debug connection failed', true);
+          initializing.value = false;
         }
       }
     });
 
     return {
       notification,
+      initializing,
       lightingEnabled,
       masterLuminance,
       masterSpeed,
@@ -912,6 +959,12 @@ export default defineComponent({
     cursor: pointer;
     position: relative;
     transition: background 0.3s;
+
+    &.disabled {
+      pointer-events: none;
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
     .toggle-slider {
       position: absolute;

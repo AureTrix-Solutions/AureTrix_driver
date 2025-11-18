@@ -61,6 +61,16 @@
                   <option :value="4">4 - Maximum</option>
                 </select>
               </div>
+              <div class="input-group">
+                <div class="label">Animation Speed</div>
+                <select v-model.number="masterSpeed" @change="applyMasterSpeed" class="mode-select" :disabled="!lightingEnabled">
+                  <option :value="0">0 - Slowest</option>
+                  <option :value="1">1 - Slow</option>
+                  <option :value="2">2 - Medium</option>
+                  <option :value="3">3 - Fast</option>
+                  <option :value="4">4 - Fastest</option>
+                </select>
+              </div>
             </div>
 
             <!-- Global Lighting -->
@@ -290,6 +300,7 @@ export default defineComponent({
     const notification = ref<{ message: string; isError: boolean } | null>(null);
     const lightingEnabled = ref(true);
     const masterLuminance = ref(4);
+    const masterSpeed = ref(3);
     const debugOutput = ref('Lighting Debug Console\n-------------------\n');
     const selectedKeys = ref<IDefKeyInfo[]>([]);
 
@@ -485,6 +496,32 @@ export default defineComponent({
       }
     };
 
+    const applyMasterSpeed = async () => {
+      try {
+        log(`Applying master speed: ${masterSpeed.value}...`);
+        const currentState = await debugKeyboardService.getLighting();
+        log(`Current state retrieved: ${JSON.stringify(currentState)}`);
+        
+        if (!currentState) {
+          throw new Error('getLighting() returned no data');
+        }
+        
+        // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
+        const { open, dynamicColorId, ...filteredParams } = currentState;
+        
+        // Update speed with the selected value
+        filteredParams.speed = masterSpeed.value;
+        log(`Applying lighting with speed ${masterSpeed.value}: ${JSON.stringify(filteredParams)}`);
+        
+        await debugKeyboardService.setLighting(filteredParams);
+        setNotification(`Animation speed set to ${masterSpeed.value}`, false);
+        log('Master speed applied successfully');
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to apply master speed', true);
+      }
+    };
+
     const applyGlobalLighting = async () => {
       try {
         log(`Applying global lighting: ${JSON.stringify(globalLighting.value)}`);
@@ -599,6 +636,7 @@ export default defineComponent({
       notification,
       lightingEnabled,
       masterLuminance,
+      masterSpeed,
       globalLighting,
       customLighting,
       specialLighting,
@@ -619,6 +657,7 @@ export default defineComponent({
       selectNone,
       toggleLighting,
       applyMasterLuminance,
+      applyMasterSpeed,
       applyGlobalLighting,
       fetchGlobalLighting,
       applyCustomLighting,

@@ -148,46 +148,6 @@
               </div>
             </div>
 
-            <!-- Logo Lighting -->
-            <div class="settings-section">
-              <div class="header-row">
-                <h3>setLogoLighting / getLogoLighting</h3>
-              </div>
-
-              <div class="input-group">
-                <div class="label">Mode</div>
-                <select v-model="logoLighting.mode" class="mode-select" :disabled="!lightingEnabled">
-                  <option value="static">Static</option>
-                  <option value="breathing">Breathing</option>
-                  <option value="off">Off</option>
-                </select>
-              </div>
-
-              <div class="input-group">
-                <div class="label">Color (RGB)</div>
-                <div class="color-inputs">
-                  <div class="color-input-group">
-                    <label>R</label>
-                    <input type="number" v-model.number="logoLighting.color.r" min="0" max="255" :disabled="!lightingEnabled" />
-                  </div>
-                  <div class="color-input-group">
-                    <label>G</label>
-                    <input type="number" v-model.number="logoLighting.color.g" min="0" max="255" :disabled="!lightingEnabled" />
-                  </div>
-                  <div class="color-input-group">
-                    <label>B</label>
-                    <input type="number" v-model.number="logoLighting.color.b" min="0" max="255" :disabled="!lightingEnabled" />
-                  </div>
-                  <div class="color-preview" :style="{ backgroundColor: `rgb(${logoLighting.color.r}, ${logoLighting.color.g}, ${logoLighting.color.b})` }"></div>
-                </div>
-              </div>
-
-              <div class="button-row">
-                <button @click="applyLogoLighting" class="apply-btn" :disabled="!lightingEnabled">Apply</button>
-                <button @click="fetchLogoLighting" class="fetch-btn">Fetch Current</button>
-              </div>
-            </div>
-
             <!-- Custom Per-Key Lighting -->
             <div class="settings-section">
               <div class="header-row">
@@ -367,11 +327,6 @@ export default defineComponent({
       brightness: 80,
       speed: 50,
       color: { r: 255, g: 255, b: 255 }
-    });
-
-    const logoLighting = ref({
-      mode: 'static',
-      color: { r: 255, g: 0, b: 255 }
     });
 
     const customLighting = ref({
@@ -561,32 +516,6 @@ export default defineComponent({
       }
     };
 
-    const applyLogoLighting = async () => {
-      try {
-        log(`Applying logo lighting: ${JSON.stringify(logoLighting.value)}`);
-        await debugKeyboardService.setLogoLighting(logoLighting.value);
-        setNotification('Logo lighting applied successfully', false);
-        log('Logo lighting applied successfully');
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to apply logo lighting', true);
-      }
-    };
-
-    const fetchLogoLighting = async () => {
-      try {
-        log('Fetching current logo lighting...');
-        const result = await debugKeyboardService.getLogoLighting();
-        log(`Current logo lighting: ${JSON.stringify(result)}`);
-        if (result.mode) logoLighting.value.mode = result.mode;
-        if (result.color) logoLighting.value.color = result.color;
-        setNotification('Logo lighting fetched', false);
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to fetch logo lighting', true);
-      }
-    };
-
     const applyCustomLighting = async () => {
       try {
         const keys = selectedKeys.value.map(k => ({
@@ -698,7 +627,6 @@ export default defineComponent({
       notification,
       lightingEnabled,
       globalLighting,
-      logoLighting,
       customLighting,
       specialLighting,
       saturation,
@@ -720,8 +648,6 @@ export default defineComponent({
       toggleLighting,
       applyGlobalLighting,
       fetchGlobalLighting,
-      applyLogoLighting,
-      fetchLogoLighting,
       applyCustomLighting,
       saveCustomLighting,
       applySpecialLighting,

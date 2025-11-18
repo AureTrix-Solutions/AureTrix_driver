@@ -1,302 +1,510 @@
 <template>
   <div class="debug-page">
-    <h2 class="title">Debug Raw Keyboard Data</h2>
+    <h2 class="title">Lighting Debug & Testing</h2>
     <div v-if="notification" class="notification" :class="{ error: notification.isError }">
-      <span>{{ notification.message }}</span>
+      {{ notification.message }}
       <button @click="notification = null" class="dismiss-btn">&times;</button>
     </div>
-    <div class="debug-container">
-      <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
-        <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
-          <div
-            v-for="(keyInfo, cIdx) in row"
-            :key="`k-${rIdx}-${cIdx}`"
-            class="key-btn"
-            :class="{ 'debug-key-selected': loaded && selectedKey?.keyValue === keyInfo.keyValue }"
-            :style="getKeyStyle(rIdx, cIdx)"
-            @click="selectKey(keyInfo, rIdx, cIdx)"
-          >
-            {{ keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
-          </div>
-        </div>
-      </div>
-      <div v-else class="no-layout">
-        <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
-        <p>Debug: layout.length={{ layout.length }}, loaded={{ loaded }}, baseLayout={{ baseLayout?.value ? 'defined' : 'null' }}</p>
-      </div>
-      <details class="debug-window" open>
-        <summary>Getter Controls & Results (Click to toggle)</summary>
-        <div class="debug-content">
-          <div class="getter-buttons">
-            <button @click="clearData" class="clear-btn">Clear Data</button>
-            <button @click="fetchAllData" class="refresh-btn" :disabled="isLoading">All Getters</button>
-            <button @click="() => fetchMethod('getGlobalTouchTravel')" class="getter-btn" :disabled="isLoading || !selectedKey">Global Travel</button>
-            <button @click="() => fetchMethod('getPerformanceMode')" class="getter-btn" :disabled="isLoading || !selectedKey">Perf Mode</button>
-            <button @click="() => fetchMethod('getDksTravel')" class="getter-btn" :disabled="isLoading || !selectedKey">DKS Travel</button>
-            <button @click="() => fetchMethod('getDbTravel')" class="getter-btn" :disabled="isLoading || !selectedKey">DB Travel</button>
-            <button @click="() => fetchMethod('getRtTravel')" class="getter-btn" :disabled="isLoading || !selectedKey">RT Travel</button>
-            <button @click="() => fetchMethod('getSingleTravel')" class="getter-btn" :disabled="isLoading || !selectedKey">Single Travel</button>
-            <button @click="() => fetchMethod('getDpDr')" class="getter-btn" :disabled="isLoading || !selectedKey">DP/DR</button>
-            <button @click="() => fetchMethod('getAxis')" class="getter-btn" :disabled="isLoading || !selectedKey">Axis</button>
-            <button @click="() => fetchMethod('getAxisList')" class="getter-btn" :disabled="isLoading">Axis List</button>
-            <button @click="() => fetchMethod('getLighting')" class="getter-btn" :disabled="isLoading">Lighting</button>
-            <button @click="() => fetchMethod('getLogoLighting')" class="getter-btn" :disabled="isLoading">Logo Lighting</button>
-            <button @click="() => fetchMethod('getCustomLighting')" class="getter-btn" :disabled="isLoading || !selectedKey">Custom Lighting</button>
-            <button @click="() => fetchMethod('getSpecialLighting')" class="getter-btn" :disabled="isLoading">Special Lighting</button>
-            <button @click="() => fetchMethod('getRm6x21Travel')" class="getter-btn" :disabled="isLoading">RM6x21 Travel</button>
-            <button @click="() => fetchMethod('getRm6x21Calibration')" class="getter-btn" :disabled="isLoading">RM6x21 Calibration</button>
-          </div>
-          <div class="test-buttons">
-            <button @click="setSingleMode" class="test-btn" :disabled="isLoading || !selectedKey">Set Single Mode</button>
-            <button @click="setGlobalMode" class="test-btn" :disabled="isLoading || !selectedKey">Set Global Mode</button>
-          </div>
-          <div class="export-section">
-            <label for="export-filename">Export Filename:</label>
-            <input id="export-filename" v-model="exportFilename" placeholder="debug-config.json" class="filename-input" />
-            <button @click="exportConfig" class="test-btn" :disabled="isLoading">Export Config</button>
-          </div>
-          <div v-if="isLoading" class="loading">Loading...</div>
-          <div v-else class="data-sections">
-            <div v-for="(data, method) in rawData" :key="method" class="data-section">
-              <h4>{{ method.replace(/([A-Z])/g, ' $1').toUpperCase() }}</h4>
-              <pre>{{ JSON.stringify(data, null, 2) }}</pre>
+
+    <div class="lighting-container">
+      <!-- Section 1: Toggle Lighting On/Off -->
+      <div class="settings-section">
+        <h3>Master Lighting Control</h3>
+        <div class="toggle-row">
+          <label class="toggle-label">Lighting</label>
+          <div class="toggle-switch" @click="toggleLighting">
+            <div class="toggle-slider" :class="{ active: lightingEnabled }">
+              <span class="toggle-text">{{ lightingEnabled ? 'ON' : 'OFF' }}</span>
             </div>
           </div>
-          <div v-if="error" class="error">{{ error }}</div>
         </div>
-      </details>
+      </div>
+
+      <!-- Section 2: Global Lighting Controls -->
+      <div class="settings-section">
+        <h3>Global Lighting</h3>
+        <div class="control-row">
+          <label>Mode</label>
+          <select v-model="globalLighting.mode" class="mode-select" :disabled="!lightingEnabled">
+            <option value="static">Static</option>
+            <option value="breathing">Breathing</option>
+            <option value="wave">Wave</option>
+            <option value="reactive">Reactive</option>
+            <option value="ripple">Ripple</option>
+            <option value="rainbow">Rainbow</option>
+          </select>
+        </div>
+        
+        <div class="control-row">
+          <label>Brightness ({{ globalLighting.brightness }})</label>
+          <input 
+            type="range" 
+            v-model.number="globalLighting.brightness" 
+            min="0" 
+            max="100" 
+            :disabled="!lightingEnabled"
+            class="slider"
+          />
+        </div>
+
+        <div class="control-row">
+          <label>Speed ({{ globalLighting.speed }})</label>
+          <input 
+            type="range" 
+            v-model.number="globalLighting.speed" 
+            min="0" 
+            max="100" 
+            :disabled="!lightingEnabled"
+            class="slider"
+          />
+        </div>
+
+        <div class="control-row">
+          <label>Color</label>
+          <div class="color-inputs">
+            <div class="color-input-group">
+              <label>R</label>
+              <input type="number" v-model.number="globalLighting.color.r" min="0" max="255" :disabled="!lightingEnabled" />
+            </div>
+            <div class="color-input-group">
+              <label>G</label>
+              <input type="number" v-model.number="globalLighting.color.g" min="0" max="255" :disabled="!lightingEnabled" />
+            </div>
+            <div class="color-input-group">
+              <label>B</label>
+              <input type="number" v-model.number="globalLighting.color.b" min="0" max="255" :disabled="!lightingEnabled" />
+            </div>
+            <div class="color-preview" :style="{ backgroundColor: `rgb(${globalLighting.color.r}, ${globalLighting.color.g}, ${globalLighting.color.b})` }"></div>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button @click="applyGlobalLighting" class="apply-btn" :disabled="!lightingEnabled">Apply Global Lighting</button>
+          <button @click="fetchGlobalLighting" class="fetch-btn">Fetch Current</button>
+        </div>
+      </div>
+
+      <!-- Section 3: Logo Lighting -->
+      <div class="settings-section">
+        <h3>Logo Lighting</h3>
+        <div class="control-row">
+          <label>Mode</label>
+          <select v-model="logoLighting.mode" class="mode-select" :disabled="!lightingEnabled">
+            <option value="static">Static</option>
+            <option value="breathing">Breathing</option>
+            <option value="off">Off</option>
+          </select>
+        </div>
+
+        <div class="control-row">
+          <label>Color</label>
+          <div class="color-inputs">
+            <div class="color-input-group">
+              <label>R</label>
+              <input type="number" v-model.number="logoLighting.color.r" min="0" max="255" :disabled="!lightingEnabled" />
+            </div>
+            <div class="color-input-group">
+              <label>G</label>
+              <input type="number" v-model.number="logoLighting.color.g" min="0" max="255" :disabled="!lightingEnabled" />
+            </div>
+            <div class="color-input-group">
+              <label>B</label>
+              <input type="number" v-model.number="logoLighting.color.b" min="0" max="255" :disabled="!lightingEnabled" />
+            </div>
+            <div class="color-preview" :style="{ backgroundColor: `rgb(${logoLighting.color.r}, ${logoLighting.color.g}, ${logoLighting.color.b})` }"></div>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button @click="applyLogoLighting" class="apply-btn" :disabled="!lightingEnabled">Apply Logo Lighting</button>
+          <button @click="fetchLogoLighting" class="fetch-btn">Fetch Current</button>
+        </div>
+      </div>
+
+      <!-- Section 4: Custom Per-Key Lighting -->
+      <div class="settings-section">
+        <h3>Custom Per-Key Lighting</h3>
+        <div class="control-row">
+          <label>Key Number</label>
+          <input 
+            type="number" 
+            v-model.number="customLighting.keyNumber" 
+            min="1" 
+            max="255" 
+            :disabled="!lightingEnabled"
+          />
+        </div>
+
+        <div class="control-row">
+          <label>Color</label>
+          <div class="color-inputs">
+            <div class="color-input-group">
+              <label>R</label>
+              <input type="number" v-model.number="customLighting.color.r" min="0" max="255" :disabled="!lightingEnabled" />
+            </div>
+            <div class="color-input-group">
+              <label>G</label>
+              <input type="number" v-model.number="customLighting.color.g" min="0" max="255" :disabled="!lightingEnabled" />
+            </div>
+            <div class="color-input-group">
+              <label>B</label>
+              <input type="number" v-model.number="customLighting.color.b" min="0" max="255" :disabled="!lightingEnabled" />
+            </div>
+            <div class="color-preview" :style="{ backgroundColor: `rgb(${customLighting.color.r}, ${customLighting.color.g}, ${customLighting.color.b})` }"></div>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button @click="applyCustomLighting" class="apply-btn" :disabled="!lightingEnabled">Apply Custom Lighting</button>
+          <button @click="saveCustomLighting" class="save-btn" :disabled="!lightingEnabled">Save to Firmware</button>
+          <button @click="fetchCustomLighting" class="fetch-btn">Fetch Key Color</button>
+        </div>
+      </div>
+
+      <!-- Section 5: Special Effects -->
+      <div class="settings-section">
+        <h3>Special Effects</h3>
+        <div class="control-row">
+          <label>Effect Mode</label>
+          <select v-model="specialLighting.mode" class="mode-select" :disabled="!lightingEnabled">
+            <option value="reactive">Reactive</option>
+            <option value="ripple">Ripple</option>
+            <option value="starlight">Starlight</option>
+          </select>
+        </div>
+
+        <div class="control-row">
+          <label>Brightness ({{ specialLighting.brightness }})</label>
+          <input 
+            type="range" 
+            v-model.number="specialLighting.brightness" 
+            min="0" 
+            max="100" 
+            :disabled="!lightingEnabled"
+            class="slider"
+          />
+        </div>
+
+        <div class="control-row">
+          <label>Speed ({{ specialLighting.speed }})</label>
+          <input 
+            type="range" 
+            v-model.number="specialLighting.speed" 
+            min="0" 
+            max="100" 
+            :disabled="!lightingEnabled"
+            class="slider"
+          />
+        </div>
+
+        <div class="button-row">
+          <button @click="applySpecialLighting" class="apply-btn" :disabled="!lightingEnabled">Apply Special Effect</button>
+          <button @click="fetchSpecialLighting" class="fetch-btn">Fetch Current</button>
+        </div>
+      </div>
+
+      <!-- Section 6: Saturation Control -->
+      <div class="settings-section">
+        <h3>Saturation Control</h3>
+        <div class="control-row">
+          <label>Saturation ({{ saturation }}%)</label>
+          <input 
+            type="range" 
+            v-model.number="saturation" 
+            min="0" 
+            max="100" 
+            :disabled="!lightingEnabled"
+            class="slider"
+          />
+        </div>
+
+        <div class="button-row">
+          <button @click="applySaturation" class="apply-btn" :disabled="!lightingEnabled">Apply Saturation</button>
+          <button @click="fetchSaturation" class="fetch-btn">Fetch Current</button>
+        </div>
+      </div>
+
+      <!-- Debug Output Section -->
+      <div class="settings-section">
+        <h3>Debug Output</h3>
+        <div class="debug-output">
+          <pre>{{ debugOutput }}</pre>
+        </div>
+        <button @click="clearDebugOutput" class="clear-btn">Clear Output</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch, onMounted } from 'vue';
-import { useMappedKeyboard } from '@utils/MappedKeyboard';
-import { keyMap } from '@utils/keyMap';
-import type { IDefKeyInfo } from '../types/types';
+import { defineComponent, ref, onMounted } from 'vue';
 import debugKeyboardService from '@services/DebugKeyboardService';
-import KeyboardService from '@services/KeyboardService';
 
 export default defineComponent({
   name: 'Debug',
   setup() {
-    const selectedKey = ref<IDefKeyInfo | null>(null);
     const notification = ref<{ message: string; isError: boolean } | null>(null);
-    const rawData = ref<{ [key: string]: any }>({});
-    const isLoading = ref(false);
-    const error = ref<string | null>(null);
-    const exportFilename = ref('debug-config.json');
+    const lightingEnabled = ref(true);
+    const debugOutput = ref('Lighting Debug Console\n-------------------\n');
 
-    const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, baseLayout, error: layoutError } = useMappedKeyboard(ref(0));
-
-    const fetchMethod = async (method: string) => {
-      if (!selectedKey.value && method !== 'getGlobalTouchTravel' && method !== 'getAxisList' && method !== 'getLighting' && method !== 'getLogoLighting' && method !== 'getSpecialLighting' && method !== 'getRm6x21Travel' && method !== 'getRm6x21Calibration') {
-        error.value = 'Select a key first';
-        return;
-      }
-      isLoading.value = true;
-      error.value = null;
-      const keyValue = selectedKey.value?.keyValue || 1;
-      try {
-        let result: any;
-        switch (method) {
-          case 'getGlobalTouchTravel':
-            result = await debugKeyboardService.getGlobalTouchTravel();
-            break;
-          case 'getPerformanceMode':
-            result = await debugKeyboardService.getPerformanceMode(keyValue);
-            break;
-          case 'getDksTravel':
-            result = await debugKeyboardService.getDksTravel(keyValue, 'Layout_DB1');
-            break;
-          case 'getDbTravel':
-            result = await debugKeyboardService.getDbTravel(keyValue, 'Layout_DB1');
-            break;
-          case 'getRtTravel':
-            result = await debugKeyboardService.getRtTravel(keyValue);
-            break;
-          case 'getSingleTravel':
-            result = await debugKeyboardService.getSingleTravel(keyValue);
-            break;
-          case 'getDpDr':
-            result = await debugKeyboardService.getDpDr(keyValue);
-            break;
-          case 'getAxis':
-            result = await debugKeyboardService.getAxis(keyValue);
-            break;
-          case 'getAxisList':
-            result = await debugKeyboardService.getAxisList();
-            break;
-          case 'getLighting':
-            result = await debugKeyboardService.getLighting();
-            break;
-          case 'getLogoLighting':
-            result = await debugKeyboardService.getLogoLighting();
-            break;
-          case 'getCustomLighting':
-            result = await debugKeyboardService.getCustomLighting(keyValue);
-            break;
-          case 'getSpecialLighting':
-            result = await debugKeyboardService.getSpecialLighting();
-            break;
-          case 'getRm6x21Travel':
-            result = await debugKeyboardService.getRm6x21Travel();
-            break;
-          case 'getRm6x21Calibration':
-            result = await debugKeyboardService.getRm6x21Calibration();
-            break;
-          default:
-            throw new Error(`Unknown method: ${method}`);
-        }
-        rawData.value[method] = result;
-        console.log(`Debug fetched ${method} for key ${keyValue}:`, result);
-      } catch (err) {
-        error.value = `Error in ${method}: ${(err as Error).message}`;
-        console.error(`Debug ${method} failed:`, err);
-      } finally {
-        isLoading.value = false;
-      }
-    };
-
-    const fetchAllData = async () => {
-      isLoading.value = true;
-      error.value = null;
-      const keyValue = selectedKey.value?.keyValue || 1;
-      try {
-        await Promise.all([
-          fetchMethod('getGlobalTouchTravel'),
-          fetchMethod('getPerformanceMode'),
-          fetchMethod('getDksTravel'),
-          fetchMethod('getDbTravel'),
-          fetchMethod('getRtTravel'),
-          fetchMethod('getSingleTravel'),
-          fetchMethod('getDpDr'),
-          fetchMethod('getAxis'),
-          fetchMethod('getAxisList'),
-          fetchMethod('getLighting'),
-          fetchMethod('getLogoLighting'),
-          fetchMethod('getCustomLighting'),
-          fetchMethod('getSpecialLighting'),
-          fetchMethod('getRm6x21Travel'),
-          fetchMethod('getRm6x21Calibration'),
-        ]);
-      } catch (err) {
-        error.value = `Batch fetch error: ${(err as Error).message}`;
-      } finally {
-        isLoading.value = false;
-      }
-    };
-
-    const clearData = () => {
-      rawData.value = {};
-      error.value = null;
-      console.log('Debug data cleared');
-    };
-
-    const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
-      console.log(`Debug: Selecting key: { keyValue: ${key.keyValue}, type: ${typeof key.keyValue}, location: { row: ${rowIdx}, col: ${colIdx} } }`);
-      selectedKey.value = key;
-      console.log(`Debug: selectedKey updated:`, selectedKey.value);
-    };
-
-    watch(selectedKey, () => {
-      if (selectedKey.value) rawData.value = {}; // Clear previous data on key change
+    const globalLighting = ref({
+      mode: 'static',
+      brightness: 80,
+      speed: 50,
+      color: { r: 255, g: 255, b: 255 }
     });
 
-    const setSingleMode = async () => {
-      if (!selectedKey.value) {
-        error.value = 'No key selected for mode test';
-        return;
-      }
-      try {
-        const result = await KeyboardService.setPerformanceMode(selectedKey.value.keyValue, 'single', 0);
-        console.log('Debug set single mode result:', result);
-        await fetchMethod('getPerformanceMode');
-      } catch (error) {
-        console.error('Debug: Failed to set single mode:', error);
-        error.value = `Set single mode failed: ${(error as Error).message}`;
-      }
-    };
-
-    const setGlobalMode = async () => {
-      if (!selectedKey.value) {
-        error.value = 'No key selected for mode test';
-        return;
-      }
-      try {
-        const result = await KeyboardService.setPerformanceMode(selectedKey.value.keyValue, 'global', 0);
-        console.log('Debug set global mode result:', result);
-        await fetchMethod('getPerformanceMode');
-      } catch (error) {
-        console.error('Debug: Failed to set global mode:', error);
-        error.value = `Set global mode failed: ${(error as Error).message}`;
-      }
-    };
-
-    const exportConfig = async () => {
-      isLoading.value = true;
-      error.value = null;
-      try {
-        await debugKeyboardService.exportEncryptedJSON(exportFilename.value);
-        notification.value = { message: `Successfully exported ${exportFilename.value}`, isError: false };
-        console.log('Debug: Config exported');
-      } catch (err) {
-        error.value = `Export failed: ${(err as Error).message}`;
-        console.error('Debug: Export config failed:', err);
-      } finally {
-        isLoading.value = false;
-      }
-    };
-
-    onMounted(async () => {
-      console.log('Debug page mounted, calling fetchLayerLayout');
-      await fetchLayerLayout();
-      
-      // Initialize debug service connection
-      try {
-        await debugKeyboardService.autoConnect();
-        console.log('Debug service connected successfully');
-      } catch (error) {
-        console.warn('Debug auto-connect failed, prompting user:', error);
-        try {
-          await debugKeyboardService.requestDevice();
-          console.log('Debug service connected via user prompt');
-        } catch (promptError) {
-          console.error('Debug connection failed:', promptError);
-          error.value = `Debug connection failed: ${(promptError as Error).message}`;
-        }
-      }
-      
-      // Initial data fetch after connection
-      setTimeout(fetchAllData, 500);
+    const logoLighting = ref({
+      mode: 'static',
+      color: { r: 255, g: 0, b: 255 }
     });
+
+    const customLighting = ref({
+      keyNumber: 4,
+      color: { r: 255, g: 0, b: 0 }
+    });
+
+    const specialLighting = ref({
+      mode: 'reactive',
+      brightness: 80,
+      speed: 50
+    });
+
+    const saturation = ref(100);
+
+    const savedLightingState = ref<any>(null);
+
+    const log = (message: string) => {
+      const timestamp = new Date().toLocaleTimeString();
+      debugOutput.value += `[${timestamp}] ${message}\n`;
+    };
 
     const setNotification = (message: string, isError: boolean) => {
       notification.value = { message, isError };
+      setTimeout(() => {
+        notification.value = null;
+      }, 5000);
     };
 
+    const toggleLighting = async () => {
+      try {
+        if (lightingEnabled.value) {
+          log('Turning off all lighting...');
+          savedLightingState.value = { ...globalLighting.value };
+          await debugKeyboardService.closedLighting();
+          lightingEnabled.value = false;
+          setNotification('Lighting turned OFF', false);
+          log('Lighting turned OFF successfully');
+        } else {
+          log('Turning on lighting...');
+          lightingEnabled.value = true;
+          if (savedLightingState.value) {
+            globalLighting.value = { ...savedLightingState.value };
+            await debugKeyboardService.setLighting(globalLighting.value);
+            log('Restored previous lighting settings');
+          }
+          setNotification('Lighting turned ON', false);
+          log('Lighting turned ON successfully');
+        }
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to toggle lighting', true);
+      }
+    };
+
+    const applyGlobalLighting = async () => {
+      try {
+        log(`Applying global lighting: ${JSON.stringify(globalLighting.value)}`);
+        await debugKeyboardService.setLighting(globalLighting.value);
+        setNotification('Global lighting applied successfully', false);
+        log('Global lighting applied successfully');
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to apply global lighting', true);
+      }
+    };
+
+    const fetchGlobalLighting = async () => {
+      try {
+        log('Fetching current global lighting...');
+        const result = await debugKeyboardService.getLighting();
+        log(`Current global lighting: ${JSON.stringify(result)}`);
+        if (result.mode) globalLighting.value.mode = result.mode;
+        if (result.brightness !== undefined) globalLighting.value.brightness = result.brightness;
+        if (result.speed !== undefined) globalLighting.value.speed = result.speed;
+        if (result.color) globalLighting.value.color = result.color;
+        setNotification('Global lighting fetched', false);
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to fetch global lighting', true);
+      }
+    };
+
+    const applyLogoLighting = async () => {
+      try {
+        log(`Applying logo lighting: ${JSON.stringify(logoLighting.value)}`);
+        await debugKeyboardService.setLogoLighting(logoLighting.value);
+        setNotification('Logo lighting applied successfully', false);
+        log('Logo lighting applied successfully');
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to apply logo lighting', true);
+      }
+    };
+
+    const fetchLogoLighting = async () => {
+      try {
+        log('Fetching current logo lighting...');
+        const result = await debugKeyboardService.getLogoLighting();
+        log(`Current logo lighting: ${JSON.stringify(result)}`);
+        if (result.mode) logoLighting.value.mode = result.mode;
+        if (result.color) logoLighting.value.color = result.color;
+        setNotification('Logo lighting fetched', false);
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to fetch logo lighting', true);
+      }
+    };
+
+    const applyCustomLighting = async () => {
+      try {
+        const param = {
+          keys: [{
+            key: customLighting.value.keyNumber,
+            r: customLighting.value.color.r,
+            g: customLighting.value.color.g,
+            b: customLighting.value.color.b
+          }]
+        };
+        log(`Applying custom lighting: ${JSON.stringify(param)}`);
+        await debugKeyboardService.setCustomLighting(param);
+        setNotification('Custom lighting applied successfully', false);
+        log('Custom lighting applied successfully');
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to apply custom lighting', true);
+      }
+    };
+
+    const saveCustomLighting = async () => {
+      try {
+        log('Saving custom lighting to firmware...');
+        await debugKeyboardService.saveCustomLighting();
+        setNotification('Custom lighting saved to firmware', false);
+        log('Custom lighting saved to firmware successfully');
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to save custom lighting', true);
+      }
+    };
+
+    const fetchCustomLighting = async () => {
+      try {
+        log(`Fetching custom lighting for key ${customLighting.value.keyNumber}...`);
+        const result = await debugKeyboardService.getCustomLighting(customLighting.value.keyNumber);
+        log(`Custom lighting for key ${customLighting.value.keyNumber}: ${JSON.stringify(result)}`);
+        setNotification('Custom lighting fetched', false);
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to fetch custom lighting', true);
+      }
+    };
+
+    const applySpecialLighting = async () => {
+      try {
+        log(`Applying special lighting: ${JSON.stringify(specialLighting.value)}`);
+        await debugKeyboardService.setSpecialLighting(specialLighting.value);
+        setNotification('Special lighting applied successfully', false);
+        log('Special lighting applied successfully');
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to apply special lighting', true);
+      }
+    };
+
+    const fetchSpecialLighting = async () => {
+      try {
+        log('Fetching current special lighting...');
+        const result = await debugKeyboardService.getSpecialLighting();
+        log(`Current special lighting: ${JSON.stringify(result)}`);
+        if (result.mode) specialLighting.value.mode = result.mode;
+        if (result.brightness !== undefined) specialLighting.value.brightness = result.brightness;
+        if (result.speed !== undefined) specialLighting.value.speed = result.speed;
+        setNotification('Special lighting fetched', false);
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to fetch special lighting', true);
+      }
+    };
+
+    const applySaturation = async () => {
+      try {
+        log(`Applying saturation: ${saturation.value}%`);
+        await debugKeyboardService.setLightingSaturation([saturation.value]);
+        setNotification('Saturation applied successfully', false);
+        log('Saturation applied successfully');
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to apply saturation', true);
+      }
+    };
+
+    const fetchSaturation = async () => {
+      try {
+        log('Fetching current saturation...');
+        const result = await debugKeyboardService.getSaturation();
+        log(`Current saturation: ${JSON.stringify(result)}`);
+        if (result.saturation !== undefined) saturation.value = result.saturation;
+        setNotification('Saturation fetched', false);
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to fetch saturation', true);
+      }
+    };
+
+    const clearDebugOutput = () => {
+      debugOutput.value = 'Lighting Debug Console\n-------------------\n';
+    };
+
+    onMounted(async () => {
+      log('Debug page mounted, attempting connection...');
+      try {
+        await debugKeyboardService.autoConnect();
+        log('Debug service connected successfully');
+      } catch (error) {
+        log(`Auto-connect failed: ${(error as Error).message}`);
+        try {
+          await debugKeyboardService.requestDevice();
+          log('Debug service connected via user prompt');
+        } catch (promptError) {
+          log(`Connection failed: ${(promptError as Error).message}`);
+          setNotification('Debug connection failed', true);
+        }
+      }
+    });
+
     return {
-      layout,
-      loaded,
-      gridStyle,
-      getKeyStyle,
-      keyMap,
-      selectKey,
-      selectedKey,
       notification,
-      setNotification,
-      rawData,
-      isLoading,
-      error,
-      fetchAllData,
-      fetchMethod,
-      clearData,
-      setSingleMode,
-      setGlobalMode,
-      exportConfig,
-      exportFilename,
-      layoutError,
-      baseLayout,
+      lightingEnabled,
+      globalLighting,
+      logoLighting,
+      customLighting,
+      specialLighting,
+      saturation,
+      debugOutput,
+      toggleLighting,
+      applyGlobalLighting,
+      fetchGlobalLighting,
+      applyLogoLighting,
+      fetchLogoLighting,
+      applyCustomLighting,
+      saveCustomLighting,
+      fetchCustomLighting,
+      applySpecialLighting,
+      fetchSpecialLighting,
+      applySaturation,
+      fetchSaturation,
+      clearDebugOutput,
     };
   },
 });
@@ -309,6 +517,8 @@ export default defineComponent({
 .debug-page {
   padding: 20px;
   color: v.$text-color;
+  max-width: 1200px;
+  margin: 0 auto;
 
   .title {
     color: v.$primary-color;
@@ -319,236 +529,273 @@ export default defineComponent({
 }
 
 .notification {
-  padding: 10px;
+  padding: 10px 15px;
   margin-bottom: 16px;
   border-radius: v.$border-radius;
-  background-color: rgba(v.$background-dark, 1.1);
+  background-color: rgba(34, 197, 94, 0.2);
   color: v.$text-color;
   display: flex;
+  justify-content: space-between;
   align-items: center;
 
   &.error {
-    background-color: color.mix(#ef4444, v.$background-dark, 50%);
+    background-color: rgba(239, 68, 68, 0.2);
   }
 
   .dismiss-btn {
-    margin-left: 10px;
-    padding: 0 6px;
+    padding: 0 8px;
     background: none;
     border: none;
     color: v.$text-color;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 1.2rem;
 
     &:hover {
-      color: rgba(v.$text-color, 0.6);
+      opacity: 0.7;
     }
   }
 }
 
-.debug-container {
+.lighting-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
-.no-layout {
-  text-align: center;
-  color: v.$text-color;
-  font-size: 1rem;
+.settings-section {
+  background: rgba(v.$background-dark, 0.5);
+  border: 1px solid rgba(v.$text-color, 0.1);
+  border-radius: v.$border-radius;
   padding: 20px;
-}
 
-.key-grid {
-  display: block !important;
-  position: relative;
-  width: fit-content;
-  margin: 0 auto;
-  min-height: 300px;
-  max-height: 500px;
-  flex-shrink: 0;
-  visibility: visible !important;
-  z-index: 1;
-}
-
-.key-row {
-  display: contents;
-}
-
-.key-btn {
-  position: absolute;
-  padding: 4px;
-  border: 2px solid rgba(v.$text-color, 0.3);
-  border-radius: v.$border-radius;
-  background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
-  color: v.$text-color;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-  user-select: none;
-  text-align: center;
-  visibility: visible !important;
-  z-index: 2;
-
-  &.debug-key-selected {
-    border-color: v.$accent-color;
-    box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
+  h3 {
+    color: v.$primary-color;
+    margin: 0 0 15px 0;
+    font-size: 1.2rem;
+    font-weight: 600;
   }
 }
 
-.debug-window {
-  margin-top: 20px;
-  border: 1px solid rgba(v.$text-color, 0.2);
-  border-radius: v.$border-radius;
-  background-color: rgba(v.$background-dark, 0.5);
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 
-  summary {
-    padding: 10px;
+  .toggle-label {
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .toggle-switch {
+    width: 80px;
+    height: 36px;
+    background: rgba(v.$text-color, 0.2);
+    border-radius: 18px;
     cursor: pointer;
-    font-weight: bold;
-    color: v.$accent-color;
-  }
+    position: relative;
+    transition: background 0.3s;
 
-  .debug-content {
-    padding: 10px;
-
-    .getter-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-bottom: 10px;
-
-      .refresh-btn {
-        padding: 5px 10px;
-        background-color: v.$primary-color;
-        color: v.$background-dark;
-        border: none;
-        border-radius: v.$border-radius;
-        cursor: pointer;
-
-        &:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-      }
-
-      .getter-btn {
-        padding: 5px 8px;
-        background-color: v.$accent-color;
-        color: v.$background-dark;
-        border: none;
-        border-radius: v.$border-radius;
-        cursor: pointer;
-        font-size: 0.8rem;
-
-        &:hover:not(:disabled) {
-          background-color: color.adjust(v.$accent-color, $lightness: 10%);
-        }
-
-        &:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-      }
-    }
-
-    .test-buttons {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .export-section {
+    .toggle-slider {
+      position: absolute;
+      width: 70px;
+      height: 30px;
+      background: #6b7280;
+      border-radius: 15px;
+      top: 3px;
+      left: 3px;
+      transition: all 0.3s;
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
+      justify-content: center;
 
-      label {
-        color: v.$text-color;
-        font-size: 0.9rem;
+      .toggle-text {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: white;
       }
 
-      .filename-input {
-        padding: 5px 8px;
-        border: 1px solid rgba(v.$text-color, 0.3);
-        border-radius: v.$border-radius;
-        background-color: rgba(v.$background-dark, 0.5);
-        color: v.$text-color;
-        font-size: 0.9rem;
+      &.active {
+        background: v.$accent-color;
       }
     }
+  }
+}
 
-    .clear-btn {
-      padding: 5px 10px;
-      background-color: #6b7280;
-      color: white;
-      border: none;
-      border-radius: v.$border-radius;
+.control-row {
+  margin-bottom: 15px;
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: v.$text-color;
+  }
+
+  .mode-select {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(v.$background-dark, 0.8);
+    border: 1px solid rgba(v.$text-color, 0.3);
+    border-radius: v.$border-radius;
+    color: v.$text-color;
+    font-size: 0.9rem;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(v.$text-color, 0.2);
+    outline: none;
+
+    &::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: v.$accent-color;
       cursor: pointer;
-
-      &:hover {
-        background-color: color.adjust(#6b7280, $lightness: 10%);
-      }
     }
 
-    .test-btn {
-      padding: 5px 10px;
-      background-color: #6b7280;
-      color: white;
-      border: none;
-      border-radius: v.$border-radius;
-      cursor: pointer;
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
 
-      &:hover:not(:disabled) {
-        background-color: color.adjust(#6b7280, $lightness: 10%);
-      }
+  input[type="number"] {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(v.$background-dark, 0.8);
+    border: 1px solid rgba(v.$text-color, 0.3);
+    border-radius: v.$border-radius;
+    color: v.$text-color;
+    font-size: 0.9rem;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.color-inputs {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  .color-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    label {
+      margin: 0;
+      font-size: 0.75rem;
+      color: v.$text-color;
+    }
+
+    input {
+      width: 60px;
+      padding: 6px;
+      background: rgba(v.$background-dark, 0.8);
+      border: 1px solid rgba(v.$text-color, 0.3);
+      border-radius: v.$border-radius;
+      color: v.$text-color;
+      font-size: 0.85rem;
 
       &:disabled {
-        opacity: 0.6;
+        opacity: 0.5;
         cursor: not-allowed;
       }
     }
+  }
 
-    .loading {
-      color: v.$text-color;
-      text-align: center;
+  .color-preview {
+    width: 50px;
+    height: 50px;
+    border-radius: v.$border-radius;
+    border: 2px solid rgba(v.$text-color, 0.3);
+  }
+}
+
+.button-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+
+  button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: v.$border-radius;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
+  }
 
-    .data-sections {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      max-height: 400px;
-      overflow-y: auto;
+  .apply-btn {
+    background: v.$accent-color;
+    color: v.$background-dark;
 
-      .data-section {
-        h4 {
-          color: v.$primary-color;
-          margin: 0 0 5px 0;
-          font-size: 0.9rem;
-        }
-
-        pre {
-          background-color: rgba(0, 0, 0, 0.3);
-          padding: 10px;
-          border-radius: v.$border-radius;
-          font-size: 0.8rem;
-          color: v.$text-color;
-          margin: 0;
-          overflow-x: auto;
-        }
-      }
+    &:hover:not(:disabled) {
+      background: color.adjust(v.$accent-color, $lightness: 10%);
     }
+  }
 
-    .error {
-      color: #ef4444;
-      text-align: center;
-      padding: 10px;
-      background-color: rgba(239, 68, 68, 0.1);
-      border-radius: v.$border-radius;
+  .fetch-btn {
+    background: v.$primary-color;
+    color: v.$background-dark;
+
+    &:hover:not(:disabled) {
+      background: color.adjust(v.$primary-color, $lightness: 10%);
     }
+  }
+
+  .save-btn {
+    background: #10b981;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: color.adjust(#10b981, $lightness: 10%);
+    }
+  }
+
+  .clear-btn {
+    background: #6b7280;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: color.adjust(#6b7280, $lightness: 10%);
+    }
+  }
+}
+
+.debug-output {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(v.$text-color, 0.2);
+  border-radius: v.$border-radius;
+  padding: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+
+  pre {
+    margin: 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: v.$text-color;
+    white-space: pre-wrap;
+    word-wrap: break-word;
   }
 }
 </style>

@@ -18,6 +18,17 @@ The application runs entirely in the browser and communicates with compatible ke
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+**November 18, 2025 - Debug Page Initialization Enhancement**
+- Added automatic UI synchronization on page load in Debug.vue
+- `initLightingFromDevice()` function fetches keyboard state via `getLighting()` on mount
+- Master controls (toggle, luminance, speed, sleep timer) now reflect actual keyboard settings instead of defaults
+- Added `initializing` ref to track sync state with "SYNCING..." UI feedback
+- Disabled all master controls during initialization to prevent race conditions
+- Graceful error handling when device not connected (falls back to defaults)
+- CSS styling added for disabled toggle state (pointer-events: none, opacity 0.5)
+
 ## Documentation
 
 ### Page Documentation

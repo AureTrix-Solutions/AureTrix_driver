@@ -51,6 +51,16 @@
                   </div>
                 </div>
               </div>
+              <div class="input-group">
+                <div class="label">RGB Brightness (Luminance)</div>
+                <select v-model.number="masterLuminance" @change="applyMasterLuminance" class="mode-select" :disabled="!lightingEnabled">
+                  <option :value="0">0 - Off</option>
+                  <option :value="1">1 - Low</option>
+                  <option :value="2">2 - Medium</option>
+                  <option :value="3">3 - High</option>
+                  <option :value="4">4 - Maximum</option>
+                </select>
+              </div>
             </div>
 
             <!-- Global Lighting -->
@@ -279,6 +289,7 @@ export default defineComponent({
   setup() {
     const notification = ref<{ message: string; isError: boolean } | null>(null);
     const lightingEnabled = ref(true);
+    const masterLuminance = ref(4);
     const debugOutput = ref('Lighting Debug Console\n-------------------\n');
     const selectedKeys = ref<IDefKeyInfo[]>([]);
 
@@ -448,6 +459,32 @@ export default defineComponent({
       }
     };
 
+    const applyMasterLuminance = async () => {
+      try {
+        log(`Applying master luminance: ${masterLuminance.value}...`);
+        const currentState = await debugKeyboardService.getLighting();
+        log(`Current state retrieved: ${JSON.stringify(currentState)}`);
+        
+        if (!currentState) {
+          throw new Error('getLighting() returned no data');
+        }
+        
+        // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
+        const { open, dynamicColorId, ...filteredParams } = currentState;
+        
+        // Update luminance with the selected value
+        filteredParams.luminance = masterLuminance.value;
+        log(`Applying lighting with luminance ${masterLuminance.value}: ${JSON.stringify(filteredParams)}`);
+        
+        await debugKeyboardService.setLighting(filteredParams);
+        setNotification(`RGB brightness set to ${masterLuminance.value}`, false);
+        log('Master luminance applied successfully');
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to apply master luminance', true);
+      }
+    };
+
     const applyGlobalLighting = async () => {
       try {
         log(`Applying global lighting: ${JSON.stringify(globalLighting.value)}`);
@@ -561,6 +598,7 @@ export default defineComponent({
     return {
       notification,
       lightingEnabled,
+      masterLuminance,
       globalLighting,
       customLighting,
       specialLighting,
@@ -580,6 +618,7 @@ export default defineComponent({
       selectNumbers,
       selectNone,
       toggleLighting,
+      applyMasterLuminance,
       applyGlobalLighting,
       fetchGlobalLighting,
       applyCustomLighting,

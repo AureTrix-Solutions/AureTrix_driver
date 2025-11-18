@@ -561,9 +561,9 @@ export default defineComponent({
         // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
         const { open, dynamicColorId, ...filteredParams } = currentState;
         
-        // Update sleepdelay with the selected value
-        filteredParams.sleepdelay = masterSleepDelay.value;
-        log(`Applying lighting with sleepdelay ${masterSleepDelay.value}: ${JSON.stringify(filteredParams)}`);
+        // Update sleepDelay with the selected value
+        filteredParams.sleepDelay = masterSleepDelay.value;
+        log(`Applying lighting with sleepDelay ${masterSleepDelay.value}: ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
         const displayText = masterSleepDelay.value === 0 ? 'Never' : `${masterSleepDelay.value} minutes`;
@@ -679,7 +679,7 @@ export default defineComponent({
           lightingEnabled.value = currentState.open ?? true;
           masterLuminance.value = currentState.luminance ?? 4;
           masterSpeed.value = currentState.speed ?? 3;
-          masterSleepDelay.value = currentState.sleepdelay ?? 0;
+          masterSleepDelay.value = currentState.sleepDelay ?? 0;
           
           // Update global lighting form
           if (currentState.mode) globalLighting.value.mode = currentState.mode;

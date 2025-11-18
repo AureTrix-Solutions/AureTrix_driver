@@ -41,7 +41,7 @@
             <!-- Master Toggle -->
             <div class="settings-section">
               <div class="header-row">
-                <h3>setLighting (luminance test)</h3>
+                <h3>closedLighting (test)</h3>
               </div>
               <div class="toggle-row">
                 <label class="toggle-label">Lighting</label>
@@ -495,21 +495,16 @@ export default defineComponent({
     const toggleLighting = async () => {
       try {
         if (lightingEnabled.value) {
-          log('Turning off all lighting with luminance: 0...');
-          const currentSettings = await debugKeyboardService.getLighting();
-          log(`Current settings: ${JSON.stringify(currentSettings)}`);
-          await debugKeyboardService.setLighting({ ...currentSettings, luminance: 0 });
+          log('Calling closedLighting() to turn off all lighting...');
+          await debugKeyboardService.closedLighting();
           lightingEnabled.value = false;
-          setNotification('Lighting turned OFF (luminance: 0)', false);
-          log('Lighting turned OFF successfully with luminance: 0');
+          setNotification('Lighting turned OFF via closedLighting()', false);
+          log('closedLighting() called successfully - lights should be off');
         } else {
-          log('Turning on lighting with luminance: 4...');
-          const currentSettings = await debugKeyboardService.getLighting();
-          log(`Current settings: ${JSON.stringify(currentSettings)}`);
-          await debugKeyboardService.setLighting({ ...currentSettings, luminance: 4 });
+          log('Toggle ON - UI only (no command sent to keyboard)');
           lightingEnabled.value = true;
-          setNotification('Lighting turned ON (luminance: 4)', false);
-          log('Lighting turned ON successfully with luminance: 4');
+          setNotification('Toggle ON (UI only - no keyboard command sent)', false);
+          log('UI toggle set to ON - try manual keyboard controls or other methods to restore lighting');
         }
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);

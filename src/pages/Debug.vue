@@ -89,6 +89,18 @@
                   <option :value="120">120 minutes</option>
                 </select>
               </div>
+              <div class="input-group">
+                <div class="label">
+                  <input 
+                    type="checkbox" 
+                    v-model="masterDirection" 
+                    @change="applyMasterDirection" 
+                    :disabled="initializing || !lightingEnabled"
+                    class="direction-checkbox"
+                  />
+                  Reverse RGB Pattern Direction
+                </div>
+              </div>
             </div>
 
             <!-- Global Lighting -->
@@ -321,6 +333,7 @@ export default defineComponent({
     const masterLuminance = ref(4);
     const masterSpeed = ref(3);
     const masterSleepDelay = ref(0);
+    const masterDirection = ref(false);
     const debugOutput = ref('Lighting Debug Console\n-------------------\n');
     const selectedKeys = ref<IDefKeyInfo[]>([]);
 
@@ -575,6 +588,33 @@ export default defineComponent({
       }
     };
 
+    const applyMasterDirection = async () => {
+      try {
+        log(`Applying master direction: ${masterDirection.value}...`);
+        const currentState = await debugKeyboardService.getLighting();
+        log(`Current state retrieved: ${JSON.stringify(currentState)}`);
+        
+        if (!currentState) {
+          throw new Error('getLighting() returned no data');
+        }
+        
+        // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
+        const { open, dynamicColorId, ...filteredParams } = currentState;
+        
+        // Update direction with the checkbox value
+        filteredParams.direction = masterDirection.value;
+        log(`Applying lighting with direction ${masterDirection.value}: ${JSON.stringify(filteredParams)}`);
+        
+        await debugKeyboardService.setLighting(filteredParams);
+        const displayText = masterDirection.value ? 'Reversed' : 'Normal';
+        setNotification(`RGB pattern direction set to ${displayText}`, false);
+        log('Master direction applied successfully');
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to apply master direction', true);
+      }
+    };
+
     const applyGlobalLighting = async () => {
       try {
         log(`Applying global lighting: ${JSON.stringify(globalLighting.value)}`);
@@ -680,6 +720,7 @@ export default defineComponent({
           masterLuminance.value = currentState.luminance ?? 4;
           masterSpeed.value = currentState.speed ?? 3;
           masterSleepDelay.value = currentState.sleepDelay ?? 0;
+          masterDirection.value = currentState.direction ?? false;
           
           // Update global lighting form
           if (currentState.mode) globalLighting.value.mode = currentState.mode;
@@ -731,6 +772,7 @@ export default defineComponent({
       masterLuminance,
       masterSpeed,
       masterSleepDelay,
+      masterDirection,
       globalLighting,
       customLighting,
       specialLighting,
@@ -753,6 +795,7 @@ export default defineComponent({
       applyMasterLuminance,
       applyMasterSpeed,
       applyMasterSleepDelay,
+      applyMasterDirection,
       applyGlobalLighting,
       fetchGlobalLighting,
       applyCustomLighting,
@@ -1010,6 +1053,19 @@ export default defineComponent({
     border-radius: v.$border-radius;
     color: v.$text-color;
     font-size: 0.9rem;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .direction-checkbox {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: v.$accent-color;
 
     &:disabled {
       opacity: 0.5;

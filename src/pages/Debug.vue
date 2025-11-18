@@ -495,25 +495,16 @@ export default defineComponent({
     const toggleLighting = async () => {
       try {
         if (lightingEnabled.value) {
-          log('Turning off lighting with closedLighting()...');
+          log('Calling closedLighting() to turn off all lighting...');
           await debugKeyboardService.closedLighting();
           lightingEnabled.value = false;
-          setNotification('Lighting turned OFF', false);
-          log('Lighting turned OFF successfully');
+          setNotification('Lighting turned OFF via closedLighting()', false);
+          log('closedLighting() called successfully - lights should be off');
         } else {
-          log('Turning on lighting - fetching current settings...');
-          const response = await debugKeyboardService.getLighting();
-          log(`getLighting response: ${JSON.stringify(response)}`);
-          
-          if (!response || !response.light) {
-            throw new Error('Failed to fetch lighting settings - response missing light property');
-          }
-          
-          log('Restoring lighting with setLighting() (open: true added automatically by SDK)...');
-          await debugKeyboardService.setLighting(response.light);
+          log('Toggle ON - UI only (no command sent to keyboard)');
           lightingEnabled.value = true;
-          setNotification('Lighting turned ON', false);
-          log('Lighting turned ON successfully - settings restored');
+          setNotification('Toggle ON (UI only - no keyboard command sent)', false);
+          log('UI toggle set to ON - try manual keyboard controls or other methods to restore lighting');
         }
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);

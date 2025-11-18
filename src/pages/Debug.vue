@@ -29,7 +29,6 @@
       </div>
 
       <div class="bottom-section">
-        <!-- Selection Buttons -->
         <div class="selection-buttons">
           <button @click="selectAll" class="select-btn">Select All</button>
           <button @click="selectWASD" class="select-btn">Select WASD</button>
@@ -37,8 +36,6 @@
           <button @click="selectNumbers" class="select-btn">Select Numbers</button>
           <button @click="selectNone" class="select-btn">Select None</button>
         </div>
-
-        <!-- Settings Panel -->
         <div class="parent">
           <div class="settings-panel">
             <!-- Master Toggle -->
@@ -77,52 +74,52 @@
               <div class="input-group">
                 <div class="label">Brightness</div>
                 <div class="slider-container">
-                  <div class="value-display">0</div>
+                  <div class="value-display">{{ lightingRanges.brightness.min }}</div>
                   <input 
                     type="range" 
                     v-model.number="globalLighting.brightness" 
-                    min="0" 
-                    max="100" 
+                    :min="lightingRanges.brightness.min" 
+                    :max="lightingRanges.brightness.max" 
                     :disabled="!lightingEnabled"
                   />
-                  <div class="value-display">100</div>
+                  <div class="value-display">{{ lightingRanges.brightness.max }}</div>
                 </div>
                 <div class="adjusters">
-                  <button @click="globalLighting.brightness = Math.max(0, globalLighting.brightness - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
+                  <button @click="globalLighting.brightness = Math.max(lightingRanges.brightness.min, globalLighting.brightness - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
                   <input
                     type="number"
                     v-model.number="globalLighting.brightness"
-                    min="0"
-                    max="100"
+                    :min="lightingRanges.brightness.min"
+                    :max="lightingRanges.brightness.max"
                     :disabled="!lightingEnabled"
                   />
-                  <button @click="globalLighting.brightness = Math.min(100, globalLighting.brightness + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
+                  <button @click="globalLighting.brightness = Math.min(lightingRanges.brightness.max, globalLighting.brightness + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
                 </div>
               </div>
 
               <div class="input-group">
                 <div class="label">Speed</div>
                 <div class="slider-container">
-                  <div class="value-display">0</div>
+                  <div class="value-display">{{ lightingRanges.speed.min }}</div>
                   <input 
                     type="range" 
                     v-model.number="globalLighting.speed" 
-                    min="0" 
-                    max="100" 
+                    :min="lightingRanges.speed.min" 
+                    :max="lightingRanges.speed.max" 
                     :disabled="!lightingEnabled"
                   />
-                  <div class="value-display">100</div>
+                  <div class="value-display">{{ lightingRanges.speed.max }}</div>
                 </div>
                 <div class="adjusters">
-                  <button @click="globalLighting.speed = Math.max(0, globalLighting.speed - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
+                  <button @click="globalLighting.speed = Math.max(lightingRanges.speed.min, globalLighting.speed - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
                   <input
                     type="number"
                     v-model.number="globalLighting.speed"
-                    min="0"
-                    max="100"
+                    :min="lightingRanges.speed.min"
+                    :max="lightingRanges.speed.max"
                     :disabled="!lightingEnabled"
                   />
-                  <button @click="globalLighting.speed = Math.min(100, globalLighting.speed + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
+                  <button @click="globalLighting.speed = Math.min(lightingRanges.speed.max, globalLighting.speed + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
                 </div>
               </div>
 
@@ -240,52 +237,52 @@
               <div class="input-group">
                 <div class="label">Brightness</div>
                 <div class="slider-container">
-                  <div class="value-display">0</div>
+                  <div class="value-display">{{ lightingRanges.brightness.min }}</div>
                   <input 
                     type="range" 
                     v-model.number="specialLighting.brightness" 
-                    min="0" 
-                    max="100" 
+                    :min="lightingRanges.brightness.min" 
+                    :max="lightingRanges.brightness.max" 
                     :disabled="!lightingEnabled"
                   />
-                  <div class="value-display">100</div>
+                  <div class="value-display">{{ lightingRanges.brightness.max }}</div>
                 </div>
                 <div class="adjusters">
-                  <button @click="specialLighting.brightness = Math.max(0, specialLighting.brightness - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
+                  <button @click="specialLighting.brightness = Math.max(lightingRanges.brightness.min, specialLighting.brightness - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
                   <input
                     type="number"
                     v-model.number="specialLighting.brightness"
-                    min="0"
-                    max="100"
+                    :min="lightingRanges.brightness.min"
+                    :max="lightingRanges.brightness.max"
                     :disabled="!lightingEnabled"
                   />
-                  <button @click="specialLighting.brightness = Math.min(100, specialLighting.brightness + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
+                  <button @click="specialLighting.brightness = Math.min(lightingRanges.brightness.max, specialLighting.brightness + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
                 </div>
               </div>
 
               <div class="input-group">
                 <div class="label">Speed</div>
                 <div class="slider-container">
-                  <div class="value-display">0</div>
+                  <div class="value-display">{{ lightingRanges.speed.min }}</div>
                   <input 
                     type="range" 
                     v-model.number="specialLighting.speed" 
-                    min="0" 
-                    max="100" 
+                    :min="lightingRanges.speed.min" 
+                    :max="lightingRanges.speed.max" 
                     :disabled="!lightingEnabled"
                   />
-                  <div class="value-display">100</div>
+                  <div class="value-display">{{ lightingRanges.speed.max }}</div>
                 </div>
                 <div class="adjusters">
-                  <button @click="specialLighting.speed = Math.max(0, specialLighting.speed - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
+                  <button @click="specialLighting.speed = Math.max(lightingRanges.speed.min, specialLighting.speed - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
                   <input
                     type="number"
                     v-model.number="specialLighting.speed"
-                    min="0"
-                    max="100"
+                    :min="lightingRanges.speed.min"
+                    :max="lightingRanges.speed.max"
                     :disabled="!lightingEnabled"
                   />
-                  <button @click="specialLighting.speed = Math.min(100, specialLighting.speed + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
+                  <button @click="specialLighting.speed = Math.min(lightingRanges.speed.max, specialLighting.speed + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
                 </div>
               </div>
 
@@ -304,26 +301,26 @@
               <div class="input-group">
                 <div class="label">Saturation (%)</div>
                 <div class="slider-container">
-                  <div class="value-display">0</div>
+                  <div class="value-display">{{ lightingRanges.saturation.min }}</div>
                   <input 
                     type="range" 
                     v-model.number="saturation" 
-                    min="0" 
-                    max="100" 
+                    :min="lightingRanges.saturation.min" 
+                    :max="lightingRanges.saturation.max" 
                     :disabled="!lightingEnabled"
                   />
-                  <div class="value-display">100</div>
+                  <div class="value-display">{{ lightingRanges.saturation.max }}</div>
                 </div>
                 <div class="adjusters">
-                  <button @click="saturation = Math.max(0, saturation - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
+                  <button @click="saturation = Math.max(lightingRanges.saturation.min, saturation - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
                   <input
                     type="number"
                     v-model.number="saturation"
-                    min="0"
-                    max="100"
+                    :min="lightingRanges.saturation.min"
+                    :max="lightingRanges.saturation.max"
                     :disabled="!lightingEnabled"
                   />
-                  <button @click="saturation = Math.min(100, saturation + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
+                  <button @click="saturation = Math.min(lightingRanges.saturation.max, saturation + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
                 </div>
               </div>
 
@@ -389,6 +386,13 @@ export default defineComponent({
 
     const saturation = ref(100);
     const savedLightingState = ref<any>(null);
+
+    // Lighting range constants (single source of truth)
+    const lightingRanges = {
+      brightness: { min: 0, max: 100 },
+      speed: { min: 0, max: 100 },
+      saturation: { min: 0, max: 100 }
+    };
 
     const log = (message: string) => {
       const timestamp = new Date().toLocaleTimeString();
@@ -683,6 +687,7 @@ export default defineComponent({
       customLighting,
       specialLighting,
       saturation,
+      lightingRanges,
       debugOutput,
       selectedKeys,
       layout,
@@ -821,29 +826,36 @@ export default defineComponent({
 
 .bottom-section {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  flex: 1;
+  flex-shrink: 0;
+  gap: 10px;
+  position: relative;
+  margin-right: auto;
+  margin-left: auto;
+  margin-top: -50px;
+  justify-content: center;
 }
 
 .selection-buttons {
   display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
 
   .select-btn {
-    padding: 10px 20px;
-    background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 20%) 0%, color.adjust(v.$background-dark, $lightness: 15%) 100%);
-    border: 1px solid rgba(v.$text-color, 0.3);
+    padding: 8px 8px;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+    color: v.$accent-color;
+    border: v.$border-style;
     border-radius: v.$border-radius;
-    color: v.$text-color;
-    font-size: 0.9rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 200px;
+    transition: background-color 0.2s ease;
+    width: 120px;
 
     &:hover {
-      background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 25%) 0%, color.adjust(v.$background-dark, $lightness: 20%) 100%);
-      border-color: v.$accent-color;
+      background-color: color.adjust(v.$accent-color, $lightness: -20%);
+      color: v.$background-light;
     }
   }
 }
@@ -949,61 +961,69 @@ export default defineComponent({
   }
 
   .slider-container {
+    flex: 1;
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-
-    .value-display {
-      min-width: 30px;
-      text-align: center;
-      font-size: 0.85rem;
-      color: rgba(v.$text-color, 0.7);
-    }
+    gap: 0px;
 
     input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
       flex: 1;
+      max-width: 200px;
+      cursor: pointer;
       height: 6px;
-      border-radius: 3px;
-      background: rgba(v.$text-color, 0.2);
-      outline: none;
+      background: transparent;
+
+      &::-webkit-slider-runnable-track {
+        background-color: color.adjust(v.$background-dark, $lightness: 10%);
+        height: 6px;
+        border-radius: 3px;
+      }
 
       &::-webkit-slider-thumb {
         appearance: none;
-        width: 18px;
-        height: 18px;
+        opacity: 1;
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
         background: v.$accent-color;
         cursor: pointer;
+        margin-top: -3px;
       }
 
       &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
       }
+    }
+
+    .value-display {
+      min-width: 40px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: rgba(v.$text-color, 0.7);
     }
   }
 
   .adjusters {
     display: flex;
-    gap: 8px;
     align-items: center;
+    gap: 4px;
 
-    .adjust-btn {
-      width: 36px;
-      height: 36px;
-      padding: 0;
-      background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 20%) 0%, color.adjust(v.$background-dark, $lightness: 15%) 100%);
-      border: 1px solid rgba(v.$text-color, 0.3);
+    input[type="number"] {
+      width: 60px;
+      padding: 4px 6px;
       border-radius: v.$border-radius;
+      background-color: v.$background-dark;
       color: v.$text-color;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      border: 1px solid rgba(v.$text-color, 0.2);
+      font-size: 0.9rem;
+      text-align: center;
 
-      &:hover:not(:disabled) {
-        background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 25%) 0%, color.adjust(v.$background-dark, $lightness: 20%) 100%);
-        border-color: v.$accent-color;
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
       }
 
       &:disabled {
@@ -1012,15 +1032,24 @@ export default defineComponent({
       }
     }
 
-    input[type="number"] {
-      flex: 1;
-      padding: 8px 12px;
-      background: rgba(v.$background-dark, 0.8);
-      border: 1px solid rgba(v.$text-color, 0.3);
-      border-radius: v.$border-radius;
+    .adjust-btn {
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 4%;
+      background-color: color.adjust(v.$background-dark, $lightness: 15%);
       color: v.$text-color;
-      font-size: 0.9rem;
-      text-align: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background-color: v.$accent-color;
+        color: v.$background-dark;
+      }
 
       &:disabled {
         opacity: 0.5;

@@ -855,7 +855,7 @@ export default defineComponent({
 
     &:hover {
       background-color: color.adjust(v.$accent-color, $lightness: -20%);
-      color: v.$background-light;
+      color: white;
     }
   }
 }

@@ -41,7 +41,7 @@
             <!-- Master Toggle -->
             <div class="settings-section">
               <div class="header-row">
-                <h3>Master Lighting Control</h3>
+                <h3>closedLighting / setLighting</h3>
               </div>
               <div class="toggle-row">
                 <label class="toggle-label">Lighting</label>
@@ -56,7 +56,7 @@
             <!-- Global Lighting -->
             <div class="settings-section">
               <div class="header-row">
-                <h3>Global Lighting</h3>
+                <h3>setLighting / getLighting</h3>
               </div>
               
               <div class="input-group">
@@ -151,7 +151,7 @@
             <!-- Logo Lighting -->
             <div class="settings-section">
               <div class="header-row">
-                <h3>Logo Lighting</h3>
+                <h3>setLogoLighting / getLogoLighting</h3>
               </div>
 
               <div class="input-group">
@@ -191,7 +191,7 @@
             <!-- Custom Per-Key Lighting -->
             <div class="settings-section">
               <div class="header-row">
-                <h3>Custom Per-Key Lighting</h3>
+                <h3>setCustomLighting / saveCustomLighting</h3>
               </div>
 
               <div class="input-group">
@@ -222,7 +222,7 @@
             <!-- Special Effects -->
             <div class="settings-section">
               <div class="header-row">
-                <h3>Special Effects</h3>
+                <h3>setSpecialLighting / getSpecialLighting</h3>
               </div>
 
               <div class="input-group">
@@ -295,7 +295,7 @@
             <!-- Saturation -->
             <div class="settings-section">
               <div class="header-row">
-                <h3>Saturation Control</h3>
+                <h3>setLightingSaturation / getSaturation</h3>
               </div>
 
               <div class="input-group">
@@ -867,17 +867,22 @@ export default defineComponent({
 
 .settings-panel {
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   background: rgba(v.$background-dark, 0.5);
   border: 1px solid rgba(v.$text-color, 0.1);
   border-radius: v.$border-radius;
   padding: 20px;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
 .settings-section {
+  border: 2px solid rgba(v.$text-color, 0.2);
+  border-radius: v.$border-radius;
+  padding: 15px;
+  background: rgba(v.$background-dark, 0.3);
+
   .header-row {
     margin-bottom: 15px;
 

@@ -506,7 +506,7 @@ export default defineComponent({
           lightingEnabled.value = true;
           if (savedLightingState.value) {
             globalLighting.value = { ...savedLightingState.value };
-            await debugKeyboardService.setLighting(globalLighting.value);
+            await debugKeyboardService.setLighting({ ...globalLighting.value, open: true });
             log('Restored previous lighting settings');
           }
           setNotification('Lighting turned ON', false);

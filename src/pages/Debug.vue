@@ -501,10 +501,23 @@ export default defineComponent({
           setNotification('Lighting turned OFF via closedLighting()', false);
           log('closedLighting() called successfully - lights should be off');
         } else {
-          log('Toggle ON - UI only (no command sent to keyboard)');
+          log('Toggle ON - Fetching current lighting state...');
+          const currentState = await debugKeyboardService.getLighting();
+          log(`Raw getLighting() response: ${JSON.stringify(currentState)}`);
+          
+          if (!currentState) {
+            throw new Error('getLighting() returned no data');
+          }
+          
+          // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
+          const { open, dynamicColorId, ...filteredParams } = currentState;
+          log(`Filtered parameters for setLighting(): ${JSON.stringify(filteredParams)}`);
+          
+          log('Calling setLighting() with filtered parameters...');
+          await debugKeyboardService.setLighting(filteredParams);
           lightingEnabled.value = true;
-          setNotification('Toggle ON (UI only - no keyboard command sent)', false);
-          log('UI toggle set to ON - try manual keyboard controls or other methods to restore lighting');
+          setNotification('Lighting turned ON via setLighting()', false);
+          log('setLighting() called successfully - lights should be on');
         }
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);

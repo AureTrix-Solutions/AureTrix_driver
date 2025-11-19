@@ -20,6 +20,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 19, 2025 - Super Response Checkbox Integration**
+- Added Super Response checkbox control to Debug Console section
+- Checkbox initializes from keyboard state during `initLightingFromDevice()`
+- `applySuperResponse()` handler follows standard pattern: fetch state, update field, call setLighting
+- Proper disable logic during initialization and when lighting is off
+- Console logging for state changes ("Super Response enabled/disabled")
+- Styling matches existing UI with accent color and disabled state support
+
 **November 18, 2025 - Debug Page Initialization Enhancement**
 - Added automatic UI synchronization on page load in Debug.vue
 - `initLightingFromDevice()` function fetches keyboard state via `getLighting()` on mount

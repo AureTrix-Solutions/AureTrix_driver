@@ -20,6 +20,21 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 19, 2025 - Real-Time Color Picker with Throttling**
+- Implemented real-time color preview for Static mode lighting
+- Added throttle utility function (100ms) to rate-limit SDK calls during color picker drag
+- Color picker uses `@input` event for throttled real-time updates while dragging
+- Maintains `@change` event for final confirmation when user releases color picker
+- Event-driven approach - no continuous polling, only fires when actively interacting with color selector
+- Provides smooth visual feedback without overwhelming keyboard hardware
+
+**November 19, 2025 - RGB Settings Layout Reorganization**
+- Moved Lighting Mode dropdown from separate "Mode Selection" section into RGB Settings
+- Restructured RGB Settings to 3-column top row (Brightness, Speed, Lighting Mode)
+- Second row remains 2-column layout (Sleep, Reverse)
+- Static color picker stays with Lighting Mode dropdown
+- Completely removed "Mode Selection" section with full cleanup
+
 **November 19, 2025 - Super Response Checkbox Integration**
 - Added Super Response checkbox control to Debug Console section
 - Checkbox initializes from keyboard state during `initLightingFromDevice()`

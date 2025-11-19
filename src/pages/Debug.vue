@@ -798,12 +798,10 @@ export default defineComponent({
 }
 
 .settings-panel {
-  width: 100%;
-  max-width: 1200px;
-  background: rgba(v.$background-dark, 0.5);
-  border: 1px solid rgba(v.$text-color, 0.1);
+  width: 1425px;
+  padding: 10px;
+  border: 1px solid rgba(v.$text-color, 0.2);
   border-radius: v.$border-radius;
-  padding: 20px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;

@@ -401,6 +401,51 @@ export default defineComponent({
       debugOutput.value = 'Lighting Debug Console\n-------------------\n';
     };
 
+    const getLightingInfo = async () => {
+      try {
+        log('Fetching lighting info...');
+        const lightingData = await debugKeyboardService.getLighting();
+        log('Lighting Info:\n' + JSON.stringify(lightingData, null, 2));
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+      }
+    };
+
+    const getCustomLightingInfo = async () => {
+      try {
+        if (selectedKeys.value.length === 0) {
+          log('ERROR: Please select at least one key on the virtual keyboard first');
+          return;
+        }
+
+        log(`Fetching custom lighting for ${selectedKeys.value.length} selected key(s)...`);
+        
+        for (const key of selectedKeys.value) {
+          const physicalKeyValue = key.physicalKeyValue || key.keyValue;
+          const keyLabel = key.remappedLabel || keyMap[key.keyValue] || `Key ${key.keyValue}`;
+          
+          try {
+            const customLighting = await debugKeyboardService.getCustomLighting(physicalKeyValue);
+            log(`Custom Lighting for ${keyLabel} (key ${physicalKeyValue}):\n` + JSON.stringify(customLighting, null, 2));
+          } catch (error) {
+            log(`ERROR for ${keyLabel}: ${(error as Error).message}`);
+          }
+        }
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+      }
+    };
+
+    const getSpecialLightingInfo = async () => {
+      try {
+        log('Fetching special lighting info...');
+        const specialLightingData = await debugKeyboardService.getSpecialLighting();
+        log('Special Lighting Info:\n' + JSON.stringify(specialLightingData, null, 2));
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+      }
+    };
+
     const initLightingFromDevice = async () => {
       try {
         initializing.value = true;
@@ -490,6 +535,9 @@ export default defineComponent({
       applyMasterDirection,
       applyModeSelection,
       clearDebugOutput,
+      getLightingInfo,
+      getCustomLightingInfo,
+      getSpecialLightingInfo,
     };
   },
 });

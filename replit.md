@@ -49,6 +49,15 @@ Preferred communication style: Simple, everyday language.
 - Workflow restarts successfully with no SASS compilation errors
 - Architect reviewed and approved changes with no regressions found
 
+**November 19, 2025 - Lighting Page Functional Fixes (Aligned with Debug.vue)**
+- Fixed mode selection not working by adding missing `type` field to setLighting() calls
+- Mode now correctly sets type='static' (mode 0), type='dynamic' (modes 1-20), type='custom' (mode 21)
+- Removed non-functional super response checkbox and all related code (ref, initialization, function, exports)
+- Replaced selectWASD, selectLetters, selectNumbers with toggle versions from Debug.vue
+- Selection buttons now properly toggle: deselect all target keys if all are selected, otherwise add without duplicates
+- All changes architect-reviewed and verified to match Debug.vue's working implementation
+- Lighting page now fully functional with mode selection, togglable key selection, and no unused controls
+
 ## System Architecture
 
 ### Frontend Architecture

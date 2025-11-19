@@ -827,8 +827,30 @@ export default defineComponent({
     }
   }
 
-  .clear-btn {
+  .console-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
     margin: 0 15px 15px 15px;
+  }
+
+  .debug-btn {
+    padding: 8px 16px;
+    background: v.$accent-color;
+    color: white;
+    border: none;
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: v.$font-style;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: color.adjust(v.$accent-color, $lightness: -10%);
+    }
+  }
+
+  .clear-btn {
     padding: 8px 16px;
     background: #6b7280;
     color: white;

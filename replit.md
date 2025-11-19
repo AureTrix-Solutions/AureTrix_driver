@@ -68,12 +68,12 @@ Preferred communication style: Simple, everyday language.
 - Architect-reviewed and verified performance improvement with no regressions
 
 **November 19, 2025 - Lighting Page Documentation**
-- Created comprehensive LIGHTING.md documentation covering complete Lighting.vue implementation
+- Created comprehensive docs/pages/Lighting.md following project documentation conventions
 - Documented all 22 lighting modes (Static, Dynamic effects 1-20, Custom per-key RGB)
 - Detailed master controls, key selection system, virtual keyboard rendering, and performance optimizations
-- Included API workflow patterns, error handling strategies, troubleshooting guide, and testing checklist
+- Included API workflow patterns, error handling strategies, user workflows, and developer notes
 - Documented dual-event color picker approach, batch processing optimization, and flash write management
-- Provides technical reference for all functions, state management, lifecycle hooks, and component architecture
+- Follows same format and structure as other page documentation (Debug.md, KeyMapping.md, etc.)
 
 ## System Architecture
 

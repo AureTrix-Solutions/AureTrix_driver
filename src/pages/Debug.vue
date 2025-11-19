@@ -923,6 +923,33 @@ export default defineComponent({
     }
   }
 
+  .console-controls {
+    padding: 15px 15px 0 15px;
+    margin-bottom: 10px;
+  }
+
+  .super-response-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    color: v.$text-color;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .super-response-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: v.$accent-color;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
   .debug-output {
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(v.$text-color, 0.2);

@@ -368,6 +368,30 @@ export default defineComponent({
       }
     };
 
+    const applyStaticColor = async () => {
+      try {
+        const currentState = await debugKeyboardService.getLighting();
+
+        if (!currentState) {
+          throw new Error('getLighting() returned no data');
+        }
+
+        const { open, dynamicColorId, ...filteredParams } = currentState;
+        
+        // Update colors[0] with the new static color
+        if (!filteredParams.colors || filteredParams.colors.length === 0) {
+          filteredParams.colors = [staticColor.value];
+        } else {
+          filteredParams.colors[0] = staticColor.value;
+        }
+
+        await debugKeyboardService.setLighting(filteredParams);
+        log(`Static color updated to ${staticColor.value}`);
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+      }
+    };
+
     const applyModeSelection = async () => {
       // Save the state BEFORE Vue updated selectedMode (confirmedMode is the last known good state)
       const previousConfirmedMode = confirmedMode.value;
@@ -531,6 +555,7 @@ export default defineComponent({
       masterSleepDelay,
       masterDirection,
       selectedMode,
+      staticColor,
       debugOutput,
       selectedKeys,
       layout,
@@ -550,6 +575,7 @@ export default defineComponent({
       applyMasterSpeed,
       applyMasterSleepDelay,
       applyMasterDirection,
+      applyStaticColor,
       applyModeSelection,
       clearDebugOutput,
       getLightingInfo,

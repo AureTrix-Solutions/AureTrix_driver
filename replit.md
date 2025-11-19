@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 19, 2025 - Custom RGB Batch Processing Optimization**
+- Implemented batch processing for custom color updates using `useBatchProcessing` composable
+- Custom colors now update in parallel batches of 80 keys instead of sequential processing
+- Significantly improved performance when updating many keys (20-50+) simultaneously
+- Color picker dragging is now smooth and responsive even with large selections
+- Maintains existing throttling and flash write optimization (preview without save, final commit with save)
+- Properly handles key fallback logic (`physicalKeyValue || keyValue`) in batch processing
+
 **November 19, 2025 - Virtual Keyboard Custom RGB Display Fix**
 - Fixed CSS gradient masking issue preventing custom colors from displaying on virtual keyboard
 - Changed `getKeyStyleWithCustomColor` to use `background` instead of `backgroundColor`

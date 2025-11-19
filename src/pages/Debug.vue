@@ -148,6 +148,18 @@
       <!-- Debug Console -->
       <details class="debug-console" open>
         <summary>Debug Console (Click to toggle)</summary>
+        <div class="console-controls">
+          <label class="super-response-label">
+            <input 
+              type="checkbox" 
+              v-model="superResponse" 
+              @change="applySuperResponse"
+              :disabled="initializing || !lightingEnabled"
+              class="super-response-checkbox"
+            />
+            Super Response
+          </label>
+        </div>
         <div class="debug-output">
           <pre>{{ debugOutput }}</pre>
         </div>

@@ -38,8 +38,8 @@
                 </button>
               </div>
               
-              <!-- Row 1: Brightness and Speed -->
-              <div class="settings-row">
+              <!-- Row 1: Brightness, Speed, and Lighting Mode -->
+              <div class="settings-row settings-row-three">
                 <div class="input-group">
                   <div class="label">Brightness</div>
                   <select v-model.number="masterLuminance" @change="applyMasterLuminance" class="mode-select"
@@ -61,6 +61,45 @@
                     <option :value="3">3 - Fast</option>
                     <option :value="4">4 - Fastest</option>
                   </select>
+                </div>
+                <div class="input-group">
+                  <div class="label">Lighting Mode</div>
+                  <select v-model.number="selectedMode" @change="applyModeSelection" class="mode-select"
+                    :disabled="initializing || !lightingEnabled">
+                    <option :value="0">Static</option>
+                    <option :value="1">Wave</option>
+                    <option :value="2">Wave 2</option>
+                    <option :value="3">Ripple</option>
+                    <option :value="4">Wheel</option>
+                    <option :value="5">Wheel 2</option>
+                    <option :value="6">Collide</option>
+                    <option :value="7">Spectrum</option>
+                    <option :value="8">Shift</option>
+                    <option :value="9">Spot Shift</option>
+                    <option :value="10">Race</option>
+                    <option :value="11">Rainbow Wave</option>
+                    <option :value="12">Snake</option>
+                    <option :value="13">Twinkle</option>
+                    <option :value="14">Twinkle 2</option>
+                    <option :value="15">Twinkle 3</option>
+                    <option :value="16">Pong</option>
+                    <option :value="17">Pulse</option>
+                    <option :value="18">Radiate</option>
+                    <option :value="19">Column</option>
+                    <option :value="20">Explode</option>
+                    <option :value="21">Custom</option>
+                  </select>
+                  <div v-if="selectedMode === 0" class="color-picker-wrapper">
+                    <label for="static-color-picker" class="color-display" :style="{ backgroundColor: staticColor }"></label>
+                    <input 
+                      type="color" 
+                      id="static-color-picker"
+                      v-model="staticColor" 
+                      @change="applyStaticColor"
+                      :disabled="initializing || !lightingEnabled"
+                      class="color-input"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -91,53 +130,6 @@
                       :disabled="initializing || !lightingEnabled" class="direction-checkbox" />
                     Reverse
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Mode Selection Section -->
-            <div class="settings-section">
-              <div class="header-row">
-                <h3>Mode Selection</h3>
-              </div>
-
-              <div class="input-group">
-                <div class="label">Lighting Mode</div>
-                <select v-model.number="selectedMode" @change="applyModeSelection" class="mode-select"
-                  :disabled="initializing || !lightingEnabled">
-                  <option :value="0">Static</option>
-                  <option :value="1">Wave</option>
-                  <option :value="2">Wave 2</option>
-                  <option :value="3">Ripple</option>
-                  <option :value="4">Wheel</option>
-                  <option :value="5">Wheel 2</option>
-                  <option :value="6">Collide</option>
-                  <option :value="7">Spectrum</option>
-                  <option :value="8">Shift</option>
-                  <option :value="9">Spot Shift</option>
-                  <option :value="10">Race</option>
-                  <option :value="11">Rainbow Wave</option>
-                  <option :value="12">Snake</option>
-                  <option :value="13">Twinkle</option>
-                  <option :value="14">Twinkle 2</option>
-                  <option :value="15">Twinkle 3</option>
-                  <option :value="16">Pong</option>
-                  <option :value="17">Pulse</option>
-                  <option :value="18">Radiate</option>
-                  <option :value="19">Column</option>
-                  <option :value="20">Explode</option>
-                  <option :value="21">Custom</option>
-                </select>
-                <div v-if="selectedMode === 0" class="color-picker-wrapper">
-                  <label for="static-color-picker" class="color-display" :style="{ backgroundColor: staticColor }"></label>
-                  <input 
-                    type="color" 
-                    id="static-color-picker"
-                    v-model="staticColor" 
-                    @change="applyStaticColor"
-                    :disabled="initializing || !lightingEnabled"
-                    class="color-input"
-                  />
                 </div>
               </div>
             </div>
@@ -817,6 +809,14 @@ export default defineComponent({
 
   .input-group {
     margin-bottom: 0;
+  }
+}
+
+.settings-row-three {
+  .input-group {
+    flex: 1;
+    min-width: 0;
+    width: auto;
   }
 }
 

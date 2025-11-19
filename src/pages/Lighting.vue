@@ -7,8 +7,7 @@
       <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
         <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
           <div v-for="(keyInfo, cIdx) in row" :key="`k-${rIdx}-${cIdx}`" class="key-btn"
-            :class="{ 'lighting-key-selected': isKeySelected(keyInfo) }"
-            :style="getKeyStyleWithCustomColor(rIdx, cIdx)" 
+            :class="{ 'lighting-key-selected': isKeySelected(keyInfo) }" :style="getKeyStyleWithCustomColor(rIdx, cIdx)"
             @click="selectKey(keyInfo)">
             <div class="key-label">
               {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
@@ -39,7 +38,7 @@
                 {{ initializing ? 'SYNCING...' : (lightingEnabled ? 'ON' : 'OFF') }}
               </button>
             </div>
-            
+
             <!-- Master Controls Row -->
             <div class="settings-row settings-row-three">
               <div class="input-group">
@@ -94,15 +93,10 @@
                 <!-- Color Picker for Static and Custom modes -->
                 <div v-if="selectedMode === 0 || selectedMode === 21" class="color-picker-wrapper">
                   <label for="color-picker" class="color-display" :style="{ backgroundColor: staticColor }"></label>
-                  <input 
-                    type="color" 
-                    id="color-picker"
-                    v-model="staticColor" 
+                  <input type="color" id="color-picker" v-model="staticColor"
                     @input="selectedMode === 0 ? applyStaticColorThrottled() : updateVirtualKeyboardColorOnly()"
                     @change="selectedMode === 0 ? applyStaticColor() : applyCustomColor()"
-                    :disabled="initializing || !lightingEnabled"
-                    class="color-input"
-                  />
+                    :disabled="initializing || !lightingEnabled" class="color-input" />
                 </div>
               </div>
             </div>
@@ -240,12 +234,12 @@ export default defineComponent({
 
     const getKeyStyleWithCustomColor = (rIdx: number, cIdx: number) => {
       const baseStyle = getKeyStyle(rIdx, cIdx);
-      
+
       if (selectedMode.value === 21 && layout.value[rIdx] && layout.value[rIdx][cIdx]) {
         const keyInfo = layout.value[rIdx][cIdx];
         const keyValue = keyInfo.physicalKeyValue || keyInfo.keyValue;
         const rgb = customColors[keyValue];
-        
+
         if (rgb) {
           const bgColor = rgbToHex(rgb.R, rgb.G, rgb.B);
           return {
@@ -255,7 +249,7 @@ export default defineComponent({
           };
         }
       }
-      
+
       return baseStyle;
     };
 
@@ -455,7 +449,7 @@ export default defineComponent({
         }
 
         const { open, dynamicColorId, ...filteredParams } = currentState;
-        
+
         if (!filteredParams.colors || filteredParams.colors.length === 0) {
           filteredParams.colors = [staticColor.value];
         } else {
@@ -487,13 +481,13 @@ export default defineComponent({
         await processBatches(
           keyIds,
           async (keyValue: number) => {
-            const result = await KeyboardService.setCustomLighting({ 
-              key: keyValue, 
-              r: rgb.R, 
-              g: rgb.G, 
-              b: rgb.B 
+            const result = await KeyboardService.setCustomLighting({
+              key: keyValue,
+              r: rgb.R,
+              g: rgb.G,
+              b: rgb.B
             });
-            
+
             if (!(result instanceof Error)) {
               customColors[keyValue] = { R: rgb.R, G: rgb.G, B: rgb.B };
             } else {
@@ -518,10 +512,10 @@ export default defineComponent({
 
     const updateVirtualKeyboardColorOnly = () => {
       if (selectedKeys.value.length === 0) return;
-      
+
       const rgb = hexToRgb(staticColor.value);
       const keyIds = selectedKeys.value.map(key => key.physicalKeyValue || key.keyValue);
-      
+
       // Update customColors reactive object for virtual keyboard preview only
       // No SDK calls - instant visual update
       keyIds.forEach(keyValue => {
@@ -539,7 +533,7 @@ export default defineComponent({
           try {
             const keyValue = key.physicalKeyValue || key.keyValue;
             const result = await KeyboardService.getCustomLighting(keyValue);
-            
+
             if (!(result instanceof Error) && result && result.R !== undefined) {
               customColors[keyValue] = {
                 R: result.R,
@@ -611,7 +605,7 @@ export default defineComponent({
 
     const initLightingFromDevice = async () => {
       initializing.value = true;
-      
+
       try {
         const currentState = await KeyboardService.getLighting();
         if (currentState instanceof Error) {
@@ -758,7 +752,7 @@ export default defineComponent({
   &.lighting-key-selected {
     border-color: v.$accent-color;
     box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
-    background: linear-gradient(to bottom, color.adjust(v.$accent-color, $lightness: -20%) 70%, color.adjust(v.$accent-color, $lightness: -10%) 100%);
+
   }
 
   &:hover {
@@ -895,7 +889,7 @@ export default defineComponent({
   gap: 0px;
   margin-bottom: 20px;
   padding: 10px;
-  width: 400px;
+  width: 430px;
   height: 30px;
   border: v.$border-style;
   border-radius: v.$border-radius;
@@ -913,7 +907,7 @@ export default defineComponent({
   .mode-select {
     width: 300px;
     padding: 8px 12px;
-    background: rgba(v.$background-dark, 0.8);
+    background: rgba(v.$background-dark, 100%);
     border: 1px solid rgba(v.$text-color, 0.3);
     border-radius: v.$border-radius;
     color: v.$text-color;

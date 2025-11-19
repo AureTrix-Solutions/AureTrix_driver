@@ -67,6 +67,14 @@ Preferred communication style: Simple, everyday language.
 - Virtual keyboard shows real-time color preview while dragging, physical keyboard updates once when finished
 - Architect-reviewed and verified performance improvement with no regressions
 
+**November 19, 2025 - Lighting Page Documentation**
+- Created comprehensive LIGHTING.md documentation covering complete Lighting.vue implementation
+- Documented all 22 lighting modes (Static, Dynamic effects 1-20, Custom per-key RGB)
+- Detailed master controls, key selection system, virtual keyboard rendering, and performance optimizations
+- Included API workflow patterns, error handling strategies, troubleshooting guide, and testing checklist
+- Documented dual-event color picker approach, batch processing optimization, and flash write management
+- Provides technical reference for all functions, state management, lifecycle hooks, and component architecture
+
 ## System Architecture
 
 ### Frontend Architecture

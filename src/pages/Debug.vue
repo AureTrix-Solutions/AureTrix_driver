@@ -259,7 +259,6 @@ export default defineComponent({
           try {
             await debugKeyboardService.getLighting();
           } catch (syncError) {
-            // Continue anyway
           }
           
           await debugKeyboardService.closedLighting();
@@ -290,10 +289,7 @@ export default defineComponent({
           throw new Error('getLighting() returned no data');
         }
         
-        // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
         const { open, dynamicColorId, ...filteredParams } = currentState;
-        
-        // Update luminance with the selected value
         filteredParams.luminance = masterLuminance.value;
         
         await debugKeyboardService.setLighting(filteredParams);
@@ -310,10 +306,7 @@ export default defineComponent({
           throw new Error('getLighting() returned no data');
         }
         
-        // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
         const { open, dynamicColorId, ...filteredParams } = currentState;
-        
-        // Update speed with the selected value
         filteredParams.speed = masterSpeed.value;
         
         await debugKeyboardService.setLighting(filteredParams);
@@ -330,10 +323,7 @@ export default defineComponent({
           throw new Error('getLighting() returned no data');
         }
         
-        // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
         const { open, dynamicColorId, ...filteredParams } = currentState;
-        
-        // Update sleepDelay with the selected value
         filteredParams.sleepDelay = masterSleepDelay.value;
         
         await debugKeyboardService.setLighting(filteredParams);
@@ -350,10 +340,7 @@ export default defineComponent({
           throw new Error('getLighting() returned no data');
         }
         
-        // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
         const { open, dynamicColorId, ...filteredParams } = currentState;
-        
-        // Update direction with the checkbox value
         filteredParams.direction = masterDirection.value;
         
         await debugKeyboardService.setLighting(filteredParams);
@@ -368,7 +355,6 @@ export default defineComponent({
       const attemptedMode = selectedMode.value; // This is the new value Vue already set
       
       try {
-        // Validate mode is within supported range
         if (attemptedMode < 0 || attemptedMode > 21) {
           throw new Error(`Invalid mode selection: ${attemptedMode} is outside supported range (0-21)`);
         }
@@ -379,7 +365,6 @@ export default defineComponent({
           throw new Error('getLighting() returned no data');
         }
         
-        // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
         const { open, dynamicColorId, ...filteredParams } = currentState;
         
         // Update mode with the numeric value (SDK expects number, not string)
@@ -416,7 +401,6 @@ export default defineComponent({
         const currentState = await debugKeyboardService.getLighting();
         
         if (currentState) {
-          // Update master controls
           lightingEnabled.value = currentState.open ?? true;
           masterLuminance.value = currentState.luminance ?? 4;
           masterSpeed.value = currentState.speed ?? 3;
@@ -427,13 +411,10 @@ export default defineComponent({
           if (currentState.mode !== undefined && currentState.mode !== null) {
             const modeNum = currentState.mode;
             
-            // Check if mode is within our supported range (0-21)
             if (modeNum >= 0 && modeNum <= 21) {
-              // Mode is recognized - sync dropdown directly
               selectedMode.value = modeNum;
               confirmedMode.value = modeNum;
             } else {
-              // Mode is outside supported range - default to Static
               selectedMode.value = 0;
               confirmedMode.value = 0;
             }
@@ -465,7 +446,6 @@ export default defineComponent({
           await debugKeyboardService.requestDevice();
           log('Debug service connected via user prompt');
           
-          // Sync UI with keyboard state after connection
           await initLightingFromDevice();
         } catch (promptError) {
           log(`Connection failed: ${(promptError as Error).message}`);

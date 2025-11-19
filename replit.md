@@ -40,6 +40,15 @@ Preferred communication style: Simple, everyday language.
 - Keys show their assigned custom colors without requiring selection
 - Inline styles now correctly override CSS class gradients for visual preview
 
+**November 19, 2025 - Lighting Page SASS Styling Fix**
+- Fixed SASS compilation issues caused by incorrect variable names in Lighting.vue
+- Replaced entire `<style>` section with correct styles copied from Debug.vue reference implementation
+- Updated SASS variables: v.$bg-color → v.$background-dark (and other variables to match Debug.vue)
+- Changed template class from 'key-selected' to 'lighting-key-selected' to match stylesheet
+- All visual styling now matches Debug.vue's working implementation
+- Workflow restarts successfully with no SASS compilation errors
+- Architect reviewed and approved changes with no regressions found
+
 ## System Architecture
 
 ### Frontend Architecture

@@ -674,6 +674,13 @@ export default defineComponent({
   }
 }
 
+.settings-row {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
 .input-group {
   display: flex;
   align-items: center;

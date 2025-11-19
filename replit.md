@@ -20,6 +20,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 19, 2025 - Custom RGB Mode SDK Interface Fix**
+- Fixed setCustomLighting to use correct SDK parameter format: `{ key, r, g, b }` object instead of individual arguments
+- Added saveCustomLighting() call to persist color changes to keyboard flash memory
+- Optimized flash writes: throttled preview (saveToFlash:false) during color picker drag, save (saveToFlash:true) only on final commit
+- Proper SDK workflow: setCustomLighting for each key, saveCustomLighting once at end
+- Prevents excessive flash writes while maintaining smooth real-time preview
+
 **November 19, 2025 - Custom RGB Mode (Mode 21) Implementation**
 - Implemented full per-key custom RGB lighting control (mode 21)
 - Added reactive Map data structure for storing per-key custom colors using `reactive(new Map())`

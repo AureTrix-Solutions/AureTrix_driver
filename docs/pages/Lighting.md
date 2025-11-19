@@ -133,7 +133,30 @@ const initLightingFromDevice = async () => {
 }
 ```
 
-#### 2. **Apply Master Control Changes**
+#### 2. **Toggle Lighting (ON/OFF)**
+```typescript
+const toggleLighting = async () => {
+  if (lightingEnabled.value) {
+    // Turning OFF
+    const result = await KeyboardService.closedLighting();
+    if (!(result instanceof Error)) {
+      lightingEnabled.value = false;
+    }
+  } else {
+    // Turning ON
+    const currentState = await KeyboardService.getLighting();
+    const { open, dynamicColorId, ...filteredParams } = currentState;
+    const result = await KeyboardService.setLighting(filteredParams);
+    if (!(result instanceof Error)) {
+      lightingEnabled.value = true;
+    }
+  }
+}
+```
+
+**IMPORTANT**: Always call `getLighting()` before using `closedLighting()` to load the keyboard's settings into memory. If you call `closedLighting()` without first calling `getLighting()`, all lighting settings will be lost when the lights are turned back on. The current implementation loads settings on page mount via `initLightingFromDevice()`, which ensures settings are preserved during the session.
+
+#### 3. **Apply Master Control Changes**
 ```typescript
 // Pattern used by all master controls
 const applyMasterLuminance = async () => {
@@ -147,7 +170,7 @@ const applyMasterLuminance = async () => {
 // Similar: applyMasterSpeed, applyMasterSleepDelay, applyMasterDirection
 ```
 
-#### 3. **Mode Selection with Type Setting**
+#### 5. **Mode Selection with Type Setting**
 ```typescript
 const applyModeSelection = async () => {
   const currentState = await KeyboardService.getLighting();
@@ -181,7 +204,7 @@ const applyModeSelection = async () => {
 }
 ```
 
-#### 4. **Static Color Application**
+#### 6. **Static Color Application**
 ```typescript
 const applyStaticColor = async () => {
   const currentState = await KeyboardService.getLighting();
@@ -203,7 +226,7 @@ const applyStaticColor = async () => {
 const applyStaticColorThrottled = throttle(applyStaticColor, 100);
 ```
 
-#### 5. **Custom Color Application (Batch Processing)**
+#### 7. **Custom Color Application (Batch Processing)**
 ```typescript
 const applyCustomColor = async (saveToFlash: boolean = true) => {
   if (selectedKeys.value.length === 0) return;
@@ -235,7 +258,7 @@ const applyCustomColor = async (saveToFlash: boolean = true) => {
 }
 ```
 
-#### 6. **Virtual-Only Color Preview (Performance Optimization)**
+#### 8. **Virtual-Only Color Preview (Performance Optimization)**
 ```typescript
 // Updates virtual keyboard instantly without SDK calls
 const updateVirtualKeyboardColorOnly = () => {
@@ -251,7 +274,7 @@ const updateVirtualKeyboardColorOnly = () => {
 }
 ```
 
-#### 7. **Load Custom Colors from Keyboard**
+#### 9. **Load Custom Colors from Keyboard**
 ```typescript
 const loadCustomColorsFromKeyboard = async () => {
   const allKeys = layout.value.flat();
@@ -351,9 +374,9 @@ const getKeyStyleWithCustomColor = (rIdx: number, cIdx: number) => {
 
 ### Services
 - **KeyboardService**: Hardware abstraction layer
-  - `getLighting()`: Fetch current RGB settings
+  - `getLighting()`: Fetch current RGB settings - **IMPORTANT**: Always call this before `closedLighting()` to load settings into memory
   - `setLighting(params)`: Apply RGB settings
-  - `closedLighting()`: Turn off lighting
+  - `closedLighting()`: Turn off lighting - **WARNING**: Must call `getLighting()` first or settings will be lost when lights turn back on
   - `getCustomLighting(keyValue)`: Fetch custom color for key
   - `setCustomLighting({ key, r, g, b })`: Set custom color for key
   - `saveCustomLighting()`: Save custom colors to flash

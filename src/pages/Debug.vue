@@ -8,7 +8,7 @@
         <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
           <div v-for="(keyInfo, cIdx) in row" :key="`k-${rIdx}-${cIdx}`" class="key-btn"
             :class="{ 'lighting-key-selected': loaded && selectedKeys.some(k => (k.physicalKeyValue || k.keyValue) === (keyInfo.physicalKeyValue || keyInfo.keyValue)) }"
-            :style="getKeyStyle(rIdx, cIdx)" @click="selectKey(keyInfo, rIdx, cIdx)">
+            :style="getKeyStyleWithCustomColor(rIdx, cIdx)" @click="selectKey(keyInfo, rIdx, cIdx)">
             <div class="key-label">
               {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
             </div>
@@ -292,6 +292,28 @@ export default defineComponent({
       },
       { deep: true }
     );
+
+    // Enhanced getKeyStyle that applies custom colors in Custom mode
+    const getKeyStyleWithCustomColor = (rIdx: number, cIdx: number) => {
+      const baseStyle = getKeyStyle(rIdx, cIdx);
+      
+      // Apply custom background color in Custom mode (21)
+      if (selectedMode.value === 21 && layout.value[rIdx] && layout.value[rIdx][cIdx]) {
+        const keyInfo = layout.value[rIdx][cIdx];
+        const keyValue = keyInfo.physicalKeyValue || keyInfo.keyValue;
+        const rgb = customColors.value.get(keyValue);
+        
+        if (rgb) {
+          const bgColor = rgbToHex(rgb.R, rgb.G, rgb.B);
+          return {
+            ...baseStyle,
+            backgroundColor: bgColor,
+          };
+        }
+      }
+      
+      return baseStyle;
+    };
 
     // Key selection functions
     const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
@@ -742,6 +764,7 @@ export default defineComponent({
       loaded,
       gridStyle,
       getKeyStyle,
+      getKeyStyleWithCustomColor,
       keyMap,
       error,
       selectKey,
@@ -758,6 +781,8 @@ export default defineComponent({
       applySuperResponse,
       applyStaticColor,
       applyStaticColorThrottled,
+      applyCustomColor,
+      applyCustomColorThrottled,
       applyModeSelection,
       clearDebugOutput,
       getLightingInfo,

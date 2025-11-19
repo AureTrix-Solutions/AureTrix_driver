@@ -181,6 +181,7 @@ export default defineComponent({
     const selectedMode = ref(0);
     const confirmedMode = ref(0); // Tracks last successfully applied mode
     const staticColor = ref('#0037ff'); // Static mode color (colors[0])
+    const superResponse = ref(false); // Super response mode
     const debugOutput = ref('Lighting Debug Console\n-------------------\n');
     const selectedKeys = ref<IDefKeyInfo[]>([]);
 
@@ -499,6 +500,7 @@ export default defineComponent({
           masterSpeed.value = currentState.speed ?? 3;
           masterSleepDelay.value = currentState.sleepDelay ?? 0;
           masterDirection.value = currentState.direction ?? false;
+          superResponse.value = currentState.superResponse ?? false;
 
           // Initialize static color from colors[0]
           if (currentState.colors && currentState.colors.length > 0) {

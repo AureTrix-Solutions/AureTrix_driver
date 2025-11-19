@@ -6,14 +6,9 @@
       <!-- Keyboard Grid -->
       <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
         <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
-          <div
-            v-for="(keyInfo, cIdx) in row"
-            :key="`k-${rIdx}-${cIdx}`"
-            class="key-btn"
+          <div v-for="(keyInfo, cIdx) in row" :key="`k-${rIdx}-${cIdx}`" class="key-btn"
             :class="{ 'lighting-key-selected': loaded && selectedKeys.some(k => (k.physicalKeyValue || k.keyValue) === (keyInfo.physicalKeyValue || keyInfo.keyValue)) }"
-            :style="getKeyStyle(rIdx, cIdx)"
-            @click="selectKey(keyInfo, rIdx, cIdx)"
-          >
+            :style="getKeyStyle(rIdx, cIdx)" @click="selectKey(keyInfo, rIdx, cIdx)">
             <div class="key-label">
               {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
             </div>
@@ -44,7 +39,8 @@
               </div>
               <div class="input-group">
                 <div class="label">Brightness</div>
-                <select v-model.number="masterLuminance" @change="applyMasterLuminance" class="mode-select" :disabled="initializing || !lightingEnabled">
+                <select v-model.number="masterLuminance" @change="applyMasterLuminance" class="mode-select"
+                  :disabled="initializing || !lightingEnabled">
                   <option :value="0">0 - Off</option>
                   <option :value="1">1 - Low</option>
                   <option :value="2">2 - Medium</option>
@@ -54,7 +50,8 @@
               </div>
               <div class="input-group">
                 <div class="label">Speed</div>
-                <select v-model.number="masterSpeed" @change="applyMasterSpeed" class="mode-select" :disabled="initializing || !lightingEnabled">
+                <select v-model.number="masterSpeed" @change="applyMasterSpeed" class="mode-select"
+                  :disabled="initializing || !lightingEnabled">
                   <option :value="0">0 - Slowest</option>
                   <option :value="1">1 - Slow</option>
                   <option :value="2">2 - Medium</option>
@@ -64,7 +61,8 @@
               </div>
               <div class="input-group">
                 <div class="label">Sleep</div>
-                <select v-model.number="masterSleepDelay" @change="applyMasterSleepDelay" class="mode-select" :disabled="initializing || !lightingEnabled">
+                <select v-model.number="masterSleepDelay" @change="applyMasterSleepDelay" class="mode-select"
+                  :disabled="initializing || !lightingEnabled">
                   <option :value="0">Never</option>
                   <option :value="1">1 minute</option>
                   <option :value="2">2 minutes</option>
@@ -82,13 +80,8 @@
               </div>
               <div class="input-group">
                 <div class="label">
-                  <input 
-                    type="checkbox" 
-                    v-model="masterDirection" 
-                    @change="applyMasterDirection" 
-                    :disabled="initializing || !lightingEnabled"
-                    class="direction-checkbox"
-                  />
+                  <input type="checkbox" v-model="masterDirection" @change="applyMasterDirection"
+                    :disabled="initializing || !lightingEnabled" class="direction-checkbox" />
                   Reverse
                 </div>
               </div>
@@ -99,10 +92,11 @@
               <div class="header-row">
                 <h3>Mode Selection</h3>
               </div>
-              
+
               <div class="input-group">
                 <div class="label">Lighting Mode</div>
-                <select v-model.number="selectedMode" @change="applyModeSelection" class="mode-select" :disabled="initializing || !lightingEnabled">
+                <select v-model.number="selectedMode" @change="applyModeSelection" class="mode-select"
+                  :disabled="initializing || !lightingEnabled">
                   <option :value="0">Static</option>
                   <option :value="1">Wave</option>
                   <option :value="2">Wave 2</option>
@@ -253,26 +247,26 @@ export default defineComponent({
       if (initializing.value) {
         return;
       }
-      
+
       try {
         if (lightingEnabled.value) {
           try {
             await debugKeyboardService.getLighting();
           } catch (syncError) {
           }
-          
+
           await debugKeyboardService.closedLighting();
           lightingEnabled.value = false;
         } else {
           const currentState = await debugKeyboardService.getLighting();
-          
+
           if (!currentState) {
             throw new Error('getLighting() returned no data');
           }
-          
+
           // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
           const { open, dynamicColorId, ...filteredParams } = currentState;
-          
+
           await debugKeyboardService.setLighting(filteredParams);
           lightingEnabled.value = true;
         }
@@ -284,14 +278,14 @@ export default defineComponent({
     const applyMasterLuminance = async () => {
       try {
         const currentState = await debugKeyboardService.getLighting();
-        
+
         if (!currentState) {
           throw new Error('getLighting() returned no data');
         }
-        
+
         const { open, dynamicColorId, ...filteredParams } = currentState;
         filteredParams.luminance = masterLuminance.value;
-        
+
         await debugKeyboardService.setLighting(filteredParams);
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
@@ -301,14 +295,14 @@ export default defineComponent({
     const applyMasterSpeed = async () => {
       try {
         const currentState = await debugKeyboardService.getLighting();
-        
+
         if (!currentState) {
           throw new Error('getLighting() returned no data');
         }
-        
+
         const { open, dynamicColorId, ...filteredParams } = currentState;
         filteredParams.speed = masterSpeed.value;
-        
+
         await debugKeyboardService.setLighting(filteredParams);
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
@@ -318,14 +312,14 @@ export default defineComponent({
     const applyMasterSleepDelay = async () => {
       try {
         const currentState = await debugKeyboardService.getLighting();
-        
+
         if (!currentState) {
           throw new Error('getLighting() returned no data');
         }
-        
+
         const { open, dynamicColorId, ...filteredParams } = currentState;
         filteredParams.sleepDelay = masterSleepDelay.value;
-        
+
         await debugKeyboardService.setLighting(filteredParams);
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
@@ -335,14 +329,14 @@ export default defineComponent({
     const applyMasterDirection = async () => {
       try {
         const currentState = await debugKeyboardService.getLighting();
-        
+
         if (!currentState) {
           throw new Error('getLighting() returned no data');
         }
-        
+
         const { open, dynamicColorId, ...filteredParams } = currentState;
         filteredParams.direction = masterDirection.value;
-        
+
         await debugKeyboardService.setLighting(filteredParams);
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
@@ -353,23 +347,23 @@ export default defineComponent({
       // Save the state BEFORE Vue updated selectedMode (confirmedMode is the last known good state)
       const previousConfirmedMode = confirmedMode.value;
       const attemptedMode = selectedMode.value; // This is the new value Vue already set
-      
+
       try {
         if (attemptedMode < 0 || attemptedMode > 21) {
           throw new Error(`Invalid mode selection: ${attemptedMode} is outside supported range (0-21)`);
         }
-        
+
         const currentState = await debugKeyboardService.getLighting();
-        
+
         if (!currentState) {
           throw new Error('getLighting() returned no data');
         }
-        
+
         const { open, dynamicColorId, ...filteredParams } = currentState;
-        
+
         // Update mode with the numeric value (SDK expects number, not string)
         filteredParams.mode = attemptedMode;
-        
+
         // Update type based on mode: Static (0) = 'static', Effects (1-20) = 'dynamic', Custom (21) = 'custom'
         if (attemptedMode === 0) {
           filteredParams.type = 'static';
@@ -378,9 +372,9 @@ export default defineComponent({
         } else {
           filteredParams.type = 'dynamic';
         }
-        
+
         await debugKeyboardService.setLighting(filteredParams);
-        
+
         // Update confirmed mode AFTER successful SDK call
         confirmedMode.value = attemptedMode;
       } catch (error) {
@@ -397,20 +391,20 @@ export default defineComponent({
     const initLightingFromDevice = async () => {
       try {
         initializing.value = true;
-        
+
         const currentState = await debugKeyboardService.getLighting();
-        
+
         if (currentState) {
           lightingEnabled.value = currentState.open ?? true;
           masterLuminance.value = currentState.luminance ?? 4;
           masterSpeed.value = currentState.speed ?? 3;
           masterSleepDelay.value = currentState.sleepDelay ?? 0;
           masterDirection.value = currentState.direction ?? false;
-          
+
           // SDK returns mode as a number - use it directly
           if (currentState.mode !== undefined && currentState.mode !== null) {
             const modeNum = currentState.mode;
-            
+
             if (modeNum >= 0 && modeNum <= 21) {
               selectedMode.value = modeNum;
               confirmedMode.value = modeNum;
@@ -433,11 +427,11 @@ export default defineComponent({
     onMounted(async () => {
       log('Debug page mounted, attempting connection...');
       await fetchLayerLayout();
-      
+
       try {
         await debugKeyboardService.autoConnect();
         log('Debug service connected successfully');
-        
+
         // Sync UI with keyboard state after connection
         await initLightingFromDevice();
       } catch (error) {
@@ -445,7 +439,7 @@ export default defineComponent({
         try {
           await debugKeyboardService.requestDevice();
           log('Debug service connected via user prompt');
-          
+
           await initLightingFromDevice();
         } catch (promptError) {
           log(`Connection failed: ${(promptError as Error).message}`);
@@ -500,7 +494,8 @@ export default defineComponent({
     color: v.$primary-color;
     margin-bottom: 20px;
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: 600;
+    font-family: v.$font-style;
   }
 }
 
@@ -514,6 +509,7 @@ export default defineComponent({
   text-align: center;
   color: v.$text-color;
   font-size: 1rem;
+  font-family: v.$font-style;
   padding: 20px;
 }
 
@@ -536,7 +532,7 @@ export default defineComponent({
 .key-btn {
   position: absolute;
   padding: 4px;
-  border: 2px solid rgba(v.$text-color, 0.3);
+  border: v.$border-style;
   border-radius: v.$border-radius;
   background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
@@ -546,11 +542,13 @@ export default defineComponent({
   box-sizing: border-box;
   user-select: none;
   text-align: center;
+  font-family: v.$font-style;
   visibility: visible !important;
   z-index: 2;
 
   .key-label {
-    font-size: 0.8rem;
+    font-size: 1rem;
+    font-weight: 300;
   }
 
   &.lighting-key-selected {
@@ -593,10 +591,11 @@ export default defineComponent({
     font-weight: 200px;
     transition: background-color 0.2s ease;
     width: 120px;
+    text-align: center;
+    font-family: v.$font-style;
 
     &:hover {
-      background-color: color.adjust(v.$accent-color, $lightness: -20%);
-      color: white;
+      background-color: color.adjust(v.$background-dark, $lightness: 10%);
     }
   }
 }
@@ -611,15 +610,17 @@ export default defineComponent({
   padding: 10px;
   border: 1px solid rgba(v.$text-color, 0.2);
   border-radius: v.$border-radius;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
 .settings-section {
-  border: 2px solid rgba(v.$text-color, 0.2);
+  flex-shrink: 0;
+  border: 1px solid rgba(v.$text-color, 0.2);
   border-radius: v.$border-radius;
-  padding: 15px;
+  padding: 10px 15px;
   background: rgba(v.$background-dark, 0.3);
 
   .header-row {
@@ -666,24 +667,35 @@ export default defineComponent({
 }
 
 .input-group {
-  margin-bottom: 15px;
-  width: 300px;
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  margin-bottom: 20px;
+  padding: 10px;
+  width: 400px;
+  height: 30px;
+  border: v.$border-style;
+  border-radius: v.$border-radius;
+  background-color: rgba(v.$background-dark, 0.5);
+  font-family: v.$font-style;
 
   .label {
-    margin-bottom: 8px;
-    font-size: 0.9rem;
+    min-width: 150px;
+    text-align: left;
     color: v.$text-color;
-    font-weight: 500;
+    font-size: 0.95rem;
+    font-weight: 300;
   }
 
   .mode-select {
-    width: 100%;
+    width: 300px;
     padding: 8px 12px;
     background: rgba(v.$background-dark, 0.8);
     border: 1px solid rgba(v.$text-color, 0.3);
     border-radius: v.$border-radius;
     color: v.$text-color;
     font-size: 0.9rem;
+    font-family: v.$font-style;
 
     &:disabled {
       opacity: 0.5;
@@ -715,6 +727,7 @@ export default defineComponent({
     padding: 12px 15px;
     cursor: pointer;
     font-weight: 600;
+    font-family: v.$font-style;
     color: v.$accent-color;
     user-select: none;
 
@@ -751,6 +764,7 @@ export default defineComponent({
     border-radius: v.$border-radius;
     cursor: pointer;
     font-size: 0.9rem;
+    font-family: v.$font-style;
 
     &:hover {
       background: color.adjust(#6b7280, $lightness: 10%);

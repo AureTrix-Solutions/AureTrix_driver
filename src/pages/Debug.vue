@@ -133,6 +133,7 @@
                   <option :value="18">Radiate</option>
                   <option :value="19">Column</option>
                   <option :value="20">Explode</option>
+                  <option :value="21">Custom</option>
                 </select>
               </div>
             </div>
@@ -555,8 +556,8 @@ export default defineComponent({
       
       try {
         // Validate mode is within supported range
-        if (attemptedMode < 0 || attemptedMode > 20) {
-          throw new Error(`Invalid mode selection: ${attemptedMode} is outside supported range (0-20)`);
+        if (attemptedMode < 0 || attemptedMode > 21) {
+          throw new Error(`Invalid mode selection: ${attemptedMode} is outside supported range (0-21)`);
         }
         
         log(`Applying mode selection: ${attemptedMode}...`);
@@ -573,8 +574,14 @@ export default defineComponent({
         // Update mode with the numeric value (SDK expects number, not string)
         filteredParams.mode = attemptedMode;
         
-        // Update type based on mode: Static (0) uses 'static', all effects (1-20) use 'dynamic'
-        filteredParams.type = attemptedMode === 0 ? 'static' : 'dynamic';
+        // Update type based on mode: Static (0) = 'static', Effects (1-20) = 'dynamic', Custom (21) = 'custom'
+        if (attemptedMode === 0) {
+          filteredParams.type = 'static';
+        } else if (attemptedMode === 21) {
+          filteredParams.type = 'custom';
+        } else {
+          filteredParams.type = 'dynamic';
+        }
         
         log(`Applying lighting with mode ${attemptedMode}, type "${filteredParams.type}": ${JSON.stringify(filteredParams)}`);
         
@@ -703,15 +710,23 @@ export default defineComponent({
           if (currentState.mode !== undefined && currentState.mode !== null) {
             const modeNum = currentState.mode;
             
-            // Check if mode is within our supported range (0-20)
-            if (modeNum >= 0 && modeNum <= 20) {
+            // Check if mode is within our supported range (0-21)
+            if (modeNum >= 0 && modeNum <= 21) {
               // Mode is recognized - sync dropdown directly
               selectedMode.value = modeNum;
               confirmedMode.value = modeNum;
               log(`Mode synced: ${modeNum}`);
               
               // Diagnostic: Check if type matches expected value based on mode
-              const expectedType = modeNum === 0 ? 'static' : 'dynamic';
+              let expectedType: string;
+              if (modeNum === 0) {
+                expectedType = 'static';
+              } else if (modeNum === 21) {
+                expectedType = 'custom';
+              } else {
+                expectedType = 'dynamic';
+              }
+              
               if (currentState.type && currentState.type !== expectedType) {
                 log(`DIAGNOSTIC: Mode ${modeNum} has type "${currentState.type}", expected "${expectedType}"`);
               }
@@ -719,7 +734,7 @@ export default defineComponent({
               // Mode is outside supported range - default to Static
               selectedMode.value = 0;
               confirmedMode.value = 0;
-              log(`WARNING: Keyboard mode ${modeNum} outside supported range (0-20), defaulting to Static`);
+              log(`WARNING: Keyboard mode ${modeNum} outside supported range (0-21), defaulting to Static`);
               setNotification(`Keyboard mode ${modeNum} not in supported range. Defaulted to Static.`, true);
             }
           } else {

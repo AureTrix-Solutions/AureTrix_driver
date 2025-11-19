@@ -184,16 +184,6 @@ export default defineComponent({
       color: { r: 255, g: 255, b: 255 }
     });
 
-    const customLighting = ref({
-      color: { r: 255, g: 0, b: 0 }
-    });
-
-    const specialLighting = ref({
-      mode: 'reactive',
-      brightness: 80,
-      speed: 50
-    });
-
     const savedLightingState = ref<any>(null);
 
     // Lighting range constants (single source of truth)
@@ -523,65 +513,6 @@ export default defineComponent({
       }
     };
 
-    const applyCustomLighting = async () => {
-      try {
-        const keys = selectedKeys.value.map(k => ({
-          key: k.physicalKeyValue || k.keyValue,
-          r: customLighting.value.color.r,
-          g: customLighting.value.color.g,
-          b: customLighting.value.color.b
-        }));
-        
-        const param = { keys };
-        log(`Applying custom lighting to ${keys.length} keys: ${JSON.stringify(param)}`);
-        await debugKeyboardService.setCustomLighting(param);
-        setNotification(`Custom lighting applied to ${keys.length} key(s)`, false);
-        log('Custom lighting applied successfully');
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to apply custom lighting', true);
-      }
-    };
-
-    const saveCustomLighting = async () => {
-      try {
-        log('Saving custom lighting to firmware...');
-        await debugKeyboardService.saveCustomLighting();
-        setNotification('Custom lighting saved to firmware', false);
-        log('Custom lighting saved to firmware successfully');
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to save custom lighting', true);
-      }
-    };
-
-    const applySpecialLighting = async () => {
-      try {
-        log(`Applying special lighting: ${JSON.stringify(specialLighting.value)}`);
-        await debugKeyboardService.setSpecialLighting(specialLighting.value);
-        setNotification('Special lighting applied successfully', false);
-        log('Special lighting applied successfully');
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to apply special lighting', true);
-      }
-    };
-
-    const fetchSpecialLighting = async () => {
-      try {
-        log('Fetching current special lighting...');
-        const result = await debugKeyboardService.getSpecialLighting();
-        log(`Current special lighting: ${JSON.stringify(result)}`);
-        if (result.mode) specialLighting.value.mode = result.mode;
-        if (result.brightness !== undefined) specialLighting.value.brightness = result.brightness;
-        if (result.speed !== undefined) specialLighting.value.speed = result.speed;
-        setNotification('Special lighting fetched', false);
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to fetch special lighting', true);
-      }
-    };
-
     const clearDebugOutput = () => {
       debugOutput.value = 'Lighting Debug Console\n-------------------\n';
     };
@@ -691,8 +622,6 @@ export default defineComponent({
       masterDirection,
       selectedMode,
       globalLighting,
-      customLighting,
-      specialLighting,
       lightingRanges,
       debugOutput,
       selectedKeys,
@@ -716,10 +645,6 @@ export default defineComponent({
       applyModeSelection,
       applyGlobalLighting,
       fetchGlobalLighting,
-      applyCustomLighting,
-      saveCustomLighting,
-      applySpecialLighting,
-      fetchSpecialLighting,
       clearDebugOutput,
     };
   },

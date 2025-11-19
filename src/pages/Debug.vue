@@ -381,6 +381,24 @@ export default defineComponent({
       }
     };
 
+    const applySuperResponse = async () => {
+      try {
+        const currentState = await debugKeyboardService.getLighting();
+
+        if (!currentState) {
+          throw new Error('getLighting() returned no data');
+        }
+
+        const { open, dynamicColorId, ...filteredParams } = currentState;
+        filteredParams.superResponse = superResponse.value;
+
+        await debugKeyboardService.setLighting(filteredParams);
+        log(`Super Response ${superResponse.value ? 'enabled' : 'disabled'}`);
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+      }
+    };
+
     const applyStaticColor = async () => {
       try {
         const currentState = await debugKeyboardService.getLighting();
@@ -573,6 +591,7 @@ export default defineComponent({
       masterSpeed,
       masterSleepDelay,
       masterDirection,
+      superResponse,
       selectedMode,
       staticColor,
       debugOutput,
@@ -594,6 +613,7 @@ export default defineComponent({
       applyMasterSpeed,
       applyMasterSleepDelay,
       applyMasterDirection,
+      applySuperResponse,
       applyStaticColor,
       applyModeSelection,
       clearDebugOutput,

@@ -140,7 +140,12 @@
         <div class="debug-output">
           <pre>{{ debugOutput }}</pre>
         </div>
-        <button @click="clearDebugOutput" class="clear-btn">Clear Console</button>
+        <div class="console-buttons">
+          <button @click="getLightingInfo" class="debug-btn">Get Lighting</button>
+          <button @click="getCustomLightingInfo" class="debug-btn">Get Custom Lighting</button>
+          <button @click="getSpecialLightingInfo" class="debug-btn">Get Special Lighting</button>
+          <button @click="clearDebugOutput" class="clear-btn">Clear Console</button>
+        </div>
       </details>
     </div>
   </div>

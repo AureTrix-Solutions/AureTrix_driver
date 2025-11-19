@@ -210,7 +210,7 @@ export default defineComponent({
     };
 
     // Custom RGB color storage (key -> {R, G, B})
-    const customColors = reactive<Map<number, { R: number; G: number; B: number }>>(new Map());
+    const customColors = reactive<Record<number, { R: number; G: number; B: number }>>({});
 
     // RGB/Hex conversion utilities
     const rgbToHex = (r: number, g: number, b: number): string => {
@@ -249,7 +249,7 @@ export default defineComponent({
         // Single key: return its custom color
         if (selectedKeys.value.length === 1) {
           const keyValue = selectedKeys.value[0].physicalKeyValue || selectedKeys.value[0].keyValue;
-          const rgb = customColors.get(keyValue);
+          const rgb = customColors[keyValue];
           return rgb ? rgbToHex(rgb.R, rgb.G, rgb.B) : '#ffffff';
         }
 
@@ -259,7 +259,7 @@ export default defineComponent({
 
         selectedKeys.value.forEach(key => {
           const keyValue = key.physicalKeyValue || key.keyValue;
-          const rgb = customColors.get(keyValue);
+          const rgb = customColors[keyValue];
           const hex = rgb ? rgbToHex(rgb.R, rgb.G, rgb.B) : '#ffffff';
           keyColors.push(hex);
           colorCounts.set(hex, (colorCounts.get(hex) || 0) + 1);
@@ -301,7 +301,7 @@ export default defineComponent({
       if (selectedMode.value === 21 && layout.value[rIdx] && layout.value[rIdx][cIdx]) {
         const keyInfo = layout.value[rIdx][cIdx];
         const keyValue = keyInfo.physicalKeyValue || keyInfo.keyValue;
-        const rgb = customColors.get(keyValue);
+        const rgb = customColors[keyValue];
         
         if (rgb) {
           const bgColor = rgbToHex(rgb.R, rgb.G, rgb.B);
@@ -564,7 +564,7 @@ export default defineComponent({
           });
           
           // Update local state
-          customColors.set(keyValue, { R: rgb.R, G: rgb.G, B: rgb.B });
+          customColors[keyValue] = { R: rgb.R, G: rgb.G, B: rgb.B };
         }
 
         // Persist to flash memory if requested (final commit)
@@ -597,11 +597,11 @@ export default defineComponent({
             const keyValue = key.physicalKeyValue || key.keyValue;
             const customLighting = await debugKeyboardService.getCustomLighting(keyValue);
             if (customLighting && customLighting.R !== undefined) {
-              customColors.set(keyValue, {
+              customColors[keyValue] = {
                 R: customLighting.R,
                 G: customLighting.G,
                 B: customLighting.B,
-              });
+              };
               loadedCount++;
             }
           } catch (error) {
@@ -749,11 +749,11 @@ export default defineComponent({
                     const keyValue = key.physicalKeyValue || key.keyValue;
                     const customLighting = await debugKeyboardService.getCustomLighting(keyValue);
                     if (customLighting && customLighting.R !== undefined) {
-                      customColors.set(keyValue, {
+                      customColors[keyValue] = {
                         R: customLighting.R,
                         G: customLighting.G,
                         B: customLighting.B,
-                      });
+                      };
                     }
                   } catch (error) {
                     // Skip keys that fail to fetch

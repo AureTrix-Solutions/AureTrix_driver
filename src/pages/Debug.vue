@@ -138,13 +138,6 @@
                     :disabled="initializing || !lightingEnabled"
                     class="color-input"
                   />
-                  <button 
-                    @click="applyStaticColor" 
-                    class="color-save-btn"
-                    :disabled="initializing || !lightingEnabled"
-                  >
-                    Save
-                  </button>
                 </div>
               </div>
             </div>
@@ -859,29 +852,6 @@ export default defineComponent({
     cursor: pointer;
 
     &:disabled {
-      cursor: not-allowed;
-    }
-  }
-
-  .color-save-btn {
-    margin-left: 10px;
-    padding: 6px 12px;
-    background: v.$accent-color;
-    color: white;
-    border: none;
-    border-radius: v.$border-radius;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-family: v.$font-style;
-    font-weight: 500;
-    transition: background 0.2s ease;
-
-    &:hover {
-      background: color.adjust(v.$accent-color, $lightness: -10%);
-    }
-
-    &:disabled {
-      opacity: 0.5;
       cursor: not-allowed;
     }
   }

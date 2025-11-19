@@ -136,18 +136,6 @@
                   <option :value="true">Reverse</option>
                 </select>
               </div>
-              <div class="input-group">
-                <label class="checkbox-label">
-                  <input 
-                    type="checkbox" 
-                    v-model="superResponse" 
-                    @change="applySuperResponse"
-                    :disabled="initializing || !lightingEnabled"
-                    class="checkbox-input"
-                  />
-                  <span>Super Response</span>
-                </label>
-              </div>
             </div>
           </div>
         </div>
@@ -176,7 +164,6 @@ export default defineComponent({
     const selectedMode = ref(0);
     const confirmedMode = ref(0);
     const staticColor = ref('#0037ff');
-    const superResponse = ref(false);
     const selectedKeys = ref<IDefKeyInfo[]>([]);
 
     const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, error } = useMappedKeyboard(ref(0));
@@ -294,29 +281,53 @@ export default defineComponent({
 
     const selectWASD = () => {
       const wasdLabels = ['W', 'A', 'S', 'D'];
-      const wasdKeys = layout.value.flat().filter(keyInfo => {
-        const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || '';
-        return wasdLabels.includes(label.toUpperCase());
-      });
-      selectedKeys.value = wasdKeys;
+      const wasdKeys = layout.value
+        .flat()
+        .filter(keyInfo => {
+          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
+          return wasdLabels.includes(label.toUpperCase());
+        });
+      const physicalWASD = wasdKeys.map(key => key.physicalKeyValue || key.keyValue);
+      const currentlySelectedWASD = selectedKeys.value.filter(k => physicalWASD.includes(k.physicalKeyValue || k.keyValue));
+      if (currentlySelectedWASD.length === wasdKeys.length) {
+        selectedKeys.value = selectedKeys.value.filter(k => !physicalWASD.includes(k.physicalKeyValue || k.keyValue));
+      } else {
+        selectedKeys.value = [...selectedKeys.value, ...wasdKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
+      }
     };
 
     const selectLetters = () => {
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-      const letterKeys = layout.value.flat().filter(keyInfo => {
-        const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || '';
-        return letters.includes(label.toUpperCase());
-      });
-      selectedKeys.value = letterKeys;
+      const letterRegex = /^[A-Z]$/;
+      const letterKeys = layout.value
+        .flat()
+        .filter(keyInfo => {
+          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
+          return letterRegex.test(label.toUpperCase());
+        });
+      const physicalLetters = letterKeys.map(key => key.physicalKeyValue || key.keyValue);
+      const currentlySelectedLetters = selectedKeys.value.filter(k => physicalLetters.includes(k.physicalKeyValue || k.keyValue));
+      if (currentlySelectedLetters.length === letterKeys.length) {
+        selectedKeys.value = selectedKeys.value.filter(k => !physicalLetters.includes(k.physicalKeyValue || k.keyValue));
+      } else {
+        selectedKeys.value = [...selectedKeys.value, ...letterKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
+      }
     };
 
     const selectNumbers = () => {
-      const numbers = '0123456789'.split('');
-      const numberKeys = layout.value.flat().filter(keyInfo => {
-        const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || '';
-        return numbers.includes(label);
-      });
-      selectedKeys.value = numberKeys;
+      const numberLabels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+      const numberKeys = layout.value
+        .flat()
+        .filter(keyInfo => {
+          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
+          return numberLabels.includes(label);
+        });
+      const physicalNumbers = numberKeys.map(key => key.physicalKeyValue || key.keyValue);
+      const currentlySelectedNumbers = selectedKeys.value.filter(k => physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
+      if (currentlySelectedNumbers.length === numberKeys.length) {
+        selectedKeys.value = selectedKeys.value.filter(k => !physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
+      } else {
+        selectedKeys.value = [...selectedKeys.value, ...numberKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
+      }
     };
 
     const selectNone = () => {
@@ -434,25 +445,6 @@ export default defineComponent({
       }
     };
 
-    const applySuperResponse = async () => {
-      try {
-        const currentState = await KeyboardService.getLighting();
-        if (currentState instanceof Error) {
-          console.error('Failed to get lighting state:', currentState.message);
-          return;
-        }
-
-        const { open, dynamicColorId, ...filteredParams } = currentState;
-        filteredParams.superResponse = superResponse.value;
-
-        const result = await KeyboardService.setLighting(filteredParams);
-        if (result instanceof Error) {
-          console.error('Failed to set super response:', result.message);
-        }
-      } catch (error) {
-        console.error('Failed to set super response:', error);
-      }
-    };
 
     const applyStaticColor = async () => {
       try {
@@ -552,40 +544,55 @@ export default defineComponent({
     };
 
     const applyModeSelection = async () => {
-      const previousMode = confirmedMode.value;
-      
+      const previousConfirmedMode = confirmedMode.value;
+      const attemptedMode = selectedMode.value;
+
       try {
+        if (attemptedMode < 0 || attemptedMode > 21) {
+          throw new Error(`Invalid mode selection: ${attemptedMode} is outside supported range (0-21)`);
+        }
+
         const currentState = await KeyboardService.getLighting();
         if (currentState instanceof Error) {
-          console.error('Failed to get lighting state:', currentState.message);
-          selectedMode.value = previousMode;
-          return;
+          throw new Error('getLighting() returned error: ' + currentState.message);
+        }
+
+        if (!currentState) {
+          throw new Error('getLighting() returned no data');
         }
 
         const { open, dynamicColorId, ...filteredParams } = currentState;
-        filteredParams.mode = selectedMode.value;
+        filteredParams.mode = attemptedMode;
+
+        // Update type based on mode: Static (0) = 'static', Effects (1-20) = 'dynamic', Custom (21) = 'custom'
+        if (attemptedMode === 0) {
+          filteredParams.type = 'static';
+          // Sync color picker to actual static color when switching to Static mode
+          if (currentState.colors && currentState.colors.length > 0) {
+            staticColor.value = currentState.colors[0];
+          }
+        } else if (attemptedMode === 21) {
+          filteredParams.type = 'custom';
+        } else {
+          filteredParams.type = 'dynamic';
+        }
 
         const result = await KeyboardService.setLighting(filteredParams);
         if (result instanceof Error) {
-          console.error('Failed to set lighting mode:', result.message);
-          selectedMode.value = previousMode;
-          return;
+          throw new Error('setLighting() failed: ' + result.message);
         }
 
-        confirmedMode.value = selectedMode.value;
+        // Update confirmed mode AFTER successful SDK call
+        confirmedMode.value = attemptedMode;
 
-        // Load custom colors when switching to Custom mode
-        if (selectedMode.value === 21) {
+        // If switching to Custom mode, load all custom colors from keyboard
+        if (attemptedMode === 21) {
           await loadCustomColorsFromKeyboard();
         }
-
-        // Sync color picker with static color when switching to Static mode
-        if (selectedMode.value === 0 && currentState.colors && currentState.colors.length > 0) {
-          staticColor.value = currentState.colors[0];
-        }
       } catch (error) {
+        // Rollback dropdown to last confirmed state
+        selectedMode.value = previousConfirmedMode;
         console.error('Failed to change lighting mode:', error);
-        selectedMode.value = previousMode;
       }
     };
 
@@ -605,7 +612,6 @@ export default defineComponent({
         masterSpeed.value = currentState.speed ?? 3;
         masterSleepDelay.value = currentState.sleepDelay ?? 0;
         masterDirection.value = currentState.direction ?? false;
-        superResponse.value = currentState.superResponse ?? false;
         selectedMode.value = currentState.mode ?? 0;
         confirmedMode.value = currentState.mode ?? 0;
 
@@ -650,14 +656,12 @@ export default defineComponent({
       masterSpeed,
       masterSleepDelay,
       masterDirection,
-      superResponse,
       selectedMode,
       staticColor,
       applyMasterLuminance,
       applyMasterSpeed,
       applyMasterSleepDelay,
       applyMasterDirection,
-      applySuperResponse,
       applyStaticColor,
       applyStaticColorThrottled,
       applyCustomColor,

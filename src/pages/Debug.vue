@@ -172,21 +172,6 @@ export default defineComponent({
 
     const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, error } = useMappedKeyboard(ref(0));
 
-    const globalLighting = ref({
-      mode: 'static',
-      brightness: 80,
-      speed: 50,
-      color: { r: 255, g: 255, b: 255 }
-    });
-
-    const savedLightingState = ref<any>(null);
-
-    // Lighting range constants (single source of truth)
-    const lightingRanges = {
-      brightness: { min: 0, max: 100 },
-      speed: { min: 0, max: 100 }
-    };
-
     const log = (message: string) => {
       const timestamp = new Date().toLocaleTimeString();
       debugOutput.value += `[${timestamp}] ${message}\n`;
@@ -480,34 +465,6 @@ export default defineComponent({
       }
     };
 
-    const applyGlobalLighting = async () => {
-      try {
-        log(`Applying global lighting: ${JSON.stringify(globalLighting.value)}`);
-        await debugKeyboardService.setLighting(globalLighting.value);
-        setNotification('Global lighting applied successfully', false);
-        log('Global lighting applied successfully');
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to apply global lighting', true);
-      }
-    };
-
-    const fetchGlobalLighting = async () => {
-      try {
-        log('Fetching current global lighting...');
-        const result = await debugKeyboardService.getLighting();
-        log(`Current global lighting: ${JSON.stringify(result)}`);
-        if (result.mode) globalLighting.value.mode = result.mode;
-        if (result.brightness !== undefined) globalLighting.value.brightness = result.brightness;
-        if (result.speed !== undefined) globalLighting.value.speed = result.speed;
-        if (result.color) globalLighting.value.color = result.color;
-        setNotification('Global lighting fetched', false);
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to fetch global lighting', true);
-      }
-    };
-
     const clearDebugOutput = () => {
       debugOutput.value = 'Lighting Debug Console\n-------------------\n';
     };
@@ -565,12 +522,6 @@ export default defineComponent({
             log('No mode in SDK response, defaulting to Static (0)');
           }
           
-          // Update global lighting form
-          if (currentState.mode !== undefined) globalLighting.value.mode = currentState.mode;
-          if (currentState.brightness !== undefined) globalLighting.value.brightness = currentState.brightness;
-          if (currentState.speed !== undefined) globalLighting.value.speed = currentState.speed;
-          if (currentState.color) globalLighting.value.color = currentState.color;
-          
           log('UI synchronized with keyboard state');
         }
       } catch (error) {
@@ -616,8 +567,6 @@ export default defineComponent({
       masterSleepDelay,
       masterDirection,
       selectedMode,
-      globalLighting,
-      lightingRanges,
       debugOutput,
       selectedKeys,
       layout,
@@ -638,8 +587,6 @@ export default defineComponent({
       applyMasterSleepDelay,
       applyMasterDirection,
       applyModeSelection,
-      applyGlobalLighting,
-      fetchGlobalLighting,
       clearDebugOutput,
     };
   },

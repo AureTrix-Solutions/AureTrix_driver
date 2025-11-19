@@ -282,6 +282,17 @@ export default defineComponent({
       return staticColor.value;
     });
 
+    // Watcher: sync staticColor with displayedColor when selection changes in Custom mode
+    watch(
+      () => [selectedKeys.value.length, selectedMode.value],
+      () => {
+        if (selectedMode.value === 21) {
+          staticColor.value = displayedColor.value;
+        }
+      },
+      { deep: true }
+    );
+
     // Key selection functions
     const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
       const physicalKeyValue = key.physicalKeyValue || key.keyValue;

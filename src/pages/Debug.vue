@@ -95,6 +95,7 @@
                       type="color" 
                       id="static-color-picker"
                       v-model="staticColor" 
+                      @input="applyStaticColorThrottled"
                       @change="applyStaticColor"
                       :disabled="initializing || !lightingEnabled"
                       class="color-input"
@@ -432,6 +433,9 @@ export default defineComponent({
       }
     };
 
+    // Throttled version for real-time color updates while dragging
+    const applyStaticColorThrottled = throttle(applyStaticColor, 100);
+
     const applyModeSelection = async () => {
       // Save the state BEFORE Vue updated selectedMode (confirmedMode is the last known good state)
       const previousConfirmedMode = confirmedMode.value;
@@ -619,6 +623,7 @@ export default defineComponent({
       applyMasterDirection,
       applySuperResponse,
       applyStaticColor,
+      applyStaticColorThrottled,
       applyModeSelection,
       clearDebugOutput,
       getLightingInfo,

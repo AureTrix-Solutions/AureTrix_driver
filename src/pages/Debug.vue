@@ -378,12 +378,17 @@ export default defineComponent({
 
         const { open, dynamicColorId, ...filteredParams } = currentState;
         
-        // Update colors[0] with the new static color
+        // Clone colors array to avoid mutating shared state
         if (!filteredParams.colors || filteredParams.colors.length === 0) {
           filteredParams.colors = [staticColor.value];
         } else {
+          filteredParams.colors = [...filteredParams.colors];
           filteredParams.colors[0] = staticColor.value;
         }
+
+        // Ensure Static mode is active
+        filteredParams.mode = 0;
+        filteredParams.type = 'static';
 
         await debugKeyboardService.setLighting(filteredParams);
         log(`Static color updated to ${staticColor.value}`);
@@ -814,6 +819,39 @@ export default defineComponent({
 
     &:disabled {
       opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    margin-left: 15px;
+    position: relative;
+  }
+
+  .color-display {
+    width: 40px;
+    height: 40px;
+    border: 2px solid rgba(v.$text-color, 0.3);
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    display: block;
+    transition: border-color 0.2s ease;
+
+    &:hover {
+      border-color: v.$accent-color;
+    }
+  }
+
+  .color-input {
+    position: absolute;
+    opacity: 0;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+
+    &:disabled {
       cursor: not-allowed;
     }
   }

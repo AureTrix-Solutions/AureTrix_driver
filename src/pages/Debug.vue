@@ -181,17 +181,14 @@ export default defineComponent({
       } else {
         selectedKeys.value.push(key);
       }
-      log(`Selected keys: ${selectedKeys.value.length}`);
     };
 
     const selectAll = () => {
       const totalKeys = layout.value.flat().length;
       if (selectedKeys.value.length === totalKeys) {
         selectedKeys.value = [];
-        log('Deselected all keys');
       } else {
         selectedKeys.value = layout.value.flat();
-        log(`Selected all ${totalKeys} keys`);
       }
     };
 
@@ -207,10 +204,8 @@ export default defineComponent({
       const currentlySelectedWASD = selectedKeys.value.filter(k => physicalWASD.includes(k.physicalKeyValue || k.keyValue));
       if (currentlySelectedWASD.length === wasdKeys.length) {
         selectedKeys.value = selectedKeys.value.filter(k => !physicalWASD.includes(k.physicalKeyValue || k.keyValue));
-        log('Deselected WASD keys');
       } else {
         selectedKeys.value = [...selectedKeys.value, ...wasdKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-        log('Selected WASD keys');
       }
     };
 
@@ -226,10 +221,8 @@ export default defineComponent({
       const currentlySelectedLetters = selectedKeys.value.filter(k => physicalLetters.includes(k.physicalKeyValue || k.keyValue));
       if (currentlySelectedLetters.length === letterKeys.length) {
         selectedKeys.value = selectedKeys.value.filter(k => !physicalLetters.includes(k.physicalKeyValue || k.keyValue));
-        log('Deselected letter keys');
       } else {
         selectedKeys.value = [...selectedKeys.value, ...letterKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-        log('Selected letter keys');
       }
     };
 
@@ -245,44 +238,34 @@ export default defineComponent({
       const currentlySelectedNumbers = selectedKeys.value.filter(k => physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
       if (currentlySelectedNumbers.length === numberKeys.length) {
         selectedKeys.value = selectedKeys.value.filter(k => !physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
-        log('Deselected number keys');
       } else {
         selectedKeys.value = [...selectedKeys.value, ...numberKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-        log('Selected number keys');
       }
     };
 
     const selectNone = () => {
       selectedKeys.value = [];
-      log('Deselected all keys');
     };
 
     // Lighting control functions
     const toggleLighting = async () => {
       // Prevent interaction during initialization
       if (initializing.value) {
-        log('Toggle blocked: initialization in progress');
         return;
       }
       
       try {
         if (lightingEnabled.value) {
-          log('Toggle OFF - Syncing SDK cache to prevent glitch...');
           try {
-            const currentState = await debugKeyboardService.getLighting();
-            log(`SDK cache synced: ${JSON.stringify(currentState)}`);
+            await debugKeyboardService.getLighting();
           } catch (syncError) {
-            log(`WARNING: Cache sync failed (${(syncError as Error).message}), continuing with closedLighting anyway`);
+            // Continue anyway
           }
           
-          log('Calling closedLighting() to turn off all lighting...');
           await debugKeyboardService.closedLighting();
           lightingEnabled.value = false;
-          log('closedLighting() called successfully - lights should be off');
         } else {
-          log('Toggle ON - Fetching current lighting state...');
           const currentState = await debugKeyboardService.getLighting();
-          log(`Raw getLighting() response: ${JSON.stringify(currentState)}`);
           
           if (!currentState) {
             throw new Error('getLighting() returned no data');
@@ -290,12 +273,9 @@ export default defineComponent({
           
           // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
           const { open, dynamicColorId, ...filteredParams } = currentState;
-          log(`Filtered parameters for setLighting(): ${JSON.stringify(filteredParams)}`);
           
-          log('Calling setLighting() with filtered parameters...');
           await debugKeyboardService.setLighting(filteredParams);
           lightingEnabled.value = true;
-          log('setLighting() called successfully - lights should be on');
         }
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
@@ -304,9 +284,7 @@ export default defineComponent({
 
     const applyMasterLuminance = async () => {
       try {
-        log(`Applying master luminance: ${masterLuminance.value}...`);
         const currentState = await debugKeyboardService.getLighting();
-        log(`Current state retrieved: ${JSON.stringify(currentState)}`);
         
         if (!currentState) {
           throw new Error('getLighting() returned no data');
@@ -317,10 +295,8 @@ export default defineComponent({
         
         // Update luminance with the selected value
         filteredParams.luminance = masterLuminance.value;
-        log(`Applying lighting with luminance ${masterLuminance.value}: ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
-        log('Master luminance applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
       }
@@ -328,9 +304,7 @@ export default defineComponent({
 
     const applyMasterSpeed = async () => {
       try {
-        log(`Applying master speed: ${masterSpeed.value}...`);
         const currentState = await debugKeyboardService.getLighting();
-        log(`Current state retrieved: ${JSON.stringify(currentState)}`);
         
         if (!currentState) {
           throw new Error('getLighting() returned no data');
@@ -341,10 +315,8 @@ export default defineComponent({
         
         // Update speed with the selected value
         filteredParams.speed = masterSpeed.value;
-        log(`Applying lighting with speed ${masterSpeed.value}: ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
-        log('Master speed applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
       }
@@ -352,9 +324,7 @@ export default defineComponent({
 
     const applyMasterSleepDelay = async () => {
       try {
-        log(`Applying master sleep delay: ${masterSleepDelay.value}...`);
         const currentState = await debugKeyboardService.getLighting();
-        log(`Current state retrieved: ${JSON.stringify(currentState)}`);
         
         if (!currentState) {
           throw new Error('getLighting() returned no data');
@@ -365,10 +335,8 @@ export default defineComponent({
         
         // Update sleepDelay with the selected value
         filteredParams.sleepDelay = masterSleepDelay.value;
-        log(`Applying lighting with sleepDelay ${masterSleepDelay.value}: ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
-        log('Master sleep delay applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
       }
@@ -376,9 +344,7 @@ export default defineComponent({
 
     const applyMasterDirection = async () => {
       try {
-        log(`Applying master direction: ${masterDirection.value}...`);
         const currentState = await debugKeyboardService.getLighting();
-        log(`Current state retrieved: ${JSON.stringify(currentState)}`);
         
         if (!currentState) {
           throw new Error('getLighting() returned no data');
@@ -389,10 +355,8 @@ export default defineComponent({
         
         // Update direction with the checkbox value
         filteredParams.direction = masterDirection.value;
-        log(`Applying lighting with direction ${masterDirection.value}: ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
-        log('Master direction applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
       }
@@ -409,9 +373,7 @@ export default defineComponent({
           throw new Error(`Invalid mode selection: ${attemptedMode} is outside supported range (0-21)`);
         }
         
-        log(`Applying mode selection: ${attemptedMode}...`);
         const currentState = await debugKeyboardService.getLighting();
-        log(`Current state retrieved: ${JSON.stringify(currentState)}`);
         
         if (!currentState) {
           throw new Error('getLighting() returned no data');
@@ -432,18 +394,14 @@ export default defineComponent({
           filteredParams.type = 'dynamic';
         }
         
-        log(`Applying lighting with mode ${attemptedMode}, type "${filteredParams.type}": ${JSON.stringify(filteredParams)}`);
-        
         await debugKeyboardService.setLighting(filteredParams);
         
         // Update confirmed mode AFTER successful SDK call
         confirmedMode.value = attemptedMode;
-        log('Mode selection applied successfully');
       } catch (error) {
         // Rollback dropdown to last confirmed state
         selectedMode.value = previousConfirmedMode;
         log(`ERROR: ${(error as Error).message}`);
-        log(`Rolled back dropdown from ${attemptedMode} to ${previousConfirmedMode}`);
       }
     };
 
@@ -454,10 +412,8 @@ export default defineComponent({
     const initLightingFromDevice = async () => {
       try {
         initializing.value = true;
-        log('Initializing UI from keyboard state...');
         
         const currentState = await debugKeyboardService.getLighting();
-        log(`Retrieved lighting state: ${JSON.stringify(currentState)}`);
         
         if (currentState) {
           // Update master controls
@@ -476,37 +432,18 @@ export default defineComponent({
               // Mode is recognized - sync dropdown directly
               selectedMode.value = modeNum;
               confirmedMode.value = modeNum;
-              log(`Mode synced: ${modeNum}`);
-              
-              // Diagnostic: Check if type matches expected value based on mode
-              let expectedType: string;
-              if (modeNum === 0) {
-                expectedType = 'static';
-              } else if (modeNum === 21) {
-                expectedType = 'custom';
-              } else {
-                expectedType = 'dynamic';
-              }
-              
-              if (currentState.type && currentState.type !== expectedType) {
-                log(`DIAGNOSTIC: Mode ${modeNum} has type "${currentState.type}", expected "${expectedType}"`);
-              }
             } else {
               // Mode is outside supported range - default to Static
               selectedMode.value = 0;
               confirmedMode.value = 0;
-              log(`WARNING: Keyboard mode ${modeNum} outside supported range (0-21), defaulting to Static`);
             }
           } else {
             selectedMode.value = 0;
             confirmedMode.value = 0;
-            log('No mode in SDK response, defaulting to Static (0)');
           }
-          
-          log('UI synchronized with keyboard state');
         }
       } catch (error) {
-        log(`Failed to initialize from device: ${(error as Error).message}`);
+        // Silent failure - initialization errors are non-critical
       } finally {
         initializing.value = false;
       }

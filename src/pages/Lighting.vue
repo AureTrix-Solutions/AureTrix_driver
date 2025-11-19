@@ -98,7 +98,7 @@
                     type="color" 
                     id="color-picker"
                     v-model="staticColor" 
-                    @input="selectedMode === 0 ? applyStaticColorThrottled() : applyCustomColorThrottled()"
+                    @input="selectedMode === 0 ? applyStaticColorThrottled() : updateVirtualKeyboardColorOnly()"
                     @change="selectedMode === 0 ? applyStaticColor() : applyCustomColor()"
                     :disabled="initializing || !lightingEnabled"
                     class="color-input"
@@ -516,6 +516,19 @@ export default defineComponent({
 
     const applyCustomColorThrottled = throttle(() => applyCustomColor(false), 100);
 
+    const updateVirtualKeyboardColorOnly = () => {
+      if (selectedKeys.value.length === 0) return;
+      
+      const rgb = hexToRgb(staticColor.value);
+      const keyIds = selectedKeys.value.map(key => key.physicalKeyValue || key.keyValue);
+      
+      // Update customColors reactive object for virtual keyboard preview only
+      // No SDK calls - instant visual update
+      keyIds.forEach(keyValue => {
+        customColors[keyValue] = { R: rgb.R, G: rgb.G, B: rgb.B };
+      });
+    };
+
     const loadCustomColorsFromKeyboard = async () => {
       if (layout.value.length === 0) return;
 
@@ -666,6 +679,7 @@ export default defineComponent({
       applyStaticColorThrottled,
       applyCustomColor,
       applyCustomColorThrottled,
+      updateVirtualKeyboardColorOnly,
       applyModeSelection,
     };
   },

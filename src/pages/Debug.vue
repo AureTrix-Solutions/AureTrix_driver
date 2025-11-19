@@ -542,7 +542,7 @@ export default defineComponent({
     // Throttled version for real-time color updates while dragging
     const applyStaticColorThrottled = throttle(applyStaticColor, 100);
 
-    const applyCustomColor = async () => {
+    const applyCustomColor = async (saveToFlash: boolean = true) => {
       try {
         // If no keys selected, nothing to update
         if (selectedKeys.value.length === 0) {
@@ -555,21 +555,32 @@ export default defineComponent({
         for (const key of selectedKeys.value) {
           const keyValue = key.physicalKeyValue || key.keyValue;
           
-          // Call SDK setCustomLighting
-          await debugKeyboardService.setCustomLighting(keyValue, rgb.R, rgb.G, rgb.B);
+          // Call SDK setCustomLighting with object parameter
+          await debugKeyboardService.setCustomLighting({ 
+            key: keyValue, 
+            r: rgb.R, 
+            g: rgb.G, 
+            b: rgb.B 
+          });
           
           // Update local state
           customColors.set(keyValue, { R: rgb.R, G: rgb.G, B: rgb.B });
         }
 
-        log(`Custom color updated for ${selectedKeys.value.length} key(s) to ${staticColor.value}`);
+        // Persist to flash memory if requested (final commit)
+        if (saveToFlash) {
+          await debugKeyboardService.saveCustomLighting();
+          log(`Custom color saved for ${selectedKeys.value.length} key(s) to ${staticColor.value}`);
+        } else {
+          log(`Custom color previewed for ${selectedKeys.value.length} key(s) to ${staticColor.value}`);
+        }
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
       }
     };
 
-    // Throttled version for real-time custom color updates
-    const applyCustomColorThrottled = throttle(applyCustomColor, 100);
+    // Throttled version for real-time custom color updates (no save to reduce flash writes)
+    const applyCustomColorThrottled = throttle(() => applyCustomColor(false), 100);
 
     const applyModeSelection = async () => {
       // Save the state BEFORE Vue updated selectedMode (confirmedMode is the last known good state)

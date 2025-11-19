@@ -572,7 +572,11 @@ export default defineComponent({
         
         // Update mode with the numeric value (SDK expects number, not string)
         filteredParams.mode = attemptedMode;
-        log(`Applying lighting with mode ${attemptedMode}: ${JSON.stringify(filteredParams)}`);
+        
+        // Update type based on mode: Static (0) uses 'static', all effects (1-20) use 'dynamic'
+        filteredParams.type = attemptedMode === 0 ? 'static' : 'dynamic';
+        
+        log(`Applying lighting with mode ${attemptedMode}, type "${filteredParams.type}": ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
         

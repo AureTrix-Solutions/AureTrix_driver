@@ -8,6 +8,16 @@ AureTrix is a web-based configuration tool for hall effect keyboards compatible 
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+**November 19, 2025 - Virtual Keyboard Custom RGB Display Fix**
+- Fixed CSS gradient masking issue preventing custom colors from displaying on virtual keyboard
+- Changed `getKeyStyleWithCustomColor` to use `background` instead of `backgroundColor`
+- Added `backgroundImage: 'none'` to override CSS gradient background from `.key-btn` class
+- Virtual keyboard now properly displays custom RGB colors immediately on page load and mode switch
+- Keys show their assigned custom colors without requiring selection
+- Inline styles now correctly override CSS class gradients for visual preview
+
 ## System Architecture
 
 ### Frontend Architecture

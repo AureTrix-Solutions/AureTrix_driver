@@ -555,18 +555,15 @@ export default defineComponent({
     const applyModeSelection = async () => {
       // Save the state BEFORE Vue updated selectedMode (confirmedMode is the last known good state)
       const previousConfirmedMode = confirmedMode.value;
-      const previousUnsupportedName = unsupportedModeName.value;
       const attemptedMode = selectedMode.value; // This is the new value Vue already set
       
       try {
-        const modeName = modeMap[attemptedMode];
-        
-        // Validate mode name exists in mapping
-        if (!modeName) {
-          throw new Error(`Invalid mode selection: ${attemptedMode} has no mapped mode name`);
+        // Validate mode is within supported range
+        if (attemptedMode < 0 || attemptedMode > 20) {
+          throw new Error(`Invalid mode selection: ${attemptedMode} is outside supported range (0-20)`);
         }
         
-        log(`Applying mode selection: ${attemptedMode} (${modeName})...`);
+        log(`Applying mode selection: ${attemptedMode}...`);
         const currentState = await debugKeyboardService.getLighting();
         log(`Current state retrieved: ${JSON.stringify(currentState)}`);
         
@@ -577,20 +574,18 @@ export default defineComponent({
         // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
         const { open, dynamicColorId, ...filteredParams } = currentState;
         
-        // Update mode with the SDK string mode name
-        filteredParams.mode = modeName;
-        log(`Applying lighting with mode "${modeName}": ${JSON.stringify(filteredParams)}`);
+        // Update mode with the numeric value (SDK expects number, not string)
+        filteredParams.mode = attemptedMode;
+        log(`Applying lighting with mode ${attemptedMode}: ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
         
-        // Only clear unsupported mode state and update confirmed mode AFTER successful SDK call
-        unsupportedModeName.value = null;
-        confirmedMode.value = attemptedMode; // Update confirmed mode on success
+        // Update confirmed mode AFTER successful SDK call
+        confirmedMode.value = attemptedMode;
         log('Mode selection applied successfully');
       } catch (error) {
         // Rollback dropdown to last confirmed state
         selectedMode.value = previousConfirmedMode;
-        unsupportedModeName.value = previousUnsupportedName;
         log(`ERROR: ${(error as Error).message}`);
         log(`Rolled back dropdown from ${attemptedMode} to ${previousConfirmedMode}`);
         setNotification('Failed to apply mode selection', true);

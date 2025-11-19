@@ -89,7 +89,7 @@
                     <option :value="20">Explode</option>
                     <option :value="21">Custom</option>
                   </select>
-                  <div v-if="selectedMode === 0" class="color-picker-wrapper">
+                  <div v-if="selectedMode === 0 || selectedMode === 21" class="color-picker-wrapper">
                     <label for="static-color-picker" class="color-display" :style="{ backgroundColor: staticColor }"></label>
                     <input 
                       type="color" 

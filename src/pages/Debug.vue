@@ -279,41 +279,8 @@ export default defineComponent({
     const masterDirection = ref(false);
     const selectedMode = ref(0);
     const confirmedMode = ref(0); // Tracks last successfully applied mode
-    const unsupportedModeName = ref<string | null>(null);
     const debugOutput = ref('Lighting Debug Console\n-------------------\n');
     const selectedKeys = ref<IDefKeyInfo[]>([]);
-
-    // Mode mapping: dropdown numeric values to SDK string mode names
-    // Covers all 21 user-requested modes as specified
-    const modeMap: Record<number, string> = {
-      0: 'static',
-      1: 'wave',
-      2: 'wave2',
-      3: 'ripple',
-      4: 'wheel',
-      5: 'wheel2',
-      6: 'collide',
-      7: 'spectrum',
-      8: 'shift',
-      9: 'spotshift',
-      10: 'race',
-      11: 'rainbowwave',
-      12: 'snake',
-      13: 'twinkle',
-      14: 'twinkle2',
-      15: 'twinkle3',
-      16: 'pong',
-      17: 'pulse',
-      18: 'radiate',
-      19: 'column',
-      20: 'explode'
-    };
-
-    // Reverse mapping: SDK string mode names to dropdown numeric values
-    // Build from modeMap to keep them in sync
-    const reverseModeMap: Record<string, number> = Object.fromEntries(
-      Object.entries(modeMap).map(([key, value]) => [value, parseInt(key)])
-    );
 
     const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, error } = useMappedKeyboard(ref(0));
 

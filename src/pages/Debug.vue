@@ -679,6 +679,10 @@ export default defineComponent({
   gap: 20px;
   align-items: center;
   margin-bottom: 10px;
+
+  .input-group {
+    margin-bottom: 0;
+  }
 }
 
 .input-group {

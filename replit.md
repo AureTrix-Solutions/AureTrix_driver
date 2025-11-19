@@ -20,6 +20,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 19, 2025 - Custom RGB Mode (Mode 21) Implementation**
+- Implemented full per-key custom RGB lighting control (mode 21)
+- Added reactive Map data structure for storing per-key custom colors using `reactive(new Map())`
+- Created RGB↔hex conversion utilities (rgbToHex, hexToRgb) for color handling
+- Smart color picker logic: displays white for no selection, individual color for single key, majority/first color for multiple selections
+- Dual real-time feedback system: throttled SDK calls update physical keyboard + instant virtual keyboard color changes
+- Enhanced page load initialization to fetch all custom colors via getCustomLighting when mode is 21
+- Color picker visible for both Static (mode 0) and Custom (mode 21) modes with mode-specific handlers
+- Implemented `getKeyStyleWithCustomColor` wrapper to apply custom background colors to virtual keyboard keys
+- Watcher synchronizes color picker display with selection changes in Custom mode
+- Proper 100ms throttling for both applyCustomColor and applyStaticColor handlers
+
 **November 19, 2025 - Real-Time Color Picker with Throttling**
 - Implemented real-time color preview for Static mode lighting
 - Added throttle utility function (100ms) to rate-limit SDK calls during color picker drag

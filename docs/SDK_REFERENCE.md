@@ -1315,20 +1315,53 @@ Turns off RGB lighting completely.
 async closedLighting(): Promise<any>
 ```
 
-**Example:**
+**⚠️ IMPORTANT - Settings Preservation:**
+
+Always call `getLighting()` before using `closedLighting()` to load the keyboard's current settings into memory. If you call `closedLighting()` without first calling `getLighting()`, all lighting settings will be lost when the lights are turned back on, and the keyboard will revert to default settings.
+
+**Correct Pattern:**
 
 ```typescript
-// Turn off all lighting
-await keyboard.closedLighting();
-```
-
-**Re-enabling Lighting:**
-
-```typescript
-// To turn lighting back on, use setLighting()
+// STEP 1: Load current settings into memory
 const currentState = await keyboard.getLighting();
+
+// STEP 2: Turn off lighting (settings now preserved in memory)
+await keyboard.closedLighting();
+
+// STEP 3: Later, turn lighting back on with preserved settings
 const { open, dynamicColorId, ...filteredParams } = currentState;
 await keyboard.setLighting(filteredParams);
+```
+
+**Incorrect Pattern (AVOID):**
+
+```typescript
+// ❌ BAD: Settings will be lost!
+await keyboard.closedLighting();
+
+// Later, when turning back on, settings will be defaults
+const currentState = await keyboard.getLighting();
+await keyboard.setLighting(currentState);  // Will use defaults, not previous settings
+```
+
+**Best Practice for Toggle:**
+
+```typescript
+// On page load or initialization
+const lightingState = await keyboard.getLighting();
+
+// Toggle OFF
+if (lightsOn) {
+  await keyboard.closedLighting();
+  lightsOn = false;
+}
+
+// Toggle ON (using preserved state)
+if (!lightsOn) {
+  const { open, dynamicColorId, ...filteredParams } = lightingState;
+  await keyboard.setLighting(filteredParams);
+  lightsOn = true;
+}
 ```
 
 ### getCustomLighting()

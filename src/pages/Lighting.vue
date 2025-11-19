@@ -84,10 +84,10 @@
                   <option :value="14">Twinkle 2</option>
                   <option :value="15">Twinkle 3</option>
                   <option :value="16">Pong</option>
-                  <option :value="17">Pulse</option>
-                  <option :value="18">Radiate</option>
-                  <option :value="19">Column</option>
-                  <option :value="20">Explode</option>
+                  <option :value="17">Pulse Reactive</option>
+                  <option :value="18">Radiate Reactive</option>
+                  <option :value="19">Column Reactive</option>
+                  <option :value="20">Explode Reactive</option>
                   <option :value="21">Custom</option>
                 </select>
                 <!-- Color Picker for Static and Custom modes -->
@@ -469,7 +469,7 @@ export default defineComponent({
       }
     };
 
-    const applyStaticColorThrottled = throttle(applyStaticColor, 100);
+    const applyStaticColorThrottled = throttle(applyStaticColor, 0);
 
     const applyCustomColor = async (saveToFlash: boolean = true) => {
       try {
@@ -508,7 +508,7 @@ export default defineComponent({
       }
     };
 
-    const applyCustomColorThrottled = throttle(() => applyCustomColor(false), 100);
+    const applyCustomColorThrottled = throttle(() => applyCustomColor(false), 0);
 
     const updateVirtualKeyboardColorOnly = () => {
       if (selectedKeys.value.length === 0) return;
@@ -851,8 +851,7 @@ export default defineComponent({
       margin-bottom: -10px;
 
       &:hover {
-        background-color: color.adjust(v.$accent-color, $lightness: -20%);
-        color: white;
+        background-color: color.adjust(v.$background-dark, $lightness: 10%);
       }
 
       &:disabled {

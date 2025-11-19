@@ -75,6 +75,14 @@ Preferred communication style: Simple, everyday language.
 - Documented dual-event color picker approach, batch processing optimization, and flash write management
 - Follows same format and structure as other page documentation (Debug.md, KeyMapping.md, etc.)
 
+**November 19, 2025 - Critical closedLighting() Documentation Update**
+- Added prominent warning in SDK_REFERENCE.md about calling getLighting() before closedLighting()
+- Documented that skipping getLighting() causes all lighting settings to be lost when lights turn back on
+- Provided correct pattern (load settings → turn off → turn back on with preserved settings)
+- Provided incorrect pattern example showing what NOT to do
+- Added best practice toggle implementation example
+- Updated docs/pages/Lighting.md with matching warnings in toggle function and dependencies sections
+
 ## System Architecture
 
 ### Frontend Architecture

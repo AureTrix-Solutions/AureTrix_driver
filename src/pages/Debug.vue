@@ -170,6 +170,7 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, computed, watch, reactive } from 'vue';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
+import { useBatchProcessing } from '@composables/useBatchProcessing';
 import { keyMap } from '@utils/keyMap';
 import debugKeyboardService from '@services/DebugKeyboardService';
 import type { IDefKeyInfo } from '../types/types';
@@ -191,6 +192,7 @@ export default defineComponent({
     const selectedKeys = ref<IDefKeyInfo[]>([]);
 
     const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, error } = useMappedKeyboard(ref(0));
+    const { processBatches } = useBatchProcessing();
 
     const log = (message: string) => {
       const timestamp = new Date().toLocaleTimeString();
@@ -552,21 +554,26 @@ export default defineComponent({
 
         const rgb = hexToRgb(staticColor.value);
 
-        // Update all selected keys
-        for (const key of selectedKeys.value) {
-          const keyValue = key.physicalKeyValue || key.keyValue;
-          
-          // Call SDK setCustomLighting with object parameter
-          await debugKeyboardService.setCustomLighting({ 
-            key: keyValue, 
-            r: rgb.R, 
-            g: rgb.G, 
-            b: rgb.B 
-          });
-          
-          // Update local state
-          customColors[keyValue] = { R: rgb.R, G: rgb.G, B: rgb.B };
-        }
+        // Extract key IDs with fallback from physicalKeyValue to keyValue
+        const keyIds = selectedKeys.value.map(key => key.physicalKeyValue || key.keyValue);
+
+        // Update all selected keys using batch processing
+        await processBatches(
+          keyIds,
+          async (keyValue: number) => {
+            // Call SDK setCustomLighting with object parameter
+            await debugKeyboardService.setCustomLighting({ 
+              key: keyValue, 
+              r: rgb.R, 
+              g: rgb.G, 
+              b: rgb.B 
+            });
+            
+            // Update local state
+            customColors[keyValue] = { R: rgb.R, G: rgb.G, B: rgb.B };
+          },
+          80 // Batch size
+        );
 
         // Persist to flash memory if requested (final commit)
         if (saveToFlash) {

@@ -802,8 +802,8 @@ export default defineComponent({
   padding: 10px;
   border: 1px solid rgba(v.$text-color, 0.2);
   border-radius: v.$border-radius;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
 }
 

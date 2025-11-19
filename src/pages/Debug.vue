@@ -95,8 +95,8 @@
                       type="color" 
                       id="static-color-picker"
                       v-model="staticColor" 
-                      @input="applyStaticColorThrottled"
-                      @change="applyStaticColor"
+                      @input="selectedMode === 0 ? applyStaticColorThrottled() : applyCustomColorThrottled()"
+                      @change="selectedMode === 0 ? applyStaticColor() : applyCustomColor()"
                       :disabled="initializing || !lightingEnabled"
                       class="color-input"
                     />
@@ -519,6 +519,35 @@ export default defineComponent({
 
     // Throttled version for real-time color updates while dragging
     const applyStaticColorThrottled = throttle(applyStaticColor, 100);
+
+    const applyCustomColor = async () => {
+      try {
+        // If no keys selected, nothing to update
+        if (selectedKeys.value.length === 0) {
+          return;
+        }
+
+        const rgb = hexToRgb(staticColor.value);
+
+        // Update all selected keys
+        for (const key of selectedKeys.value) {
+          const keyValue = key.physicalKeyValue || key.keyValue;
+          
+          // Call SDK setCustomLighting
+          await debugKeyboardService.setCustomLighting(keyValue, rgb.R, rgb.G, rgb.B);
+          
+          // Update local state
+          customColors.value.set(keyValue, { R: rgb.R, G: rgb.G, B: rgb.B });
+        }
+
+        log(`Custom color updated for ${selectedKeys.value.length} key(s) to ${staticColor.value}`);
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+      }
+    };
+
+    // Throttled version for real-time custom color updates
+    const applyCustomColorThrottled = throttle(applyCustomColor, 100);
 
     const applyModeSelection = async () => {
       // Save the state BEFORE Vue updated selectedMode (confirmedMode is the last known good state)

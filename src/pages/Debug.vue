@@ -112,6 +112,7 @@
               <div class="input-group">
                 <div class="label">Lighting Mode</div>
                 <select v-model.number="selectedMode" @change="applyModeSelection" class="mode-select" :disabled="initializing || !lightingEnabled">
+                  <option v-if="unsupportedModeName" :value="-1" disabled>⚠️ Unsupported: {{ unsupportedModeName }}</option>
                   <option :value="0">Static</option>
                   <option :value="1">Wave</option>
                   <option :value="2">Wave 2</option>
@@ -134,6 +135,9 @@
                   <option :value="19">Column</option>
                   <option :value="20">Explode</option>
                 </select>
+                <div v-if="unsupportedModeName" class="warning-message">
+                  Keyboard is in unsupported mode. Select a mode above to resync.
+                </div>
               </div>
             </div>
 
@@ -274,6 +278,8 @@ export default defineComponent({
     const masterSleepDelay = ref(0);
     const masterDirection = ref(false);
     const selectedMode = ref(0);
+    const confirmedMode = ref(0); // Tracks last successfully applied mode
+    const unsupportedModeName = ref<string | null>(null);
     const debugOutput = ref('Lighting Debug Console\n-------------------\n');
     const selectedKeys = ref<IDefKeyInfo[]>([]);
 
@@ -580,15 +586,20 @@ export default defineComponent({
     };
 
     const applyModeSelection = async () => {
+      // Save the state BEFORE Vue updated selectedMode (confirmedMode is the last known good state)
+      const previousConfirmedMode = confirmedMode.value;
+      const previousUnsupportedName = unsupportedModeName.value;
+      const attemptedMode = selectedMode.value; // This is the new value Vue already set
+      
       try {
-        const modeName = modeMap[selectedMode.value];
+        const modeName = modeMap[attemptedMode];
         
         // Validate mode name exists in mapping
         if (!modeName) {
-          throw new Error(`Invalid mode selection: ${selectedMode.value} has no mapped mode name`);
+          throw new Error(`Invalid mode selection: ${attemptedMode} has no mapped mode name`);
         }
         
-        log(`Applying mode selection: ${selectedMode.value} (${modeName})...`);
+        log(`Applying mode selection: ${attemptedMode} (${modeName})...`);
         const currentState = await debugKeyboardService.getLighting();
         log(`Current state retrieved: ${JSON.stringify(currentState)}`);
         
@@ -604,9 +615,17 @@ export default defineComponent({
         log(`Applying lighting with mode "${modeName}": ${JSON.stringify(filteredParams)}`);
         
         await debugKeyboardService.setLighting(filteredParams);
+        
+        // Only clear unsupported mode state and update confirmed mode AFTER successful SDK call
+        unsupportedModeName.value = null;
+        confirmedMode.value = attemptedMode; // Update confirmed mode on success
         log('Mode selection applied successfully');
       } catch (error) {
+        // Rollback dropdown to last confirmed state
+        selectedMode.value = previousConfirmedMode;
+        unsupportedModeName.value = previousUnsupportedName;
         log(`ERROR: ${(error as Error).message}`);
+        log(`Rolled back dropdown from ${attemptedMode} to ${previousConfirmedMode}`);
         setNotification('Failed to apply mode selection', true);
       }
     };
@@ -724,18 +743,24 @@ export default defineComponent({
             const modeNum = reverseModeMap[modeLower];
             
             if (modeNum !== undefined) {
-              // Mode is recognized - sync dropdown
+              // Mode is recognized - sync dropdown and clear unsupported state
               selectedMode.value = modeNum;
+              confirmedMode.value = modeNum; // Update confirmed mode
+              unsupportedModeName.value = null;
               log(`Mode synced: "${currentState.mode}" → ${selectedMode.value}`);
             } else {
-              // Unknown mode - notify user but keep dropdown at current value
-              // DO NOT change selectedMode.value to avoid false sync
+              // Unknown mode - set to unsupported state
+              selectedMode.value = -1;
+              confirmedMode.value = -1; // Track unsupported as confirmed state
+              unsupportedModeName.value = currentState.mode;
               log(`ERROR: Keyboard is using unsupported mode "${currentState.mode}"`);
-              log(`Dropdown will remain at current value (${selectedMode.value}). Change mode to sync with keyboard.`);
-              setNotification(`Keyboard mode "${currentState.mode}" not supported in dropdown. Please select a new mode.`, true);
+              log(`Dropdown set to unsupported state. User must select a mode to resync.`);
+              setNotification(`Keyboard mode "${currentState.mode}" not supported. Select a mode to resync.`, true);
             }
           } else {
             selectedMode.value = 0;
+            confirmedMode.value = 0; // Update confirmed mode
+            unsupportedModeName.value = null;
             log('No mode in SDK response, defaulting to Static (0)');
           }
           
@@ -790,6 +815,7 @@ export default defineComponent({
       masterSleepDelay,
       masterDirection,
       selectedMode,
+      unsupportedModeName,
       globalLighting,
       customLighting,
       specialLighting,
@@ -1089,6 +1115,17 @@ export default defineComponent({
       opacity: 0.5;
       cursor: not-allowed;
     }
+  }
+
+  .warning-message {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: v.$border-radius;
+    color: #fca5a5;
+    font-size: 0.85rem;
+    font-weight: 500;
   }
 
   .slider-container {

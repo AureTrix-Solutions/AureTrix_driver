@@ -20,6 +20,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 19, 2025 - Custom RGB Mode Switching & Visual Preview Fix**
+- Added `loadCustomColorsFromKeyboard()` helper to fetch all custom colors from keyboard
+- Mode switching to Custom (21) now loads existing custom colors and displays them on virtual keyboard
+- Mode switching to Static (0) syncs color picker to actual static color from keyboard state
+- Virtual keyboard now shows saved custom colors on initial page load when in Custom mode
+- Provides visual preview of current keyboard custom color state for easier editing
+- Logs number of keys loaded for user feedback
+
 **November 19, 2025 - Custom RGB Mode SDK Interface Fix**
 - Fixed setCustomLighting to use correct SDK parameter format: `{ key, r, g, b }` object instead of individual arguments
 - Added saveCustomLighting() call to persist color changes to keyboard flash memory

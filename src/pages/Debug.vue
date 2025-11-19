@@ -196,6 +196,18 @@ export default defineComponent({
       debugOutput.value += `[${timestamp}] ${message}\n`;
     };
 
+    // Throttle utility: limits function execution to once per delay period
+    const throttle = (func: Function, delay: number) => {
+      let lastCall = 0;
+      return (...args: any[]) => {
+        const now = Date.now();
+        if (now - lastCall >= delay) {
+          lastCall = now;
+          func(...args);
+        }
+      };
+    };
+
     // Key selection functions
     const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
       const physicalKeyValue = key.physicalKeyValue || key.keyValue;

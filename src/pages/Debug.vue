@@ -42,14 +42,9 @@
             <div class="settings-section">
               <div class="header-row">
                 <h3>RGB Settings</h3>
-              </div>
-              <div class="toggle-row">
-                <label class="toggle-label">Lighting</label>
-                <div class="toggle-switch" @click="toggleLighting" :class="{ disabled: initializing }">
-                  <div class="toggle-slider" :class="{ active: lightingEnabled }">
-                    <span class="toggle-text">{{ initializing ? 'SYNCING...' : (lightingEnabled ? 'ON' : 'OFF') }}</span>
-                  </div>
-                </div>
+                <button @click="toggleLighting" class="show-btn" :disabled="initializing">
+                  {{ initializing ? 'SYNCING...' : (lightingEnabled ? 'ON' : 'OFF') }}
+                </button>
               </div>
               <div class="input-group">
                 <div class="label">Brightness</div>

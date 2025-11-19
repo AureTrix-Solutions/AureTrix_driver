@@ -629,6 +629,91 @@ class KeyboardService {
       return error as Error;
     }
   }
+
+  // RGB Lighting Methods
+  async getLighting(): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.getLighting();
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to get lighting:', error);
+      return error as Error;
+    }
+  }
+
+  async setLighting(lightModeConfig: any): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.setLighting(lightModeConfig);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to set lighting:', error);
+      return error as Error;
+    }
+  }
+
+  async closedLighting(): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.closedLighting();
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to close lighting:', error);
+      return error as Error;
+    }
+  }
+
+  async getCustomLighting(key?: number): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.getCustomLighting(key);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to get custom lighting:', error);
+      return error as Error;
+    }
+  }
+
+  async setCustomLighting(param: { key: number; r: number; g: number; b: number }): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.setCustomLighting(param);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to set custom lighting:', error);
+      return error as Error;
+    }
+  }
+
+  async saveCustomLighting(): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.saveCustomLighting();
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to save custom lighting:', error);
+      return error as Error;
+    }
+  }
 }
 
 export default new KeyboardService();

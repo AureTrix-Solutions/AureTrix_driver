@@ -151,9 +151,28 @@ This document provides a comprehensive index of all functional pages in the Aure
 
 ---
 
+### 9. [Lighting Page](./pages/Lighting.md)
+**Purpose**: Control RGB lighting modes, effects, and per-key custom colors
+
+**Key Features**:
+- Master controls (brightness 0-4, speed 0-4, sleep timer, direction, super response)
+- 22 lighting modes (Static, Wave, Ripple, Spectrum, Custom, etc.)
+- Per-key custom RGB lighting in Custom mode
+- Visual color picker with real-time preview
+- Virtual keyboard displays custom colors
+- Quick selection presets (WASD, letters, numbers, all)
+- Batch processing for smooth multi-key color updates
+- Flash write optimization (preview without save, commit with save)
+
+**Primary Use Case**: Personalizing keyboard aesthetics and creating custom lighting effects
+
+**Dependencies**: KeyboardService lighting APIs, useBatchProcessing, MappedKeyboard utility
+
+---
+
 ## Page Status
 
-### Fully Functional Pages (8)
+### Fully Functional Pages (9)
 ✅ Connect  
 ✅ Key Mapping  
 ✅ Macro Recording  
@@ -162,9 +181,9 @@ This document provides a comprehensive index of all functional pages in the Aure
 ✅ Debug  
 ✅ Layout Preview  
 ✅ Rapid Trigger  
+✅ Lighting  
 
-### Placeholder Pages (3)
-⏳ Lighting - RGB control (planned)  
+### Placeholder Pages (2)
 ⏳ Profiles - Configuration management (planned)  
 ⏳ Advanced Config - Advanced features (planned)  
 

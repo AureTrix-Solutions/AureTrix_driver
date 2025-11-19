@@ -1199,198 +1199,315 @@ console.log('Assigned axes:', axisConfig.axisList);
 
 ## Lighting Control
 
+RGB lighting is controlled through a state-based API. The recommended workflow is:
+1. Call `getLighting()` to get current state
+2. Modify properties as needed
+3. Remove `open` and `dynamicColorId` properties
+4. Call `setLighting()` with modified state
+
 ### getLighting()
 
-Retrieves global RGB lighting settings.
+Retrieves the current global RGB lighting state.
 
 ```typescript
-async getLighting(): Promise<LightingConfig>
+async getLighting(): Promise<LightingState>
 ```
 
-**Returns:** Lighting configuration object
+**Returns:** Lighting state object
+
+**Response Format:**
+
+```typescript
+{
+  open: boolean,           // Lighting on/off state (1 = on, 0 = off)
+  mode: number,            // Lighting mode (0-21)
+  luminance: number,       // Brightness (0-4)
+  speed: number,           // Animation speed (0-4)
+  sleepDelay: number,      // Sleep timer in minutes (0 = never)
+  direction: boolean,      // Animation direction (false = normal, true = reverse)
+  superResponse: boolean,  // Super response mode enabled
+  colors: string[],        // Color values for static mode
+  dynamicColorId: number,  // Internal SDK property
+  type: string,            // Lighting type
+  // ... additional mode-specific properties
+}
+```
 
 **Example:**
 
 ```typescript
-const lighting = await keyboard.getLighting();
-console.log('Lighting mode:', lighting.mode);
-console.log('Brightness:', lighting.brightness);
-console.log('Speed:', lighting.speed);
+const state = await keyboard.getLighting();
+console.log('Lighting mode:', state.mode);
+console.log('Brightness:', state.luminance);
+console.log('Speed:', state.speed);
+console.log('Enabled:', state.open);
 ```
 
-### getLogoLighting()
-
-Gets keyboard logo RGB settings.
-
-```typescript
-async getLogoLighting(): Promise<LogoLightingConfig>
-```
-
-**Returns:** Logo lighting configuration
-
-### getCustomLighting()
-
-Gets per-key RGB color.
-
-```typescript
-async getCustomLighting(key?: number): Promise<CustomLightingConfig>
-```
-
-**Parameters:**
-- `key` (number, optional): Specific key to query
-
-**Returns:** Custom lighting configuration
-
-**Example:**
-
-```typescript
-// Get lighting for 'A' key
-const color = await keyboard.getCustomLighting(4);
-console.log('A key color:', color);
-```
-
-### getSpecialLighting()
-
-Gets special lighting effect settings.
-
-```typescript
-async getSpecialLighting(): Promise<SpecialLightingConfig>
-```
-
-**Returns:** Special lighting configuration
-
-### getSaturation()
-
-Gets RGB saturation settings.
-
-```typescript
-async getSaturation(): Promise<{ saturation: number }>
-```
-
-**Returns:** Saturation value
+**Modes Reference:**
+- 0: Static
+- 1-20: Various dynamic effects (Wave, Ripple, Spectrum, etc.)
+- 21: Custom (per-key RGB)
 
 ### setLighting()
 
-Sets global RGB lighting mode and effects.
+Sets global RGB lighting parameters. Must remove `open` and `dynamicColorId` before calling.
 
 ```typescript
-async setLighting(lightModeConfig: LightModeConfigs): Promise<any>
+async setLighting(lightModeConfig: any): Promise<any>
 ```
 
 **Parameters:**
-- `lightModeConfig` (LightModeConfigs): Lighting configuration object with mode, brightness, speed, and color settings
+- `lightModeConfig` (object): Lighting configuration object (without `open` and `dynamicColorId`)
+
+**⚠️ Critical:** Always filter out `open` and `dynamicColorId` properties before calling `setLighting()`:
+
+```typescript
+const { open, dynamicColorId, ...filteredParams } = currentState;
+```
+
+**Example 1: Change Brightness**
+
+```typescript
+// Get current state
+const currentState = await keyboard.getLighting();
+
+// Filter out restricted properties
+const { open, dynamicColorId, ...filteredParams } = currentState;
+
+// Modify brightness
+filteredParams.luminance = 4;  // Maximum brightness
+
+// Apply changes
+await keyboard.setLighting(filteredParams);
+```
+
+**Example 2: Change Mode**
+
+```typescript
+const currentState = await keyboard.getLighting();
+const { open, dynamicColorId, ...filteredParams } = currentState;
+
+// Switch to Wave mode
+filteredParams.mode = 1;
+
+await keyboard.setLighting(filteredParams);
+```
+
+**Example 3: Set Static Color**
+
+```typescript
+const currentState = await keyboard.getLighting();
+const { open, dynamicColorId, ...filteredParams } = currentState;
+
+// Set static blue color
+filteredParams.mode = 0;
+filteredParams.type = 'static';
+filteredParams.colors = ['#0037ff'];
+
+await keyboard.setLighting(filteredParams);
+```
+
+### closedLighting()
+
+Turns off RGB lighting completely.
+
+```typescript
+async closedLighting(): Promise<any>
+```
 
 **Example:**
 
 ```typescript
-// Set lighting to breathing effect
-await keyboard.setLighting({
-  mode: 'breathing',
-  brightness: 80,
-  speed: 50,
-  color: { r: 255, g: 0, b: 0 }
-});
+// Turn off all lighting
+await keyboard.closedLighting();
+```
+
+**Re-enabling Lighting:**
+
+```typescript
+// To turn lighting back on, use setLighting()
+const currentState = await keyboard.getLighting();
+const { open, dynamicColorId, ...filteredParams } = currentState;
+await keyboard.setLighting(filteredParams);
+```
+
+### getCustomLighting()
+
+Gets per-key RGB color for keys in Custom mode (mode 21).
+
+```typescript
+async getCustomLighting(key: number): Promise<CustomRGB>
+```
+
+**Parameters:**
+- `key` (number): Key value to query
+
+**Returns:** RGB color object
+
+**Response Format:**
+
+```typescript
+{
+  R: number,  // Red (0-255)
+  G: number,  // Green (0-255)
+  B: number   // Blue (0-255)
+}
+```
+
+**Example:**
+
+```typescript
+// Get color for 'W' key (HID code 26)
+const color = await keyboard.getCustomLighting(26);
+console.log('W key color:', `rgb(${color.R}, ${color.G}, ${color.B})`);
+// Output: W key color: rgb(255, 0, 0)
 ```
 
 ### setCustomLighting()
 
-Sets per-key RGB colors for custom lighting.
+Sets per-key RGB color for Custom lighting mode (mode 21).
 
 ```typescript
-async setCustomLighting(param: IKRGBDesc): Promise<any>
+async setCustomLighting(param: {
+  key: number;
+  r: number;
+  g: number;
+  b: number;
+}): Promise<any>
 ```
 
 **Parameters:**
-- `param` (IKRGBDesc): Custom lighting descriptor with key-color mappings
+- `param.key` (number): Key value to set color for
+- `param.r` (number): Red value (0-255)
+- `param.g` (number): Green value (0-255)
+- `param.b` (number): Blue value (0-255)
 
-**Example:**
+**Example 1: Set Single Key Color**
 
 ```typescript
-// Set custom colors for WASD keys
+// Set 'W' key to red
 await keyboard.setCustomLighting({
-  keys: [
-    { key: 26, r: 255, g: 0, b: 0 },    // W - Red
-    { key: 4,  r: 0, g: 255, b: 0 },    // A - Green
-    { key: 22, r: 0, g: 0, b: 255 },    // S - Blue
-    { key: 7,  r: 255, g: 255, b: 0 }   // D - Yellow
-  ]
+  key: 26,
+  r: 255,
+  g: 0,
+  b: 0
 });
+
+// Save to firmware
+await keyboard.saveCustomLighting();
 ```
 
-### setLogoLighting()
-
-Sets keyboard logo RGB lighting.
+**Example 2: Set WASD Colors (with Batch Processing)**
 
 ```typescript
-async setLogoLighting(lightModeConfig: ILoGoLightMode): Promise<any>
+const wasdColors = [
+  { key: 26, r: 255, g: 0, b: 0 },    // W - Red
+  { key: 4,  r: 0, g: 255, b: 0 },    // A - Green
+  { key: 22, r: 0, g: 0, b: 255 },    // S - Blue
+  { key: 7,  r: 255, g: 255, b: 0 }   // D - Yellow
+];
+
+// Set colors in batches
+for (const color of wasdColors) {
+  await keyboard.setCustomLighting(color);
+}
+
+// Save once after all changes
+await keyboard.saveCustomLighting();
 ```
 
-**Parameters:**
-- `lightModeConfig` (ILoGoLightMode): Logo lighting configuration
-
-**Example:**
+**Example 3: Real-Time Preview Pattern (AureTrix)**
 
 ```typescript
-// Set logo to static purple
-await keyboard.setLogoLighting({
-  mode: 'static',
-  color: { r: 128, g: 0, b: 128 }
-});
+// Preview without saving (drag color picker)
+await keyboard.setCustomLighting({ key: 26, r: 128, g: 64, b: 192 });
+
+// Final commit with save (release color picker)
+await keyboard.setCustomLighting({ key: 26, r: 128, g: 64, b: 192 });
+await keyboard.saveCustomLighting();
 ```
 
-### setLightingSaturation()
-
-Sets RGB saturation level for all lighting.
+**⚠️ Important:** Custom colors only apply when lighting mode is set to 21 (Custom). Switch mode first:
 
 ```typescript
-async setLightingSaturation(param: number[]): Promise<any>
-```
+// Switch to Custom mode
+const state = await keyboard.getLighting();
+const { open, dynamicColorId, ...filteredParams } = state;
+filteredParams.mode = 21;
+await keyboard.setLighting(filteredParams);
 
-**Parameters:**
-- `param` (number[]): Saturation values array
-
-**Example:**
-
-```typescript
-// Set saturation to 75%
-await keyboard.setLightingSaturation([75]);
-```
-
-### setSpecialLighting()
-
-Sets special lighting effects and patterns.
-
-```typescript
-async setSpecialLighting(lightModeConfig: LightModeConfigs): Promise<any>
-```
-
-**Parameters:**
-- `lightModeConfig` (LightModeConfigs): Special lighting configuration
-
-**Example:**
-
-```typescript
-// Set reactive lighting effect
-await keyboard.setSpecialLighting({
-  mode: 'reactive',
-  brightness: 100,
-  speed: 75
-});
+// Then set custom colors
+await keyboard.setCustomLighting({ key: 26, r: 255, g: 0, b: 0 });
+await keyboard.saveCustomLighting();
 ```
 
 ### saveCustomLighting()
 
-Saves custom lighting configuration to firmware.
+Saves custom lighting configuration to keyboard firmware. Call after all `setCustomLighting()` operations.
 
 ```typescript
 async saveCustomLighting(): Promise<any>
 ```
 
-**Example:**
+**Flash Write Optimization:**
+
+Custom lighting uses flash memory. Minimize writes using this pattern:
+1. During real-time updates (color picker dragging): Call `setCustomLighting()` without save
+2. On final commit: Call `saveCustomLighting()` once
+
+**Example (Optimized Pattern from AureTrix):**
 
 ```typescript
-// Set custom colors then save
-await keyboard.setCustomLighting({ /* colors */ });
+// Throttled preview (during drag)
+const throttledPreview = throttle(async (color) => {
+  await keyboard.setCustomLighting({ 
+    key: selectedKey, 
+    r: color.R, 
+    g: color.G, 
+    b: color.B 
+  });
+  // No save - preview only
+}, 100);
+
+// Final commit (on drag end)
+const finalCommit = async (color) => {
+  await keyboard.setCustomLighting({ 
+    key: selectedKey, 
+    r: color.R, 
+    g: color.G, 
+    b: color.B 
+  });
+  await keyboard.saveCustomLighting();  // Save to flash
+};
+```
+
+### Batch Processing Pattern
+
+When updating many keys (20+), use batch processing to prevent hardware overload:
+
+```typescript
+const BATCH_SIZE = 80;
+const keys = [/* array of 100+ keys */];
+const colors = { R: 255, G: 0, B: 0 };
+
+// Process in batches
+for (let i = 0; i < keys.length; i += BATCH_SIZE) {
+  const batch = keys.slice(i, i + BATCH_SIZE);
+  
+  // Process batch in parallel
+  await Promise.all(
+    batch.map(key => 
+      keyboard.setCustomLighting({ key, r: colors.R, g: colors.G, b: colors.B })
+    )
+  );
+  
+  // Delay between batches
+  if (i + BATCH_SIZE < keys.length) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+}
+
+// Save once after all batches
 await keyboard.saveCustomLighting();
 ```
 

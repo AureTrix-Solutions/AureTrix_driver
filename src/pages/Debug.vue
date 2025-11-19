@@ -1,10 +1,6 @@
 <template>
   <div class="lighting-debug-page">
     <h2 class="title">Lighting Debug & Testing</h2>
-    <div v-if="notification" class="notification" :class="{ error: notification.isError }">
-      {{ notification.message }}
-      <button @click="notification = null" class="dismiss-btn">&times;</button>
-    </div>
 
     <div class="lighting-container">
       <!-- Keyboard Grid -->
@@ -158,7 +154,6 @@ import type { IDefKeyInfo } from '../types/types';
 export default defineComponent({
   name: 'LightingDebug',
   setup() {
-    const notification = ref<{ message: string; isError: boolean } | null>(null);
     const initializing = ref(false);
     const lightingEnabled = ref(true);
     const masterLuminance = ref(4);
@@ -175,13 +170,6 @@ export default defineComponent({
     const log = (message: string) => {
       const timestamp = new Date().toLocaleTimeString();
       debugOutput.value += `[${timestamp}] ${message}\n`;
-    };
-
-    const setNotification = (message: string, isError: boolean) => {
-      notification.value = { message, isError };
-      setTimeout(() => {
-        notification.value = null;
-      }, 5000);
     };
 
     // Key selection functions
@@ -311,7 +299,6 @@ export default defineComponent({
         }
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to toggle lighting', true);
       }
     };
 
@@ -336,7 +323,6 @@ export default defineComponent({
         log('Master luminance applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to apply master luminance', true);
       }
     };
 
@@ -361,7 +347,6 @@ export default defineComponent({
         log('Master speed applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to apply master speed', true);
       }
     };
 
@@ -386,7 +371,6 @@ export default defineComponent({
         log('Master sleep delay applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to apply master sleep delay', true);
       }
     };
 
@@ -411,7 +395,6 @@ export default defineComponent({
         log('Master direction applied successfully');
       } catch (error) {
         log(`ERROR: ${(error as Error).message}`);
-        setNotification('Failed to apply master direction', true);
       }
     };
 
@@ -461,7 +444,6 @@ export default defineComponent({
         selectedMode.value = previousConfirmedMode;
         log(`ERROR: ${(error as Error).message}`);
         log(`Rolled back dropdown from ${attemptedMode} to ${previousConfirmedMode}`);
-        setNotification('Failed to apply mode selection', true);
       }
     };
 
@@ -514,7 +496,6 @@ export default defineComponent({
               selectedMode.value = 0;
               confirmedMode.value = 0;
               log(`WARNING: Keyboard mode ${modeNum} outside supported range (0-21), defaulting to Static`);
-              setNotification(`Keyboard mode ${modeNum} not in supported range. Defaulted to Static.`, true);
             }
           } else {
             selectedMode.value = 0;
@@ -526,7 +507,6 @@ export default defineComponent({
         }
       } catch (error) {
         log(`Failed to initialize from device: ${(error as Error).message}`);
-        setNotification('Using default settings (device not connected)', true);
       } finally {
         initializing.value = false;
       }
@@ -552,14 +532,12 @@ export default defineComponent({
           await initLightingFromDevice();
         } catch (promptError) {
           log(`Connection failed: ${(promptError as Error).message}`);
-          setNotification('Debug connection failed', true);
           initializing.value = false;
         }
       }
     });
 
     return {
-      notification,
       initializing,
       lightingEnabled,
       masterLuminance,
@@ -606,34 +584,6 @@ export default defineComponent({
     margin-bottom: 20px;
     font-size: 1.5rem;
     font-weight: 700;
-  }
-}
-
-.notification {
-  padding: 10px 15px;
-  margin-bottom: 16px;
-  border-radius: v.$border-radius;
-  background-color: rgba(34, 197, 94, 0.2);
-  color: v.$text-color;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  &.error {
-    background-color: rgba(239, 68, 68, 0.2);
-  }
-
-  .dismiss-btn {
-    padding: 0 8px;
-    background: none;
-    border: none;
-    color: v.$text-color;
-    cursor: pointer;
-    font-size: 1.2rem;
-
-    &:hover {
-      opacity: 0.7;
-    }
   }
 }
 

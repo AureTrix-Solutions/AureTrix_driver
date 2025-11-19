@@ -7,7 +7,7 @@
       <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
         <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
           <div v-for="(keyInfo, cIdx) in row" :key="`k-${rIdx}-${cIdx}`" class="key-btn"
-            :class="{ 'key-selected': isKeySelected(keyInfo) }"
+            :class="{ 'lighting-key-selected': isKeySelected(keyInfo) }"
             :style="getKeyStyleWithCustomColor(rIdx, cIdx)" 
             @click="selectKey(keyInfo)">
             <div class="key-label">
@@ -668,7 +668,7 @@ export default defineComponent({
 });
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 @use 'sass:color';
 @use '@styles/variables' as v;
 
@@ -679,231 +679,289 @@ export default defineComponent({
   .title {
     color: v.$primary-color;
     margin-bottom: 20px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-family: v.$font-style;
+  }
+}
+
+.lighting-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.no-layout {
+  text-align: center;
+  color: v.$text-color;
+  font-size: 1rem;
+  font-family: v.$font-style;
+  padding: 20px;
+}
+
+.key-grid {
+  display: block !important;
+  position: relative;
+  width: fit-content;
+  margin: 0 auto;
+  min-height: 300px;
+  max-height: 500px;
+  flex-shrink: 0;
+  visibility: visible !important;
+  z-index: 1;
+}
+
+.key-row {
+  display: contents;
+}
+
+.key-btn {
+  position: absolute;
+  padding: 4px;
+  border: v.$border-style;
+  border-radius: v.$border-radius;
+  background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
+  color: v.$text-color;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  user-select: none;
+  text-align: center;
+  font-family: v.$font-style;
+  visibility: visible !important;
+  z-index: 2;
+
+  .key-label {
+    font-size: 1rem;
+    font-weight: 300;
   }
 
-  .lighting-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  &.lighting-key-selected {
+    border-color: v.$accent-color;
+    box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
+    background: linear-gradient(to bottom, color.adjust(v.$accent-color, $lightness: -20%) 70%, color.adjust(v.$accent-color, $lightness: -10%) 100%);
   }
 
-  .key-grid {
-    position: relative;
-    margin: 0 auto;
-    background: color.adjust(v.$bg-color, $alpha: -0.7);
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid color.adjust(v.$primary-color, $alpha: -0.8);
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
   }
+}
 
-  .key-row {
-    display: flex;
-    position: absolute;
-  }
+.bottom-section {
+  display: flex;
+  flex: 1;
+  flex-shrink: 0;
+  gap: 10px;
+  position: relative;
+  margin-right: auto;
+  margin-left: auto;
+  margin-top: -50px;
+  justify-content: center;
+}
 
-  .key-btn {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, color.adjust(v.$primary-color, $alpha: -0.85), color.adjust(v.$bg-color, $alpha: -0.75));
-    border: 1px solid color.adjust(v.$primary-color, $alpha: -0.7);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    position: absolute;
-
-    &:hover {
-      background: linear-gradient(135deg, color.adjust(v.$primary-color, $alpha: -0.75), color.adjust(v.$bg-color, $alpha: -0.65));
-      border-color: color.adjust(v.$primary-color, $alpha: -0.4);
-      transform: translateY(-1px);
-    }
-
-    &.key-selected {
-      background: linear-gradient(135deg, color.adjust(v.$accent-color, $alpha: -0.6), color.adjust(v.$primary-color, $alpha: -0.7));
-      border-color: v.$accent-color;
-      box-shadow: 0 0 8px color.adjust(v.$accent-color, $alpha: -0.5);
-    }
-
-    .key-label {
-      font-size: 0.7rem;
-      color: v.$text-color;
-      text-align: center;
-      font-weight: 500;
-      user-select: none;
-    }
-  }
-
-  .no-layout {
-    text-align: center;
-    padding: 40px;
-    color: color.adjust(v.$text-color, $alpha: -0.4);
-  }
-
-  .bottom-section {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .selection-buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
+.selection-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 
   .select-btn {
-    padding: 8px 16px;
-    background: color.adjust(v.$primary-color, $alpha: -0.8);
-    border: 1px solid color.adjust(v.$primary-color, $alpha: -0.6);
-    border-radius: 4px;
-    color: v.$text-color;
+    padding: 8px 8px;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+    color: v.$accent-color;
+    border: v.$border-style;
+    border-radius: v.$border-radius;
     cursor: pointer;
-    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 200px;
+    transition: background-color 0.2s ease;
+    width: 120px;
+    text-align: center;
+    font-family: v.$font-style;
 
     &:hover {
-      background: color.adjust(v.$primary-color, $alpha: -0.7);
-      border-color: color.adjust(v.$primary-color, $alpha: -0.4);
-    }
-
-    &:active {
-      transform: scale(0.98);
+      background-color: color.adjust(v.$background-dark, $lightness: 10%);
     }
   }
+}
 
-  .settings-panel {
-    background: color.adjust(v.$bg-color, $alpha: -0.7);
-    border: 1px solid color.adjust(v.$primary-color, $alpha: -0.8);
-    border-radius: 8px;
-    padding: 20px;
-  }
+.parent {
+  display: flex;
+  justify-content: center;
+}
 
-  .settings-section {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
+.settings-panel {
+  width: 1425px;
+  padding: 10px;
+  border: 1px solid rgba(v.$text-color, 0.2);
+  border-radius: v.$border-radius;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-section {
+  flex-shrink: 0;
+  border: 1px solid rgba(v.$text-color, 0.2);
+  border-radius: v.$border-radius;
+  padding: 10px 15px;
+  background: rgba(v.$background-dark, 0.3);
 
   .header-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding-bottom: 10px;
-    border-bottom: 1px solid color.adjust(v.$primary-color, $alpha: -0.8);
+    margin-bottom: 16px;
+    font-family: v.$font-style;
 
     h3 {
-      margin: 0;
       color: v.$primary-color;
+      width: auto;
+      margin: 0;
+      margin-bottom: -5px;
+      margin-right: 10px;
+      font-size: 1.5rem;
+      font-weight: 400;
+    }
+
+    .toggle-btn {
+      padding: 3px 8px;
+      background-color: color.adjust(v.$background-dark, $lightness: -100%);
+      color: v.$accent-color;
+      border: v.$border-style;
+      border-radius: v.$border-radius;
+      cursor: pointer;
+      font-size: 0.7rem;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+      align-self: left;
+      margin-bottom: -10px;
+
+      &:hover {
+        background-color: color.adjust(v.$accent-color, $lightness: -20%);
+        color: white;
+      }
+
+      &:disabled {
+        pointer-events: none;
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
     }
   }
+}
 
-  .toggle-btn {
-    padding: 6px 16px;
-    background: color.adjust(v.$success-color, $alpha: -0.8);
-    border: 1px solid color.adjust(v.$success-color, $alpha: -0.6);
-    border-radius: 4px;
-    color: v.$success-color;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-weight: 600;
+.settings-row {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 10px;
+
+  .input-group {
+    margin-bottom: 0;
+  }
+}
+
+.settings-row-three {
+  .input-group {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  margin-bottom: 20px;
+  padding: 10px;
+  width: 400px;
+  height: 30px;
+  border: v.$border-style;
+  border-radius: v.$border-radius;
+  background-color: rgba(v.$background-dark, 0.5);
+  font-family: v.$font-style;
+
+  .label {
+    min-width: 150px;
+    text-align: left;
+    color: v.$text-color;
+    font-size: 0.95rem;
+    font-weight: 300;
+  }
+
+  .mode-select {
+    width: 300px;
+    padding: 8px 12px;
+    background: rgba(v.$background-dark, 0.8);
+    border: 1px solid rgba(v.$text-color, 0.3);
+    border-radius: v.$border-radius;
+    color: v.$text-color;
+    font-size: 0.9rem;
+    font-family: v.$font-style;
 
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
-    }
-
-    &:hover:not(:disabled) {
-      background: color.adjust(v.$success-color, $alpha: -0.7);
-      border-color: color.adjust(v.$success-color, $alpha: -0.4);
-    }
-  }
-
-  .settings-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-
-    &.settings-row-three {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  .input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    .label {
-      font-size: 0.85rem;
-      color: color.adjust(v.$text-color, $alpha: -0.2);
-      font-weight: 500;
-    }
-
-    .mode-select {
-      padding: 8px 12px;
-      background: color.adjust(v.$bg-color, $alpha: -0.6);
-      border: 1px solid color.adjust(v.$primary-color, $alpha: -0.7);
-      border-radius: 4px;
-      color: v.$text-color;
-      cursor: pointer;
-      transition: all 0.2s ease;
-
-      &:hover:not(:disabled) {
-        border-color: color.adjust(v.$primary-color, $alpha: -0.5);
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
     }
   }
 
   .color-picker-wrapper {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-top: 8px;
-
-    .color-display {
-      width: 32px;
-      height: 32px;
-      border-radius: 4px;
-      border: 2px solid color.adjust(v.$primary-color, $alpha: -0.6);
-      cursor: pointer;
-      transition: all 0.2s ease;
-
-      &:hover {
-        border-color: color.adjust(v.$primary-color, $alpha: -0.4);
-        transform: scale(1.05);
-      }
-    }
-
-    .color-input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-      position: absolute;
-    }
+    margin-left: 15px;
+    position: relative;
   }
 
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .color-display {
+    width: 40px;
+    height: 40px;
+    border: 2px solid rgba(v.$text-color, 0.3);
+    border-radius: v.$border-radius;
     cursor: pointer;
-    padding-top: 20px;
+    display: block;
+    transition: border-color 0.2s ease;
 
-    .checkbox-input {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
-
-    span {
-      font-size: 0.9rem;
-      color: v.$text-color;
-      user-select: none;
+    &:hover {
+      border-color: v.$accent-color;
     }
   }
+
+  .color-input {
+    position: absolute;
+    opacity: 0;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  .checkbox-input {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: v.$accent-color;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: v.$text-color;
+  cursor: pointer;
+  user-select: none;
 }
 </style>

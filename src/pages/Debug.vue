@@ -582,6 +582,39 @@ export default defineComponent({
     // Throttled version for real-time custom color updates (no save to reduce flash writes)
     const applyCustomColorThrottled = throttle(() => applyCustomColor(false), 100);
 
+    // Helper function to load all custom colors from keyboard
+    const loadCustomColorsFromKeyboard = async () => {
+      if (layout.value.length === 0) {
+        return;
+      }
+
+      try {
+        const allKeys = layout.value.flat();
+        let loadedCount = 0;
+
+        for (const key of allKeys) {
+          try {
+            const keyValue = key.physicalKeyValue || key.keyValue;
+            const customLighting = await debugKeyboardService.getCustomLighting(keyValue);
+            if (customLighting && customLighting.R !== undefined) {
+              customColors.set(keyValue, {
+                R: customLighting.R,
+                G: customLighting.G,
+                B: customLighting.B,
+              });
+              loadedCount++;
+            }
+          } catch (error) {
+            // Skip keys that fail to fetch
+          }
+        }
+        
+        log(`Custom RGB colors loaded: ${loadedCount} keys`);
+      } catch (error) {
+        log(`ERROR loading custom colors: ${(error as Error).message}`);
+      }
+    };
+
     const applyModeSelection = async () => {
       // Save the state BEFORE Vue updated selectedMode (confirmedMode is the last known good state)
       const previousConfirmedMode = confirmedMode.value;
@@ -606,6 +639,10 @@ export default defineComponent({
         // Update type based on mode: Static (0) = 'static', Effects (1-20) = 'dynamic', Custom (21) = 'custom'
         if (attemptedMode === 0) {
           filteredParams.type = 'static';
+          // Sync color picker to actual static color when switching to Static mode
+          if (currentState.colors && currentState.colors.length > 0) {
+            staticColor.value = currentState.colors[0];
+          }
         } else if (attemptedMode === 21) {
           filteredParams.type = 'custom';
         } else {
@@ -616,6 +653,11 @@ export default defineComponent({
 
         // Update confirmed mode AFTER successful SDK call
         confirmedMode.value = attemptedMode;
+
+        // If switching to Custom mode, load all custom colors from keyboard
+        if (attemptedMode === 21) {
+          await loadCustomColorsFromKeyboard();
+        }
       } catch (error) {
         // Rollback dropdown to last confirmed state
         selectedMode.value = previousConfirmedMode;

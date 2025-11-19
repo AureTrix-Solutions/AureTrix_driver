@@ -307,7 +307,8 @@ export default defineComponent({
           const bgColor = rgbToHex(rgb.R, rgb.G, rgb.B);
           return {
             ...baseStyle,
-            backgroundColor: bgColor,
+            background: bgColor,
+            backgroundImage: 'none',
           };
         }
       }

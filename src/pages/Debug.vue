@@ -809,63 +809,43 @@ export default defineComponent({
   background: rgba(v.$background-dark, 0.3);
 
   .header-row {
-    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    font-family: v.$font-style;
 
     h3 {
       color: v.$primary-color;
+      width: auto;
       margin: 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-  }
-}
-
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-
-  .toggle-label {
-    font-size: 1rem;
-    font-weight: 500;
-  }
-
-  .toggle-switch {
-    width: 80px;
-    height: 36px;
-    background: rgba(v.$text-color, 0.2);
-    border-radius: 18px;
-    cursor: pointer;
-    position: relative;
-    transition: background 0.3s;
-
-    &.disabled {
-      pointer-events: none;
-      opacity: 0.5;
-      cursor: not-allowed;
+      margin-bottom: -5px;
+      margin-right: 10px;
+      font-size: 1.5rem;
+      font-weight: 400;
     }
 
-    .toggle-slider {
-      position: absolute;
-      width: 70px;
-      height: 30px;
-      background: #6b7280;
-      border-radius: 15px;
-      top: 3px;
-      left: 3px;
-      transition: all 0.3s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .show-btn {
+      padding: 3px 8px;
+      background-color: color.adjust(v.$background-dark, $lightness: -100%);
+      color: v.$accent-color;
+      border: v.$border-style;
+      border-radius: v.$border-radius;
+      cursor: pointer;
+      font-size: 0.7rem;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+      align-self: left;
+      margin-bottom: -10px;
 
-      .toggle-text {
-        font-size: 0.75rem;
-        font-weight: 700;
+      &:hover {
+        background-color: color.adjust(v.$accent-color, $lightness: -20%);
         color: white;
       }
 
-      &.active {
-        background: v.$accent-color;
+      &:disabled {
+        pointer-events: none;
+        opacity: 0.6;
+        cursor: not-allowed;
       }
     }
   }
@@ -873,6 +853,7 @@ export default defineComponent({
 
 .input-group {
   margin-bottom: 15px;
+  width: 300px;
 
   .label {
     margin-bottom: 8px;

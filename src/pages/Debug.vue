@@ -665,6 +665,27 @@ export default defineComponent({
             if (modeNum >= 0 && modeNum <= 21) {
               selectedMode.value = modeNum;
               confirmedMode.value = modeNum;
+
+              // If Custom mode (21), fetch custom lighting for all keys
+              if (modeNum === 21 && layout.value.length > 0) {
+                const allKeys = layout.value.flat();
+                for (const key of allKeys) {
+                  try {
+                    const keyValue = key.physicalKeyValue || key.keyValue;
+                    const customLighting = await debugKeyboardService.getCustomLighting(keyValue);
+                    if (customLighting && customLighting.R !== undefined) {
+                      customColors.value.set(keyValue, {
+                        R: customLighting.R,
+                        G: customLighting.G,
+                        B: customLighting.B,
+                      });
+                    }
+                  } catch (error) {
+                    // Skip keys that fail to fetch
+                  }
+                }
+                log('Custom RGB colors loaded from keyboard');
+              }
             } else {
               selectedMode.value = 0;
               confirmedMode.value = 0;

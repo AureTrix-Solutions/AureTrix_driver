@@ -704,30 +704,26 @@ export default defineComponent({
           masterSleepDelay.value = currentState.sleepDelay ?? 0;
           masterDirection.value = currentState.direction ?? false;
           
-          // Convert SDK string mode to numeric dropdown value
-          if (currentState.mode) {
-            const modeLower = currentState.mode.toLowerCase();
-            const modeNum = reverseModeMap[modeLower];
+          // SDK returns mode as a number - use it directly
+          if (currentState.mode !== undefined && currentState.mode !== null) {
+            const modeNum = currentState.mode;
             
-            if (modeNum !== undefined) {
-              // Mode is recognized - sync dropdown and clear unsupported state
+            // Check if mode is within our supported range (0-20)
+            if (modeNum >= 0 && modeNum <= 20) {
+              // Mode is recognized - sync dropdown directly
               selectedMode.value = modeNum;
-              confirmedMode.value = modeNum; // Update confirmed mode
-              unsupportedModeName.value = null;
-              log(`Mode synced: "${currentState.mode}" → ${selectedMode.value}`);
+              confirmedMode.value = modeNum;
+              log(`Mode synced: ${modeNum}`);
             } else {
-              // Unknown mode - set to unsupported state
-              selectedMode.value = -1;
-              confirmedMode.value = -1; // Track unsupported as confirmed state
-              unsupportedModeName.value = currentState.mode;
-              log(`ERROR: Keyboard is using unsupported mode "${currentState.mode}"`);
-              log(`Dropdown set to unsupported state. User must select a mode to resync.`);
-              setNotification(`Keyboard mode "${currentState.mode}" not supported. Select a mode to resync.`, true);
+              // Mode is outside supported range - default to Static
+              selectedMode.value = 0;
+              confirmedMode.value = 0;
+              log(`WARNING: Keyboard mode ${modeNum} outside supported range (0-20), defaulting to Static`);
+              setNotification(`Keyboard mode ${modeNum} not in supported range. Defaulted to Static.`, true);
             }
           } else {
             selectedMode.value = 0;
-            confirmedMode.value = 0; // Update confirmed mode
-            unsupportedModeName.value = null;
+            confirmedMode.value = 0;
             log('No mode in SDK response, defaulting to Static (0)');
           }
           

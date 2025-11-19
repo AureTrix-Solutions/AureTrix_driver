@@ -37,52 +37,60 @@
                   {{ initializing ? 'SYNCING...' : (lightingEnabled ? 'ON' : 'OFF') }}
                 </button>
               </div>
-              <div class="input-group">
-                <div class="label">Brightness</div>
-                <select v-model.number="masterLuminance" @change="applyMasterLuminance" class="mode-select"
-                  :disabled="initializing || !lightingEnabled">
-                  <option :value="0">0 - Off</option>
-                  <option :value="1">1 - Low</option>
-                  <option :value="2">2 - Medium</option>
-                  <option :value="3">3 - High</option>
-                  <option :value="4">4 - Maximum</option>
-                </select>
+              
+              <!-- Row 1: Brightness and Speed -->
+              <div class="settings-row">
+                <div class="input-group">
+                  <div class="label">Brightness</div>
+                  <select v-model.number="masterLuminance" @change="applyMasterLuminance" class="mode-select"
+                    :disabled="initializing || !lightingEnabled">
+                    <option :value="0">0 - Off</option>
+                    <option :value="1">1 - Low</option>
+                    <option :value="2">2 - Medium</option>
+                    <option :value="3">3 - High</option>
+                    <option :value="4">4 - Maximum</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <div class="label">Speed</div>
+                  <select v-model.number="masterSpeed" @change="applyMasterSpeed" class="mode-select"
+                    :disabled="initializing || !lightingEnabled">
+                    <option :value="0">0 - Slowest</option>
+                    <option :value="1">1 - Slow</option>
+                    <option :value="2">2 - Medium</option>
+                    <option :value="3">3 - Fast</option>
+                    <option :value="4">4 - Fastest</option>
+                  </select>
+                </div>
               </div>
-              <div class="input-group">
-                <div class="label">Speed</div>
-                <select v-model.number="masterSpeed" @change="applyMasterSpeed" class="mode-select"
-                  :disabled="initializing || !lightingEnabled">
-                  <option :value="0">0 - Slowest</option>
-                  <option :value="1">1 - Slow</option>
-                  <option :value="2">2 - Medium</option>
-                  <option :value="3">3 - Fast</option>
-                  <option :value="4">4 - Fastest</option>
-                </select>
-              </div>
-              <div class="input-group">
-                <div class="label">Sleep</div>
-                <select v-model.number="masterSleepDelay" @change="applyMasterSleepDelay" class="mode-select"
-                  :disabled="initializing || !lightingEnabled">
-                  <option :value="0">Never</option>
-                  <option :value="1">1 minute</option>
-                  <option :value="2">2 minutes</option>
-                  <option :value="3">3 minutes</option>
-                  <option :value="5">5 minutes</option>
-                  <option :value="10">10 minutes</option>
-                  <option :value="15">15 minutes</option>
-                  <option :value="20">20 minutes</option>
-                  <option :value="25">25 minutes</option>
-                  <option :value="30">30 minutes</option>
-                  <option :value="45">45 minutes</option>
-                  <option :value="60">60 minutes</option>
-                  <option :value="120">120 minutes</option>
-                </select>
-              </div>
-              <div class="input-group">
-                <div class="label">
-                  <input type="checkbox" v-model="masterDirection" @change="applyMasterDirection"
-                    :disabled="initializing || !lightingEnabled" class="direction-checkbox" />
-                  Reverse
+
+              <!-- Row 2: Sleep and Reverse -->
+              <div class="settings-row">
+                <div class="input-group">
+                  <div class="label">Sleep</div>
+                  <select v-model.number="masterSleepDelay" @change="applyMasterSleepDelay" class="mode-select"
+                    :disabled="initializing || !lightingEnabled">
+                    <option :value="0">Never</option>
+                    <option :value="1">1 minute</option>
+                    <option :value="2">2 minutes</option>
+                    <option :value="3">3 minutes</option>
+                    <option :value="5">5 minutes</option>
+                    <option :value="10">10 minutes</option>
+                    <option :value="15">15 minutes</option>
+                    <option :value="20">20 minutes</option>
+                    <option :value="25">25 minutes</option>
+                    <option :value="30">30 minutes</option>
+                    <option :value="45">45 minutes</option>
+                    <option :value="60">60 minutes</option>
+                    <option :value="120">120 minutes</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <div class="label">
+                    <input type="checkbox" v-model="masterDirection" @change="applyMasterDirection"
+                      :disabled="initializing || !lightingEnabled" class="direction-checkbox" />
+                    Reverse
+                  </div>
                 </div>
               </div>
             </div>

@@ -863,6 +863,29 @@ export default defineComponent({
     }
   }
 
+  .color-save-btn {
+    margin-left: 10px;
+    padding: 6px 12px;
+    background: v.$accent-color;
+    color: white;
+    border: none;
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: v.$font-style;
+    font-weight: 500;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: color.adjust(v.$accent-color, $lightness: -10%);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
   .direction-checkbox {
     margin-right: 10px;
     width: 18px;

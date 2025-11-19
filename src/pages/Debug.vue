@@ -138,6 +138,13 @@
                     :disabled="initializing || !lightingEnabled"
                     class="color-input"
                   />
+                  <button 
+                    @click="applyStaticColor" 
+                    class="color-save-btn"
+                    :disabled="initializing || !lightingEnabled"
+                  >
+                    Save
+                  </button>
                 </div>
               </div>
             </div>

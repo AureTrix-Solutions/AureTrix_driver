@@ -169,6 +169,7 @@ export default defineComponent({
     const masterDirection = ref(false);
     const selectedMode = ref(0);
     const confirmedMode = ref(0); // Tracks last successfully applied mode
+    const staticColor = ref('#0037ff'); // Static mode color (colors[0])
     const debugOutput = ref('Lighting Debug Console\n-------------------\n');
     const selectedKeys = ref<IDefKeyInfo[]>([]);
 
@@ -458,6 +459,11 @@ export default defineComponent({
           masterSpeed.value = currentState.speed ?? 3;
           masterSleepDelay.value = currentState.sleepDelay ?? 0;
           masterDirection.value = currentState.direction ?? false;
+
+          // Initialize static color from colors[0]
+          if (currentState.colors && currentState.colors.length > 0) {
+            staticColor.value = currentState.colors[0];
+          }
 
           // SDK returns mode as a number - use it directly
           if (currentState.mode !== undefined && currentState.mode !== null) {

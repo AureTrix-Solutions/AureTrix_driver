@@ -168,7 +168,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
+import { defineComponent, ref, onMounted, computed, watch } from 'vue';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
 import { keyMap } from '@utils/keyMap';
 import debugKeyboardService from '@services/DebugKeyboardService';
@@ -231,6 +231,56 @@ export default defineComponent({
           }
         : { R: 255, G: 255, B: 255 }; // Default to white
     };
+
+    // Computed color picker value based on mode and selection
+    const displayedColor = computed(() => {
+      // Static mode: use staticColor ref
+      if (selectedMode.value === 0) {
+        return staticColor.value;
+      }
+
+      // Custom mode (21): determine color based on selection
+      if (selectedMode.value === 21) {
+        // No keys selected: white
+        if (selectedKeys.value.length === 0) {
+          return '#ffffff';
+        }
+
+        // Single key: return its custom color
+        if (selectedKeys.value.length === 1) {
+          const keyValue = selectedKeys.value[0].physicalKeyValue || selectedKeys.value[0].keyValue;
+          const rgb = customColors.value.get(keyValue);
+          return rgb ? rgbToHex(rgb.R, rgb.G, rgb.B) : '#ffffff';
+        }
+
+        // Multiple keys: find majority color or use first key's color
+        const colorCounts = new Map<string, number>();
+        const keyColors: string[] = [];
+
+        selectedKeys.value.forEach(key => {
+          const keyValue = key.physicalKeyValue || key.keyValue;
+          const rgb = customColors.value.get(keyValue);
+          const hex = rgb ? rgbToHex(rgb.R, rgb.G, rgb.B) : '#ffffff';
+          keyColors.push(hex);
+          colorCounts.set(hex, (colorCounts.get(hex) || 0) + 1);
+        });
+
+        // Find majority
+        let maxCount = 0;
+        let majorityColor = keyColors[0];
+        colorCounts.forEach((count, color) => {
+          if (count > maxCount) {
+            maxCount = count;
+            majorityColor = color;
+          }
+        });
+
+        return majorityColor;
+      }
+
+      // Default fallback
+      return staticColor.value;
+    });
 
     // Key selection functions
     const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {

@@ -58,6 +58,15 @@ Preferred communication style: Simple, everyday language.
 - All changes architect-reviewed and verified to match Debug.vue's working implementation
 - Lighting page now fully functional with mode selection, togglable key selection, and no unused controls
 
+**November 19, 2025 - Custom RGB Performance Optimization**
+- Separated virtual keyboard preview from physical keyboard writes for smooth custom color dragging
+- Created updateVirtualKeyboardColorOnly() function that updates customColors reactive object without SDK calls
+- Color picker @input (during drag) now updates only virtual keyboard preview (instant, no SDK calls)
+- Color picker @change (on release) updates physical keyboard via SDK with saveToFlash: true
+- Eliminated lag during color dragging by deferring all KeyboardService calls to final release event
+- Virtual keyboard shows real-time color preview while dragging, physical keyboard updates once when finished
+- Architect-reviewed and verified performance improvement with no regressions
+
 ## System Architecture
 
 ### Frontend Architecture

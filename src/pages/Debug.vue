@@ -112,7 +112,6 @@
               <div class="input-group">
                 <div class="label">Lighting Mode</div>
                 <select v-model.number="selectedMode" @change="applyModeSelection" class="mode-select" :disabled="initializing || !lightingEnabled">
-                  <option v-if="unsupportedModeName" :value="-1" disabled>⚠️ Unsupported: {{ unsupportedModeName }}</option>
                   <option :value="0">Static</option>
                   <option :value="1">Wave</option>
                   <option :value="2">Wave 2</option>
@@ -135,9 +134,6 @@
                   <option :value="19">Column</option>
                   <option :value="20">Explode</option>
                 </select>
-                <div v-if="unsupportedModeName" class="warning-message">
-                  Keyboard is in unsupported mode. Select a mode above to resync.
-                </div>
               </div>
             </div>
 
@@ -773,7 +769,6 @@ export default defineComponent({
       masterSleepDelay,
       masterDirection,
       selectedMode,
-      unsupportedModeName,
       globalLighting,
       customLighting,
       specialLighting,

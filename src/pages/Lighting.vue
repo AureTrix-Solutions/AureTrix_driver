@@ -690,10 +690,10 @@ export default defineComponent({
   .key-grid {
     position: relative;
     margin: 0 auto;
-    background: rgba(v.$bg-color, 0.3);
+    background: color.adjust(v.$bg-color, $alpha: -0.7);
     padding: 20px;
     border-radius: 8px;
-    border: 1px solid rgba(v.$primary-color, 0.2);
+    border: 1px solid color.adjust(v.$primary-color, $alpha: -0.8);
   }
 
   .key-row {
@@ -705,23 +705,23 @@ export default defineComponent({
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, rgba(v.$primary-color, 0.15), rgba(v.$bg-color, 0.25));
-    border: 1px solid rgba(v.$primary-color, 0.3);
+    background: linear-gradient(135deg, color.adjust(v.$primary-color, $alpha: -0.85), color.adjust(v.$bg-color, $alpha: -0.75));
+    border: 1px solid color.adjust(v.$primary-color, $alpha: -0.7);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.15s ease;
     position: absolute;
 
     &:hover {
-      background: linear-gradient(135deg, rgba(v.$primary-color, 0.25), rgba(v.$bg-color, 0.35));
-      border-color: rgba(v.$primary-color, 0.6);
+      background: linear-gradient(135deg, color.adjust(v.$primary-color, $alpha: -0.75), color.adjust(v.$bg-color, $alpha: -0.65));
+      border-color: color.adjust(v.$primary-color, $alpha: -0.4);
       transform: translateY(-1px);
     }
 
     &.key-selected {
-      background: linear-gradient(135deg, rgba(v.$accent-color, 0.4), rgba(v.$primary-color, 0.3));
+      background: linear-gradient(135deg, color.adjust(v.$accent-color, $alpha: -0.6), color.adjust(v.$primary-color, $alpha: -0.7));
       border-color: v.$accent-color;
-      box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
+      box-shadow: 0 0 8px color.adjust(v.$accent-color, $alpha: -0.5);
     }
 
     .key-label {
@@ -736,7 +736,7 @@ export default defineComponent({
   .no-layout {
     text-align: center;
     padding: 40px;
-    color: rgba(v.$text-color, 0.6);
+    color: color.adjust(v.$text-color, $alpha: -0.4);
   }
 
   .bottom-section {
@@ -753,16 +753,16 @@ export default defineComponent({
 
   .select-btn {
     padding: 8px 16px;
-    background: rgba(v.$primary-color, 0.2);
-    border: 1px solid rgba(v.$primary-color, 0.4);
+    background: color.adjust(v.$primary-color, $alpha: -0.8);
+    border: 1px solid color.adjust(v.$primary-color, $alpha: -0.6);
     border-radius: 4px;
     color: v.$text-color;
     cursor: pointer;
     transition: all 0.2s ease;
 
     &:hover {
-      background: rgba(v.$primary-color, 0.3);
-      border-color: rgba(v.$primary-color, 0.6);
+      background: color.adjust(v.$primary-color, $alpha: -0.7);
+      border-color: color.adjust(v.$primary-color, $alpha: -0.4);
     }
 
     &:active {
@@ -771,8 +771,8 @@ export default defineComponent({
   }
 
   .settings-panel {
-    background: rgba(v.$bg-color, 0.3);
-    border: 1px solid rgba(v.$primary-color, 0.2);
+    background: color.adjust(v.$bg-color, $alpha: -0.7);
+    border: 1px solid color.adjust(v.$primary-color, $alpha: -0.8);
     border-radius: 8px;
     padding: 20px;
   }
@@ -788,7 +788,7 @@ export default defineComponent({
     justify-content: space-between;
     align-items: center;
     padding-bottom: 10px;
-    border-bottom: 1px solid rgba(v.$primary-color, 0.2);
+    border-bottom: 1px solid color.adjust(v.$primary-color, $alpha: -0.8);
 
     h3 {
       margin: 0;
@@ -798,8 +798,8 @@ export default defineComponent({
 
   .toggle-btn {
     padding: 6px 16px;
-    background: rgba(v.$success-color, 0.2);
-    border: 1px solid rgba(v.$success-color, 0.4);
+    background: color.adjust(v.$success-color, $alpha: -0.8);
+    border: 1px solid color.adjust(v.$success-color, $alpha: -0.6);
     border-radius: 4px;
     color: v.$success-color;
     cursor: pointer;
@@ -812,8 +812,8 @@ export default defineComponent({
     }
 
     &:hover:not(:disabled) {
-      background: rgba(v.$success-color, 0.3);
-      border-color: rgba(v.$success-color, 0.6);
+      background: color.adjust(v.$success-color, $alpha: -0.7);
+      border-color: color.adjust(v.$success-color, $alpha: -0.4);
     }
   }
 
@@ -834,21 +834,21 @@ export default defineComponent({
 
     .label {
       font-size: 0.85rem;
-      color: rgba(v.$text-color, 0.8);
+      color: color.adjust(v.$text-color, $alpha: -0.2);
       font-weight: 500;
     }
 
     .mode-select {
       padding: 8px 12px;
-      background: rgba(v.$bg-color, 0.4);
-      border: 1px solid rgba(v.$primary-color, 0.3);
+      background: color.adjust(v.$bg-color, $alpha: -0.6);
+      border: 1px solid color.adjust(v.$primary-color, $alpha: -0.7);
       border-radius: 4px;
       color: v.$text-color;
       cursor: pointer;
       transition: all 0.2s ease;
 
       &:hover:not(:disabled) {
-        border-color: rgba(v.$primary-color, 0.5);
+        border-color: color.adjust(v.$primary-color, $alpha: -0.5);
       }
 
       &:disabled {
@@ -868,12 +868,12 @@ export default defineComponent({
       width: 32px;
       height: 32px;
       border-radius: 4px;
-      border: 2px solid rgba(v.$primary-color, 0.4);
+      border: 2px solid color.adjust(v.$primary-color, $alpha: -0.6);
       cursor: pointer;
       transition: all 0.2s ease;
 
       &:hover {
-        border-color: rgba(v.$primary-color, 0.6);
+        border-color: color.adjust(v.$primary-color, $alpha: -0.4);
         transform: scale(1.05);
       }
     }

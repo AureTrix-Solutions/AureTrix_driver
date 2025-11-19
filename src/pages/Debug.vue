@@ -209,6 +209,29 @@ export default defineComponent({
       };
     };
 
+    // Custom RGB color storage (key -> {R, G, B})
+    const customColors = ref<Map<number, { R: number; G: number; B: number }>>(new Map());
+
+    // RGB/Hex conversion utilities
+    const rgbToHex = (r: number, g: number, b: number): string => {
+      const toHex = (n: number) => {
+        const hex = n.toString(16).padStart(2, '0');
+        return hex;
+      };
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    };
+
+    const hexToRgb = (hex: string): { R: number; G: number; B: number } => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result
+        ? {
+            R: parseInt(result[1], 16),
+            G: parseInt(result[2], 16),
+            B: parseInt(result[3], 16),
+          }
+        : { R: 255, G: 255, B: 255 }; // Default to white
+    };
+
     // Key selection functions
     const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
       const physicalKeyValue = key.physicalKeyValue || key.keyValue;

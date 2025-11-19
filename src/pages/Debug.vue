@@ -170,7 +170,7 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, computed, watch, reactive } from 'vue';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
-import { useBatchProcessing } from '@composables/useBatchProcessing';
+import { useBatchProcessing } from '@/composables/useBatchProcessing';
 import { keyMap } from '@utils/keyMap';
 import debugKeyboardService from '@services/DebugKeyboardService';
 import type { IDefKeyInfo } from '../types/types';

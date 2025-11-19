@@ -709,6 +709,12 @@ export default defineComponent({
               selectedMode.value = modeNum;
               confirmedMode.value = modeNum;
               log(`Mode synced: ${modeNum}`);
+              
+              // Diagnostic: Check if type matches expected value based on mode
+              const expectedType = modeNum === 0 ? 'static' : 'dynamic';
+              if (currentState.type && currentState.type !== expectedType) {
+                log(`DIAGNOSTIC: Mode ${modeNum} has type "${currentState.type}", expected "${expectedType}"`);
+              }
             } else {
               // Mode is outside supported range - default to Static
               selectedMode.value = 0;

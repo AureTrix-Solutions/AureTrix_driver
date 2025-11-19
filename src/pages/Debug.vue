@@ -38,10 +38,10 @@
         </div>
         <div class="parent">
           <div class="settings-panel">
-            <!-- Master Toggle -->
+            <!-- RGB Settings Section -->
             <div class="settings-section">
               <div class="header-row">
-                <h3>closedLighting / setLighting</h3>
+                <h3>RGB Settings</h3>
               </div>
               <div class="toggle-row">
                 <label class="toggle-label">Lighting</label>
@@ -52,7 +52,7 @@
                 </div>
               </div>
               <div class="input-group">
-                <div class="label">RGB Brightness (Luminance)</div>
+                <div class="label">Brightness</div>
                 <select v-model.number="masterLuminance" @change="applyMasterLuminance" class="mode-select" :disabled="initializing || !lightingEnabled">
                   <option :value="0">0 - Off</option>
                   <option :value="1">1 - Low</option>
@@ -62,7 +62,7 @@
                 </select>
               </div>
               <div class="input-group">
-                <div class="label">Animation Speed</div>
+                <div class="label">Speed</div>
                 <select v-model.number="masterSpeed" @change="applyMasterSpeed" class="mode-select" :disabled="initializing || !lightingEnabled">
                   <option :value="0">0 - Slowest</option>
                   <option :value="1">1 - Slow</option>
@@ -72,7 +72,7 @@
                 </select>
               </div>
               <div class="input-group">
-                <div class="label">Sleep Timer (minutes)</div>
+                <div class="label">Sleep</div>
                 <select v-model.number="masterSleepDelay" @change="applyMasterSleepDelay" class="mode-select" :disabled="initializing || !lightingEnabled">
                   <option :value="0">Never</option>
                   <option :value="1">1 minute</option>
@@ -98,103 +98,42 @@
                     :disabled="initializing || !lightingEnabled"
                     class="direction-checkbox"
                   />
-                  Reverse RGB Pattern Direction
+                  Reverse
                 </div>
               </div>
             </div>
 
-            <!-- Global Lighting -->
+            <!-- Mode Selection Section -->
             <div class="settings-section">
               <div class="header-row">
-                <h3>setLighting / getLighting</h3>
+                <h3>Mode Selection</h3>
               </div>
               
               <div class="input-group">
-                <div class="label">Mode</div>
-                <select v-model="globalLighting.mode" class="mode-select" :disabled="!lightingEnabled">
-                  <option value="static">Static</option>
-                  <option value="breathing">Breathing</option>
-                  <option value="wave">Wave</option>
-                  <option value="reactive">Reactive</option>
-                  <option value="ripple">Ripple</option>
-                  <option value="rainbow">Rainbow</option>
+                <div class="label">Lighting Mode</div>
+                <select v-model.number="selectedMode" @change="applyModeSelection" class="mode-select" :disabled="initializing || !lightingEnabled">
+                  <option :value="0">Static</option>
+                  <option :value="1">Wave</option>
+                  <option :value="2">Wave 2</option>
+                  <option :value="3">Ripple</option>
+                  <option :value="4">Wheel</option>
+                  <option :value="5">Wheel 2</option>
+                  <option :value="6">Collide</option>
+                  <option :value="7">Spectrum</option>
+                  <option :value="8">Shift</option>
+                  <option :value="9">Spot Shift</option>
+                  <option :value="10">Race</option>
+                  <option :value="11">Rainbow Wave</option>
+                  <option :value="12">Snake</option>
+                  <option :value="13">Twinkle</option>
+                  <option :value="14">Twinkle 2</option>
+                  <option :value="15">Twinkle 3</option>
+                  <option :value="16">Pong</option>
+                  <option :value="17">Pulse</option>
+                  <option :value="18">Radiate</option>
+                  <option :value="19">Column</option>
+                  <option :value="20">Explode</option>
                 </select>
-              </div>
-
-              <div class="input-group">
-                <div class="label">Brightness</div>
-                <div class="slider-container">
-                  <div class="value-display">{{ lightingRanges.brightness.min }}</div>
-                  <input 
-                    type="range" 
-                    v-model.number="globalLighting.brightness" 
-                    :min="lightingRanges.brightness.min" 
-                    :max="lightingRanges.brightness.max" 
-                    :disabled="!lightingEnabled"
-                  />
-                  <div class="value-display">{{ lightingRanges.brightness.max }}</div>
-                </div>
-                <div class="adjusters">
-                  <button @click="globalLighting.brightness = Math.max(lightingRanges.brightness.min, globalLighting.brightness - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
-                  <input
-                    type="number"
-                    v-model.number="globalLighting.brightness"
-                    :min="lightingRanges.brightness.min"
-                    :max="lightingRanges.brightness.max"
-                    :disabled="!lightingEnabled"
-                  />
-                  <button @click="globalLighting.brightness = Math.min(lightingRanges.brightness.max, globalLighting.brightness + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
-                </div>
-              </div>
-
-              <div class="input-group">
-                <div class="label">Speed</div>
-                <div class="slider-container">
-                  <div class="value-display">{{ lightingRanges.speed.min }}</div>
-                  <input 
-                    type="range" 
-                    v-model.number="globalLighting.speed" 
-                    :min="lightingRanges.speed.min" 
-                    :max="lightingRanges.speed.max" 
-                    :disabled="!lightingEnabled"
-                  />
-                  <div class="value-display">{{ lightingRanges.speed.max }}</div>
-                </div>
-                <div class="adjusters">
-                  <button @click="globalLighting.speed = Math.max(lightingRanges.speed.min, globalLighting.speed - 1)" class="adjust-btn" :disabled="!lightingEnabled">-</button>
-                  <input
-                    type="number"
-                    v-model.number="globalLighting.speed"
-                    :min="lightingRanges.speed.min"
-                    :max="lightingRanges.speed.max"
-                    :disabled="!lightingEnabled"
-                  />
-                  <button @click="globalLighting.speed = Math.min(lightingRanges.speed.max, globalLighting.speed + 1)" class="adjust-btn" :disabled="!lightingEnabled">+</button>
-                </div>
-              </div>
-
-              <div class="input-group">
-                <div class="label">Color (RGB)</div>
-                <div class="color-inputs">
-                  <div class="color-input-group">
-                    <label>R</label>
-                    <input type="number" v-model.number="globalLighting.color.r" min="0" max="255" :disabled="!lightingEnabled" />
-                  </div>
-                  <div class="color-input-group">
-                    <label>G</label>
-                    <input type="number" v-model.number="globalLighting.color.g" min="0" max="255" :disabled="!lightingEnabled" />
-                  </div>
-                  <div class="color-input-group">
-                    <label>B</label>
-                    <input type="number" v-model.number="globalLighting.color.b" min="0" max="255" :disabled="!lightingEnabled" />
-                  </div>
-                  <div class="color-preview" :style="{ backgroundColor: `rgb(${globalLighting.color.r}, ${globalLighting.color.g}, ${globalLighting.color.b})` }"></div>
-                </div>
-              </div>
-
-              <div class="button-row">
-                <button @click="applyGlobalLighting" class="apply-btn" :disabled="!lightingEnabled">Apply</button>
-                <button @click="fetchGlobalLighting" class="fetch-btn">Fetch Current</button>
               </div>
             </div>
 
@@ -334,8 +273,41 @@ export default defineComponent({
     const masterSpeed = ref(3);
     const masterSleepDelay = ref(0);
     const masterDirection = ref(false);
+    const selectedMode = ref(0);
     const debugOutput = ref('Lighting Debug Console\n-------------------\n');
     const selectedKeys = ref<IDefKeyInfo[]>([]);
+
+    // Mode mapping: dropdown numeric values to SDK string mode names
+    // Covers all 21 user-requested modes as specified
+    const modeMap: Record<number, string> = {
+      0: 'static',
+      1: 'wave',
+      2: 'wave2',
+      3: 'ripple',
+      4: 'wheel',
+      5: 'wheel2',
+      6: 'collide',
+      7: 'spectrum',
+      8: 'shift',
+      9: 'spotshift',
+      10: 'race',
+      11: 'rainbowwave',
+      12: 'snake',
+      13: 'twinkle',
+      14: 'twinkle2',
+      15: 'twinkle3',
+      16: 'pong',
+      17: 'pulse',
+      18: 'radiate',
+      19: 'column',
+      20: 'explode'
+    };
+
+    // Reverse mapping: SDK string mode names to dropdown numeric values
+    // Build from modeMap to keep them in sync
+    const reverseModeMap: Record<string, number> = Object.fromEntries(
+      Object.entries(modeMap).map(([key, value]) => [value, parseInt(key)])
+    );
 
     const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, error } = useMappedKeyboard(ref(0));
 
@@ -607,6 +579,38 @@ export default defineComponent({
       }
     };
 
+    const applyModeSelection = async () => {
+      try {
+        const modeName = modeMap[selectedMode.value];
+        
+        // Validate mode name exists in mapping
+        if (!modeName) {
+          throw new Error(`Invalid mode selection: ${selectedMode.value} has no mapped mode name`);
+        }
+        
+        log(`Applying mode selection: ${selectedMode.value} (${modeName})...`);
+        const currentState = await debugKeyboardService.getLighting();
+        log(`Current state retrieved: ${JSON.stringify(currentState)}`);
+        
+        if (!currentState) {
+          throw new Error('getLighting() returned no data');
+        }
+        
+        // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
+        const { open, dynamicColorId, ...filteredParams } = currentState;
+        
+        // Update mode with the SDK string mode name
+        filteredParams.mode = modeName;
+        log(`Applying lighting with mode "${modeName}": ${JSON.stringify(filteredParams)}`);
+        
+        await debugKeyboardService.setLighting(filteredParams);
+        log('Mode selection applied successfully');
+      } catch (error) {
+        log(`ERROR: ${(error as Error).message}`);
+        setNotification('Failed to apply mode selection', true);
+      }
+    };
+
     const applyGlobalLighting = async () => {
       try {
         log(`Applying global lighting: ${JSON.stringify(globalLighting.value)}`);
@@ -714,8 +718,29 @@ export default defineComponent({
           masterSleepDelay.value = currentState.sleepDelay ?? 0;
           masterDirection.value = currentState.direction ?? false;
           
+          // Convert SDK string mode to numeric dropdown value
+          if (currentState.mode) {
+            const modeLower = currentState.mode.toLowerCase();
+            const modeNum = reverseModeMap[modeLower];
+            
+            if (modeNum !== undefined) {
+              // Mode is recognized - sync dropdown
+              selectedMode.value = modeNum;
+              log(`Mode synced: "${currentState.mode}" → ${selectedMode.value}`);
+            } else {
+              // Unknown mode - notify user but keep dropdown at current value
+              // DO NOT change selectedMode.value to avoid false sync
+              log(`ERROR: Keyboard is using unsupported mode "${currentState.mode}"`);
+              log(`Dropdown will remain at current value (${selectedMode.value}). Change mode to sync with keyboard.`);
+              setNotification(`Keyboard mode "${currentState.mode}" not supported in dropdown. Please select a new mode.`, true);
+            }
+          } else {
+            selectedMode.value = 0;
+            log('No mode in SDK response, defaulting to Static (0)');
+          }
+          
           // Update global lighting form
-          if (currentState.mode) globalLighting.value.mode = currentState.mode;
+          if (currentState.mode !== undefined) globalLighting.value.mode = currentState.mode;
           if (currentState.brightness !== undefined) globalLighting.value.brightness = currentState.brightness;
           if (currentState.speed !== undefined) globalLighting.value.speed = currentState.speed;
           if (currentState.color) globalLighting.value.color = currentState.color;
@@ -764,6 +789,7 @@ export default defineComponent({
       masterSpeed,
       masterSleepDelay,
       masterDirection,
+      selectedMode,
       globalLighting,
       customLighting,
       specialLighting,
@@ -787,6 +813,7 @@ export default defineComponent({
       applyMasterSpeed,
       applyMasterSleepDelay,
       applyMasterDirection,
+      applyModeSelection,
       applyGlobalLighting,
       fetchGlobalLighting,
       applyCustomLighting,

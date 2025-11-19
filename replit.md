@@ -10,6 +10,20 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 19, 2025 - Production Lighting Page Implementation**
+- Implemented complete production-ready Lighting.vue page with full RGB lighting control
+- Added master lighting controls (brightness 0-4, speed 0-4, sleep timer, direction reversal, super response toggle)
+- Integrated 22 lighting modes (Static, Wave, Ripple, Spectrum, Custom, and 17 more dynamic effects)
+- Implemented per-key custom RGB lighting in Custom mode (mode 21) with color picker and batch processing
+- Added virtual keyboard displaying custom colors with proper CSS override (background + backgroundImage: none)
+- Implemented quick selection presets (Select All, WASD, Letters, Numbers, None)
+- Added lighting SDK methods to KeyboardService.ts (getLighting, setLighting, closedLighting, getCustomLighting, setCustomLighting, saveCustomLighting)
+- Follows proper API workflow pattern: get current state, modify properties, filter out `open` and `dynamicColorId`, then set
+- Comprehensive error handling for all SDK calls with user-friendly error messages
+- Flash write optimization: preview without save during color picker drag, commit with save on release
+- Updated SDK_REFERENCE.md with detailed lighting API documentation and workflow examples
+- Updated PAGES_OVERVIEW.md to mark Lighting as fully functional (9 functional pages total)
+
 **November 19, 2025 - Custom RGB Batch Processing Optimization**
 - Implemented batch processing for custom color updates using `useBatchProcessing` composable
 - Custom colors now update in parallel batches of 80 keys instead of sequential processing

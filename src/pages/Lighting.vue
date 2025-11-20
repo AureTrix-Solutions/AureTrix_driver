@@ -516,8 +516,7 @@ export default defineComponent({
       const rgb = hexToRgb(staticColor.value);
       const keyIds = selectedKeys.value.map(key => key.physicalKeyValue || key.keyValue);
 
-      // Update customColors reactive object for virtual keyboard preview only
-      // No SDK calls - instant visual update
+      // Virtual keyboard preview only - no SDK calls
       keyIds.forEach(keyValue => {
         customColors[keyValue] = { R: rgb.R, G: rgb.G, B: rgb.B };
       });
@@ -530,7 +529,6 @@ export default defineComponent({
         const allKeys = layout.value.flat();
         const tempColors: Record<number, { R: number; G: number; B: number }> = {};
 
-        // Collect all colors in temporary object first
         for (const key of allKeys) {
           try {
             const keyValue = key.physicalKeyValue || key.keyValue;
@@ -544,22 +542,18 @@ export default defineComponent({
               };
             }
           } catch (error) {
-            // Skip keys that fail
           }
         }
 
-        // Wait 100ms before updating virtual keyboard
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        // Clear existing colors to ensure clean state
         Object.keys(customColors).forEach(key => delete customColors[Number(key)]);
         
-        // Assign each color individually to trigger Vue's reactivity properly
+        // Assign individually to trigger Vue reactivity
         Object.keys(tempColors).forEach(key => {
           customColors[Number(key)] = tempColors[Number(key)];
         });
         
-        // Force Vue to process reactive updates before rendering
         await nextTick();
       } catch (error) {
         console.error('Failed to load custom colors:', error);
@@ -587,10 +581,9 @@ export default defineComponent({
         const { open, dynamicColorId, ...filteredParams } = currentState;
         filteredParams.mode = attemptedMode;
 
-        // Update type based on mode: Static (0) = 'static', Effects (1-20) = 'dynamic', Custom (21) = 'custom'
+        // Mode 0='static', 1-20='dynamic', 21='custom'
         if (attemptedMode === 0) {
           filteredParams.type = 'static';
-          // Sync color picker to actual static color when switching to Static mode
           if (currentState.colors && currentState.colors.length > 0) {
             staticColor.value = currentState.colors[0];
           }
@@ -605,18 +598,14 @@ export default defineComponent({
           throw new Error('setLighting() failed: ' + result.message);
         }
 
-        // Update confirmed mode AFTER successful SDK call
         confirmedMode.value = attemptedMode;
 
-        // If switching to Custom mode, load all custom colors from keyboard
         if (attemptedMode === 21) {
-          // Wait 250ms for device to fully transition to Custom mode before loading colors
-          // This prevents loading stale/empty color data during mode transition
+          // Wait for device mode transition to prevent stale color reads
           await new Promise(resolve => setTimeout(resolve, 250));
           await loadCustomColorsFromKeyboard();
         }
       } catch (error) {
-        // Rollback dropdown to last confirmed state
         selectedMode.value = previousConfirmedMode;
         console.error('Failed to change lighting mode:', error);
       }

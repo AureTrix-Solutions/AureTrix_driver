@@ -83,6 +83,14 @@ Preferred communication style: Simple, everyday language.
 - Added best practice toggle implementation example
 - Updated docs/pages/Lighting.md with matching warnings in toggle function and dependencies sections
 
+**November 20, 2025 - Custom Color Loading Optimization**
+- Modified loadCustomColorsFromKeyboard() to use batched updates for smooth virtual keyboard rendering
+- Colors now collected in temporary object first instead of updating reactive customColors immediately
+- Added 100ms delay after all colors retrieved to prevent flicker during mode switch or page load
+- Batch-assign all colors at once using Object.assign() for single smooth virtual keyboard update
+- Eliminates flickering/multiple updates when loading 80-100+ key colors in Custom mode
+- Architect-reviewed and verified no regressions, maintains Vue reactivity
+
 ## System Architecture
 
 ### Frontend Architecture

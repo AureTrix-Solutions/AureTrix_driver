@@ -556,6 +556,9 @@ export default defineComponent({
         
         // Force Vue to process reactive updates before rendering
         await nextTick();
+        
+        // Additional 50ms delay to ensure rendering completes
+        await new Promise(resolve => setTimeout(resolve, 50));
       } catch (error) {
         console.error('Failed to load custom colors:', error);
       }

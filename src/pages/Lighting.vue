@@ -528,14 +528,16 @@ export default defineComponent({
 
       try {
         const allKeys = layout.value.flat();
+        const tempColors: Record<number, { R: number; G: number; B: number }> = {};
 
+        // Collect all colors in temporary object first
         for (const key of allKeys) {
           try {
             const keyValue = key.physicalKeyValue || key.keyValue;
             const result = await KeyboardService.getCustomLighting(keyValue);
 
             if (!(result instanceof Error) && result && result.R !== undefined) {
-              customColors[keyValue] = {
+              tempColors[keyValue] = {
                 R: result.R,
                 G: result.G,
                 B: result.B,
@@ -545,6 +547,12 @@ export default defineComponent({
             // Skip keys that fail
           }
         }
+
+        // Wait 100ms before updating virtual keyboard
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Batch-assign all colors at once for smooth virtual keyboard update
+        Object.assign(customColors, tempColors);
       } catch (error) {
         console.error('Failed to load custom colors:', error);
       }

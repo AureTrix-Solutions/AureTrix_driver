@@ -551,14 +551,16 @@ export default defineComponent({
         // Wait 100ms before updating virtual keyboard
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        // Batch-assign all colors at once for smooth virtual keyboard update
-        Object.assign(customColors, tempColors);
+        // Clear existing colors to ensure clean state
+        Object.keys(customColors).forEach(key => delete customColors[Number(key)]);
+        
+        // Assign each color individually to trigger Vue's reactivity properly
+        Object.keys(tempColors).forEach(key => {
+          customColors[Number(key)] = tempColors[Number(key)];
+        });
         
         // Force Vue to process reactive updates before rendering
         await nextTick();
-        
-        // Additional 50ms delay to ensure rendering completes
-        await new Promise(resolve => setTimeout(resolve, 50));
       } catch (error) {
         console.error('Failed to load custom colors:', error);
       }

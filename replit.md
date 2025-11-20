@@ -83,15 +83,15 @@ Preferred communication style: Simple, everyday language.
 - Added best practice toggle implementation example
 - Updated docs/pages/Lighting.md with matching warnings in toggle function and dependencies sections
 
-**November 20, 2025 - Custom Color Loading Optimization**
-- Modified loadCustomColorsFromKeyboard() to use batched updates for smooth virtual keyboard rendering
-- Colors now collected in temporary object first instead of updating reactive customColors immediately
-- Added 100ms delay after all colors retrieved to prevent flicker during mode switch or page load
-- Batch-assign all colors at once using Object.assign() for single smooth virtual keyboard update
-- Added nextTick() after batch assignment to ensure Vue processes reactive updates before rendering
-- Added additional 50ms delay after nextTick() to ensure rendering completes without glitches
-- Eliminates flickering/multiple updates and occasional rendering glitches when loading 80-100+ key colors
-- Architect-reviewed and verified no regressions, maintains Vue reactivity
+**November 20, 2025 - Custom Color Loading Reactivity Fix**
+- Fixed intermittent rendering glitch where top row keys would show colors then disappear on initial load
+- Root cause: Object.assign() on reactive object didn't trigger Vue's reactivity system for all properties
+- Solution: Clear customColors object first, then assign each color individually to trigger proper reactivity
+- Modified loadCustomColorsFromKeyboard() to collect colors in temp buffer, clear reactive object, then assign individually
+- Eliminated need for extra 50ms delay after nextTick() since proper reactivity ensures correct rendering
+- Virtual keyboard now consistently displays all custom colors on initial page load and mode switches
+- Colors collected in temp buffer → 100ms delay → clear reactive object → individual assignment → nextTick()
+- Resolves issue where mode switching or page refresh would fix missing colors (reactivity wasn't tracking all keys)
 
 ## System Architecture
 

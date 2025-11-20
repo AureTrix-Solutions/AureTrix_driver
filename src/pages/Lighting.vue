@@ -139,7 +139,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed, watch, reactive } from 'vue';
+import { defineComponent, ref, onMounted, computed, watch, reactive, nextTick } from 'vue';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
 import { useBatchProcessing } from '@/composables/useBatchProcessing';
 import { keyMap } from '@utils/keyMap';
@@ -553,6 +553,9 @@ export default defineComponent({
 
         // Batch-assign all colors at once for smooth virtual keyboard update
         Object.assign(customColors, tempColors);
+        
+        // Force Vue to process reactive updates before rendering
+        await nextTick();
       } catch (error) {
         console.error('Failed to load custom colors:', error);
       }

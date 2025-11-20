@@ -93,6 +93,15 @@ Preferred communication style: Simple, everyday language.
 - Colors collected in temp buffer → 100ms delay → clear reactive object → individual assignment → nextTick()
 - Resolves issue where mode switching or page refresh would fix missing colors (reactivity wasn't tracking all keys)
 
+**November 20, 2025 - Mode Transition Delay Fix**
+- Fixed random top-row keys losing colors when switching TO Custom mode from another mode
+- Root cause: Device still transitioning to mode 21, so getCustomLighting() returns stale/empty data for some keys
+- Solution: Added 250ms delay after setLighting() before calling loadCustomColorsFromKeyboard() in mode switch flow
+- Gives device time to fully complete mode transition before reading custom color data
+- Page refresh worked because device was already in mode 21 with no transition delay
+- Prevents clearing customColors with incomplete data during device mode transition
+- Architect-reviewed and identified timing issue vs reactivity as root cause
+
 ## System Architecture
 
 ### Frontend Architecture

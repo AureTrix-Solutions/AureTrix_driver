@@ -610,6 +610,9 @@ export default defineComponent({
 
         // If switching to Custom mode, load all custom colors from keyboard
         if (attemptedMode === 21) {
+          // Wait 250ms for device to fully transition to Custom mode before loading colors
+          // This prevents loading stale/empty color data during mode transition
+          await new Promise(resolve => setTimeout(resolve, 250));
           await loadCustomColorsFromKeyboard();
         }
       } catch (error) {

@@ -8,6 +8,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 21, 2025 - Fixed Custom RGB Import with Mode Switching**
+- **Import Bug Discovered**: `setCustomLighting()` only works when keyboard is in custom mode (21), similar to `getCustomLighting()` read requirement
+- **Solution**: Refactored `applyImportedConfig()` with linear flow: custom RGB application (if exists) → lighting zone restoration (always)
+- **Custom Mode for Write**: When custom RGB colors exist in config, temporarily switch to mode 21 before applying colors via `setCustomLighting()`
+- **Batch Processing**: Apply colors in 80-key batches with 100ms delays, then call `saveCustomLighting()` to persist to hardware
+- **Mode Restoration**: After RGB write, restore target lighting mode from config (static/dynamic/custom) to all zones (main/logo/special)
+- **Regression Fix**: Created `applyLightingZones()` helper that ALWAYS runs to ensure profiles without custom RGB still get their lighting applied
+- **Import Flow**: Check for custom RGB → switch to mode 21 (if needed) → apply colors → save → restore target mode → apply zone settings
+- **Expected Behavior**: Custom RGB palette persists in hardware even after mode switches away from custom to static/dynamic effects
+- **Test Coverage**: Handles imports both WITH and WITHOUT custom RGB data correctly
+
 **November 21, 2025 - Fixed Custom RGB Export with Smart Mode Switching**
 - **SDK Quirk Discovery**: `getCustomLighting()` returns R:0 G:0 B:0 when keyboard is NOT in custom mode (21), causing incorrect RGB exports
 - **Solution**: Created `withCustomModeForExport()` guard function that temporarily switches to custom mode during Phase D RGB collection

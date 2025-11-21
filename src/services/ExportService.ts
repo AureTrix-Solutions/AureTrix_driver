@@ -1,107 +1,6 @@
 import KeyboardService from './KeyboardService';
 import { useBatchProcessing } from '../composables/useBatchProcessing';
-
-interface LightConfig {
-  open: boolean;
-  mode: number;
-  staticColors: string[];
-  selectStaticColor: number;
-  luminance: number;
-  speed: number;
-  sleepTime: number;
-  direction: boolean;
-  dynamic: number;
-}
-
-interface PerformanceConfig {
-  isGlobalTriggering: boolean;
-  globalTriggeringValue: number;
-  isRt: boolean;
-  isSingle: boolean;
-  singleTriggeringValue: number;
-  rtPressValue: number;
-  rtReleaseValue: number;
-  axisID: number;
-  deadBandPressValue: number;
-  deadBandReleaseValue: number;
-  advancedKeyMode: number;
-}
-
-interface AdvancedKeyConfig {
-  advancedType?: string;
-  value?: number;
-  dks?: any;
-  mpt?: any;
-  mt?: any;
-  tgl?: any;
-  end?: any;
-  socd?: any;
-  macro?: any;
-}
-
-interface CustomKeyConfig {
-  fn0: { keyValue: number; bindKeyValue: number } | null;
-  fn1: { keyValue: number; bindKeyValue: number } | null;
-  fn2: { keyValue: number; bindKeyValue: number } | null;
-  fn3: { keyValue: number; bindKeyValue: number } | null;
-}
-
-interface KeyboardLightConfig {
-  custom: {
-    R: number;
-    G: number;
-    B: number;
-    key: number;
-  };
-}
-
-interface Keyboards {
-  col: number;
-  row: number;
-  keyValue: number;
-  performance: PerformanceConfig;
-  advancedKeys: AdvancedKeyConfig;
-  customKeys: CustomKeyConfig;
-  light: KeyboardLightConfig;
-}
-
-interface MacroEntry {
-  date: string;
-  id: number;
-  name: string;
-  step: Array<{
-    id: number;
-    keyValue: number;
-    status: number;
-    delay: number;
-  }>;
-}
-
-interface KeyboardConfig {
-  light: {
-    main: LightConfig;
-    logo: LightConfig;
-    other: LightConfig;
-  };
-  keyboards: Array<Keyboards>;
-  macro: {
-    list: Array<MacroEntry>;
-    v2list: any[];
-  };
-  system: {
-    rateOfReturn: number;
-    topDeadBandSwitch: number;
-    productId: number;
-    vendorId: number;
-    keyboardName: string;
-    usage: number;
-    usagePage: number;
-  };
-  other?: any;
-  version?: string;
-  firmwareVersion?: string;
-  protocolVersion?: string;
-}
+import type { KeyboardConfig, Keyboards } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
 
 class ExportService {
   private processBatches = useBatchProcessing().processBatches;
@@ -181,7 +80,7 @@ class ExportService {
     }
   }
 
-  private convertLightingToConfig(lighting: any): LightConfig {
+  private convertLightingToConfig(lighting: any): KeyboardConfig['light']['main'] {
     return {
       open: lighting.open ?? true,
       mode: lighting.mode ?? 0,
@@ -195,7 +94,7 @@ class ExportService {
     };
   }
 
-  private getDefaultLightConfig(): LightConfig {
+  private getDefaultLightConfig(): KeyboardConfig['light']['main'] {
     return {
       open: true,
       mode: 0,
@@ -244,27 +143,36 @@ class ExportService {
       });
 
       console.log('Phase A: Gathering layout bindings (Fn0-Fn3)...');
+      const phaseAStart = performance.now();
       await this.gatherCustomKeyBindings(allKeys, keyboardsData);
+      console.log(`Phase A completed in ${(performance.now() - phaseAStart).toFixed(2)}ms`);
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      console.log('Phase B: Gathering performance & travel data...');
-      await this.processBatches(allKeys, async (keyValue) => {
-        await this.gatherPerformanceData(keyValue, keyboardsData);
-      }, 16, 200);
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // TEMPORARILY DISABLED FOR DEBUGGING - Testing Phase A in isolation
+      // console.log('Phase B: Gathering performance & travel data...');
+      // const phaseBStart = performance.now();
+      // await this.processBatches(allKeys, async (keyValue) => {
+      //   await this.gatherPerformanceData(keyValue, keyboardsData);
+      // }, 16, 200);
+      // console.log(`Phase B completed in ${(performance.now() - phaseBStart).toFixed(2)}ms`);
+      // await new Promise(resolve => setTimeout(resolve, 150));
 
-      console.log('Phase C: Gathering advanced key data...');
-      await this.processBatches(allKeys, async (keyValue) => {
-        await this.gatherAdvancedKeyData(keyValue, keyboardsData);
-      }, 16, 250);
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // console.log('Phase C: Gathering advanced key data...');
+      // const phaseCStart = performance.now();
+      // await this.processBatches(allKeys, async (keyValue) => {
+      //   await this.gatherAdvancedKeyData(keyValue, keyboardsData);
+      // }, 16, 250);
+      // console.log(`Phase C completed in ${(performance.now() - phaseCStart).toFixed(2)}ms`);
+      // await new Promise(resolve => setTimeout(resolve, 150));
 
-      console.log('Phase D: Gathering lighting data...');
-      await this.processBatches(allKeys, async (keyValue) => {
-        await this.gatherLightingData(keyValue, keyboardsData);
-      }, 16, 200);
+      // console.log('Phase D: Gathering lighting data...');
+      // const phaseDStart = performance.now();
+      // await this.processBatches(allKeys, async (keyValue) => {
+      //   await this.gatherLightingData(keyValue, keyboardsData);
+      // }, 16, 200);
+      // console.log(`Phase D completed in ${(performance.now() - phaseDStart).toFixed(2)}ms`);
 
-      console.log('All phases complete');
+      console.log('All phases complete (B, C, D temporarily disabled for debugging)');
       return Array.from(keyboardsData.values()) as Keyboards[];
     } catch (error) {
       console.error('Error gathering keyboards config:', error);
@@ -275,16 +183,20 @@ class ExportService {
   private async gatherCustomKeyBindings(keys: number[], dataMap: Map<number, Partial<Keyboards>>): Promise<void> {
     try {
       const fnLayers = [0, 1, 2, 3];
-      const batchSize = 16;
+      const batchSize = 16; // Try different values: 1, 8, 16, 32, 40
       
       for (const layer of fnLayers) {
-        console.log(`  Gathering Fn${layer} bindings...`);
+        console.log(`  Gathering Fn${layer} bindings (batchSize=${batchSize})...`);
+        const layerStart = performance.now();
         
         for (let i = 0; i < keys.length; i += batchSize) {
           const keyBatch = keys.slice(i, i + batchSize);
           const params = keyBatch.map(key => ({ key, layout: layer }));
           
+          const callStart = performance.now();
           const layoutInfo = await this.retryWithBackoff(() => KeyboardService.getLayoutKeyInfo(params));
+          const callDuration = performance.now() - callStart;
+          console.log(`    Batch ${Math.floor(i / batchSize) + 1}: ${keyBatch.length} keys, ${callDuration.toFixed(2)}ms`);
           
           if (!(layoutInfo instanceof Error) && Array.isArray(layoutInfo)) {
             layoutInfo.forEach((keyInfo, index) => {
@@ -303,6 +215,7 @@ class ExportService {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
         
+        console.log(`  Fn${layer} completed in ${(performance.now() - layerStart).toFixed(2)}ms`);
         await new Promise(resolve => setTimeout(resolve, 150));
       }
     } catch (error) {
@@ -381,7 +294,7 @@ class ExportService {
 
       const end = await this.retryWithBackoff(() => KeyboardService.getEND(keyValue));
 
-      const advancedKeys: AdvancedKeyConfig = {};
+      const advancedKeys: Keyboards['advancedKeys'] = {};
       let activeType: string | undefined;
       let activeValue: number | undefined;
 
@@ -461,7 +374,7 @@ class ExportService {
     }
   }
 
-  private getDefaultPerformance(): PerformanceConfig {
+  private getDefaultPerformance(): Keyboards['performance'] {
     return {
       isGlobalTriggering: true,
       globalTriggeringValue: 0,
@@ -477,7 +390,7 @@ class ExportService {
     };
   }
 
-  async buildMacroLibrary(): Promise<{ list: MacroEntry[]; v2list: any[] }> {
+  async buildMacroLibrary(): Promise<KeyboardConfig['macro']> {
     try {
       const layout = await KeyboardService.defKey();
       if (layout instanceof Error) {
@@ -493,7 +406,7 @@ class ExportService {
         });
       });
 
-      const macros: MacroEntry[] = [];
+      const macros: KeyboardConfig['macro']['list'] = [];
       let macroId = 1;
 
       await this.processBatches(allKeys, async (keyValue) => {

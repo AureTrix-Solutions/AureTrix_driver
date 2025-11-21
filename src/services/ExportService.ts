@@ -836,6 +836,23 @@ class ExportService {
 
   async importProfile(file: File): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log('Switching to custom mode before import...');
+      const currentState = await KeyboardService.getLighting();
+      
+      if (!(currentState instanceof Error)) {
+        const { open, dynamicColorId, ...filteredParams } = currentState;
+        filteredParams.mode = 21;
+        filteredParams.type = 'custom';
+        
+        const switchResult = await KeyboardService.setLighting(filteredParams);
+        if (switchResult instanceof Error) {
+          console.error('Failed to switch to custom mode:', switchResult.message);
+        } else {
+          console.log('Switched to custom mode 21');
+          await new Promise(resolve => setTimeout(resolve, 250));
+        }
+      }
+      
       console.log('Importing profile from file...');
       const result = await KeyboardService.importConfig(file);
       

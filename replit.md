@@ -11,12 +11,13 @@ Preferred communication style: Simple, everyday language.
 **November 21, 2025 - Fixed Custom RGB Persistence with Simple Save Call**
 - **Simple Solution**: SDK `importConfig()` loads all data including custom RGB into keyboard memory
 - **Import Flow**: 
-  1. SDK `importConfig()` imports full profile (includes mode="custom" and all custom RGB data)
-  2. Wait 1 second for profile to apply to hardware
-  3. Call `saveCustomLighting()` once to commit custom RGB to flash memory
-- **Key Insight**: SDK import handles everything; we just need to save the custom RGB data to flash
-- **No Manual Loops**: No need for GET/SET loops - SDK already loads the data
-- **No Manual Mode Switch**: Exported profile already contains mode="custom"
+  1. Switch keyboard to custom mode 21 before import (removes `open` and `dynamicColorId` from current state)
+  2. Wait 250ms for mode transition
+  3. SDK `importConfig()` imports full profile (includes mode="custom" and all custom RGB data)
+  4. Wait 1 second for profile to apply to hardware
+  5. Call `saveCustomLighting()` once to commit custom RGB to flash memory
+- **Key Insight**: Keyboard must be in custom mode before SDK import for RGB data to load correctly; then just save to flash
+- **No Manual Loops**: No need for GET/SET loops - SDK already loads the data when in custom mode
 - **Export Flow**: Switch to custom mode → capture all data (shows mode="custom", dynamic=21) → restore original mode
 - **Result**: Custom RGB colors persist through browser refreshes and lighting mode switches
 

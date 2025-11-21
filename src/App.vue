@@ -48,6 +48,9 @@
         <button class="export-btn" @click="exportProfile" :disabled="!connectionStore.isConnected">
           Export Profile
         </button>
+        <button class="debug-export-btn" @click="exportProfileDebug" :disabled="!connectionStore.isConnected">
+          Debug Export (JSON)
+        </button>
         <button class="import-btn" @click="importProfile" :disabled="!connectionStore.isConnected">
           Import Profile
         </button>
@@ -218,6 +221,22 @@ export default defineComponent({
         }
       } catch (error) {
         console.error('Export profile error:', error);
+      }
+    },
+    async exportProfileDebug() {
+      try {
+        const activeProfile = this.profileStore.profiles.find(p => p.id === this.profileStore.activeProfileId);
+        const profileName = activeProfile ? activeProfile.name : 'keyboard-config';
+        const filename = `${profileName}-debug`;
+        
+        const exportResult = await ExportService.exportProfileDebug(filename);
+        if (!exportResult.success) {
+          console.error('Failed to export debug profile:', exportResult.error);
+        } else {
+          console.log(`Debug profile "${profileName}" exported successfully as ${filename}.json`);
+        }
+      } catch (error) {
+        console.error('Export debug profile error:', error);
       }
     },
     async importProfile() {
@@ -497,6 +516,7 @@ export default defineComponent({
 }
 
 .export-btn,
+.debug-export-btn,
 .import-btn {
   width: 100%;
   font-family: v.$font-style;

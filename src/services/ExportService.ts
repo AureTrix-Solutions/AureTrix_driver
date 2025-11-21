@@ -4,6 +4,7 @@ import type { KeyboardConfig, Keyboards } from '@sparklinkplayjoy/sdk-keyboard/d
 
 class ExportService {
   private processBatches = useBatchProcessing().processBatches;
+  private globalTravelCache: number | null = null;
 
   private async retryWithBackoff<T>(
     fn: () => Promise<T>,
@@ -192,15 +193,15 @@ class ExportService {
           console.log(`    Batch ${Math.floor(i / batchSize) + 1}: ${keyBatch.length} keys, ${callDuration.toFixed(2)}ms`);
           
           if (!(layoutInfo instanceof Error) && Array.isArray(layoutInfo)) {
-            layoutInfo.forEach((keyInfo, index) => {
+            layoutInfo.forEach((keyInfo: any, index) => {
               const keyValue = params[index].key;
               const keyData = dataMap.get(keyValue);
               if (keyData) {
                 const fnKey = `fn${layer}` as 'fn0' | 'fn1' | 'fn2' | 'fn3';
                 
-                // Only create binding object if we have valid numeric values
-                const bindValue = Number(keyInfo?.keyValue);
-                if (!isNaN(bindValue) && typeof keyInfo?.keyValue !== 'undefined') {
+                // FIX: SDK returns { key, value }, not IDefKeyInfo
+                const bindValue = Number(keyInfo?.value);
+                if (!isNaN(bindValue) && typeof keyInfo?.value !== 'undefined') {
                   keyData.customKeys![fnKey] = {
                     keyValue: keyValue,
                     bindKeyValue: bindValue
@@ -253,6 +254,28 @@ class ExportService {
 
       if (!(performanceMode instanceof Error)) {
         keyData.performance!.advancedKeyMode = performanceMode.advancedKeyMode ?? 0;
+        
+        // Parse touchMode to set boolean flags
+        const touchMode = performanceMode.touchMode;
+        keyData.performance!.isRt = touchMode === 'rt';
+        keyData.performance!.isGlobalTriggering = touchMode === 'global';
+        keyData.performance!.isSingle = touchMode === 'single';
+        
+        // Collect travel values based on active mode
+        if (touchMode === 'global') {
+          if (this.globalTravelCache === null) {
+            const globalTravel = await this.retryWithBackoff(() => KeyboardService.getGlobalTouchTravel());
+            if (!(globalTravel instanceof Error)) {
+              this.globalTravelCache = globalTravel.globalTouchTravel ?? 0;
+            }
+          }
+          keyData.performance!.globalTriggeringValue = this.globalTravelCache ?? 0;
+        } else if (touchMode === 'single') {
+          const singleTravel = await this.retryWithBackoff(() => KeyboardService.getSingleTravel(keyValue));
+          if (!(singleTravel instanceof Error)) {
+            keyData.performance!.singleTriggeringValue = singleTravel ?? 0;
+          }
+        }
       }
 
       if (!(rtTravel instanceof Error)) {
@@ -442,6 +465,9 @@ class ExportService {
   async gatherKeyboardSnapshot(): Promise<KeyboardConfig> {
     console.log('Starting keyboard snapshot collection...');
     const snapshotStart = performance.now();
+    
+    // Reset cache for fresh export
+    this.globalTravelCache = null;
 
     console.log('Step 1: Gathering system info...');
     const system = await this.gatherDeviceInfo();
@@ -480,6 +506,32 @@ class ExportService {
       return { success: true };
     } catch (error) {
       console.error('Failed to export profile:', error);
+      return { success: false, error: (error as Error).message };
+    }
+  }
+
+  async exportProfileDebug(filename: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('Gathering keyboard configuration for debug export...');
+      const config = await this.gatherKeyboardSnapshot();
+      
+      console.log('Exporting raw JSON configuration...');
+      const jsonString = JSON.stringify(config, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${filename}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      console.log(`Debug profile exported successfully as ${filename}.json`);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to export debug profile:', error);
       return { success: false, error: (error as Error).message };
     }
   }

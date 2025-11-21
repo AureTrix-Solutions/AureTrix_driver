@@ -106,6 +106,25 @@ interface KeyboardConfig {
 class ExportService {
   private processBatches = useBatchProcessing().processBatches;
 
+  private async retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    maxRetries: number = 2,
+    backoffMs: number = 200
+  ): Promise<T> {
+    let lastError: any;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, backoffMs * (attempt + 1)));
+        }
+      }
+    }
+    throw lastError;
+  }
+
   async gatherDeviceInfo(): Promise<Partial<KeyboardConfig['system']>> {
     try {
       const baseInfo = await KeyboardService.getBaseInfo();
@@ -207,7 +226,7 @@ class ExportService {
         });
       });
 
-      console.log(`Gathering config for ${allKeys.length} keys...`);
+      console.log(`Gathering config for ${allKeys.length} keys in phases...`);
 
       const keyboardsData: Map<number, Partial<Keyboards>> = new Map();
 
@@ -224,12 +243,28 @@ class ExportService {
         });
       });
 
+      console.log('Phase A: Gathering layout bindings (Fn0-Fn3)...');
       await this.gatherCustomKeyBindings(allKeys, keyboardsData);
+      await new Promise(resolve => setTimeout(resolve, 150));
 
+      console.log('Phase B: Gathering performance & travel data...');
       await this.processBatches(allKeys, async (keyValue) => {
-        await this.gatherKeyData(keyValue, keyboardsData);
-      }, 40);
+        await this.gatherPerformanceData(keyValue, keyboardsData);
+      }, 16, 200);
+      await new Promise(resolve => setTimeout(resolve, 150));
 
+      console.log('Phase C: Gathering advanced key data...');
+      await this.processBatches(allKeys, async (keyValue) => {
+        await this.gatherAdvancedKeyData(keyValue, keyboardsData);
+      }, 16, 250);
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      console.log('Phase D: Gathering lighting data...');
+      await this.processBatches(allKeys, async (keyValue) => {
+        await this.gatherLightingData(keyValue, keyboardsData);
+      }, 16, 200);
+
+      console.log('All phases complete');
       return Array.from(keyboardsData.values()) as Keyboards[];
     } catch (error) {
       console.error('Error gathering keyboards config:', error);
@@ -242,13 +277,13 @@ class ExportService {
       const fnLayers = [0, 1, 2, 3];
       for (const layer of fnLayers) {
         const params = keys.map(key => ({ key, layout: layer }));
-        const layoutInfo = await KeyboardService.getLayoutKeyInfo(params);
+        const layoutInfo = await this.retryWithBackoff(() => KeyboardService.getLayoutKeyInfo(params));
         
         if (!(layoutInfo instanceof Error) && Array.isArray(layoutInfo)) {
           layoutInfo.forEach((keyInfo, index) => {
             const keyValue = params[index].key;
             const keyData = dataMap.get(keyValue);
-            if (keyData && keyInfo.keyValue !== keyValue) {
+            if (keyData) {
               const fnKey = `fn${layer}` as 'fn0' | 'fn1' | 'fn2' | 'fn3';
               keyData.customKeys![fnKey] = {
                 keyValue: keyValue,
@@ -258,7 +293,7 @@ class ExportService {
           });
         }
         
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 150));
       }
     } catch (error) {
       console.error('Error gathering custom key bindings:', error);
@@ -276,24 +311,24 @@ class ExportService {
     return null;
   }
 
-  private async gatherKeyData(keyValue: number, dataMap: Map<number, Partial<Keyboards>>): Promise<void> {
+  private async gatherPerformanceData(keyValue: number, dataMap: Map<number, Partial<Keyboards>>): Promise<void> {
     const keyData = dataMap.get(keyValue);
     if (!keyData) return;
 
     try {
-      const [performanceMode, rtTravel, dpDr, axis, customLight] = await Promise.all([
-        KeyboardService.getPerformanceMode(keyValue),
-        KeyboardService.getRtTravel(keyValue),
-        KeyboardService.getDpDr(keyValue),
-        KeyboardService.getAxis(keyValue),
-        KeyboardService.getCustomLighting(keyValue),
-      ]);
+      const performanceMode = await this.retryWithBackoff(() => KeyboardService.getPerformanceMode(keyValue));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const rtTravel = await this.retryWithBackoff(() => KeyboardService.getRtTravel(keyValue));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const dpDr = await this.retryWithBackoff(() => KeyboardService.getDpDr(keyValue));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const axis = await this.retryWithBackoff(() => KeyboardService.getAxis(keyValue));
 
       if (!(performanceMode instanceof Error)) {
-        keyData.performance = {
-          ...keyData.performance!,
-          advancedKeyMode: performanceMode.advancedKeyMode ?? 0,
-        };
+        keyData.performance!.advancedKeyMode = performanceMode.advancedKeyMode ?? 0;
       }
 
       if (!(rtTravel instanceof Error)) {
@@ -309,6 +344,97 @@ class ExportService {
       if (!(axis instanceof Error)) {
         keyData.performance!.axisID = axis.axis ?? 0;
       }
+    } catch (error) {
+      console.error(`Error gathering performance data for key ${keyValue}:`, error);
+    }
+  }
+
+  private async gatherAdvancedKeyData(keyValue: number, dataMap: Map<number, Partial<Keyboards>>): Promise<void> {
+    const keyData = dataMap.get(keyValue);
+    if (!keyData) return;
+
+    try {
+      const dks = await this.retryWithBackoff(() => KeyboardService.getDks(keyValue));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const mpt = await this.retryWithBackoff(() => KeyboardService.getMpt(keyValue));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const socd = await this.retryWithBackoff(() => KeyboardService.getSocd(keyValue));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const mt = await this.retryWithBackoff(() => KeyboardService.getMT(keyValue));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const tgl = await this.retryWithBackoff(() => KeyboardService.getTGL(keyValue));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const end = await this.retryWithBackoff(() => KeyboardService.getEND(keyValue));
+
+      const advancedKeys: AdvancedKeyConfig = {};
+      let activeType: string | undefined;
+      let activeValue: number | undefined;
+
+      if (!(dks instanceof Error) && dks) {
+        advancedKeys.dks = dks;
+        if (dks.enable) {
+          activeType = 'dks';
+          activeValue = dks.keyValue;
+        }
+      }
+
+      if (!(mpt instanceof Error) && mpt) {
+        advancedKeys.mpt = mpt;
+        if (mpt.enable && !activeType) {
+          activeType = 'mpt';
+          activeValue = mpt.triggeringPoint;
+        }
+      }
+
+      if (!(socd instanceof Error) && socd) {
+        advancedKeys.socd = socd;
+        if (socd.enable && !activeType) {
+          activeType = 'socd';
+          activeValue = socd.mode;
+        }
+      }
+
+      if (!(mt instanceof Error) && mt) {
+        advancedKeys.mt = mt;
+        if (mt.enable && !activeType) {
+          activeType = 'mt';
+          activeValue = mt.mode;
+        }
+      }
+
+      if (!(tgl instanceof Error) && tgl) {
+        advancedKeys.tgl = tgl;
+        if (tgl.enable && !activeType) {
+          activeType = 'tgl';
+        }
+      }
+
+      if (!(end instanceof Error) && end) {
+        advancedKeys.end = end;
+      }
+
+      if (activeType) {
+        advancedKeys.advancedType = activeType;
+        advancedKeys.value = activeValue;
+      }
+
+      keyData.advancedKeys = advancedKeys;
+    } catch (error) {
+      console.error(`Error gathering advanced key data for key ${keyValue}:`, error);
+    }
+  }
+
+  private async gatherLightingData(keyValue: number, dataMap: Map<number, Partial<Keyboards>>): Promise<void> {
+    const keyData = dataMap.get(keyValue);
+    if (!keyData) return;
+
+    try {
+      const customLight = await this.retryWithBackoff(() => KeyboardService.getCustomLighting(keyValue));
 
       if (!(customLight instanceof Error) && customLight.r !== undefined) {
         keyData.light = {
@@ -320,26 +446,8 @@ class ExportService {
           },
         };
       }
-
-      const [dks, mpt, socd, mt, tgl, end] = await Promise.all([
-        KeyboardService.getDks(keyValue),
-        KeyboardService.getMpt(keyValue),
-        KeyboardService.getSocd(keyValue),
-        KeyboardService.getMT(keyValue),
-        KeyboardService.getTGL(keyValue),
-        KeyboardService.getEND(keyValue),
-      ]);
-
-      keyData.advancedKeys = {
-        dks: !(dks instanceof Error) ? dks : undefined,
-        mpt: !(mpt instanceof Error) ? mpt : undefined,
-        socd: !(socd instanceof Error) ? socd : undefined,
-        mt: !(mt instanceof Error) ? mt : undefined,
-        tgl: !(tgl instanceof Error) ? tgl : undefined,
-        end: !(end instanceof Error) ? end : undefined,
-      };
     } catch (error) {
-      console.error(`Error gathering data for key ${keyValue}:`, error);
+      console.error(`Error gathering lighting data for key ${keyValue}:`, error);
     }
   }
 

@@ -5,7 +5,8 @@ export const useBatchProcessing = () => {
   const processBatches = async <T>(
     keys: { physicalKeyValue: number; keyValue: number }[] | number[],
     updateFn: (physicalKey: number) => Promise<T>,
-    batchSize: number = 80
+    batchSize: number = 80,
+    delayMs: number = 100
   ) => {
     // Fixed condition: Check if first item is object with physicalKeyValue (not Array.isArray)
     const isObjectArray = keys.length > 0 && typeof keys[0] === 'object' && 'physicalKeyValue' in keys[0];
@@ -18,7 +19,7 @@ export const useBatchProcessing = () => {
     }
     for (const batch of batches) {
       await Promise.all(batch.map(updateFn));
-      await new Promise(resolve => setTimeout(resolve, 100)); // Throttle
+      await new Promise(resolve => setTimeout(resolve, delayMs));
       console.log(`[BATCH] Processed batch of ${batch.length} keys`);
     }
   };

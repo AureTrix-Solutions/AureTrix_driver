@@ -263,7 +263,9 @@ export default defineComponent({
           }
           
           if (importResult.success) {
-            console.log('Debug profile imported and applied successfully - reloading page...');
+            console.log('Debug profile imported and applied successfully - waiting for hardware save...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            console.log('Reloading page...');
             window.location.reload();
           } else {
             console.error('Debug import failed:', importResult.error || 'Unknown error');
@@ -296,7 +298,9 @@ export default defineComponent({
           }
           
           if (importResult.success) {
-            console.log('Profile imported successfully');
+            console.log('Profile imported successfully - waiting for hardware save...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            console.log('Reloading page...');
             window.location.reload();
           } else {
             console.error('Import failed:', importResult.error || 'Unknown error');

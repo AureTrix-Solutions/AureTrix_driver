@@ -161,9 +161,13 @@ class ExportService {
 
       console.log('Phase D: Gathering per-key lighting data...');
       const phaseDStart = performance.now();
-      await this.processBatches(allKeys, async (keyValue) => {
-        await this.gatherLightingData(keyValue, keyboardsData);
-      }, 80, 100);
+      
+      await this.withCustomModeForExport(async () => {
+        await this.processBatches(allKeys, async (keyValue) => {
+          await this.gatherLightingData(keyValue, keyboardsData);
+        }, 80, 100);
+      });
+      
       console.log(`Phase D completed in ${(performance.now() - phaseDStart).toFixed(2)}ms`);
 
       console.log('All phases complete');
@@ -377,6 +381,118 @@ class ExportService {
       keyData.advancedKeys = advancedKeys;
     } catch (error) {
       console.error(`Error gathering advanced key data for key ${keyValue}:`, error);
+    }
+  }
+
+  private async withCustomModeForExport<T>(callback: () => Promise<T>): Promise<T> {
+    interface LightingSnapshot {
+      main: any;
+      logo: any;
+      other: any;
+    }
+
+    let snapshot: LightingSnapshot | null = null;
+    let wasAlreadyCustom = false;
+
+    try {
+      console.log('Preparing to capture custom RGB data...');
+      
+      const mainLighting = await KeyboardService.getLighting();
+      const logoLighting = await KeyboardService.getLogoLighting();
+      const otherLighting = await KeyboardService.getSpecialLighting();
+
+      if (mainLighting instanceof Error) {
+        throw new Error('Failed to get current main lighting state');
+      }
+
+      snapshot = {
+        main: mainLighting,
+        logo: logoLighting instanceof Error ? null : logoLighting,
+        other: otherLighting instanceof Error ? null : otherLighting,
+      };
+
+      wasAlreadyCustom = mainLighting.mode === 21 && (mainLighting.open === true || mainLighting.open === 1);
+
+      if (wasAlreadyCustom) {
+        console.log('Already in custom mode with lighting on, proceeding with export...');
+      } else {
+        console.log(`Temporarily switching from mode ${mainLighting.mode} to custom mode (21)...`);
+        
+        const { dynamicColorId, ...filteredParams } = mainLighting;
+        filteredParams.mode = 21;
+        filteredParams.type = 'custom';
+        filteredParams.open = true;
+
+        const switchResult = await KeyboardService.setLighting(filteredParams);
+        if (switchResult instanceof Error) {
+          throw new Error(`Failed to switch to custom mode: ${switchResult.message}`);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+        console.log('Switched to custom mode successfully (temporarily enabled if it was off)');
+      }
+
+      const result = await callback();
+
+      return result;
+
+    } finally {
+      if (snapshot && !wasAlreadyCustom) {
+        try {
+          console.log('Restoring original lighting state for all zones...');
+          
+          const mainWasOff = snapshot.main.open === false || snapshot.main.open === 0;
+          
+          if (mainWasOff) {
+            console.log('Main zone was originally OFF, restoring OFF state...');
+            const { dynamicColorId, ...mainParams } = snapshot.main;
+            mainParams.open = false;
+            
+            const mainResult = await KeyboardService.setLighting(mainParams);
+            if (mainResult instanceof Error) {
+              console.error('Failed to restore main zone OFF:', mainResult.message);
+            }
+          } else {
+            console.log('Restoring main zone to original mode...');
+            const { dynamicColorId, ...mainParams } = snapshot.main;
+            
+            const mainResult = await KeyboardService.setLighting(mainParams);
+            if (mainResult instanceof Error) {
+              console.error('Failed to restore main lighting:', mainResult.message);
+            } else {
+              console.log('Main zone restored successfully');
+            }
+          }
+
+          if (snapshot.logo) {
+            const logoWasOn = snapshot.logo.open === true || snapshot.logo.open === 1;
+            if (logoWasOn) {
+              console.log('Restoring logo zone...');
+              const { dynamicColorId, ...logoParams } = snapshot.logo;
+              const logoResult = await KeyboardService.setLogoLighting(logoParams);
+              if (logoResult instanceof Error) {
+                console.error('Failed to restore logo lighting:', logoResult.message);
+              }
+            }
+          }
+
+          if (snapshot.other) {
+            const otherWasOn = snapshot.other.open === true || snapshot.other.open === 1;
+            if (otherWasOn) {
+              console.log('Restoring special zone...');
+              const { dynamicColorId, ...otherParams } = snapshot.other;
+              const otherResult = await KeyboardService.setSpecialLighting(otherParams);
+              if (otherResult instanceof Error) {
+                console.error('Failed to restore special lighting:', otherResult.message);
+              }
+            }
+          }
+
+          console.log('All zones restored to original state');
+        } catch (error) {
+          console.error('Error restoring lighting state:', error);
+        }
+      }
     }
   }
 

@@ -832,6 +832,25 @@ class ExportService {
             }
           }
 
+          console.log('Loading custom colors into flash buffer...');
+          for (let i = 0; i < keysWithCustomLight.length; i += 80) {
+            const batch = keysWithCustomLight.slice(i, i + 80);
+            
+            await Promise.all(
+              batch.map(async (keyData) => {
+                const result = await KeyboardService.getCustomLighting(keyData.light!.custom.key);
+                
+                if (result instanceof Error) {
+                  console.error(`Failed to get custom lighting for key ${keyData.light!.custom.key}:`, result.message);
+                }
+              })
+            );
+            
+            if (i + 80 < keysWithCustomLight.length) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
+
           console.log('Saving custom lighting to hardware...');
           const saveResult = await KeyboardService.saveCustomLighting();
           if (saveResult instanceof Error) {

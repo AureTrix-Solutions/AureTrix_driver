@@ -49,7 +49,7 @@
               @keyup.enter="finishEditing"
               @keyup.esc="cancelEditing"
               class="profile-name-input"
-              ref="profileInput"
+              :ref="`profileInput-${profile.id}`"
               @click.stop
             />
             <span v-else class="profile-name">{{ profile.name }}</span>
@@ -97,8 +97,7 @@ export default defineComponent({
   },
   setup() {
     const connectionStore = useConnectionStore();
-    const profileStore = useProfileStore();
-    return { connectionStore, profileStore };
+    return { connectionStore };
   },
   data() {
     return {
@@ -140,6 +139,9 @@ export default defineComponent({
     };
   },
   computed: {
+    profileStore() {
+      return useProfileStore();
+    },
     isStatusReady() {
       const info = this.connectionStore.deviceInfo;
       return info && 
@@ -181,7 +183,8 @@ export default defineComponent({
         this.editingProfileId = profileId;
         this.editingProfileName = profile.name;
         nextTick(() => {
-          const input = this.$refs.profileInput as HTMLInputElement | HTMLInputElement[];
+          const refKey = `profileInput-${profileId}`;
+          const input = this.$refs[refKey] as HTMLInputElement | HTMLInputElement[];
           if (input) {
             const inputElement = Array.isArray(input) ? input[0] : input;
             inputElement?.focus();

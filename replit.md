@@ -102,6 +102,16 @@ Preferred communication style: Simple, everyday language.
 - Prevents clearing customColors with incomplete data during device mode transition
 - Architect-reviewed and identified timing issue vs reactivity as root cause
 
+**November 21, 2025 - Profile Quick-Access Buttons**
+- Added 4 customizable profile buttons in 2x2 grid layout below Debug nav item in sidebar
+- Created profileStore.ts with Pinia for managing profiles, active profile, and localStorage persistence
+- Profile names editable via double-click with inline input (default: "Profile 1" through "Profile 4")
+- Active profile highlighted with gold accent color matching existing nav aesthetic
+- Profile names and active selection persist across page reloads via localStorage (key: 'keyboard-profiles')
+- Implemented unique refs per profile input to ensure correct focus/select behavior in Options API context
+- ProfileStore accessed via computed property to maintain $refs functionality
+- Users can rename profiles to custom names like "Gaming", "Windows", "Work", etc.
+
 ## System Architecture
 
 ### Frontend Architecture

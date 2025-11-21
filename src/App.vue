@@ -360,6 +360,60 @@ export default defineComponent({
   }
 }
 
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.profile-btn {
+  font-family: v.$font-style;
+  padding: 10px 8px;
+  border: 1px solid rgba(v.$text-color, 0.2);
+  border-radius: v.$border-radius;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  color: v.$primary-color;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.85rem;
+  text-align: center;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  &.active {
+    background-color: rgba($color: #a088242e, $alpha: 1.0);
+    color: rgba($color: #000000, $alpha: 1.0);
+    font-weight: bold;
+    border-color: v.$accent-color;
+  }
+  
+  .profile-name {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.profile-name-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: v.$primary-color;
+  font-family: v.$font-style;
+  font-size: 0.85rem;
+  text-align: center;
+  outline: none;
+  padding: 0;
+  
+  &:focus {
+    color: v.$accent-color;
+  }
+}
+
 @keyframes slideInRight {
   from {
     transform: translateX(100%);

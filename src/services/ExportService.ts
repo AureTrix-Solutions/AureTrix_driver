@@ -275,22 +275,32 @@ class ExportService {
   private async gatherCustomKeyBindings(keys: number[], dataMap: Map<number, Partial<Keyboards>>): Promise<void> {
     try {
       const fnLayers = [0, 1, 2, 3];
+      const batchSize = 16;
+      
       for (const layer of fnLayers) {
-        const params = keys.map(key => ({ key, layout: layer }));
-        const layoutInfo = await this.retryWithBackoff(() => KeyboardService.getLayoutKeyInfo(params));
+        console.log(`  Gathering Fn${layer} bindings...`);
         
-        if (!(layoutInfo instanceof Error) && Array.isArray(layoutInfo)) {
-          layoutInfo.forEach((keyInfo, index) => {
-            const keyValue = params[index].key;
-            const keyData = dataMap.get(keyValue);
-            if (keyData) {
-              const fnKey = `fn${layer}` as 'fn0' | 'fn1' | 'fn2' | 'fn3';
-              keyData.customKeys![fnKey] = {
-                keyValue: keyValue,
-                bindKeyValue: keyInfo.keyValue
-              };
-            }
-          });
+        for (let i = 0; i < keys.length; i += batchSize) {
+          const keyBatch = keys.slice(i, i + batchSize);
+          const params = keyBatch.map(key => ({ key, layout: layer }));
+          
+          const layoutInfo = await this.retryWithBackoff(() => KeyboardService.getLayoutKeyInfo(params));
+          
+          if (!(layoutInfo instanceof Error) && Array.isArray(layoutInfo)) {
+            layoutInfo.forEach((keyInfo, index) => {
+              const keyValue = params[index].key;
+              const keyData = dataMap.get(keyValue);
+              if (keyData) {
+                const fnKey = `fn${layer}` as 'fn0' | 'fn1' | 'fn2' | 'fn3';
+                keyData.customKeys![fnKey] = {
+                  keyValue: keyValue,
+                  bindKeyValue: keyInfo.keyValue
+                };
+              }
+            });
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
         
         await new Promise(resolve => setTimeout(resolve, 150));

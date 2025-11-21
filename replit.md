@@ -8,6 +8,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 21, 2025 - Connection Storage Cleanup and Race Condition Fixes**
+- Simplified localStorage to use only `pairedStableId` (single key) instead of multiple pairedDeviceData_* entries
+- Removed redundant reconnect() method that duplicated device data in localStorage
+- Added cleanupLegacyStorage() to remove old pairedDeviceId and pairedDeviceData_* keys on startup
+- Improved reconnectIfPaired() with pairedStableId check before calling autoConnect() to avoid unnecessary browser queries
+- Added race condition guard (isAutoConnecting flag) to prevent concurrent autoConnect() calls from constructor and handleConnect events
+- Implemented try-finally pattern to ensure isAutoConnecting flag is always reset even on errors
+- Made reconnectIfPaired() async with proper error handling for startup connection failures
+- Connection persistence now relies solely on browser's navigator.hid.getDevices() for fresh device data instead of localStorage cache
+
 **November 21, 2025 - Profile Quick-Access Buttons with SDK Integration**
 - Added 4 customizable profile buttons in 2x2 grid layout below Debug nav item in sidebar
 - Created profileStore.ts with Pinia for managing profiles, active profile, and localStorage persistence

@@ -51,6 +51,9 @@
         <button class="debug-export-btn" @click="exportProfileDebug" :disabled="!connectionStore.isConnected">
           Debug Export (JSON)
         </button>
+        <button class="debug-import-btn" @click="importProfileDebug" :disabled="!connectionStore.isConnected">
+          Debug Import (JSON)
+        </button>
         <button class="import-btn" @click="importProfile" :disabled="!connectionStore.isConnected">
           Import Profile
         </button>
@@ -237,6 +240,39 @@ export default defineComponent({
         }
       } catch (error) {
         console.error('Export debug profile error:', error);
+      }
+    },
+    async importProfileDebug() {
+      try {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = async (event: Event) => {
+          const target = event.target as HTMLInputElement;
+          const file = target.files?.[0];
+          if (!file) {
+            console.log('No file selected');
+            return;
+          }
+          
+          const importResult = await ExportService.importProfileDebug(file);
+          if (!importResult.success) {
+            console.error('Failed to import debug profile:', importResult.error);
+            return;
+          }
+          
+          if (importResult.success) {
+            console.log('Debug profile imported and applied successfully - reloading page...');
+            window.location.reload();
+          } else {
+            console.error('Debug import failed:', importResult.error || 'Unknown error');
+          }
+        };
+        
+        input.click();
+      } catch (error) {
+        console.error('Import debug profile error:', error);
       }
     },
     async importProfile() {
@@ -517,6 +553,7 @@ export default defineComponent({
 
 .export-btn,
 .debug-export-btn,
+.debug-import-btn,
 .import-btn {
   width: 100%;
   font-family: v.$font-style;

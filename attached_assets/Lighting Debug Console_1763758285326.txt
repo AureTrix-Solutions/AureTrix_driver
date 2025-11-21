@@ -1,0 +1,563 @@
+Lighting Debug Console
+-------------------
+[12:50:43 PM] Fetching custom lighting for 80 selected key(s)...
+[12:50:43 PM] Custom Lighting for ESC (key 41):
+{
+  "key": 41,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F1 (key 58):
+{
+  "key": 58,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F2 (key 59):
+{
+  "key": 59,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F3 (key 60):
+{
+  "key": 60,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F4 (key 61):
+{
+  "key": 61,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F5 (key 62):
+{
+  "key": 62,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F6 (key 63):
+{
+  "key": 63,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F7 (key 64):
+{
+  "key": 64,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F8 (key 65):
+{
+  "key": 65,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F9 (key 66):
+{
+  "key": 66,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F10 (key 67):
+{
+  "key": 67,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F11 (key 68):
+{
+  "key": 68,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for F12 (key 69):
+{
+  "key": 69,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for Insert (key 73):
+{
+  "key": 73,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for Del (key 76):
+{
+  "key": 76,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for ` (key 53):
+{
+  "key": 53,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:43 PM] Custom Lighting for 1 (key 30):
+{
+  "key": 30,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for 2 (key 31):
+{
+  "key": 31,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for 3 (key 32):
+{
+  "key": 32,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for 4 (key 33):
+{
+  "key": 33,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for 5 (key 34):
+{
+  "key": 34,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for 6 (key 35):
+{
+  "key": 35,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for 7 (key 36):
+{
+  "key": 36,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for 8 (key 37):
+{
+  "key": 37,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for 9 (key 38):
+{
+  "key": 38,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for 0 (key 39):
+{
+  "key": 39,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for - (key 45):
+{
+  "key": 45,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for = (key 46):
+{
+  "key": 46,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for Back Space (key 42):
+{
+  "key": 42,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for PgUp (key 75):
+{
+  "key": 75,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for Tab (key 43):
+{
+  "key": 43,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for Q (key 20):
+{
+  "key": 20,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for W (key 26):
+{
+  "key": 26,
+  "R": 0,
+  "G": 5,
+  "B": 158
+}
+[12:50:44 PM] Custom Lighting for E (key 8):
+{
+  "key": 8,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for R (key 21):
+{
+  "key": 21,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for T (key 23):
+{
+  "key": 23,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for Y (key 28):
+{
+  "key": 28,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for U (key 24):
+{
+  "key": 24,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for I (key 12):
+{
+  "key": 12,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for O (key 18):
+{
+  "key": 18,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for P (key 19):
+{
+  "key": 19,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for [ (key 47):
+{
+  "key": 47,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for ] (key 48):
+{
+  "key": 48,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for \ (key 49):
+{
+  "key": 49,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for PgDn (key 78):
+{
+  "key": 78,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for L-Ctrl (key 57):
+{
+  "key": 57,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for A (key 4):
+{
+  "key": 4,
+  "R": 0,
+  "G": 5,
+  "B": 158
+}
+[12:50:44 PM] Custom Lighting for S (key 22):
+{
+  "key": 22,
+  "R": 0,
+  "G": 5,
+  "B": 158
+}
+[12:50:44 PM] Custom Lighting for D (key 7):
+{
+  "key": 7,
+  "R": 0,
+  "G": 5,
+  "B": 158
+}
+[12:50:44 PM] Custom Lighting for F (key 9):
+{
+  "key": 9,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for G (key 10):
+{
+  "key": 10,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for H (key 11):
+{
+  "key": 11,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for J (key 13):
+{
+  "key": 13,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for K (key 14):
+{
+  "key": 14,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for L (key 15):
+{
+  "key": 15,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for ; (key 51):
+{
+  "key": 51,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for ' (key 52):
+{
+  "key": 52,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for Enter (key 40):
+{
+  "key": 40,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for L-Shift (key 225):
+{
+  "key": 225,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for Z (key 29):
+{
+  "key": 29,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for X (key 27):
+{
+  "key": 27,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for C (key 6):
+{
+  "key": 6,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for V (key 25):
+{
+  "key": 25,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for B (key 5):
+{
+  "key": 5,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for N (key 17):
+{
+  "key": 17,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for M (key 16):
+{
+  "key": 16,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for , (key 54):
+{
+  "key": 54,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for . (key 55):
+{
+  "key": 55,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for / (key 56):
+{
+  "key": 56,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for R-Shift (key 229):
+{
+  "key": 229,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for ↑ (key 82):
+{
+  "key": 82,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for L-Ctrl (key 224):
+{
+  "key": 224,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for L-Win (key 227):
+{
+  "key": 227,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for L-Alt (key 226):
+{
+  "key": 226,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for Space (key 44):
+{
+  "key": 44,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for Fn1 (key 1):
+{
+  "key": 1,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for R-Ctrl (key 228):
+{
+  "key": 228,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for ← (key 80):
+{
+  "key": 80,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for ↓ (key 81):
+{
+  "key": 81,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}
+[12:50:44 PM] Custom Lighting for → (key 79):
+{
+  "key": 79,
+  "R": 0,
+  "G": 0,
+  "B": 0
+}

@@ -685,6 +685,34 @@ class KeyboardService {
     }
   }
 
+  async setLogoLighting(lightModeConfig: any): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.setLogoLighting(lightModeConfig);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to set logo lighting:', error);
+      return error as Error;
+    }
+  }
+
+  async setSpecialLighting(lightModeConfig: any): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.setSpecialLighting(lightModeConfig);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to set special lighting:', error);
+      return error as Error;
+    }
+  }
+
   async closedLighting(): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {

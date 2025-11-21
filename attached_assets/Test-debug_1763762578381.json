@@ -1,0 +1,6717 @@
+{
+  "system": {
+    "rateOfReturn": 3,
+    "topDeadBandSwitch": 0,
+    "productId": 0,
+    "vendorId": 0,
+    "keyboardName": "",
+    "usage": 0,
+    "usagePage": 0
+  },
+  "light": {
+    "main": {
+      "open": true,
+      "mode": "static",
+      "staticColors": [
+        "#8a0000",
+        "#00ff00",
+        "#7f7f00",
+        "#0000ff",
+        "#7f007f",
+        "#007f7f",
+        "#ffffff"
+      ],
+      "selectStaticColor": 0,
+      "luminance": 1,
+      "speed": 0,
+      "sleepTime": 120,
+      "direction": true,
+      "dynamic": 0
+    },
+    "logo": {
+      "open": true,
+      "mode": "static",
+      "staticColors": [
+        "#8a0000",
+        "#00ff00",
+        "#7f7f00",
+        "#0000ff",
+        "#7f007f",
+        "#007f7f",
+        "#ffffff"
+      ],
+      "selectStaticColor": 0,
+      "luminance": 1,
+      "speed": 0,
+      "sleepTime": 120,
+      "direction": true,
+      "dynamic": 0
+    },
+    "other": {
+      "open": true,
+      "mode": "static",
+      "staticColors": [
+        "#8a0000",
+        "#00ff00",
+        "#7f7f00",
+        "#0000ff",
+        "#7f007f",
+        "#007f7f",
+        "#ffffff",
+        "#000000"
+      ],
+      "selectStaticColor": 0,
+      "luminance": 1,
+      "speed": 0,
+      "sleepTime": 120,
+      "direction": true,
+      "dynamic": 0
+    }
+  },
+  "keyboards": [
+    {
+      "col": 0,
+      "row": 0,
+      "keyValue": 41,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 41,
+          "bindKeyValue": 41
+        },
+        "fn1": {
+          "keyValue": 41,
+          "bindKeyValue": 61696
+        },
+        "fn2": {
+          "keyValue": 41,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 41,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 41
+        }
+      }
+    },
+    {
+      "col": 1,
+      "row": 0,
+      "keyValue": 58,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 58,
+          "bindKeyValue": 58
+        },
+        "fn1": {
+          "keyValue": 58,
+          "bindKeyValue": 4483
+        },
+        "fn2": {
+          "keyValue": 58,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 58,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 58
+        }
+      }
+    },
+    {
+      "col": 2,
+      "row": 0,
+      "keyValue": 59,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 59,
+          "bindKeyValue": 59
+        },
+        "fn1": {
+          "keyValue": 59,
+          "bindKeyValue": 4498
+        },
+        "fn2": {
+          "keyValue": 59,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 59,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 59
+        }
+      }
+    },
+    {
+      "col": 3,
+      "row": 0,
+      "keyValue": 60,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 60,
+          "bindKeyValue": 60
+        },
+        "fn1": {
+          "keyValue": 60,
+          "bindKeyValue": 26667
+        },
+        "fn2": {
+          "keyValue": 60,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 60,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 60
+        }
+      }
+    },
+    {
+      "col": 4,
+      "row": 0,
+      "keyValue": 61,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 61,
+          "bindKeyValue": 61
+        },
+        "fn1": {
+          "keyValue": 61,
+          "bindKeyValue": 26632
+        },
+        "fn2": {
+          "keyValue": 61,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 61,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 61
+        }
+      }
+    },
+    {
+      "col": 5,
+      "row": 0,
+      "keyValue": 62,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 62,
+          "bindKeyValue": 62
+        },
+        "fn1": {
+          "keyValue": 62,
+          "bindKeyValue": 4208
+        },
+        "fn2": {
+          "keyValue": 62,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 62,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 62
+        }
+      }
+    },
+    {
+      "col": 6,
+      "row": 0,
+      "keyValue": 63,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 63,
+          "bindKeyValue": 63
+        },
+        "fn1": {
+          "keyValue": 63,
+          "bindKeyValue": 4207
+        },
+        "fn2": {
+          "keyValue": 63,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 63,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 63
+        }
+      }
+    },
+    {
+      "col": 7,
+      "row": 0,
+      "keyValue": 64,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 64,
+          "bindKeyValue": 64
+        },
+        "fn1": {
+          "keyValue": 64,
+          "bindKeyValue": 4278
+        },
+        "fn2": {
+          "keyValue": 64,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 64,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 64
+        }
+      }
+    },
+    {
+      "col": 8,
+      "row": 0,
+      "keyValue": 65,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 65,
+          "bindKeyValue": 65
+        },
+        "fn1": {
+          "keyValue": 65,
+          "bindKeyValue": 4301
+        },
+        "fn2": {
+          "keyValue": 65,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 65,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 65
+        }
+      }
+    },
+    {
+      "col": 9,
+      "row": 0,
+      "keyValue": 66,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 66,
+          "bindKeyValue": 66
+        },
+        "fn1": {
+          "keyValue": 66,
+          "bindKeyValue": 4277
+        },
+        "fn2": {
+          "keyValue": 66,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 66,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 66
+        }
+      }
+    },
+    {
+      "col": 10,
+      "row": 0,
+      "keyValue": 67,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 67,
+          "bindKeyValue": 67
+        },
+        "fn1": {
+          "keyValue": 67,
+          "bindKeyValue": 4322
+        },
+        "fn2": {
+          "keyValue": 67,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 67,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 67
+        }
+      }
+    },
+    {
+      "col": 11,
+      "row": 0,
+      "keyValue": 68,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 68,
+          "bindKeyValue": 68
+        },
+        "fn1": {
+          "keyValue": 68,
+          "bindKeyValue": 4330
+        },
+        "fn2": {
+          "keyValue": 68,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 68,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 68
+        }
+      }
+    },
+    {
+      "col": 12,
+      "row": 0,
+      "keyValue": 69,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 69,
+          "bindKeyValue": 69
+        },
+        "fn1": {
+          "keyValue": 69,
+          "bindKeyValue": 4329
+        },
+        "fn2": {
+          "keyValue": 69,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 69,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 69
+        }
+      }
+    },
+    {
+      "col": 13,
+      "row": 0,
+      "keyValue": 73,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 73,
+          "bindKeyValue": 73
+        },
+        "fn1": {
+          "keyValue": 73,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 73,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 73,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 73
+        }
+      }
+    },
+    {
+      "col": 14,
+      "row": 0,
+      "keyValue": 76,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 76,
+          "bindKeyValue": 76
+        },
+        "fn1": {
+          "keyValue": 76,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 76,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 76,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 76
+        }
+      }
+    },
+    {
+      "col": 0,
+      "row": 1,
+      "keyValue": 53,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 53,
+          "bindKeyValue": 53
+        },
+        "fn1": {
+          "keyValue": 53,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 53,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 53,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 53
+        }
+      }
+    },
+    {
+      "col": 1,
+      "row": 1,
+      "keyValue": 30,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 30,
+          "bindKeyValue": 30
+        },
+        "fn1": {
+          "keyValue": 30,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 30,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 30,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 30
+        }
+      }
+    },
+    {
+      "col": 2,
+      "row": 1,
+      "keyValue": 31,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 31,
+          "bindKeyValue": 31
+        },
+        "fn1": {
+          "keyValue": 31,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 31,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 31,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 31
+        }
+      }
+    },
+    {
+      "col": 3,
+      "row": 1,
+      "keyValue": 32,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 32,
+          "bindKeyValue": 32
+        },
+        "fn1": {
+          "keyValue": 32,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 32,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 32,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 32
+        }
+      }
+    },
+    {
+      "col": 4,
+      "row": 1,
+      "keyValue": 33,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 33,
+          "bindKeyValue": 33
+        },
+        "fn1": {
+          "keyValue": 33,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 33,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 33,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 33
+        }
+      }
+    },
+    {
+      "col": 5,
+      "row": 1,
+      "keyValue": 34,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 34,
+          "bindKeyValue": 34
+        },
+        "fn1": {
+          "keyValue": 34,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 34,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 34,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 34
+        }
+      }
+    },
+    {
+      "col": 6,
+      "row": 1,
+      "keyValue": 35,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 35,
+          "bindKeyValue": 35
+        },
+        "fn1": {
+          "keyValue": 35,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 35,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 35,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 35
+        }
+      }
+    },
+    {
+      "col": 7,
+      "row": 1,
+      "keyValue": 36,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 36,
+          "bindKeyValue": 36
+        },
+        "fn1": {
+          "keyValue": 36,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 36,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 36,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 36
+        }
+      }
+    },
+    {
+      "col": 8,
+      "row": 1,
+      "keyValue": 37,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 37,
+          "bindKeyValue": 37
+        },
+        "fn1": {
+          "keyValue": 37,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 37,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 37,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 37
+        }
+      }
+    },
+    {
+      "col": 9,
+      "row": 1,
+      "keyValue": 38,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 38,
+          "bindKeyValue": 38
+        },
+        "fn1": {
+          "keyValue": 38,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 38,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 38,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 38
+        }
+      }
+    },
+    {
+      "col": 10,
+      "row": 1,
+      "keyValue": 39,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 39,
+          "bindKeyValue": 39
+        },
+        "fn1": {
+          "keyValue": 39,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 39,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 39,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 39
+        }
+      }
+    },
+    {
+      "col": 11,
+      "row": 1,
+      "keyValue": 45,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 45,
+          "bindKeyValue": 45
+        },
+        "fn1": {
+          "keyValue": 45,
+          "bindKeyValue": 61697
+        },
+        "fn2": {
+          "keyValue": 45,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 45,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 45
+        }
+      }
+    },
+    {
+      "col": 12,
+      "row": 1,
+      "keyValue": 46,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 46,
+          "bindKeyValue": 46
+        },
+        "fn1": {
+          "keyValue": 46,
+          "bindKeyValue": 61698
+        },
+        "fn2": {
+          "keyValue": 46,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 46,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 46
+        }
+      }
+    },
+    {
+      "col": 13,
+      "row": 1,
+      "keyValue": 42,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "2.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 42,
+          "bindKeyValue": 42
+        },
+        "fn1": {
+          "keyValue": 42,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 42,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 42,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 42
+        }
+      }
+    },
+    {
+      "col": 14,
+      "row": 1,
+      "keyValue": 75,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 75,
+          "bindKeyValue": 75
+        },
+        "fn1": {
+          "keyValue": 75,
+          "bindKeyValue": 62224
+        },
+        "fn2": {
+          "keyValue": 75,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 75,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 75
+        }
+      }
+    },
+    {
+      "col": 0,
+      "row": 2,
+      "keyValue": 43,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 43,
+          "bindKeyValue": 43
+        },
+        "fn1": {
+          "keyValue": 43,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 43,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 43,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 43
+        }
+      }
+    },
+    {
+      "col": 1,
+      "row": 2,
+      "keyValue": 20,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 20,
+          "bindKeyValue": 20
+        },
+        "fn1": {
+          "keyValue": 20,
+          "bindKeyValue": 30
+        },
+        "fn2": {
+          "keyValue": 20,
+          "bindKeyValue": 31
+        },
+        "fn3": {
+          "keyValue": 20,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 20
+        }
+      }
+    },
+    {
+      "col": 2,
+      "row": 2,
+      "keyValue": 26,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 26,
+          "bindKeyValue": 26
+        },
+        "fn1": {
+          "keyValue": 26,
+          "bindKeyValue": 32
+        },
+        "fn2": {
+          "keyValue": 26,
+          "bindKeyValue": 33
+        },
+        "fn3": {
+          "keyValue": 26,
+          "bindKeyValue": 34
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 5,
+          "B": 158,
+          "key": 26
+        }
+      }
+    },
+    {
+      "col": 3,
+      "row": 2,
+      "keyValue": 8,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 8,
+          "bindKeyValue": 8
+        },
+        "fn1": {
+          "keyValue": 8,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 8,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 8,
+          "bindKeyValue": 35
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 8
+        }
+      }
+    },
+    {
+      "col": 4,
+      "row": 2,
+      "keyValue": 21,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 21,
+          "bindKeyValue": 21
+        },
+        "fn1": {
+          "keyValue": 21,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 21,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 21,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 21
+        }
+      }
+    },
+    {
+      "col": 5,
+      "row": 2,
+      "keyValue": 23,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 23,
+          "bindKeyValue": 23
+        },
+        "fn1": {
+          "keyValue": 23,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 23,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 23,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 23
+        }
+      }
+    },
+    {
+      "col": 6,
+      "row": 2,
+      "keyValue": 28,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 28,
+          "bindKeyValue": 28
+        },
+        "fn1": {
+          "keyValue": 28,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 28,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 28,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 28
+        }
+      }
+    },
+    {
+      "col": 7,
+      "row": 2,
+      "keyValue": 24,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 24,
+          "bindKeyValue": 24
+        },
+        "fn1": {
+          "keyValue": 24,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 24,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 24,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 24
+        }
+      }
+    },
+    {
+      "col": 8,
+      "row": 2,
+      "keyValue": 12,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 12,
+          "bindKeyValue": 12
+        },
+        "fn1": {
+          "keyValue": 12,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 12,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 12,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 12
+        }
+      }
+    },
+    {
+      "col": 9,
+      "row": 2,
+      "keyValue": 18,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 18,
+          "bindKeyValue": 18
+        },
+        "fn1": {
+          "keyValue": 18,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 18,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 18,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 18
+        }
+      }
+    },
+    {
+      "col": 10,
+      "row": 2,
+      "keyValue": 19,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 19,
+          "bindKeyValue": 19
+        },
+        "fn1": {
+          "keyValue": 19,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 19,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 19,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 19
+        }
+      }
+    },
+    {
+      "col": 11,
+      "row": 2,
+      "keyValue": 47,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 47,
+          "bindKeyValue": 47
+        },
+        "fn1": {
+          "keyValue": 47,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 47,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 47,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 47
+        }
+      }
+    },
+    {
+      "col": 12,
+      "row": 2,
+      "keyValue": 48,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 48,
+          "bindKeyValue": 48
+        },
+        "fn1": {
+          "keyValue": 48,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 48,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 48,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 48
+        }
+      }
+    },
+    {
+      "col": 13,
+      "row": 2,
+      "keyValue": 49,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 49,
+          "bindKeyValue": 49
+        },
+        "fn1": {
+          "keyValue": 49,
+          "bindKeyValue": 62269
+        },
+        "fn2": {
+          "keyValue": 49,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 49,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 49
+        }
+      }
+    },
+    {
+      "col": 14,
+      "row": 2,
+      "keyValue": 78,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 78,
+          "bindKeyValue": 78
+        },
+        "fn1": {
+          "keyValue": 78,
+          "bindKeyValue": 62277
+        },
+        "fn2": {
+          "keyValue": 78,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 78,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 78
+        }
+      }
+    },
+    {
+      "col": 0,
+      "row": 3,
+      "keyValue": 57,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 57,
+          "bindKeyValue": 224
+        },
+        "fn1": {
+          "keyValue": 57,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 57,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 57,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 57
+        }
+      }
+    },
+    {
+      "col": 1,
+      "row": 3,
+      "keyValue": 4,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 24966
+        },
+        "mpt": {
+          "dks": [
+            24966,
+            0,
+            0
+          ],
+          "dbs": [
+            1.4,
+            2.2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 24966,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 24966,
+          "delay": 0
+        },
+        "end": {
+          "dks": 24966,
+          "delay": 0
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 4,
+          "bindKeyValue": 4
+        },
+        "fn1": {
+          "keyValue": 4,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 4,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 4,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 5,
+          "B": 158,
+          "key": 4
+        }
+      }
+    },
+    {
+      "col": 2,
+      "row": 3,
+      "keyValue": 22,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 4
+        },
+        "mpt": {
+          "dks": [
+            4,
+            5,
+            6
+          ],
+          "dbs": [
+            0.5,
+            1,
+            1.5
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 4,
+          "dks2": 5,
+          "dks3": 6,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 4,
+          "delay": 60
+        },
+        "end": {
+          "dks": 4,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 22,
+          "bindKeyValue": 22
+        },
+        "fn1": {
+          "keyValue": 22,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 22,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 22,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 5,
+          "B": 158,
+          "key": 22
+        }
+      }
+    },
+    {
+      "col": 3,
+      "row": 3,
+      "keyValue": 7,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 4
+        },
+        "mpt": {
+          "dks": [
+            4,
+            6,
+            20
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 4,
+          "dks2": 6,
+          "dks3": 20,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 4,
+          "delay": 200
+        },
+        "end": {
+          "dks": 4,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 7,
+          "bindKeyValue": 7
+        },
+        "fn1": {
+          "keyValue": 7,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 7,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 7,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 5,
+          "B": 158,
+          "key": 7
+        }
+      }
+    },
+    {
+      "col": 4,
+      "row": 3,
+      "keyValue": 9,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 4
+        },
+        "mpt": {
+          "dks": [
+            4,
+            0,
+            20
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 4,
+          "dks2": 0,
+          "dks3": 20,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 4,
+          "delay": 200
+        },
+        "end": {
+          "dks": 4,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 9,
+          "bindKeyValue": 9
+        },
+        "fn1": {
+          "keyValue": 9,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 9,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 9,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 9
+        }
+      }
+    },
+    {
+      "col": 5,
+      "row": 3,
+      "keyValue": 10,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 27
+        },
+        "mpt": {
+          "dks": [
+            27,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 27,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 27,
+          "delay": 0
+        },
+        "end": {
+          "dks": 27,
+          "delay": 0
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 10,
+          "bindKeyValue": 10
+        },
+        "fn1": {
+          "keyValue": 10,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 10,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 10,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 10
+        }
+      }
+    },
+    {
+      "col": 6,
+      "row": 3,
+      "keyValue": 11,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 11,
+          "bindKeyValue": 11
+        },
+        "fn1": {
+          "keyValue": 11,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 11,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 11,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 11
+        }
+      }
+    },
+    {
+      "col": 7,
+      "row": 3,
+      "keyValue": 13,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            10
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 10,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 100
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 13,
+          "bindKeyValue": 13
+        },
+        "fn1": {
+          "keyValue": 13,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 13,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 13,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 13
+        }
+      }
+    },
+    {
+      "col": 8,
+      "row": 3,
+      "keyValue": 14,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 14,
+          "bindKeyValue": 14
+        },
+        "fn1": {
+          "keyValue": 14,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 14,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 14,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 14
+        }
+      }
+    },
+    {
+      "col": 9,
+      "row": 3,
+      "keyValue": 15,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 15,
+          "bindKeyValue": 15
+        },
+        "fn1": {
+          "keyValue": 15,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 15,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 15,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 15
+        }
+      }
+    },
+    {
+      "col": 10,
+      "row": 3,
+      "keyValue": 51,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 51,
+          "bindKeyValue": 51
+        },
+        "fn1": {
+          "keyValue": 51,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 51,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 51,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 51
+        }
+      }
+    },
+    {
+      "col": 11,
+      "row": 3,
+      "keyValue": 52,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 52,
+          "bindKeyValue": 52
+        },
+        "fn1": {
+          "keyValue": 52,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 52,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 52,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 52
+        }
+      }
+    },
+    {
+      "col": 13,
+      "row": 3,
+      "keyValue": 40,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "2.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 40,
+          "bindKeyValue": 40
+        },
+        "fn1": {
+          "keyValue": 40,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 40,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 40,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 40
+        }
+      }
+    },
+    {
+      "col": 0,
+      "row": 4,
+      "keyValue": 225,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "2.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 225,
+          "bindKeyValue": 225
+        },
+        "fn1": {
+          "keyValue": 225,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 225,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 225,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 225
+        }
+      }
+    },
+    {
+      "col": 2,
+      "row": 4,
+      "keyValue": 29,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 29,
+          "bindKeyValue": 29
+        },
+        "fn1": {
+          "keyValue": 29,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 29,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 29,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 29
+        }
+      }
+    },
+    {
+      "col": 3,
+      "row": 4,
+      "keyValue": 27,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 27,
+          "bindKeyValue": 27
+        },
+        "fn1": {
+          "keyValue": 27,
+          "bindKeyValue": 62231
+        },
+        "fn2": {
+          "keyValue": 27,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 27,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 27
+        }
+      }
+    },
+    {
+      "col": 4,
+      "row": 4,
+      "keyValue": 6,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 6,
+          "bindKeyValue": 6
+        },
+        "fn1": {
+          "keyValue": 6,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 6,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 6,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 6
+        }
+      }
+    },
+    {
+      "col": 5,
+      "row": 4,
+      "keyValue": 25,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 25,
+          "bindKeyValue": 25
+        },
+        "fn1": {
+          "keyValue": 25,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 25,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 25,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 25
+        }
+      }
+    },
+    {
+      "col": 6,
+      "row": 4,
+      "keyValue": 5,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 24966
+        },
+        "mpt": {
+          "dks": [
+            24966,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 24966,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 24966,
+          "delay": 0
+        },
+        "end": {
+          "dks": 24966,
+          "delay": 0
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 5,
+          "bindKeyValue": 5
+        },
+        "fn1": {
+          "keyValue": 5,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 5,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 5,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 5
+        }
+      }
+    },
+    {
+      "col": 7,
+      "row": 4,
+      "keyValue": 17,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 17,
+          "bindKeyValue": 17
+        },
+        "fn1": {
+          "keyValue": 17,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 17,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 17,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 17
+        }
+      }
+    },
+    {
+      "col": 8,
+      "row": 4,
+      "keyValue": 16,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 16,
+          "bindKeyValue": 16
+        },
+        "fn1": {
+          "keyValue": 16,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 16,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 16,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 16
+        }
+      }
+    },
+    {
+      "col": 9,
+      "row": 4,
+      "keyValue": 54,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 54,
+          "bindKeyValue": 54
+        },
+        "fn1": {
+          "keyValue": 54,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 54,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 54,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 54
+        }
+      }
+    },
+    {
+      "col": 10,
+      "row": 4,
+      "keyValue": 55,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 55,
+          "bindKeyValue": 55
+        },
+        "fn1": {
+          "keyValue": 55,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 55,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 55,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 55
+        }
+      }
+    },
+    {
+      "col": 11,
+      "row": 4,
+      "keyValue": 56,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "1.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 56,
+          "bindKeyValue": 56
+        },
+        "fn1": {
+          "keyValue": 56,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 56,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 56,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 56
+        }
+      }
+    },
+    {
+      "col": 13,
+      "row": 4,
+      "keyValue": 229,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "2.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 229,
+          "bindKeyValue": 229
+        },
+        "fn1": {
+          "keyValue": 229,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 229,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 229,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 229
+        }
+      }
+    },
+    {
+      "col": 14,
+      "row": 4,
+      "keyValue": 82,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 82,
+          "bindKeyValue": 82
+        },
+        "fn1": {
+          "keyValue": 82,
+          "bindKeyValue": 62226
+        },
+        "fn2": {
+          "keyValue": 82,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 82,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 82
+        }
+      }
+    },
+    {
+      "col": 0,
+      "row": 5,
+      "keyValue": 224,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 224,
+          "bindKeyValue": 224
+        },
+        "fn1": {
+          "keyValue": 224,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 224,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 224,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 224
+        }
+      }
+    },
+    {
+      "col": 1,
+      "row": 5,
+      "keyValue": 227,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 227,
+          "bindKeyValue": 227
+        },
+        "fn1": {
+          "keyValue": 227,
+          "bindKeyValue": 62217
+        },
+        "fn2": {
+          "keyValue": 227,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 227,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 227
+        }
+      }
+    },
+    {
+      "col": 2,
+      "row": 5,
+      "keyValue": 226,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 226,
+          "bindKeyValue": 226
+        },
+        "fn1": {
+          "keyValue": 226,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 226,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 226,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 226
+        }
+      }
+    },
+    {
+      "col": 6,
+      "row": 5,
+      "keyValue": 44,
+      "performance": {
+        "isGlobalTriggering": false,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": true,
+        "singleTriggeringValue": "2.50",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 44,
+          "bindKeyValue": 44
+        },
+        "fn1": {
+          "keyValue": 44,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 44,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 44,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 44
+        }
+      }
+    },
+    {
+      "col": 11,
+      "row": 5,
+      "keyValue": 1,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 1,
+          "bindKeyValue": 61441
+        },
+        "fn1": {
+          "keyValue": 1,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 1,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 1,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 1
+        }
+      }
+    },
+    {
+      "col": 12,
+      "row": 5,
+      "keyValue": 228,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 228,
+          "bindKeyValue": 228
+        },
+        "fn1": {
+          "keyValue": 228,
+          "bindKeyValue": 1
+        },
+        "fn2": {
+          "keyValue": 228,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 228,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 228
+        }
+      }
+    },
+    {
+      "col": 13,
+      "row": 5,
+      "keyValue": 80,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 80,
+          "bindKeyValue": 80
+        },
+        "fn1": {
+          "keyValue": 80,
+          "bindKeyValue": 62229
+        },
+        "fn2": {
+          "keyValue": 80,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 80,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 80
+        }
+      }
+    },
+    {
+      "col": 14,
+      "row": 5,
+      "keyValue": 81,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 81,
+          "bindKeyValue": 81
+        },
+        "fn1": {
+          "keyValue": 81,
+          "bindKeyValue": 62227
+        },
+        "fn2": {
+          "keyValue": 81,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 81,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 81
+        }
+      }
+    },
+    {
+      "col": 15,
+      "row": 5,
+      "keyValue": 79,
+      "performance": {
+        "isGlobalTriggering": true,
+        "globalTriggeringValue": 1.9,
+        "isRt": false,
+        "isSingle": false,
+        "singleTriggeringValue": "1.90",
+        "rtPressValue": 0.3,
+        "rtReleaseValue": 0.3,
+        "axisID": 4,
+        "deadBandPressValue": 0,
+        "deadBandReleaseValue": 0,
+        "advancedKeyMode": 0
+      },
+      "advancedKeys": {
+        "dks": {
+          "dks": 0
+        },
+        "mpt": {
+          "dks": [
+            0,
+            0,
+            0
+          ],
+          "dbs": [
+            1,
+            2,
+            3
+          ]
+        },
+        "socd": {
+          "pos": 0,
+          "key": 0,
+          "type": 0,
+          "mode": 0
+        },
+        "mt": {
+          "dks1": 0,
+          "dks2": 0,
+          "dks3": 0,
+          "dks4": 0
+        },
+        "tgl": {
+          "dks": 0,
+          "delay": 0
+        },
+        "end": {
+          "dks": 0,
+          "delay": 65535
+        },
+        "advancedType": "none",
+        "value": 0
+      },
+      "customKeys": {
+        "fn0": {
+          "keyValue": 79,
+          "bindKeyValue": 79
+        },
+        "fn1": {
+          "keyValue": 79,
+          "bindKeyValue": 62228
+        },
+        "fn2": {
+          "keyValue": 79,
+          "bindKeyValue": 1
+        },
+        "fn3": {
+          "keyValue": 79,
+          "bindKeyValue": 1
+        }
+      },
+      "light": {
+        "custom": {
+          "R": 0,
+          "G": 0,
+          "B": 0,
+          "key": 79
+        }
+      }
+    }
+  ],
+  "macro": {
+    "list": [],
+    "v2list": []
+  }
+}

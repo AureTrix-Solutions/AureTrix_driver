@@ -586,10 +586,9 @@ class ExportService {
     let originalLighting: any = null;
     let originalLogo: any = null;
     let originalSpecial: any = null;
-    let savedLightConfig: KeyboardConfig['light'] | null = null;
 
     try {
-      console.log('Pre-export: Capturing original lighting state...');
+      console.log('Pre-export: Capturing original lighting state for restoration...');
       originalLighting = await KeyboardService.getLighting();
       originalLogo = await KeyboardService.getLogoLighting();
       originalSpecial = await KeyboardService.getSpecialLighting();
@@ -598,14 +597,7 @@ class ExportService {
         throw new Error('Failed to capture original lighting state');
       }
 
-      savedLightConfig = {
-        main: originalLighting instanceof Error ? this.getDefaultLightConfig() : this.convertLightingToConfig(originalLighting),
-        logo: originalLogo instanceof Error ? this.getDefaultLightConfig() : this.convertLightingToConfig(originalLogo),
-        other: originalSpecial instanceof Error ? this.getDefaultLightConfig() : this.convertLightingToConfig(originalSpecial),
-      };
-      console.log(`Original lighting captured (mode: ${savedLightConfig.main.mode})`);
-
-      console.log(`Switching to custom mode (21) for RGB export...`);
+      console.log(`Original mode: ${originalLighting.mode}, switching to custom mode (21) for export...`);
       
       const { dynamicColorId, ...originalParams } = originalLighting;
       const tempCustomParams: any = {
@@ -621,12 +613,13 @@ class ExportService {
       }
 
       await new Promise(resolve => setTimeout(resolve, 300));
-      console.log('Keyboard now in custom mode for RGB capture - proceeding with data collection...');
+      console.log('Keyboard now in custom mode - proceeding with data collection...');
 
       console.log('Step 1: Gathering system info...');
       const system = await this.gatherDeviceInfo();
       
-      console.log('Step 2: Using saved lighting configuration (original mode)...');
+      console.log('Step 2: Gathering lighting configuration (in custom mode)...');
+      const light = await this.gatherLightingConfig();
       
       console.log('Step 3: Gathering keyboard layouts and key data...');
       const keyboards = await this.gatherKeyboardsConfig();
@@ -636,7 +629,7 @@ class ExportService {
 
       const config: KeyboardConfig = {
         system: system as KeyboardConfig['system'],
-        light: savedLightConfig as KeyboardConfig['light'],
+        light: light as KeyboardConfig['light'],
         keyboards: keyboards as Keyboards[],
         macro,
       };

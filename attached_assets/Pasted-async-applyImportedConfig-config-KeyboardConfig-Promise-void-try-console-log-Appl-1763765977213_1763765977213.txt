@@ -1,0 +1,83 @@
+async applyImportedConfig(config: KeyboardConfig): Promise<void> {
+    try {
+      console.log('Applying imported configuration to hardware...');
+
+      const keysWithCustomLight = config.keyboards?.filter(k => k.light?.custom) || [];
+      
+      if (keysWithCustomLight.length > 0 && config.light?.main) {
+        console.log(`Found ${keysWithCustomLight.length} keys with custom RGB - temporarily switching to custom mode...`);
+        
+        const importedLighting = this.convertLightConfigToSDKFormat(config.light.main);
+        const tempCustomParams: any = {
+          ...importedLighting,
+          type: 'custom',
+          mode: 21,
+          open: true,
+        };
+
+        const switchResult = await KeyboardService.setLighting(tempCustomParams);
+        if (switchResult instanceof Error) {
+          console.warn('Failed to switch to custom mode for RGB import:', switchResult.message);
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 300));
+          console.log('Loading SDK working buffer with getCustomLighting()...');
+
+          for (let i = 0; i < keysWithCustomLight.length; i += 80) {
+            const batch = keysWithCustomLight.slice(i, i + 80);
+            
+            await Promise.all(
+              batch.map(async (keyData) => {
+                const result = await KeyboardService.getCustomLighting(keyData.light!.custom.key);
+                
+                if (result instanceof Error) {
+                  console.error(`Failed to get custom lighting for key ${keyData.light!.custom.key}:`, result.message);
+                }
+              })
+            );
+            
+            if (i + 80 < keysWithCustomLight.length) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
+
+          console.log('Applying RGB colors with setCustomLighting()...');
+          for (let i = 0; i < keysWithCustomLight.length; i += 80) {
+            const batch = keysWithCustomLight.slice(i, i + 80);
+            
+            await Promise.all(
+              batch.map(async (keyData) => {
+                const result = await KeyboardService.setCustomLighting({
+                  key: keyData.light!.custom.key,
+                  r: keyData.light!.custom.R,
+                  g: keyData.light!.custom.G,
+                  b: keyData.light!.custom.B,
+                });
+                
+                if (result instanceof Error) {
+                  console.error(`Failed to set custom lighting for key ${keyData.light!.custom.key}:`, result.message);
+                }
+              })
+            );
+            
+            if (i + 80 < keysWithCustomLight.length) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
+
+          console.log('Saving custom lighting to hardware with saveCustomLighting()...');
+          const saveResult = await KeyboardService.saveCustomLighting();
+          if (saveResult instanceof Error) {
+            console.error('Failed to save custom lighting:', saveResult.message);
+          } else {
+            console.log('Custom RGB colors saved to hardware successfully');
+          }
+        }
+      }
+
+      console.log('Configuration applied successfully');
+      console.log('Keyboard left in custom mode - user can manually switch to preferred lighting mode');
+    } catch (error) {
+      console.error('Failed to apply imported configuration:', error);
+      throw error;
+    }
+  }

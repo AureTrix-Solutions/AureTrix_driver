@@ -120,8 +120,6 @@ class ExportService {
         });
       });
 
-      console.log(`Gathering config for ${allKeys.length} keys in phases...`);
-
       const keyboardsData: Map<number, Partial<Keyboards>> = new Map();
 
       allKeys.forEach(keyValue => {
@@ -137,38 +135,23 @@ class ExportService {
         });
       });
 
-      console.log('Phase A: Gathering layout bindings (Fn0-Fn3)...');
-      const phaseAStart = performance.now();
       await this.gatherCustomKeyBindings(allKeys, keyboardsData);
-      console.log(`Phase A completed in ${(performance.now() - phaseAStart).toFixed(2)}ms`);
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      console.log('Phase B: Gathering performance & travel data...');
-      const phaseBStart = performance.now();
       await this.processBatches(allKeys, async (keyValue) => {
         await this.gatherPerformanceData(keyValue, keyboardsData);
       }, 80, 100);
-      console.log(`Phase B completed in ${(performance.now() - phaseBStart).toFixed(2)}ms`);
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      console.log('Phase C: Gathering advanced key data...');
-      const phaseCStart = performance.now();
       await this.processBatches(allKeys, async (keyValue) => {
         await this.gatherAdvancedKeyData(keyValue, keyboardsData);
       }, 80, 100);
-      console.log(`Phase C completed in ${(performance.now() - phaseCStart).toFixed(2)}ms`);
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      console.log('Phase D: Gathering per-key lighting data...');
-      const phaseDStart = performance.now();
-      
       await this.processBatches(allKeys, async (keyValue) => {
         await this.gatherLightingData(keyValue, keyboardsData);
       }, 80, 100);
-      
-      console.log(`Phase D completed in ${(performance.now() - phaseDStart).toFixed(2)}ms`);
 
-      console.log('All phases complete');
       return Array.from(keyboardsData.values()) as Keyboards[];
     } catch (error) {
       console.error('Error gathering keyboards config:', error);
@@ -182,17 +165,11 @@ class ExportService {
       const batchSize = 10;
       
       for (const layer of fnLayers) {
-        console.log(`  Gathering Fn${layer} bindings (batchSize=${batchSize})...`);
-        const layerStart = performance.now();
-        
         for (let i = 0; i < keys.length; i += batchSize) {
           const keyBatch = keys.slice(i, i + batchSize);
           const params = keyBatch.map(key => ({ key, layout: layer }));
           
-          const callStart = performance.now();
           const layoutInfo = await this.retryWithBackoff(() => KeyboardService.getLayoutKeyInfo(params));
-          const callDuration = performance.now() - callStart;
-          console.log(`    Batch ${Math.floor(i / batchSize) + 1}: ${keyBatch.length} keys, ${callDuration.toFixed(2)}ms`);
           
           if (!(layoutInfo instanceof Error) && Array.isArray(layoutInfo)) {
             layoutInfo.forEach((keyInfo: any, index) => {
@@ -200,8 +177,6 @@ class ExportService {
               const keyData = dataMap.get(keyValue);
               if (keyData) {
                 const fnKey = `fn${layer}` as 'fn0' | 'fn1' | 'fn2' | 'fn3';
-                
-                // FIX: SDK returns { key, value }, not IDefKeyInfo
                 const bindValue = Number(keyInfo?.value);
                 if (!isNaN(bindValue) && typeof keyInfo?.value !== 'undefined') {
                   keyData.customKeys![fnKey] = {
@@ -209,7 +184,6 @@ class ExportService {
                     bindKeyValue: bindValue
                   };
                 } else {
-                  // Leave as null if no valid binding
                   keyData.customKeys![fnKey] = null;
                 }
               }
@@ -219,7 +193,6 @@ class ExportService {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
         
-        console.log(`  Fn${layer} completed in ${(performance.now() - layerStart).toFixed(2)}ms`);
         await new Promise(resolve => setTimeout(resolve, 100));
       }
     } catch (error) {
@@ -393,8 +366,6 @@ class ExportService {
     let wasAlreadyCustom = false;
 
     try {
-      console.log('Preparing to capture custom RGB data...');
-      
       const mainLighting = await KeyboardService.getLighting();
       const logoLighting = await KeyboardService.getLogoLighting();
       const otherLighting = await KeyboardService.getSpecialLighting();
@@ -411,11 +382,7 @@ class ExportService {
 
       wasAlreadyCustom = mainLighting.mode === 21 && (mainLighting.open === true || mainLighting.open === 1);
 
-      if (wasAlreadyCustom) {
-        console.log('Already in custom mode with lighting on, proceeding with export...');
-      } else {
-        console.log(`Temporarily switching from mode ${mainLighting.mode} to custom mode (21)...`);
-        
+      if (!wasAlreadyCustom) {
         const { dynamicColorId, ...filteredParams } = mainLighting;
         filteredParams.mode = 21;
         filteredParams.type = 'custom';
@@ -427,45 +394,34 @@ class ExportService {
         }
 
         await new Promise(resolve => setTimeout(resolve, 300));
-        console.log('Switched to custom mode successfully (temporarily enabled if it was off)');
       }
 
       const result = await callback();
-
       return result;
 
     } finally {
       if (snapshot && !wasAlreadyCustom) {
         try {
-          console.log('Restoring original lighting state for all zones...');
-          
           const mainWasOff = snapshot.main.open === false || snapshot.main.open === 0;
           
           if (mainWasOff) {
-            console.log('Main zone was originally OFF, restoring OFF state...');
             const { dynamicColorId, ...mainParams } = snapshot.main;
             mainParams.open = false;
-            
             const mainResult = await KeyboardService.setLighting(mainParams);
             if (mainResult instanceof Error) {
               console.error('Failed to restore main zone OFF:', mainResult.message);
             }
           } else {
-            console.log('Restoring main zone to original mode...');
             const { dynamicColorId, ...mainParams } = snapshot.main;
-            
             const mainResult = await KeyboardService.setLighting(mainParams);
             if (mainResult instanceof Error) {
               console.error('Failed to restore main lighting:', mainResult.message);
-            } else {
-              console.log('Main zone restored successfully');
             }
           }
 
           if (snapshot.logo) {
             const logoWasOn = snapshot.logo.open === true || snapshot.logo.open === 1;
             if (logoWasOn) {
-              console.log('Restoring logo zone...');
               const { dynamicColorId, ...logoParams } = snapshot.logo;
               const logoResult = await KeyboardService.setLogoLighting(logoParams);
               if (logoResult instanceof Error) {
@@ -477,7 +433,6 @@ class ExportService {
           if (snapshot.other) {
             const otherWasOn = snapshot.other.open === true || snapshot.other.open === 1;
             if (otherWasOn) {
-              console.log('Restoring special zone...');
               const { dynamicColorId, ...otherParams } = snapshot.other;
               const otherResult = await KeyboardService.setSpecialLighting(otherParams);
               if (otherResult instanceof Error) {
@@ -485,8 +440,6 @@ class ExportService {
               }
             }
           }
-
-          console.log('All zones restored to original state');
         } catch (error) {
           console.error('Error restoring lighting state:', error);
         }
@@ -568,7 +521,6 @@ class ExportService {
         }
       }, 40);
 
-      console.log(`Found ${macros.length} macros`);
       return { list: macros, v2list: [] };
     } catch (error) {
       console.error('Error building macro library:', error);
@@ -577,10 +529,6 @@ class ExportService {
   }
 
   async gatherKeyboardSnapshot(): Promise<KeyboardConfig> {
-    console.log('Starting keyboard snapshot collection...');
-    const snapshotStart = performance.now();
-    
-    // Reset cache for fresh export
     this.globalTravelCache = null;
 
     let originalLighting: any = null;
@@ -588,7 +536,6 @@ class ExportService {
     let originalSpecial: any = null;
 
     try {
-      console.log('Pre-export: Capturing original lighting state for restoration...');
       originalLighting = await KeyboardService.getLighting();
       originalLogo = await KeyboardService.getLogoLighting();
       originalSpecial = await KeyboardService.getSpecialLighting();
@@ -597,8 +544,6 @@ class ExportService {
         throw new Error('Failed to capture original lighting state');
       }
 
-      console.log(`Original mode: ${originalLighting.mode}, switching to custom mode (21) for export...`);
-      
       const { dynamicColorId, ...originalParams } = originalLighting;
       const tempCustomParams: any = {
         ...originalParams,
@@ -613,18 +558,10 @@ class ExportService {
       }
 
       await new Promise(resolve => setTimeout(resolve, 300));
-      console.log('Keyboard now in custom mode - proceeding with data collection...');
 
-      console.log('Step 1: Gathering system info...');
       const system = await this.gatherDeviceInfo();
-      
-      console.log('Step 2: Gathering lighting configuration (in custom mode)...');
       const light = await this.gatherLightingConfig();
-      
-      console.log('Step 3: Gathering keyboard layouts and key data...');
       const keyboards = await this.gatherKeyboardsConfig();
-      
-      console.log('Step 4: Building macro library...');
       const macro = await this.buildMacroLibrary();
 
       const config: KeyboardConfig = {
@@ -633,24 +570,16 @@ class ExportService {
         keyboards: keyboards as Keyboards[],
         macro,
       };
-
-      const totalDuration = performance.now() - snapshotStart;
-      console.log(`Keyboard snapshot collection complete in ${totalDuration.toFixed(2)}ms`);
-      console.log(`Total keys: ${keyboards.length}, Total macros: ${macro.list.length}`);
       
       return config;
 
     } finally {
       if (originalLighting && !(originalLighting instanceof Error)) {
-        console.log('Post-export: Restoring original lighting state...');
-        
         try {
           const { dynamicColorId, ...mainParams } = originalLighting;
           const restoreResult = await KeyboardService.setLighting(mainParams);
           if (restoreResult instanceof Error) {
             console.error('Failed to restore main lighting:', restoreResult.message);
-          } else {
-            console.log(`Main lighting restored to mode ${originalLighting.mode}`);
           }
 
           if (originalLogo && !(originalLogo instanceof Error)) {
@@ -668,8 +597,6 @@ class ExportService {
               await KeyboardService.setSpecialLighting(specialParams);
             }
           }
-
-          console.log('Original lighting state restored successfully');
         } catch (error) {
           console.error('Error restoring original lighting:', error);
         }
@@ -679,41 +606,11 @@ class ExportService {
 
   async exportProfile(filename: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('Gathering keyboard configuration...');
       const config = await this.gatherKeyboardSnapshot();
-      
-      console.log('Exporting configuration to file...');
       KeyboardService.exportConfig(config, filename);
-      console.log(`Profile exported successfully as ${filename}`);
       return { success: true };
     } catch (error) {
       console.error('Failed to export profile:', error);
-      return { success: false, error: (error as Error).message };
-    }
-  }
-
-  async exportProfileDebug(filename: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      console.log('Gathering keyboard configuration for debug export...');
-      const config = await this.gatherKeyboardSnapshot();
-      
-      console.log('Exporting raw JSON configuration...');
-      const jsonString = JSON.stringify(config, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${filename}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      console.log(`Debug profile exported successfully as ${filename}.json`);
-      return { success: true };
-    } catch (error) {
-      console.error('Failed to export debug profile:', error);
       return { success: false, error: (error as Error).message };
     }
   }
@@ -747,7 +644,6 @@ class ExportService {
       (config.light?.other && !config.light.other.open);
 
     if (anyZoneOff) {
-      console.log('Turning off all lighting zones (per config)...');
       const closeResult = await KeyboardService.closedLighting();
       if (closeResult instanceof Error) {
         console.error('Failed to turn off lighting:', closeResult.message);
@@ -759,8 +655,6 @@ class ExportService {
       const result = await KeyboardService.setLighting(mainLighting);
       if (result instanceof Error) {
         console.error('Failed to apply main lighting:', result.message);
-      } else {
-        console.log(`Main lighting applied: ${config.light.main.mode} mode`);
       }
     }
 
@@ -769,8 +663,6 @@ class ExportService {
       const result = await KeyboardService.setLogoLighting(logoLighting);
       if (result instanceof Error) {
         console.error('Failed to apply logo lighting:', result.message);
-      } else {
-        console.log('Logo lighting applied');
       }
     }
 
@@ -779,64 +671,27 @@ class ExportService {
       const result = await KeyboardService.setSpecialLighting(otherLighting);
       if (result instanceof Error) {
         console.error('Failed to apply special lighting:', result.message);
-      } else {
-        console.log('Special lighting applied');
       }
     }
   }
 
   async applyImportedConfig(config: KeyboardConfig): Promise<void> {
     try {
-      console.log('Waiting for SDK profile import to complete...');
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      console.log('Saving custom RGB to hardware flash...');
       const saveResult = await KeyboardService.saveCustomLighting();
       if (saveResult instanceof Error) {
         console.error('Failed to save custom lighting:', saveResult.message);
-      } else {
-        console.log('Custom RGB colors saved successfully');
       }
-
-      console.log('Configuration applied successfully');
     } catch (error) {
       console.error('Failed to apply imported configuration:', error);
       throw error;
     }
   }
 
-  async importProfileDebug(file: File): Promise<{ success: boolean; error?: string }> {
-    try {
-      console.log('Importing unencrypted profile via SDK...');
-      
-      const result = await KeyboardService.importConfig(file);
-      
-      if (result instanceof Error) {
-        return { success: false, error: result.message };
-      }
-
-      if (result.success === false) {
-        return { success: false, error: result.error || 'Import failed' };
-      }
-
-      console.log('SDK import complete, restoring custom RGB...');
-      
-      const text = await file.text();
-      const config: KeyboardConfig = JSON.parse(text);
-      
-      await this.applyImportedConfig(config);
-      
-      console.log('Debug profile imported and custom RGB applied successfully');
-      return { success: true };
-    } catch (error) {
-      console.error('Failed to import debug profile:', error);
-      return { success: false, error: (error as Error).message };
-    }
-  }
-
   async importProfile(file: File): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('Switching to custom mode before import...');
+      // Switch to custom mode before import to ensure RGB data loads correctly
       const currentState = await KeyboardService.getLighting();
       
       if (!(currentState instanceof Error)) {
@@ -848,12 +703,10 @@ class ExportService {
         if (switchResult instanceof Error) {
           console.error('Failed to switch to custom mode:', switchResult.message);
         } else {
-          console.log('Switched to custom mode 21');
           await new Promise(resolve => setTimeout(resolve, 250));
         }
       }
       
-      console.log('Importing profile from file...');
       const result = await KeyboardService.importConfig(file);
       
       if (result instanceof Error) {
@@ -864,11 +717,10 @@ class ExportService {
         return { success: false, error: result.error || 'Import failed' };
       }
 
-      console.log('Profile imported successfully');
-      
       const text = await file.text();
       const config: KeyboardConfig = JSON.parse(text);
       
+      // Wait for SDK import to complete, then save custom RGB to flash
       await this.applyImportedConfig(config);
       
       return { success: true };

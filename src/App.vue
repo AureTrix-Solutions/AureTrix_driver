@@ -48,12 +48,6 @@
         <button class="export-btn" @click="exportProfile" :disabled="!connectionStore.isConnected">
           Export Profile
         </button>
-        <button class="debug-export-btn" @click="exportProfileDebug" :disabled="!connectionStore.isConnected">
-          Debug Export (JSON)
-        </button>
-        <button class="debug-import-btn" @click="importProfileDebug" :disabled="!connectionStore.isConnected">
-          Debug Import (JSON)
-        </button>
         <button class="import-btn" @click="importProfile" :disabled="!connectionStore.isConnected">
           Import Profile
         </button>
@@ -163,7 +157,6 @@ export default defineComponent({
       return String(value);
     },
     handleCategoryClick(item: any, event: MouseEvent) {
-      console.log('Category clicked:', item.name);
       if (this.openCategory === item) {
         this.closeCategory();
         return;
@@ -219,60 +212,9 @@ export default defineComponent({
         const exportResult = await ExportService.exportProfile(filename);
         if (!exportResult.success) {
           console.error('Failed to export profile:', exportResult.error);
-        } else {
-          console.log(`Profile "${profileName}" exported successfully as ${filename}`);
         }
       } catch (error) {
         console.error('Export profile error:', error);
-      }
-    },
-    async exportProfileDebug() {
-      try {
-        const activeProfile = this.profileStore.profiles.find(p => p.id === this.profileStore.activeProfileId);
-        const profileName = activeProfile ? activeProfile.name : 'keyboard-config';
-        const filename = `${profileName}-debug`;
-        
-        const exportResult = await ExportService.exportProfileDebug(filename);
-        if (!exportResult.success) {
-          console.error('Failed to export debug profile:', exportResult.error);
-        } else {
-          console.log(`Debug profile "${profileName}" exported successfully as ${filename}.json`);
-        }
-      } catch (error) {
-        console.error('Export debug profile error:', error);
-      }
-    },
-    async importProfileDebug() {
-      try {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        
-        input.onchange = async (event: Event) => {
-          const target = event.target as HTMLInputElement;
-          const file = target.files?.[0];
-          if (!file) {
-            console.log('No file selected');
-            return;
-          }
-          
-          const importResult = await ExportService.importProfileDebug(file);
-          if (!importResult.success) {
-            console.error('Failed to import debug profile:', importResult.error);
-            return;
-          }
-          
-          if (importResult.success) {
-            console.log('Debug profile imported and applied successfully - reloading page...');
-            window.location.reload();
-          } else {
-            console.error('Debug import failed:', importResult.error || 'Unknown error');
-          }
-        };
-        
-        input.click();
-      } catch (error) {
-        console.error('Import debug profile error:', error);
       }
     },
     async importProfile() {
@@ -285,7 +227,6 @@ export default defineComponent({
           const target = event.target as HTMLInputElement;
           const file = target.files?.[0];
           if (!file) {
-            console.log('No file selected');
             return;
           }
           
@@ -296,7 +237,6 @@ export default defineComponent({
           }
           
           if (importResult.success) {
-            console.log('Profile imported successfully - reloading page...');
             window.location.reload();
           } else {
             console.error('Import failed:', importResult.error || 'Unknown error');
@@ -552,8 +492,6 @@ export default defineComponent({
 }
 
 .export-btn,
-.debug-export-btn,
-.debug-import-btn,
 .import-btn {
   width: 100%;
   font-family: v.$font-style;

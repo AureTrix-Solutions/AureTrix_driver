@@ -503,12 +503,12 @@ class ExportService {
     try {
       const customLight = await this.retryWithBackoff(() => KeyboardService.getCustomLighting(keyValue));
 
-      if (!(customLight instanceof Error) && customLight.r !== undefined) {
+      if (!(customLight instanceof Error) && customLight.R !== undefined) {
         keyData.light = {
           custom: {
-            R: customLight.r,
-            G: customLight.g,
-            B: customLight.b,
+            R: customLight.R,
+            G: customLight.G,
+            B: customLight.B,
             key: keyValue,
           },
         };

@@ -730,6 +730,40 @@ class KeyboardService {
       return error as Error;
     }
   }
+
+  async exportEncryptedJSON(filename?: string): Promise<void | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const exportController = (this.keyboard as any).exportController;
+      if (!exportController || typeof exportController.exportEncryptedJSON !== 'function') {
+        return new Error('Export functionality not available in SDK');
+      }
+      await exportController.exportEncryptedJSON({}, filename || 'keyboard-config.json');
+    } catch (error) {
+      console.error('Failed to export config:', error);
+      return error as Error;
+    }
+  }
+
+  async importEncryptedJSON(file: File): Promise<{ success: boolean; error?: string } | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const exportController = (this.keyboard as any).exportController;
+      if (!exportController || typeof exportController.importEncryptedJSON !== 'function') {
+        return new Error('Import functionality not available in SDK');
+      }
+      const result = await exportController.importEncryptedJSON(file);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to import config:', error);
+      return error as Error;
+    }
+  }
 }
 
 export default new KeyboardService();

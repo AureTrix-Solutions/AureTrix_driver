@@ -37,12 +37,21 @@
               @keyup.enter="finishEditing" @keyup.esc="cancelEditing" class="profile-name-input"
               :ref="`profileInput-${profile.id}`" @click.stop />
             <span v-else class="profile-name">{{ profile.name }}</span>
+            <span v-if="editingProfileId !== profile.id" class="export-icon" @click.stop="exportProfile(profile.id)"
+              role="button" tabindex="0" @keyup.enter="exportProfile(profile.id)" aria-label="Export profile">
+              ⬇
+            </span>
             <span v-if="editingProfileId !== profile.id" class="edit-icon" @click.stop="startEditing(profile.id)"
               role="button" tabindex="0" @keyup.enter="startEditing(profile.id)" aria-label="Edit profile name">
               ✏️
             </span>
           </button>
         </div>
+        
+        <!-- Import Profile Button -->
+        <button class="import-btn" @click="importProfile" :disabled="!connectionStore.isConnected">
+          Import Profile
+        </button>
       </nav>
       <p class="copyright">Copyright©2025 AureTrix</p>
     </aside>
@@ -71,6 +80,7 @@ import { defineComponent, computed, nextTick } from 'vue';
 import { RouterLink, RouterView } from 'vue-router';
 import { useConnectionStore } from './store/connection';
 import { useProfileStore } from './store/profileStore';
+import KeyboardService from './services/KeyboardService';
 
 export default defineComponent({
   name: 'App',
@@ -193,6 +203,66 @@ export default defineComponent({
     cancelEditing() {
       this.editingProfileId = null;
       this.editingProfileName = '';
+    },
+    async exportProfile(profileId: number) {
+      try {
+        const profile = this.profileStore.getProfileById(profileId);
+        if (!profile) {
+          console.error('Profile not found');
+          return;
+        }
+        
+        const switchResult = await KeyboardService.switchConfig(profileId);
+        if (switchResult instanceof Error) {
+          console.error('Failed to switch to profile:', switchResult.message);
+          return;
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const filename = `${profile.name}.json`;
+        const exportResult = await KeyboardService.exportEncryptedJSON(filename);
+        if (exportResult instanceof Error) {
+          console.error('Failed to export profile:', exportResult.message);
+        } else {
+          console.log(`Profile "${profile.name}" exported successfully as ${filename}`);
+        }
+      } catch (error) {
+        console.error('Export profile error:', error);
+      }
+    },
+    async importProfile() {
+      try {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = async (event: Event) => {
+          const target = event.target as HTMLInputElement;
+          const file = target.files?.[0];
+          if (!file) {
+            console.log('No file selected');
+            return;
+          }
+          
+          const importResult = await KeyboardService.importEncryptedJSON(file);
+          if (importResult instanceof Error) {
+            console.error('Failed to import profile:', importResult.message);
+            return;
+          }
+          
+          if (importResult.success) {
+            console.log('Profile imported successfully');
+            window.location.reload();
+          } else {
+            console.error('Import failed:', importResult.error || 'Unknown error');
+          }
+        };
+        
+        input.click();
+      } catch (error) {
+        console.error('Import profile error:', error);
+      }
     }
   }
 });
@@ -404,6 +474,23 @@ export default defineComponent({
   }
 }
 
+.export-icon {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 2px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
 .edit-icon {
   position: absolute;
   top: -10px;
@@ -434,6 +521,30 @@ export default defineComponent({
 
   &:focus {
     color: v.$accent-color;
+  }
+}
+
+.import-btn {
+  width: 100%;
+  font-family: v.$font-style;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid rgba(v.$text-color, 0.2);
+  border-radius: v.$border-radius;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  color: v.$primary-color;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.85rem;
+  text-align: center;
+
+  &:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 }
 

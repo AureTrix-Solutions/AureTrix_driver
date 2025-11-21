@@ -37,10 +37,6 @@
               @keyup.enter="finishEditing" @keyup.esc="cancelEditing" class="profile-name-input"
               :ref="`profileInput-${profile.id}`" @click.stop />
             <span v-else class="profile-name">{{ profile.name }}</span>
-            <span v-if="editingProfileId !== profile.id" class="export-icon" @click.stop="exportProfile(profile.id)"
-              role="button" tabindex="0" @keyup.enter="exportProfile(profile.id)" aria-label="Export profile">
-              ⬇
-            </span>
             <span v-if="editingProfileId !== profile.id" class="edit-icon" @click.stop="startEditing(profile.id)"
               role="button" tabindex="0" @keyup.enter="startEditing(profile.id)" aria-label="Edit profile name">
               ✏️
@@ -48,7 +44,10 @@
           </button>
         </div>
         
-        <!-- Import Profile Button -->
+        <!-- Profile Control Buttons -->
+        <button class="export-btn" @click="exportProfile" :disabled="!connectionStore.isConnected">
+          Export Profile
+        </button>
         <button class="import-btn" @click="importProfile" :disabled="!connectionStore.isConnected">
           Import Profile
         </button>
@@ -204,28 +203,17 @@ export default defineComponent({
       this.editingProfileId = null;
       this.editingProfileName = '';
     },
-    async exportProfile(profileId: number) {
+    async exportProfile() {
       try {
-        const profile = this.profileStore.getProfileById(profileId);
-        if (!profile) {
-          console.error('Profile not found');
-          return;
-        }
+        const activeProfile = this.profileStore.profiles.find(p => p.id === this.profileStore.activeProfileId);
+        const profileName = activeProfile ? activeProfile.name : 'keyboard-config';
+        const filename = `${profileName}.json`;
         
-        const switchResult = await KeyboardService.switchConfig(profileId);
-        if (switchResult instanceof Error) {
-          console.error('Failed to switch to profile:', switchResult.message);
-          return;
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const filename = `${profile.name}.json`;
         const exportResult = await KeyboardService.exportEncryptedJSON(filename);
         if (exportResult instanceof Error) {
           console.error('Failed to export profile:', exportResult.message);
         } else {
-          console.log(`Profile "${profile.name}" exported successfully as ${filename}`);
+          console.log(`Profile "${profileName}" exported successfully as ${filename}`);
         }
       } catch (error) {
         console.error('Export profile error:', error);
@@ -474,23 +462,6 @@ export default defineComponent({
   }
 }
 
-.export-icon {
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 0.7rem;
-  padding: 2px;
-  opacity: 0.6;
-  transition: opacity 0.2s;
-
-  &:hover {
-    opacity: 1;
-  }
-}
-
 .edit-icon {
   position: absolute;
   top: -10px;
@@ -524,6 +495,7 @@ export default defineComponent({
   }
 }
 
+.export-btn,
 .import-btn {
   width: 100%;
   font-family: v.$font-style;

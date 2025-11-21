@@ -790,61 +790,12 @@ class ExportService {
       console.log('Waiting for SDK profile import to complete...');
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const keysWithCustomLight = config.keyboards?.filter(k => k.light?.custom && k.light.custom.key) || [];
-      
-      if (keysWithCustomLight.length > 0) {
-        console.log(`Restoring custom RGB for ${keysWithCustomLight.length} keys...`);
-        console.log('Step 1: Loading SDK working buffer with getCustomLighting()...');
-
-        for (let i = 0; i < keysWithCustomLight.length; i += 80) {
-          const batch = keysWithCustomLight.slice(i, i + 80);
-          
-          await Promise.all(
-            batch.map(async (keyData) => {
-              const result = await KeyboardService.getCustomLighting(keyData.light!.custom.key);
-              
-              if (result instanceof Error) {
-                console.error(`Failed to get custom lighting for key ${keyData.light!.custom.key}:`, result.message);
-              }
-            })
-          );
-          
-          if (i + 80 < keysWithCustomLight.length) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-        }
-
-        console.log('Step 2: Applying imported RGB colors with setCustomLighting()...');
-        for (let i = 0; i < keysWithCustomLight.length; i += 80) {
-          const batch = keysWithCustomLight.slice(i, i + 80);
-          
-          await Promise.all(
-            batch.map(async (keyData) => {
-              const result = await KeyboardService.setCustomLighting({
-                key: keyData.light!.custom.key,
-                r: keyData.light!.custom.R,
-                g: keyData.light!.custom.G,
-                b: keyData.light!.custom.B,
-              });
-              
-              if (result instanceof Error) {
-                console.error(`Failed to set custom lighting for key ${keyData.light!.custom.key}:`, result.message);
-              }
-            })
-          );
-          
-          if (i + 80 < keysWithCustomLight.length) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-        }
-
-        console.log('Step 3: Saving custom RGB to hardware flash with saveCustomLighting()...');
-        const saveResult = await KeyboardService.saveCustomLighting();
-        if (saveResult instanceof Error) {
-          console.error('Failed to save custom lighting:', saveResult.message);
-        } else {
-          console.log('Custom RGB colors saved to hardware successfully');
-        }
+      console.log('Saving custom RGB to hardware flash...');
+      const saveResult = await KeyboardService.saveCustomLighting();
+      if (saveResult instanceof Error) {
+        console.error('Failed to save custom lighting:', saveResult.message);
+      } else {
+        console.log('Custom RGB colors saved successfully');
       }
 
       console.log('Configuration applied successfully');

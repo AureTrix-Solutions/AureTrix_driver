@@ -8,20 +8,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**November 21, 2025 - Fixed Custom RGB Persistence with Correct SDK Buffer Ordering**
-- **Critical Discovery**: SDK requires GET-SET-SAVE order for custom RGB persistence: `getCustomLighting()` → `setCustomLighting()` → `saveCustomLighting()`
-- **Why GET First**: `getCustomLighting()` populates the SDK's internal working buffer, which `setCustomLighting()` then mutates before `saveCustomLighting()` commits
+**November 21, 2025 - Fixed Custom RGB Persistence with Simple Save Call**
+- **Simple Solution**: SDK `importConfig()` loads all data including custom RGB into keyboard memory
 - **Import Flow**: 
-  1. SDK `importConfig()` imports full profile (includes mode="custom")
+  1. SDK `importConfig()` imports full profile (includes mode="custom" and all custom RGB data)
   2. Wait 1 second for profile to apply to hardware
-  3. GET loop: Call `getCustomLighting()` for each key (seeds SDK buffer)
-  4. SET loop: Call `setCustomLighting()` with imported colors (mutates buffer)
-  5. Call `saveCustomLighting()` once (commits buffer to flash)
-- **Key Insight**: SDK import handles all settings except per-key custom RGB, which requires manual GET→SET→SAVE sequence
-- **No Manual Mode Switch**: Exported profile already contains mode="custom", so no explicit mode switching needed during import
-- **Batch Processing**: Both GET and SET use 80-key batches with 100ms delays to prevent hardware saturation
+  3. Call `saveCustomLighting()` once to commit custom RGB to flash memory
+- **Key Insight**: SDK import handles everything; we just need to save the custom RGB data to flash
+- **No Manual Loops**: No need for GET/SET loops - SDK already loads the data
+- **No Manual Mode Switch**: Exported profile already contains mode="custom"
 - **Export Flow**: Switch to custom mode → capture all data (shows mode="custom", dynamic=21) → restore original mode
-- **Result**: Custom RGB colors now persist through browser refreshes and lighting mode switches
+- **Result**: Custom RGB colors persist through browser refreshes and lighting mode switches
 
 ## System Architecture
 

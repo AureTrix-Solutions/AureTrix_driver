@@ -12,7 +12,8 @@ Preferred communication style: Simple, everyday language.
 - **Critical Discovery**: SDK requires GET-SET-SAVE order for custom RGB persistence: `getCustomLighting()` → `setCustomLighting()` → `saveCustomLighting()`
 - **Why GET First**: `getCustomLighting()` populates the SDK's internal working buffer, which `setCustomLighting()` then mutates before `saveCustomLighting()` commits
 - **Wrong Order**: SET→GET→SAVE causes the SDK to reload old colors into the buffer right before saving, overwriting the new colors
-- **Import Flow**: Switch to custom mode → GET all keys (load SDK buffer) → SET all keys (mutate buffer with new colors) → SAVE (commit to flash)
+- **Import Flow**: SDK imports full profile (key mappings, macros, lighting modes) → wait 1s → GET all keys (load SDK buffer) → SET all keys (mutate buffer) → SAVE (commit to flash)
+- **Key Insight**: Only custom RGB needs manual restoration; all other settings (key mappings, macros, system settings) persist automatically via SDK import
 - **Batch Processing**: Both GET and SET use 80-key batches with 100ms delays to prevent hardware saturation
 - **Export Flow**: Switch to custom mode → capture all data (shows mode="custom", dynamic=21) → restore original mode
 - **Result**: Custom RGB colors now persist through browser refreshes and lighting mode switches

@@ -790,10 +790,31 @@ class ExportService {
       console.log('Waiting for SDK profile import to complete...');
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const keysWithCustomLight = config.keyboards?.filter(k => k.light?.custom) || [];
+      const keysWithCustomLight = config.keyboards?.filter(k => k.light?.custom && k.light.custom.key) || [];
       
       if (keysWithCustomLight.length > 0) {
-        console.log(`Phase 3: Restoring custom RGB for ${keysWithCustomLight.length} keys...`);
+        console.log(`Restoring custom RGB for ${keysWithCustomLight.length} keys...`);
+        console.log('Ensuring keyboard is in custom mode...');
+        
+        const currentLighting = await KeyboardService.getLighting();
+        if (!(currentLighting instanceof Error)) {
+          const { dynamicColorId, ...params } = currentLighting;
+          const customModeParams: any = {
+            ...params,
+            type: 'custom',
+            mode: 21,
+            open: true,
+          };
+          
+          const switchResult = await KeyboardService.setLighting(customModeParams);
+          if (switchResult instanceof Error) {
+            console.error('Failed to switch to custom mode:', switchResult.message);
+            return;
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        
         console.log('Step 1: Loading SDK working buffer with getCustomLighting()...');
 
         for (let i = 0; i < keysWithCustomLight.length; i += 80) {
@@ -856,14 +877,26 @@ class ExportService {
 
   async importProfileDebug(file: File): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('Importing unencrypted profile from file...');
+      console.log('Importing unencrypted profile via SDK...');
+      
+      const result = await KeyboardService.importConfig(file);
+      
+      if (result instanceof Error) {
+        return { success: false, error: result.message };
+      }
+
+      if (result.success === false) {
+        return { success: false, error: result.error || 'Import failed' };
+      }
+
+      console.log('SDK import complete, restoring custom RGB...');
       
       const text = await file.text();
       const config: KeyboardConfig = JSON.parse(text);
       
       await this.applyImportedConfig(config);
       
-      console.log('Debug profile imported and applied successfully');
+      console.log('Debug profile imported and custom RGB applied successfully');
       return { success: true };
     } catch (error) {
       console.error('Failed to import debug profile:', error);
@@ -885,6 +918,12 @@ class ExportService {
       }
 
       console.log('Profile imported successfully');
+      
+      const text = await file.text();
+      const config: KeyboardConfig = JSON.parse(text);
+      
+      await this.applyImportedConfig(config);
+      
       return { success: true };
     } catch (error) {
       console.error('Failed to import profile:', error);

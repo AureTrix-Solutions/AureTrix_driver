@@ -19,6 +19,7 @@ Preferred communication style: Simple, everyday language.
 - **Zero Visual Impact**: Users won't see mode changes during export (300ms flash if watching closely)
 - **Export Time Impact**: +300-600ms for mode switching overhead, still completes in 3-5 seconds total
 - **Test Matrix Coverage**: All combinations of main/logo/special zones ON/OFF properly preserved after export
+- **Case Sensitivity Bug Fix**: Fixed `gatherLightingData()` to use uppercase `customLight.R/G/B` instead of lowercase `customLight.r/g/b` to match SDK's response format (matches pattern in Lighting.vue and Debug.vue)
 
 **November 21, 2025 - Complete Export Using Proven Batch Processing Patterns**
 - **Fixed approach**: Removed incorrect ORDER_TYPE_CONFIG usage (only switches profiles, doesn't return config)

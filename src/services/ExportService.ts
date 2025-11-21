@@ -842,11 +842,8 @@ class ExportService {
         }
       }
 
-      console.log('Restoring target lighting configuration from import...');
-      await this.applyLightingZones(config);
-
       console.log('Configuration applied successfully');
-      console.log(`Lighting restored to: ${config.light?.main?.mode} mode with custom RGB colors persisted`);
+      console.log('Keyboard left in custom mode - user can manually switch to preferred lighting mode');
     } catch (error) {
       console.error('Failed to apply imported configuration:', error);
       throw error;

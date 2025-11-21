@@ -6,6 +6,21 @@ AureTrix is a web-based configuration tool for hall effect keyboards compatible 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+**November 21, 2025 - Profile Quick-Access Buttons with SDK Integration**
+- Added 4 customizable profile buttons in 2x2 grid layout below Debug nav item in sidebar
+- Created profileStore.ts with Pinia for managing profiles, active profile, and localStorage persistence
+- Integrated SDK's switchConfig method for hardware profile switching via profile buttons
+- Added KeyboardService.switchConfig wrapper that maps profileId (1-4) to SDK config index (0-3) with error handling
+- Single-click profile button triggers hardware profile switch via SDK and full page reload
+- **Full page reload after successful profile switch**: Ensures all UI components re-mount and re-fetch settings (lighting, key mappings, macros) from newly active profile
+- Added small edit icon (✏️) in top-right corner of each profile button for renaming
+- Edit icon implemented as accessible span element with role="button", tabindex="0", and Enter key support
+- UX flow: click button switches keyboard hardware profile with page reload, click edit icon enters rename mode
+- Profile names persist in localStorage independently of hardware profile state
+- Page reload only triggers on successful SDK switch, not on rename operations or failed switches
+
 ## System Architecture
 
 ### Frontend Architecture

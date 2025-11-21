@@ -1,0 +1,101 @@
+ExportService.ts:477 Importing profile from file...
+KeyboardService.ts:872 配置验证失败: light.mode must be string
+validateKeyboardConfig @ @sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1321
+n2.onload @ @sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1307
+FileReader
+(anonymous) @ @sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1313
+importEncryptedJSON @ @sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1301
+importConfig @ @sparklinkplayjoy_sdk-keyboard.js?v=b164615f:4259
+importConfig @ KeyboardService.ts:872
+importProfile @ ExportService.ts:478
+input.onchange @ App.vue:237
+KeyboardService.ts:876 Failed to import config: Error: 配置验证失败
+    at n2.onload (@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1307:51)
+importConfig @ KeyboardService.ts:876
+await in importConfig
+importProfile @ ExportService.ts:478
+input.onchange @ App.vue:237
+App.vue:239 Failed to import profile: 配置验证失败
+input.onchange @ App.vue:239
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1351 result:  (80) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 0 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 1 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 2 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 3 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 4 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 5 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 6 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 7 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 8 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 9 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 10 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 11 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 12 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 13 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 14 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 15 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 16 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 17 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 18 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 19 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 20 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 21 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 22 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 23 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 24 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 25 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 26 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 27 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 28 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 29 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 30 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 31 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 32 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 33 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 34 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 35 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 36 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 37 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 38 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 39 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 40 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 41 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 42 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 43 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 44 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 45 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 46 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 47 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 48 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 49 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 50 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 51 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 52 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 53 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 54 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 55 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 56 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 57 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 58 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 59 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 60 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 61 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 62 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 63 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 64 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 65 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 66 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 67 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 68 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 69 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}advancedKeysRes: undefinedcustomKeysRes: Array(4)0: {status: 'fulfilled', value: Array(1)}status: "fulfilled"value: [{…}][[Prototype]]: Object1: {status: 'fulfilled', value: Array(1)}2: {status: 'fulfilled', value: Array(1)}3: {status: 'fulfilled', value: Array(1)}length: 4[[Prototype]]: Array(0)lightRes: {key: 229, R: 255, G: 255, B: 255}performanceRes: (2) [Promise, {…}][[Prototype]]: Object
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 70 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 71 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 72 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 73 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 74 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 75 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 76 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 77 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 78 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1352 Keyboard 79 results:  {advancedKeysRes: undefined, performanceRes: Array(2), customKeysRes: Array(4), lightRes: {…}}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:2819 paramparamparamparam {type: 'ORDER_TYPE_TOP_DEAD_SWITCH', hArgs: Array(1)}

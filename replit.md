@@ -8,13 +8,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**November 21, 2025 - Simplified Export: ORDER_TYPE_CONFIG Single-Call Approach**
-- **Complete rewrite**: Discovered previous implementation was fundamentally wrong - making hundreds of individual SDK calls
-- **Correct approach**: Use SDK's built-in `ORDER_TYPE_CONFIG` command via getApi() to retrieve complete configuration in one call
-- **Fixed schema compliance**: Replaced duplicated interfaces with proper SDK type imports from validate.d.ts
-- Single SDK call replaces all manual per-key iteration (Phase A/B/C/D approach eliminated)
-- Export now completes in milliseconds instead of 26+ seconds with zero timeouts
-- Configuration data comes directly from SDK, ensuring accuracy and completeness
+**November 21, 2025 - Complete Export Using Proven Batch Processing Patterns**
+- **Fixed approach**: Removed incorrect ORDER_TYPE_CONFIG usage (only switches profiles, doesn't return config)
+- **Implemented complete 4-phase data collection** matching proven patterns from MappedKeyboard.ts and Vue pages:
+  - **Phase A**: Layout bindings (Fn0-Fn3) using 10-key sequential batches for `getLayoutKeyInfo()` array method
+  - **Phase B**: Performance & travel data using 80-key batches with 100ms delays via `processBatches`
+  - **Phase C**: Advanced key data (DKS, MPT, SOCD, MT, TGL, END) using 80-key batches with 100ms delays
+  - **Phase D**: Per-key custom RGB lighting using 80-key batches with 100ms delays
+- **Complete lighting zones**: Added `getLogoLighting()` and `getSpecialLighting()` to KeyboardService for main/logo/other zones
+- **Complete macro library**: Iterates all keys to find macro assignments via `getMacro()`
+- **Proper schema compliance**: Imports KeyboardConfig/Keyboards types from SDK's validate.d.ts
+- Export assembles complete KeyboardConfig from all phases: system, light (3 zones), keyboards (80 keys with all settings), macros
+- Batch sizes match production code: 10-key for array-based SDK methods, 80-key for single-key SDK methods
+- Expected completion time: 3-5 seconds for complete profile backup
 
 **November 21, 2025 - Optimized Profile Export/Import with Phased Batch Processing**
 - Created dedicated ExportService.ts for profile backup/restore functionality with timeout-resistant data collection

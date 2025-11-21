@@ -56,19 +56,13 @@ class ExportService {
   async gatherLightingConfig(): Promise<Partial<KeyboardConfig['light']>> {
     try {
       const lighting = await KeyboardService.getLighting();
-      if (lighting instanceof Error) {
-        console.error('Failed to get lighting:', lighting);
-        return {
-          main: this.getDefaultLightConfig(),
-          logo: this.getDefaultLightConfig(),
-          other: this.getDefaultLightConfig(),
-        };
-      }
+      const logoLighting = await KeyboardService.getLogoLighting();
+      const specialLighting = await KeyboardService.getSpecialLighting();
 
       return {
-        main: this.convertLightingToConfig(lighting),
-        logo: this.convertLightingToConfig(lighting),
-        other: this.getDefaultLightConfig(),
+        main: lighting instanceof Error ? this.getDefaultLightConfig() : this.convertLightingToConfig(lighting),
+        logo: logoLighting instanceof Error ? this.getDefaultLightConfig() : this.convertLightingToConfig(logoLighting),
+        other: specialLighting instanceof Error ? this.getDefaultLightConfig() : this.convertLightingToConfig(specialLighting),
       };
     } catch (error) {
       console.error('Error gathering lighting config:', error);
@@ -148,31 +142,30 @@ class ExportService {
       console.log(`Phase A completed in ${(performance.now() - phaseAStart).toFixed(2)}ms`);
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      // TEMPORARILY DISABLED FOR DEBUGGING - Testing Phase A in isolation
-      // console.log('Phase B: Gathering performance & travel data...');
-      // const phaseBStart = performance.now();
-      // await this.processBatches(allKeys, async (keyValue) => {
-      //   await this.gatherPerformanceData(keyValue, keyboardsData);
-      // }, 16, 200);
-      // console.log(`Phase B completed in ${(performance.now() - phaseBStart).toFixed(2)}ms`);
-      // await new Promise(resolve => setTimeout(resolve, 150));
+      console.log('Phase B: Gathering performance & travel data...');
+      const phaseBStart = performance.now();
+      await this.processBatches(allKeys, async (keyValue) => {
+        await this.gatherPerformanceData(keyValue, keyboardsData);
+      }, 80, 100);
+      console.log(`Phase B completed in ${(performance.now() - phaseBStart).toFixed(2)}ms`);
+      await new Promise(resolve => setTimeout(resolve, 150));
 
-      // console.log('Phase C: Gathering advanced key data...');
-      // const phaseCStart = performance.now();
-      // await this.processBatches(allKeys, async (keyValue) => {
-      //   await this.gatherAdvancedKeyData(keyValue, keyboardsData);
-      // }, 16, 250);
-      // console.log(`Phase C completed in ${(performance.now() - phaseCStart).toFixed(2)}ms`);
-      // await new Promise(resolve => setTimeout(resolve, 150));
+      console.log('Phase C: Gathering advanced key data...');
+      const phaseCStart = performance.now();
+      await this.processBatches(allKeys, async (keyValue) => {
+        await this.gatherAdvancedKeyData(keyValue, keyboardsData);
+      }, 80, 100);
+      console.log(`Phase C completed in ${(performance.now() - phaseCStart).toFixed(2)}ms`);
+      await new Promise(resolve => setTimeout(resolve, 150));
 
-      // console.log('Phase D: Gathering lighting data...');
-      // const phaseDStart = performance.now();
-      // await this.processBatches(allKeys, async (keyValue) => {
-      //   await this.gatherLightingData(keyValue, keyboardsData);
-      // }, 16, 200);
-      // console.log(`Phase D completed in ${(performance.now() - phaseDStart).toFixed(2)}ms`);
+      console.log('Phase D: Gathering per-key lighting data...');
+      const phaseDStart = performance.now();
+      await this.processBatches(allKeys, async (keyValue) => {
+        await this.gatherLightingData(keyValue, keyboardsData);
+      }, 80, 100);
+      console.log(`Phase D completed in ${(performance.now() - phaseDStart).toFixed(2)}ms`);
 
-      console.log('All phases complete (B, C, D temporarily disabled for debugging)');
+      console.log('All phases complete');
       return Array.from(keyboardsData.values()) as Keyboards[];
     } catch (error) {
       console.error('Error gathering keyboards config:', error);
@@ -183,7 +176,7 @@ class ExportService {
   private async gatherCustomKeyBindings(keys: number[], dataMap: Map<number, Partial<Keyboards>>): Promise<void> {
     try {
       const fnLayers = [0, 1, 2, 3];
-      const batchSize = 16; // Try different values: 1, 8, 16, 32, 40
+      const batchSize = 10;
       
       for (const layer of fnLayers) {
         console.log(`  Gathering Fn${layer} bindings (batchSize=${batchSize})...`);
@@ -212,11 +205,11 @@ class ExportService {
             });
           }
           
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
         
         console.log(`  Fn${layer} completed in ${(performance.now() - layerStart).toFixed(2)}ms`);
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     } catch (error) {
       console.error('Error gathering custom key bindings:', error);
@@ -436,21 +429,32 @@ class ExportService {
 
   async gatherKeyboardSnapshot(): Promise<KeyboardConfig> {
     console.log('Starting keyboard snapshot collection...');
-    console.log('Fetching full configuration via ORDER_TYPE_CONFIG...');
-    
-    const configStart = performance.now();
-    const configResult = await KeyboardService.getApi({ type: 'ORDER_TYPE_CONFIG' });
-    const configDuration = performance.now() - configStart;
-    console.log(`ORDER_TYPE_CONFIG completed in ${configDuration.toFixed(2)}ms`);
-    
-    if (configResult instanceof Error) {
-      console.error('Failed to get configuration via ORDER_TYPE_CONFIG:', configResult);
-      throw new Error('Could not retrieve keyboard configuration');
-    }
+    const snapshotStart = performance.now();
 
-    console.log('Configuration retrieved successfully');
-    console.log('Keyboard snapshot collection complete');
-    return configResult as KeyboardConfig;
+    console.log('Step 1: Gathering system info...');
+    const system = await this.gatherDeviceInfo();
+    
+    console.log('Step 2: Gathering lighting configuration...');
+    const light = await this.gatherLightingConfig();
+    
+    console.log('Step 3: Gathering keyboard layouts and key data...');
+    const keyboards = await this.gatherKeyboardsConfig();
+    
+    console.log('Step 4: Building macro library...');
+    const macro = await this.buildMacroLibrary();
+
+    const config: KeyboardConfig = {
+      system: system as KeyboardConfig['system'],
+      light: light as KeyboardConfig['light'],
+      keyboards: keyboards as Keyboards[],
+      macro,
+    };
+
+    const totalDuration = performance.now() - snapshotStart;
+    console.log(`Keyboard snapshot collection complete in ${totalDuration.toFixed(2)}ms`);
+    console.log(`Total keys: ${keyboards.length}, Total macros: ${macro.list.length}`);
+    
+    return config;
   }
 
   async exportProfile(filename: string): Promise<{ success: boolean; error?: string }> {

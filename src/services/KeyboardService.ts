@@ -643,6 +643,34 @@ class KeyboardService {
     }
   }
 
+  async getLogoLighting(): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.getLogoLighting();
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to get logo lighting:', error);
+      return error as Error;
+    }
+  }
+
+  async getSpecialLighting(): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.getSpecialLighting();
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to get special lighting:', error);
+      return error as Error;
+    }
+  }
+
   async setLighting(lightModeConfig: any): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {

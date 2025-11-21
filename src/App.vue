@@ -31,6 +31,30 @@
             <span class="arrow" :class="{ open: openCategory === item }">></span>
           </div>
         </template>
+
+        <!-- Profile Quick Access Grid -->
+        <div class="profile-grid">
+          <button
+            v-for="profile in profileStore.profiles"
+            :key="profile.id"
+            class="profile-btn"
+            :class="{ active: profileStore.activeProfileId === profile.id }"
+            @click="profileStore.setActiveProfile(profile.id)"
+            @dblclick="startEditing(profile.id)"
+          >
+            <input
+              v-if="editingProfileId === profile.id"
+              v-model="editingProfileName"
+              @blur="finishEditing"
+              @keyup.enter="finishEditing"
+              @keyup.esc="cancelEditing"
+              class="profile-name-input"
+              ref="profileInput"
+              @click.stop
+            />
+            <span v-else class="profile-name">{{ profile.name }}</span>
+          </button>
+        </div>
       </nav>
       <p class="copyright">Copyright©2025 AureTrix</p>
     </aside>
@@ -60,9 +84,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue';
+import { defineComponent, computed, nextTick } from 'vue';
 import { RouterLink, RouterView } from 'vue-router';
 import { useConnectionStore } from './store/connection';
+import { useProfileStore } from './store/profileStore';
 
 export default defineComponent({
   name: 'App',
@@ -72,7 +97,8 @@ export default defineComponent({
   },
   setup() {
     const connectionStore = useConnectionStore();
-    return { connectionStore };
+    const profileStore = useProfileStore();
+    return { connectionStore, profileStore };
   },
   data() {
     return {
@@ -108,7 +134,9 @@ export default defineComponent({
         { name: 'Debug', path: '/debug', isCategory: false }
       ],
       openCategory: null as any,
-      flyoutTop: 0
+      flyoutTop: 0,
+      editingProfileId: null as number | null,
+      editingProfileName: ''
     };
   },
   computed: {
@@ -135,17 +163,43 @@ export default defineComponent({
       return String(value);
     },
     handleCategoryClick(item: any, event: MouseEvent) {
-      console.log('Category clicked:', item.name); // Debug log
+      console.log('Category clicked:', item.name);
       if (this.openCategory === item) {
         this.closeCategory();
         return;
       }
       const target = event.currentTarget as HTMLElement;
-      this.flyoutTop = target.offsetTop - 50; // Raise by 50px; adjust value as needed
+      this.flyoutTop = target.offsetTop - 50;
       this.openCategory = item;
     },
     closeCategory() {
       this.openCategory = null;
+    },
+    startEditing(profileId: number) {
+      const profile = this.profileStore.getProfileById(profileId);
+      if (profile) {
+        this.editingProfileId = profileId;
+        this.editingProfileName = profile.name;
+        nextTick(() => {
+          const input = this.$refs.profileInput as HTMLInputElement | HTMLInputElement[];
+          if (input) {
+            const inputElement = Array.isArray(input) ? input[0] : input;
+            inputElement?.focus();
+            inputElement?.select();
+          }
+        });
+      }
+    },
+    finishEditing() {
+      if (this.editingProfileId !== null && this.editingProfileName.trim()) {
+        this.profileStore.updateProfileName(this.editingProfileId, this.editingProfileName);
+      }
+      this.editingProfileId = null;
+      this.editingProfileName = '';
+    },
+    cancelEditing() {
+      this.editingProfileId = null;
+      this.editingProfileName = '';
     }
   }
 });

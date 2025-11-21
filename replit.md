@@ -8,6 +8,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 21, 2025 - Fixed Custom RGB Export with Smart Mode Switching**
+- **SDK Quirk Discovery**: `getCustomLighting()` returns R:0 G:0 B:0 when keyboard is NOT in custom mode (21), causing incorrect RGB exports
+- **Solution**: Created `withCustomModeForExport()` guard function that temporarily switches to custom mode during Phase D RGB collection
+- **Smart Mode Detection**: Only switches mode if NOT already in custom mode with lighting ON
+- **Complete State Preservation**: Snapshots all 3 lighting zones (main, logo, special) before mode switch
+- **Temporary Enable**: Forces `open=true` when switching to custom mode to enable RGB reads even if lighting was originally OFF
+- **Full Zone Restoration**: Restores main zone to original mode/on-off state, then restores logo/special zones if they were originally ON
+- **Error Handling**: try/finally ensures state restoration even on failures, logs all steps for debugging
+- **Zero Visual Impact**: Users won't see mode changes during export (300ms flash if watching closely)
+- **Export Time Impact**: +300-600ms for mode switching overhead, still completes in 3-5 seconds total
+- **Test Matrix Coverage**: All combinations of main/logo/special zones ON/OFF properly preserved after export
+
 **November 21, 2025 - Complete Export Using Proven Batch Processing Patterns**
 - **Fixed approach**: Removed incorrect ORDER_TYPE_CONFIG usage (only switches profiles, doesn't return config)
 - **Implemented complete 4-phase data collection** matching proven patterns from MappedKeyboard.ts and Vue pages:

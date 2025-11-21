@@ -130,7 +130,7 @@ class ExportService {
           row: keyLocation?.row ?? 0,
           keyValue,
           performance: this.getDefaultPerformance(),
-          advancedKeys: { advancedType: 'none' },
+          advancedKeys: { advancedType: 'none', value: 0 },
           customKeys: { fn0: null, fn1: null, fn2: null, fn3: null },
           light: { custom: { R: 255, G: 255, B: 255, key: keyValue } },
         });
@@ -289,7 +289,7 @@ class ExportService {
 
       const advancedKeys: Keyboards['advancedKeys'] = {};
       let activeType: string | undefined;
-      let activeValue: number | undefined;
+      let activeValue: number = 0;
 
       if (!(dks instanceof Error) && dks) {
         advancedKeys.dks = dks;
@@ -327,6 +327,7 @@ class ExportService {
         advancedKeys.tgl = tgl;
         if (tgl.enable && !activeType) {
           activeType = 'tgl';
+          activeValue = 0;
         }
       }
 
@@ -339,6 +340,7 @@ class ExportService {
         advancedKeys.value = activeValue;
       } else {
         advancedKeys.advancedType = 'none';
+        advancedKeys.value = 0;
       }
 
       keyData.advancedKeys = advancedKeys;

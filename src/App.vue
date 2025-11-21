@@ -9,7 +9,8 @@
             <li>Connected: {{ connectionStore.deviceInfo?.productName || 'Unknown Device' }}</li>
             <li>SN: {{ decodeString(connectionStore.deviceInfo?.KeyboardSN) || 'N/A' }}</li>
             <li v-if="connectionStore.deviceInfo?.BoardID">Board ID: {{ connectionStore.deviceInfo.BoardID }}</li>
-            <li v-if="connectionStore.deviceInfo?.appVersion">Version: {{ decodeString(connectionStore.deviceInfo?.appVersion) || 'N/A' }}</li>
+            <li v-if="connectionStore.deviceInfo?.appVersion">Version: {{
+              decodeString(connectionStore.deviceInfo?.appVersion) || 'N/A' }}</li>
           </ul>
           <ul v-else-if="connectionStore.isConnected">
             <li>Loading device info...</li>
@@ -19,11 +20,7 @@
       </div>
       <nav class="sidebar-nav">
         <template v-for="item in menuItems" :key="item.name">
-          <router-link
-            v-if="!item.isCategory"
-            :to="item.path"
-            class="nav-item"
-          >
+          <router-link v-if="!item.isCategory" :to="item.path" class="nav-item">
             {{ item.name }}
           </router-link>
           <div v-else class="nav-item category-header" @click="handleCategoryClick(item, $event)">
@@ -34,33 +31,14 @@
 
         <!-- Profile Quick Access Grid -->
         <div class="profile-grid">
-          <button
-            v-for="profile in profileStore.profiles"
-            :key="profile.id"
-            class="profile-btn"
-            :class="{ active: profileStore.activeProfileId === profile.id }"
-            @click="handleProfileClick(profile.id)"
-          >
-            <input
-              v-if="editingProfileId === profile.id"
-              v-model="editingProfileName"
-              @blur="finishEditing"
-              @keyup.enter="finishEditing"
-              @keyup.esc="cancelEditing"
-              class="profile-name-input"
-              :ref="`profileInput-${profile.id}`"
-              @click.stop
-            />
+          <button v-for="profile in profileStore.profiles" :key="profile.id" class="profile-btn"
+            :class="{ active: profileStore.activeProfileId === profile.id }" @click="handleProfileClick(profile.id)">
+            <input v-if="editingProfileId === profile.id" v-model="editingProfileName" @blur="finishEditing"
+              @keyup.enter="finishEditing" @keyup.esc="cancelEditing" class="profile-name-input"
+              :ref="`profileInput-${profile.id}`" @click.stop />
             <span v-else class="profile-name">{{ profile.name }}</span>
-            <span
-              v-if="editingProfileId !== profile.id"
-              class="edit-icon"
-              @click.stop="startEditing(profile.id)"
-              role="button"
-              tabindex="0"
-              @keyup.enter="startEditing(profile.id)"
-              aria-label="Edit profile name"
-            >
+            <span v-if="editingProfileId !== profile.id" class="edit-icon" @click.stop="startEditing(profile.id)"
+              role="button" tabindex="0" @keyup.enter="startEditing(profile.id)" aria-label="Edit profile name">
               ✏️
             </span>
           </button>
@@ -73,13 +51,8 @@
     <div v-if="openCategory" class="flyout-menu" :style="{ top: flyoutTop + 'px' }" @click.self="closeCategory">
       <div class="flyout-content">
         <nav class="flyout-nav">
-          <router-link
-            v-for="sub in openCategory.items"
-            :key="sub.name"
-            :to="sub.path"
-            class="flyout-item"
-            @click="closeCategory"
-          >
+          <router-link v-for="sub in openCategory.items" :key="sub.name" :to="sub.path" class="flyout-item"
+            @click="closeCategory">
             {{ sub.name }}
           </router-link>
         </nav>
@@ -113,33 +86,32 @@ export default defineComponent({
     return {
       menuItems: [
         { name: 'Connect', path: '/', isCategory: false },
-        { 
-          name: 'Basic Settings', 
+        {
+          name: 'Basic Settings',
           items: [
             { name: 'Calibration', path: '/calibration' },
             { name: 'Key Travels', path: '/performance' },
             { name: 'Rapid Trigger', path: '/rapid-trigger' }
-          ], 
-          isCategory: true 
+          ],
+          isCategory: true
         },
-        { 
-          name: 'Customization', 
+        {
+          name: 'Customization',
           items: [
             { name: 'Macro Recording', path: '/macros' },
             { name: 'Key Mapping', path: '/key-mapping' },
             { name: 'Lighting', path: '/lighting' }
-          ], 
-          isCategory: true 
+          ],
+          isCategory: true
         },
-        { 
-          name: 'Advanced', 
+        {
+          name: 'Advanced',
           items: [
             { name: 'Advanced Config', path: '/advanced-config' },
             { name: 'Layout Preview', path: '/layout-preview' }
-          ], 
-          isCategory: true 
+          ],
+          isCategory: true
         },
-        { name: 'Profiles', path: '/profiles', isCategory: false },
         { name: 'Debug', path: '/debug', isCategory: false }
       ],
       openCategory: null as any,
@@ -154,11 +126,11 @@ export default defineComponent({
     },
     isStatusReady() {
       const info = this.connectionStore.deviceInfo;
-      return info && 
-             typeof info.KeyboardSN !== 'undefined' && 
-             (typeof info.KeyboardSN === 'string' || (info.KeyboardSN instanceof Uint8Array && info.KeyboardSN.length > 0)) &&
-             typeof info.appVersion !== 'undefined' &&
-             (typeof info.appVersion === 'string' || (info.appVersion instanceof Uint8Array && info.appVersion.length > 0));
+      return info &&
+        typeof info.KeyboardSN !== 'undefined' &&
+        (typeof info.KeyboardSN === 'string' || (info.KeyboardSN instanceof Uint8Array && info.KeyboardSN.length > 0)) &&
+        typeof info.appVersion !== 'undefined' &&
+        (typeof info.appVersion === 'string' || (info.appVersion instanceof Uint8Array && info.appVersion.length > 0));
     }
   },
   methods: {
@@ -254,11 +226,13 @@ export default defineComponent({
 .sidebar-header {
   margin-bottom: 20px;
   text-align: left;
+
   .logo {
     max-width: 100%;
     height: auto;
     margin-bottom: 10px;
   }
+
   .status {
     margin-top: 10x;
     margin-bottom: 40px;
@@ -267,15 +241,18 @@ export default defineComponent({
     width: 220px;
     height: 69.13px;
     color: v.$accent-color;
+
     ul {
-      list-style-type:none;
+      list-style-type: none;
       padding-left: 0px;
       margin: 0;
+
       li {
         margin: 0;
         line-height: 1.2;
       }
     }
+
     p {
       margin: 0;
       line-height: 1.2;
@@ -297,9 +274,11 @@ export default defineComponent({
   border: 1px solid rgba(v.$text-color, 0.2);
   border-radius: v.$border-radius;
   transition: background-color 0.3s;
+
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
+
   &.router-link-active {
     background-color: rgba($color: #a088242e, $alpha: 1.0);
     color: rgba($color: #000000, $alpha: 1.0);
@@ -318,6 +297,7 @@ export default defineComponent({
   border: 1px solid rgba(v.$text-color, 0.2);
   border-radius: v.$border-radius;
   transition: background-color 0.3s;
+
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
@@ -326,6 +306,7 @@ export default defineComponent({
 .arrow {
   font-size: 0.8rem;
   transition: transform 0.3s ease;
+
   &.open {
     transform: rotate(90deg);
   }
@@ -371,11 +352,14 @@ export default defineComponent({
   border-radius: v.$border-radius;
   transition: background-color 0.3s;
   font-size: 0.95rem;
+
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
+
   &.router-link-active {
-    background-color: rgba($color: #a088242e, $alpha: 1.0);;
+    background-color: rgba($color: #a088242e, $alpha: 1.0);
+    ;
     color: rgba($color: #000000, $alpha: 1.0);
     font-weight: bold;
   }
@@ -400,18 +384,18 @@ export default defineComponent({
   font-size: 0.85rem;
   text-align: center;
   position: relative;
-  
+
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
-  
+
   &.active {
-    background-color: rgba($color: #a088242e, $alpha: 1.0);
-    color: rgba($color: #000000, $alpha: 1.0);
-    font-weight: bold;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+    color: v.$accent-color;
+    font-family: v.$font-style;
     border-color: v.$accent-color;
   }
-  
+
   .profile-name {
     display: block;
     white-space: nowrap;
@@ -422,8 +406,8 @@ export default defineComponent({
 
 .edit-icon {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: -10px;
+  right: -10px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -431,7 +415,7 @@ export default defineComponent({
   padding: 2px;
   opacity: 0.6;
   transition: opacity 0.2s;
-  
+
   &:hover {
     opacity: 1;
   }
@@ -447,7 +431,7 @@ export default defineComponent({
   text-align: center;
   outline: none;
   padding: 0;
-  
+
   &:focus {
     color: v.$accent-color;
   }
@@ -458,6 +442,7 @@ export default defineComponent({
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -485,7 +470,8 @@ export default defineComponent({
 @use 'styles/variables' as v;
 @use 'sass:color';
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;

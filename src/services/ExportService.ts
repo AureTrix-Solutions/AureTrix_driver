@@ -674,61 +674,81 @@ class ExportService {
     return sdkFormat;
   }
 
+  private async applyLightingZones(config: KeyboardConfig): Promise<void> {
+    const anyZoneOff = 
+      (config.light?.main && !config.light.main.open) ||
+      (config.light?.logo && !config.light.logo.open) ||
+      (config.light?.other && !config.light.other.open);
+
+    if (anyZoneOff) {
+      console.log('Turning off all lighting zones (per config)...');
+      const closeResult = await KeyboardService.closedLighting();
+      if (closeResult instanceof Error) {
+        console.error('Failed to turn off lighting:', closeResult.message);
+      }
+    }
+
+    if (config.light?.main && config.light.main.open) {
+      const mainLighting = this.convertLightConfigToSDKFormat(config.light.main);
+      const result = await KeyboardService.setLighting(mainLighting);
+      if (result instanceof Error) {
+        console.error('Failed to apply main lighting:', result.message);
+      } else {
+        console.log(`Main lighting applied: ${config.light.main.mode} mode`);
+      }
+    }
+
+    if (config.light?.logo && config.light.logo.open) {
+      const logoLighting = this.convertLightConfigToSDKFormat(config.light.logo);
+      const result = await KeyboardService.setLogoLighting(logoLighting);
+      if (result instanceof Error) {
+        console.error('Failed to apply logo lighting:', result.message);
+      } else {
+        console.log('Logo lighting applied');
+      }
+    }
+
+    if (config.light?.other && config.light.other.open) {
+      const otherLighting = this.convertLightConfigToSDKFormat(config.light.other);
+      const result = await KeyboardService.setSpecialLighting(otherLighting);
+      if (result instanceof Error) {
+        console.error('Failed to apply special lighting:', result.message);
+      } else {
+        console.log('Special lighting applied');
+      }
+    }
+  }
+
   async applyImportedConfig(config: KeyboardConfig): Promise<void> {
     try {
       console.log('Applying imported configuration to hardware...');
 
-      console.log('Applying lighting settings for all zones...');
-      
-      const anyZoneOff = 
-        (config.light?.main && !config.light.main.open) ||
-        (config.light?.logo && !config.light.logo.open) ||
-        (config.light?.other && !config.light.other.open);
+      const keysWithCustomLight = config.keyboards?.filter(k => k.light?.custom) || [];
+      const hasCustomColors = keysWithCustomLight.length > 0;
 
-      if (anyZoneOff) {
-        console.log('Turning off all lighting zones (will re-enable required zones)...');
-        const closeResult = await KeyboardService.closedLighting();
-        if (closeResult instanceof Error) {
-          console.error('Failed to turn off lighting:', closeResult.message);
-        }
-      }
-
-      if (config.light?.main && config.light.main.open) {
-        const mainLighting = this.convertLightConfigToSDKFormat(config.light.main);
-        const result = await KeyboardService.setLighting(mainLighting);
-        if (result instanceof Error) {
-          console.error('Failed to apply main lighting:', result.message);
-        } else {
-          console.log('Main lighting applied successfully');
-        }
-      }
-
-      if (config.light?.logo && config.light.logo.open) {
-        const logoLighting = this.convertLightConfigToSDKFormat(config.light.logo);
-        const result = await KeyboardService.setLogoLighting(logoLighting);
-        if (result instanceof Error) {
-          console.error('Failed to apply logo lighting:', result.message);
-        } else {
-          console.log('Logo lighting applied successfully');
-        }
-      }
-
-      if (config.light?.other && config.light.other.open) {
-        const otherLighting = this.convertLightConfigToSDKFormat(config.light.other);
-        const result = await KeyboardService.setSpecialLighting(otherLighting);
-        if (result instanceof Error) {
-          console.error('Failed to apply special lighting:', result.message);
-        } else {
-          console.log('Special lighting applied successfully');
-        }
-      }
-
-      const hasCustomMode = config.light?.main?.mode === 'custom';
-
-      if (hasCustomMode && config.keyboards && config.keyboards.length > 0) {
-        console.log('Applying custom per-key RGB colors...');
+      if (hasCustomColors) {
+        console.log(`Found ${keysWithCustomLight.length} keys with custom RGB - applying in custom mode...`);
         
-        const keysWithCustomLight = config.keyboards.filter(k => k.light?.custom);
+        const tempCustomParams: any = {
+          direction: true,
+          speed: 50,
+          colors: ['#FF0000'],
+          luminance: 100,
+          sleepDelay: 0,
+          staticColor: 0,
+          type: 'custom',
+          mode: 21,
+          open: true,
+        };
+
+        const switchResult = await KeyboardService.setLighting(tempCustomParams);
+        if (switchResult instanceof Error) {
+          throw new Error(`Failed to switch to custom mode: ${switchResult.message}`);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+        console.log('Temporarily in custom mode - applying RGB colors...');
+
         for (let i = 0; i < keysWithCustomLight.length; i += 80) {
           const batch = keysWithCustomLight.slice(i, i + 80);
           
@@ -756,8 +776,15 @@ class ExportService {
         const saveResult = await KeyboardService.saveCustomLighting();
         if (saveResult instanceof Error) {
           console.error('Failed to save custom lighting:', saveResult.message);
+        } else {
+          console.log('Custom RGB colors saved successfully');
         }
+
+        console.log('RGB colors applied, now restoring target lighting mode...');
       }
+
+      console.log('Applying lighting zones from config...');
+      await this.applyLightingZones(config);
 
       console.log('Configuration applied successfully');
     } catch (error) {

@@ -39,8 +39,7 @@
             :key="profile.id"
             class="profile-btn"
             :class="{ active: profileStore.activeProfileId === profile.id }"
-            @click="profileStore.setActiveProfile(profile.id)"
-            @dblclick="startEditing(profile.id)"
+            @click="handleProfileClick(profile.id)"
           >
             <input
               v-if="editingProfileId === profile.id"
@@ -53,6 +52,17 @@
               @click.stop
             />
             <span v-else class="profile-name">{{ profile.name }}</span>
+            <span
+              v-if="editingProfileId !== profile.id"
+              class="edit-icon"
+              @click.stop="startEditing(profile.id)"
+              role="button"
+              tabindex="0"
+              @keyup.enter="startEditing(profile.id)"
+              aria-label="Edit profile name"
+            >
+              ✏️
+            </span>
           </button>
         </div>
       </nav>
@@ -176,6 +186,12 @@ export default defineComponent({
     },
     closeCategory() {
       this.openCategory = null;
+    },
+    async handleProfileClick(profileId: number) {
+      const result = await this.profileStore.switchProfile(profileId);
+      if (!result.success && result.error) {
+        console.error('Failed to switch profile:', result.error);
+      }
     },
     startEditing(profileId: number) {
       const profile = this.profileStore.getProfileById(profileId);
@@ -381,6 +397,7 @@ export default defineComponent({
   transition: all 0.3s;
   font-size: 0.85rem;
   text-align: center;
+  position: relative;
   
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
@@ -398,6 +415,23 @@ export default defineComponent({
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+
+.edit-icon {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 2px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  
+  &:hover {
+    opacity: 1;
   }
 }
 

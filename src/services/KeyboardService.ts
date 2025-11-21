@@ -714,6 +714,24 @@ class KeyboardService {
       return error as Error;
     }
   }
+
+  async switchConfig(profileId: number): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      if (profileId < 1 || profileId > 4) {
+        return new Error('Profile ID must be between 1 and 4');
+      }
+      const configIndex = profileId - 1;
+      const result = await this.keyboard.switchConfig(configIndex);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to switch config:', error);
+      return error as Error;
+    }
+  }
 }
 
 export default new KeyboardService();

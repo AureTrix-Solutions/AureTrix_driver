@@ -162,11 +162,9 @@ class ExportService {
       console.log('Phase D: Gathering per-key lighting data...');
       const phaseDStart = performance.now();
       
-      await this.withCustomModeForExport(async () => {
-        await this.processBatches(allKeys, async (keyValue) => {
-          await this.gatherLightingData(keyValue, keyboardsData);
-        }, 80, 100);
-      });
+      await this.processBatches(allKeys, async (keyValue) => {
+        await this.gatherLightingData(keyValue, keyboardsData);
+      }, 80, 100);
       
       console.log(`Phase D completed in ${(performance.now() - phaseDStart).toFixed(2)}ms`);
 
@@ -585,30 +583,105 @@ class ExportService {
     // Reset cache for fresh export
     this.globalTravelCache = null;
 
-    console.log('Step 1: Gathering system info...');
-    const system = await this.gatherDeviceInfo();
-    
-    console.log('Step 2: Gathering lighting configuration...');
-    const light = await this.gatherLightingConfig();
-    
-    console.log('Step 3: Gathering keyboard layouts and key data...');
-    const keyboards = await this.gatherKeyboardsConfig();
-    
-    console.log('Step 4: Building macro library...');
-    const macro = await this.buildMacroLibrary();
+    let originalLighting: any = null;
+    let originalLogo: any = null;
+    let originalSpecial: any = null;
+    let savedLightConfig: KeyboardConfig['light'] | null = null;
 
-    const config: KeyboardConfig = {
-      system: system as KeyboardConfig['system'],
-      light: light as KeyboardConfig['light'],
-      keyboards: keyboards as Keyboards[],
-      macro,
-    };
+    try {
+      console.log('Pre-export: Capturing original lighting state...');
+      originalLighting = await KeyboardService.getLighting();
+      originalLogo = await KeyboardService.getLogoLighting();
+      originalSpecial = await KeyboardService.getSpecialLighting();
 
-    const totalDuration = performance.now() - snapshotStart;
-    console.log(`Keyboard snapshot collection complete in ${totalDuration.toFixed(2)}ms`);
-    console.log(`Total keys: ${keyboards.length}, Total macros: ${macro.list.length}`);
-    
-    return config;
+      if (originalLighting instanceof Error) {
+        throw new Error('Failed to capture original lighting state');
+      }
+
+      savedLightConfig = {
+        main: originalLighting instanceof Error ? this.getDefaultLightConfig() : this.convertLightingToConfig(originalLighting),
+        logo: originalLogo instanceof Error ? this.getDefaultLightConfig() : this.convertLightingToConfig(originalLogo),
+        other: originalSpecial instanceof Error ? this.getDefaultLightConfig() : this.convertLightingToConfig(originalSpecial),
+      };
+      console.log(`Original lighting captured (mode: ${savedLightConfig.main.mode})`);
+
+      console.log(`Switching to custom mode (21) for RGB export...`);
+      
+      const { dynamicColorId, ...originalParams } = originalLighting;
+      const tempCustomParams: any = {
+        ...originalParams,
+        type: 'custom',
+        mode: 21,
+        open: true,
+      };
+
+      const switchResult = await KeyboardService.setLighting(tempCustomParams);
+      if (switchResult instanceof Error) {
+        throw new Error(`Failed to switch to custom mode: ${switchResult.message}`);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+      console.log('Keyboard now in custom mode for RGB capture - proceeding with data collection...');
+
+      console.log('Step 1: Gathering system info...');
+      const system = await this.gatherDeviceInfo();
+      
+      console.log('Step 2: Using saved lighting configuration (original mode)...');
+      
+      console.log('Step 3: Gathering keyboard layouts and key data...');
+      const keyboards = await this.gatherKeyboardsConfig();
+      
+      console.log('Step 4: Building macro library...');
+      const macro = await this.buildMacroLibrary();
+
+      const config: KeyboardConfig = {
+        system: system as KeyboardConfig['system'],
+        light: savedLightConfig as KeyboardConfig['light'],
+        keyboards: keyboards as Keyboards[],
+        macro,
+      };
+
+      const totalDuration = performance.now() - snapshotStart;
+      console.log(`Keyboard snapshot collection complete in ${totalDuration.toFixed(2)}ms`);
+      console.log(`Total keys: ${keyboards.length}, Total macros: ${macro.list.length}`);
+      
+      return config;
+
+    } finally {
+      if (originalLighting && !(originalLighting instanceof Error)) {
+        console.log('Post-export: Restoring original lighting state...');
+        
+        try {
+          const { dynamicColorId, ...mainParams } = originalLighting;
+          const restoreResult = await KeyboardService.setLighting(mainParams);
+          if (restoreResult instanceof Error) {
+            console.error('Failed to restore main lighting:', restoreResult.message);
+          } else {
+            console.log(`Main lighting restored to mode ${originalLighting.mode}`);
+          }
+
+          if (originalLogo && !(originalLogo instanceof Error)) {
+            const logoWasOn = originalLogo.open === true || originalLogo.open === 1;
+            if (logoWasOn) {
+              const { dynamicColorId: logoColorId, ...logoParams } = originalLogo;
+              await KeyboardService.setLogoLighting(logoParams);
+            }
+          }
+
+          if (originalSpecial && !(originalSpecial instanceof Error)) {
+            const specialWasOn = originalSpecial.open === true || originalSpecial.open === 1;
+            if (specialWasOn) {
+              const { dynamicColorId: specialColorId, ...specialParams} = originalSpecial;
+              await KeyboardService.setSpecialLighting(specialParams);
+            }
+          }
+
+          console.log('Original lighting state restored successfully');
+        } catch (error) {
+          console.error('Error restoring original lighting:', error);
+        }
+      }
+    }
   }
 
   async exportProfile(filename: string): Promise<{ success: boolean; error?: string }> {
@@ -724,18 +797,13 @@ class ExportService {
       console.log('Applying imported configuration to hardware...');
 
       const keysWithCustomLight = config.keyboards?.filter(k => k.light?.custom) || [];
-      const hasCustomColors = keysWithCustomLight.length > 0;
-
-      if (hasCustomColors) {
-        console.log(`Found ${keysWithCustomLight.length} keys with custom RGB - applying in custom mode...`);
+      
+      if (keysWithCustomLight.length > 0 && config.light?.main) {
+        console.log(`Found ${keysWithCustomLight.length} keys with custom RGB - temporarily switching to custom mode...`);
         
+        const importedLighting = this.convertLightConfigToSDKFormat(config.light.main);
         const tempCustomParams: any = {
-          direction: true,
-          speed: 50,
-          colors: ['#FF0000'],
-          luminance: 100,
-          sleepDelay: 0,
-          staticColor: 0,
+          ...importedLighting,
           type: 'custom',
           mode: 21,
           open: true,
@@ -743,50 +811,49 @@ class ExportService {
 
         const switchResult = await KeyboardService.setLighting(tempCustomParams);
         if (switchResult instanceof Error) {
-          throw new Error(`Failed to switch to custom mode: ${switchResult.message}`);
-        }
+          console.warn('Failed to switch to custom mode for RGB import:', switchResult.message);
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 300));
+          console.log('Temporarily in custom mode (with imported settings) - applying RGB colors...');
 
-        await new Promise(resolve => setTimeout(resolve, 300));
-        console.log('Temporarily in custom mode - applying RGB colors...');
+          for (let i = 0; i < keysWithCustomLight.length; i += 80) {
+            const batch = keysWithCustomLight.slice(i, i + 80);
+            
+            await Promise.all(
+              batch.map(async (keyData) => {
+                const result = await KeyboardService.setCustomLighting({
+                  key: keyData.light!.custom.key,
+                  r: keyData.light!.custom.R,
+                  g: keyData.light!.custom.G,
+                  b: keyData.light!.custom.B,
+                });
+                
+                if (result instanceof Error) {
+                  console.error(`Failed to set custom lighting for key ${keyData.light!.custom.key}:`, result.message);
+                }
+              })
+            );
+            
+            if (i + 80 < keysWithCustomLight.length) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
 
-        for (let i = 0; i < keysWithCustomLight.length; i += 80) {
-          const batch = keysWithCustomLight.slice(i, i + 80);
-          
-          await Promise.all(
-            batch.map(async (keyData) => {
-              const result = await KeyboardService.setCustomLighting({
-                key: keyData.light!.custom.key,
-                r: keyData.light!.custom.R,
-                g: keyData.light!.custom.G,
-                b: keyData.light!.custom.B,
-              });
-              
-              if (result instanceof Error) {
-                console.error(`Failed to set custom lighting for key ${keyData.light!.custom.key}:`, result.message);
-              }
-            })
-          );
-          
-          if (i + 80 < keysWithCustomLight.length) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+          console.log('Saving custom lighting to hardware...');
+          const saveResult = await KeyboardService.saveCustomLighting();
+          if (saveResult instanceof Error) {
+            console.error('Failed to save custom lighting:', saveResult.message);
+          } else {
+            console.log('Custom RGB colors saved to hardware successfully');
           }
         }
-
-        console.log('Saving custom lighting to hardware...');
-        const saveResult = await KeyboardService.saveCustomLighting();
-        if (saveResult instanceof Error) {
-          console.error('Failed to save custom lighting:', saveResult.message);
-        } else {
-          console.log('Custom RGB colors saved successfully');
-        }
-
-        console.log('RGB colors applied, now restoring target lighting mode...');
       }
 
-      console.log('Applying lighting zones from config...');
+      console.log('Restoring target lighting configuration from import...');
       await this.applyLightingZones(config);
 
       console.log('Configuration applied successfully');
+      console.log(`Lighting restored to: ${config.light?.main?.mode} mode with custom RGB colors persisted`);
     } catch (error) {
       console.error('Failed to apply imported configuration:', error);
       throw error;

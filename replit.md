@@ -8,17 +8,23 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**November 21, 2025 - Complete Profile Export/Import Implementation with ExportService**
-- Created dedicated ExportService.ts for profile backup/restore functionality
-- Implements comprehensive keyboard snapshot collection gathering all configuration data
+**November 21, 2025 - Optimized Profile Export/Import with Phased Batch Processing**
+- Created dedicated ExportService.ts for profile backup/restore functionality with timeout-resistant data collection
 - Added missing SDK wrapper methods to KeyboardService: getApi, getDks, getMpt, getSocd, getMT, getTGL, getEND
-- Export now collects complete KeyboardConfig: device info, system settings (polling rate via ORDER_TYPE_ROES, top dead band via ORDER_TYPE_TOP_DEAD_SWITCH), global and per-key lighting, all key layouts (Fn0-Fn3), performance settings, travel configurations, advanced key modes, and macro library
-- Uses existing useBatchProcessing composable to efficiently query all keys (40 keys per batch, 100ms throttle)
-- Macro library reconstructed by iterating all keys with getMacro() and building list from results
+- Implemented **4-phase batch processing** to eliminate SDK timeout errors:
+  - **Phase A**: Layout bindings (Fn0-Fn3) - 16 keys/batch, 200ms delay between batches
+  - **Phase B**: Performance & travel data - serialized SDK calls with 50ms delays, 16 keys/batch, 200ms delay
+  - **Phase C**: Advanced key data (DKS/MPT/SOCD/MT/TGL/END) - serialized with metadata extraction, 16 keys/batch, 250ms delay
+  - **Phase D**: Custom RGB lighting - 16 keys/batch, 200ms delay
+  - 150ms buffer between phases to prevent hardware overload
+- **Retry logic**: All SDK calls wrapped with retryWithBackoff (2 retries, 200ms backoff) to handle intermittent timeouts
+- Enhanced useBatchProcessing composable with configurable batchSize and delayMs parameters (defaults: 80, 100)
+- Export collects complete KeyboardConfig: device info, system settings (polling rate, top dead band), global and per-key lighting, all key layouts across all layers, performance settings, travel configurations, advanced key modes with metadata (advancedType/value), and macro library
+- All keys populate fn0-fn3 bindings (not just remapped keys) for complete layer mapping
 - Export passes populated KeyboardConfig to SDK's exportConfig() for encryption and file download
-- Import uses SDK's importConfig() which handles decryption and applying settings automatically
-- UI updated: Export/Import buttons in sidebar use ExportService instead of KeyboardService
-- Removed old exportEncryptedJSON/importEncryptedJSON methods from KeyboardService (replaced with simpler exportConfig/importConfig wrappers)
+- Import uses SDK's importConfig() which handles decryption and applies settings automatically
+- UI updated: Export/Import buttons in sidebar use ExportService with proper error handling
+- Removed old exportEncryptedJSON/importEncryptedJSON methods from KeyboardService
 
 **November 21, 2025 - Simplified Profile Export/Import UI**
 - Removed per-profile export icon (⬇) from profile buttons for cleaner interface

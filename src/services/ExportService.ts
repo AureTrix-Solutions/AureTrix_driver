@@ -75,10 +75,17 @@ class ExportService {
     }
   }
 
+  private convertModeNumberToType(modeNum: number): 'static' | 'custom' | 'dynamic' {
+    if (modeNum === 0) return 'static';
+    if (modeNum === 21) return 'custom';
+    if (modeNum >= 1 && modeNum <= 20) return 'dynamic';
+    return 'static'; // fallback
+  }
+
   private convertLightingToConfig(lighting: any): KeyboardConfig['light']['main'] {
     return {
       open: lighting.open ?? true,
-      mode: lighting.mode ?? 0,
+      mode: this.convertModeNumberToType(lighting.mode ?? 0),
       staticColors: lighting.colors || ['#FF0000'],
       selectStaticColor: lighting.staticColor ?? 0,
       luminance: lighting.luminance ?? 100,
@@ -92,7 +99,7 @@ class ExportService {
   private getDefaultLightConfig(): KeyboardConfig['light']['main'] {
     return {
       open: true,
-      mode: 0,
+      mode: 'static',
       staticColors: ['#FF0000'],
       selectStaticColor: 0,
       luminance: 100,

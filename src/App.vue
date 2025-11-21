@@ -80,6 +80,7 @@ import { RouterLink, RouterView } from 'vue-router';
 import { useConnectionStore } from './store/connection';
 import { useProfileStore } from './store/profileStore';
 import KeyboardService from './services/KeyboardService';
+import ExportService from './services/ExportService';
 
 export default defineComponent({
   name: 'App',
@@ -209,9 +210,9 @@ export default defineComponent({
         const profileName = activeProfile ? activeProfile.name : 'keyboard-config';
         const filename = `${profileName}.json`;
         
-        const exportResult = await KeyboardService.exportEncryptedJSON(filename);
-        if (exportResult instanceof Error) {
-          console.error('Failed to export profile:', exportResult.message);
+        const exportResult = await ExportService.exportProfile(filename);
+        if (!exportResult.success) {
+          console.error('Failed to export profile:', exportResult.error);
         } else {
           console.log(`Profile "${profileName}" exported successfully as ${filename}`);
         }
@@ -233,9 +234,9 @@ export default defineComponent({
             return;
           }
           
-          const importResult = await KeyboardService.importEncryptedJSON(file);
-          if (importResult instanceof Error) {
-            console.error('Failed to import profile:', importResult.message);
+          const importResult = await ExportService.importProfile(file);
+          if (!importResult.success) {
+            console.error('Failed to import profile:', importResult.error);
             return;
           }
           

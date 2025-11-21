@@ -8,6 +8,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 21, 2025 - Complete Profile Export/Import Implementation with ExportService**
+- Created dedicated ExportService.ts for profile backup/restore functionality
+- Implements comprehensive keyboard snapshot collection gathering all configuration data
+- Added missing SDK wrapper methods to KeyboardService: getApi, getDks, getMpt, getSocd, getMT, getTGL, getEND
+- Export now collects complete KeyboardConfig: device info, system settings (polling rate via ORDER_TYPE_ROES, top dead band via ORDER_TYPE_TOP_DEAD_SWITCH), global and per-key lighting, all key layouts (Fn0-Fn3), performance settings, travel configurations, advanced key modes, and macro library
+- Uses existing useBatchProcessing composable to efficiently query all keys (40 keys per batch, 100ms throttle)
+- Macro library reconstructed by iterating all keys with getMacro() and building list from results
+- Export passes populated KeyboardConfig to SDK's exportConfig() for encryption and file download
+- Import uses SDK's importConfig() which handles decryption and applying settings automatically
+- UI updated: Export/Import buttons in sidebar use ExportService instead of KeyboardService
+- Removed old exportEncryptedJSON/importEncryptedJSON methods from KeyboardService (replaced with simpler exportConfig/importConfig wrappers)
+
 **November 21, 2025 - Simplified Profile Export/Import UI**
 - Removed per-profile export icon (⬇) from profile buttons for cleaner interface
 - Added centralized "Export Profile" button above "Import Profile" button in sidebar
@@ -55,15 +67,17 @@ The application is built with Vue.js 3, using the Composition API and TypeScript
 User interactions trigger `KeyboardService` methods, which encapsulate SparkLink SDK calls. The SDK communicates with the keyboard via WebHID. Responses update Pinia stores, leading to reactive UI updates. Connection status, device identification, macro library, and travel profiles are persisted via localStorage.
 
 ### Service Layer
--   **KeyboardService.ts:** Abstraction layer for hardware interaction, managing device discovery, WebHID pairing, auto-reconnection, SparkLink SDK API wrappers, and connection lifecycle.
+-   **KeyboardService.ts:** Abstraction layer for hardware interaction, managing device discovery, WebHID pairing, auto-reconnection, SparkLink SDK API wrappers, and connection lifecycle. Provides comprehensive SDK method wrappers including getApi() for raw command access.
+-   **ExportService.ts:** Handles complete profile backup and restore functionality. Orchestrates data collection from keyboard hardware, assembles KeyboardConfig objects matching SDK validation schema, and manages export/import operations via SDK's exportConfig/importConfig methods.
 -   **DebugKeyboardService.ts:** A dedicated service for development and testing, offering SDK access without interfering with the main application state.
 
 ### Key Technical Decisions
 1.  **WebHID over Native Drivers:** Chosen for cross-platform compatibility, no installation, and browser security, acknowledging its limitation to Chromium browsers and requirement for HTTPS.
-2.  **Batch Processing for SDK Calls:** Crucial for managing hardware communication efficiency when sending numerous updates.
-3.  **Dual Service Pattern:** Separates `KeyboardService` and `DebugKeyboardService` to enable raw data inspection independently.
+2.  **Batch Processing for SDK Calls:** Crucial for managing hardware communication efficiency when sending numerous updates. Export/import leverages existing useBatchProcessing composable (40 keys/batch, 100ms throttle) for efficient data collection.
+3.  **Service Separation Pattern:** Separates `KeyboardService` (SDK wrappers), `ExportService` (profile backup/restore), and `DebugKeyboardService` (development/testing) for clear separation of concerns.
 4.  **Layout Configuration System:** Centralized management of absolute positioning data for accurate rendering of diverse keyboard layouts.
 5.  **Type Safety with TypeScript:** Ensures type consistency across the application, especially between physical keys and remapped values in SDK calls and UI.
+6.  **Complete Configuration Snapshot:** Export collects full keyboard state (not just subset) by querying all keys using batch processing, reconstructing macro library from getMacro() results, and using getApi() for system settings lacking dedicated getters (polling rate: ORDER_TYPE_ROES, top dead band: ORDER_TYPE_TOP_DEAD_SWITCH).
 
 ## External Dependencies
 

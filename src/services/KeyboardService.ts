@@ -731,28 +731,115 @@ class KeyboardService {
     }
   }
 
-  async exportEncryptedJSON(filename?: string): Promise<void | Error> {
+  async getApi(param: any): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      if (typeof this.keyboard.exportConfig !== 'function') {
-        return new Error('Export functionality not available in SDK');
-      }
-      this.keyboard.exportConfig({}, filename || 'keyboard-config.json');
+      const result = await this.keyboard.getApi(param);
+      if (result instanceof Error) return result;
+      return result;
     } catch (error) {
-      console.error('Failed to export config:', error);
+      console.error('Failed to execute getApi:', error);
       return error as Error;
     }
   }
 
-  async importEncryptedJSON(file: File): Promise<{ success: boolean; error?: string } | Error> {
+  async getDks(key: number, type?: string): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      if (typeof this.keyboard.importConfig !== 'function') {
-        return new Error('Import functionality not available in SDK');
+      const result = await this.keyboard.getDks(key, type);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to get DKS for key ${key}:`, error);
+      return error as Error;
+    }
+  }
+
+  async getMpt(key: number): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.getMpt(key);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to get MPT for key ${key}:`, error);
+      return error as Error;
+    }
+  }
+
+  async getSocd(key: number, version?: string): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.getSocd(key, version);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to get SOCD for key ${key}:`, error);
+      return error as Error;
+    }
+  }
+
+  async getMT(key: number): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.getMT(key);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to get MT for key ${key}:`, error);
+      return error as Error;
+    }
+  }
+
+  async getTGL(key: number): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.getTGL(key);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to get TGL for key ${key}:`, error);
+      return error as Error;
+    }
+  }
+
+  async getEND(key: number): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.getEND(key);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to get END for key ${key}:`, error);
+      return error as Error;
+    }
+  }
+
+  exportConfig(data: any, filename: string): void {
+    if (!this.connectedDevice) {
+      throw new Error('No device connected');
+    }
+    this.keyboard.exportConfig(data, filename);
+  }
+
+  async importConfig(file: File): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
       }
       const result = await this.keyboard.importConfig(file);
       if (result instanceof Error) return result;

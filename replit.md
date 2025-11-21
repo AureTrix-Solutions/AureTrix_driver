@@ -8,15 +8,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**November 21, 2025 - Fixed Export to Capture Custom Mode and Import Persistence**
+**November 21, 2025 - Fixed Export to Capture Custom Mode and Simplified Import**
 - **Export Fix**: Modified `exportProfile()` to switch keyboard to custom mode (21) BEFORE capturing lighting config, ensuring exported JSON shows `mode: "custom"` and `dynamic: 21`
 - **Export Flow**: Capture original state → switch to custom mode → gather ALL config data (lighting shows custom mode) → restore original state
-- **Import Flow**: Apply lighting zones (sets custom mode from JSON) → apply RGB in 80-key batches → save with `saveCustomLighting()` → restore target mode from config
-- **Persistence Fix**: Added 500ms delay in App.vue after import completes and before page reload to allow `saveCustomLighting()` to persist RGB data to hardware
-- **Import Delay**: Browser waits 500ms after import success before calling `window.location.reload()`, ensuring hardware save completes
-- **Custom RGB Persistence**: RGB colors now persist through browser refreshes and lighting mode switches (static/dynamic/custom)
-- **Complete Flow**: Export captures mode="custom"/dynamic=21 → Import applies in custom mode → Saves to hardware → User manually switches to desired mode → RGB colors persist
-- **Test Coverage**: Handles exports/imports with correct mode metadata and persistent RGB colors across all lighting modes
+- **Import Flow Simplified**: Apply custom RGB colors in 80-key batches → save with `saveCustomLighting()` → leave keyboard in custom mode
+- **No Automatic Mode Switching**: Import no longer switches modes automatically - keyboard remains in custom mode (21) after import completes
+- **User-Controlled Mode**: User can manually switch to any lighting mode (static/dynamic/custom) after import via Lighting page
+- **Custom RGB Persistence**: RGB colors persist through browser refreshes and lighting mode switches because they're saved to hardware flash memory
+- **Complete Flow**: Export captures mode="custom"/dynamic=21 → Import applies RGB colors in custom mode → Saves to hardware → Keyboard stays in custom mode → User manually switches to preferred mode → RGB colors persist
+- **Simplified Logic**: Removed `applyLightingZones()` call and delay before page reload - cleaner import flow with no mode switching interference
 
 **November 21, 2025 - Fixed Custom RGB Export with Smart Mode Switching**
 - **SDK Quirk Discovery**: `getCustomLighting()` returns R:0 G:0 B:0 when keyboard is NOT in custom mode (21), causing incorrect RGB exports

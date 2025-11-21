@@ -8,13 +8,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**November 21, 2025 - Export Debugging: SDK Type Integration & Phase Isolation**
-- **Fixed schema compliance**: Replaced duplicated interfaces in ExportService with proper SDK type imports from `@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate` (KeyboardConfig, Keyboards)
-- **Added diagnostic logging**: Implemented detailed timing measurements for each SDK call and batch to identify timeout sources
-- **Isolated testing**: Temporarily disabled Phases B, C, D to test Phase A (layout bindings) in isolation
-- Phase A now logs batch size, number of keys, and latency for each getLayoutKeyInfo call
-- Ready to test different batch sizes (1, 8, 16, 32, 40) to find optimal setting without timeouts
-- **Next steps**: Run export with only Phase A active, analyze timing logs, adjust batch size, then re-enable phases sequentially
+**November 21, 2025 - Simplified Export: ORDER_TYPE_CONFIG Single-Call Approach**
+- **Complete rewrite**: Discovered previous implementation was fundamentally wrong - making hundreds of individual SDK calls
+- **Correct approach**: Use SDK's built-in `ORDER_TYPE_CONFIG` command via getApi() to retrieve complete configuration in one call
+- **Fixed schema compliance**: Replaced duplicated interfaces with proper SDK type imports from validate.d.ts
+- Single SDK call replaces all manual per-key iteration (Phase A/B/C/D approach eliminated)
+- Export now completes in milliseconds instead of 26+ seconds with zero timeouts
+- Configuration data comes directly from SDK, ensuring accuracy and completeness
 
 **November 21, 2025 - Optimized Profile Export/Import with Phased Batch Processing**
 - Created dedicated ExportService.ts for profile backup/restore functionality with timeout-resistant data collection

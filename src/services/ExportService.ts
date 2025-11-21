@@ -436,35 +436,21 @@ class ExportService {
 
   async gatherKeyboardSnapshot(): Promise<KeyboardConfig> {
     console.log('Starting keyboard snapshot collection...');
+    console.log('Fetching full configuration via ORDER_TYPE_CONFIG...');
+    
+    const configStart = performance.now();
+    const configResult = await KeyboardService.getApi({ type: 'ORDER_TYPE_CONFIG' });
+    const configDuration = performance.now() - configStart;
+    console.log(`ORDER_TYPE_CONFIG completed in ${configDuration.toFixed(2)}ms`);
+    
+    if (configResult instanceof Error) {
+      console.error('Failed to get configuration via ORDER_TYPE_CONFIG:', configResult);
+      throw new Error('Could not retrieve keyboard configuration');
+    }
 
-    const [deviceInfo, lightingConfig, keyboardsConfig, macroLibrary] = await Promise.all([
-      this.gatherDeviceInfo(),
-      this.gatherLightingConfig(),
-      this.gatherKeyboardsConfig(),
-      this.buildMacroLibrary(),
-    ]);
-
-    const config: KeyboardConfig = {
-      light: {
-        main: lightingConfig.main || this.getDefaultLightConfig(),
-        logo: lightingConfig.logo || this.getDefaultLightConfig(),
-        other: lightingConfig.other || this.getDefaultLightConfig(),
-      },
-      keyboards: keyboardsConfig,
-      macro: macroLibrary,
-      system: {
-        rateOfReturn: deviceInfo.rateOfReturn ?? 3,
-        topDeadBandSwitch: deviceInfo.topDeadBandSwitch ?? 0,
-        productId: deviceInfo.productId ?? 0,
-        vendorId: deviceInfo.vendorId ?? 0,
-        keyboardName: deviceInfo.keyboardName ?? '',
-        usage: deviceInfo.usage ?? 0,
-        usagePage: deviceInfo.usagePage ?? 0,
-      },
-    };
-
+    console.log('Configuration retrieved successfully');
     console.log('Keyboard snapshot collection complete');
-    return config;
+    return configResult as KeyboardConfig;
   }
 
   async exportProfile(filename: string): Promise<{ success: boolean; error?: string }> {

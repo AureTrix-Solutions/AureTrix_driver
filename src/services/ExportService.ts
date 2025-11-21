@@ -260,22 +260,22 @@ class ExportService {
         keyData.performance!.isRt = touchMode === 'rt';
         keyData.performance!.isGlobalTriggering = touchMode === 'global';
         keyData.performance!.isSingle = touchMode === 'single';
-        
-        // Collect travel values based on active mode
-        if (touchMode === 'global') {
-          if (this.globalTravelCache === null) {
-            const globalTravel = await this.retryWithBackoff(() => KeyboardService.getGlobalTouchTravel());
-            if (!(globalTravel instanceof Error)) {
-              this.globalTravelCache = globalTravel.globalTouchTravel ?? 0;
-            }
-          }
-          keyData.performance!.globalTriggeringValue = this.globalTravelCache ?? 0;
-        } else if (touchMode === 'single') {
-          const singleTravel = await this.retryWithBackoff(() => KeyboardService.getSingleTravel(keyValue));
-          if (!(singleTravel instanceof Error)) {
-            keyData.performance!.singleTriggeringValue = singleTravel ?? 0;
-          }
+      }
+      
+      // ALWAYS collect all travel values (hardware preserves them regardless of active mode)
+      // Global travel value (same for all keys)
+      if (this.globalTravelCache === null) {
+        const globalTravel = await this.retryWithBackoff(() => KeyboardService.getGlobalTouchTravel());
+        if (!(globalTravel instanceof Error)) {
+          this.globalTravelCache = globalTravel.globalTouchTravel ?? 0;
         }
+      }
+      keyData.performance!.globalTriggeringValue = this.globalTravelCache ?? 0;
+      
+      // Single travel value (per-key)
+      const singleTravel = await this.retryWithBackoff(() => KeyboardService.getSingleTravel(keyValue));
+      if (!(singleTravel instanceof Error)) {
+        keyData.performance!.singleTriggeringValue = singleTravel ?? 0;
       }
 
       if (!(rtTravel instanceof Error)) {

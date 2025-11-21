@@ -787,50 +787,7 @@ class ExportService {
 
   async applyImportedConfig(config: KeyboardConfig): Promise<void> {
     try {
-      console.log('Phase 1: Importing full profile to hardware...');
-
-      if (config.keyboards && config.keyboards.length > 0) {
-        console.log('Applying key mappings across all Fn layers...');
-        const keyConfigs: { key: number; layout: number; value: number }[] = [];
-        
-        config.keyboards.forEach(keyData => {
-          if (keyData.customKeys?.fn0) keyConfigs.push({ key: keyData.keyValue, layout: 0, value: keyData.customKeys.fn0 });
-          if (keyData.customKeys?.fn1) keyConfigs.push({ key: keyData.keyValue, layout: 1, value: keyData.customKeys.fn1 });
-          if (keyData.customKeys?.fn2) keyConfigs.push({ key: keyData.keyValue, layout: 2, value: keyData.customKeys.fn2 });
-          if (keyData.customKeys?.fn3) keyConfigs.push({ key: keyData.keyValue, layout: 3, value: keyData.customKeys.fn3 });
-        });
-
-        if (keyConfigs.length > 0) {
-          const setKeyResult = await KeyboardService.setKey(keyConfigs);
-          if (setKeyResult instanceof Error) {
-            console.error('Failed to apply key mappings:', setKeyResult.message);
-          } else {
-            console.log(`Applied ${keyConfigs.length} key mappings`);
-          }
-        }
-      }
-
-      if (config.macro && config.macro.list && config.macro.list.length > 0) {
-        console.log(`Applying ${config.macro.list.length} macros...`);
-        for (const macro of config.macro.list) {
-          const macroData = macro.step.map((s: any) => ({
-            keyCode: s.keyValue,
-            status: s.status === 1 ? 'press' : 'release',
-            timeDifference: s.delay,
-          }));
-
-          const keyValue = parseInt(macro.name.replace('Macro ', ''));
-          const setMacroResult = await KeyboardService.setMacro({ key: keyValue }, macroData);
-          if (setMacroResult instanceof Error) {
-            console.error(`Failed to apply macro for key ${keyValue}:`, setMacroResult.message);
-          }
-        }
-        console.log('Macros applied');
-      }
-
-      await this.applyLightingZones(config);
-
-      console.log('Phase 2: Waiting for profile settings to apply...');
+      console.log('Waiting for SDK profile import to complete...');
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const keysWithCustomLight = config.keyboards?.filter(k => k.light?.custom) || [];

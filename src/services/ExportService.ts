@@ -75,24 +75,17 @@ class ExportService {
     }
   }
 
-  private convertModeNumberToType(modeNum: number): 'static' | 'custom' | 'dynamic' {
-    if (modeNum === 0) return 'static';
-    if (modeNum === 21) return 'custom';
-    if (modeNum >= 1 && modeNum <= 20) return 'dynamic';
-    return 'static'; // fallback
-  }
-
   private convertLightingToConfig(lighting: any): KeyboardConfig['light']['main'] {
     return {
       open: lighting.open ?? true,
-      mode: this.convertModeNumberToType(lighting.mode ?? 0),
+      mode: lighting.type ?? 'static',
       staticColors: lighting.colors || ['#FF0000'],
       selectStaticColor: lighting.staticColor ?? 0,
       luminance: lighting.luminance ?? 100,
       speed: lighting.speed ?? 50,
       sleepTime: lighting.sleepDelay ?? 0,
       direction: lighting.direction ?? true,
-      dynamic: lighting.dynamic ?? 0,
+      dynamic: lighting.mode ?? 0,
     };
   }
 

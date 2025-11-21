@@ -8,6 +8,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 21, 2025 - Simplified Profile Export/Import UI**
+- Removed per-profile export icon (⬇) from profile buttons for cleaner interface
+- Added centralized "Export Profile" button above "Import Profile" button in sidebar
+- Both export/import buttons share consistent full-width styling and disabled state when disconnected
+- Simplified exportProfile() method to export currently active profile without switching profiles
+- Export filename automatically uses custom profile name from profileStore
+- Active profile tracking relies on profileStore's persisted activeProfileId (restored after page reload)
+- **Profile export flow**: Switch to desired profile → profile changes and page reloads → click "Export Profile" to save that profile's current configuration
+- Removed .export-icon CSS styling, added .export-btn styling grouped with .import-btn
+
 **November 21, 2025 - Connection Storage Cleanup and Race Condition Fixes**
 - Simplified localStorage to use only `pairedStableId` (single key) instead of multiple pairedDeviceData_* entries
 - Removed redundant reconnect() method that duplicated device data in localStorage

@@ -736,11 +736,10 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const exportController = (this.keyboard as any).exportController;
-      if (!exportController || typeof exportController.exportEncryptedJSON !== 'function') {
+      if (typeof this.keyboard.exportConfig !== 'function') {
         return new Error('Export functionality not available in SDK');
       }
-      await exportController.exportEncryptedJSON({}, filename || 'keyboard-config.json');
+      this.keyboard.exportConfig({}, filename || 'keyboard-config.json');
     } catch (error) {
       console.error('Failed to export config:', error);
       return error as Error;
@@ -752,11 +751,10 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const exportController = (this.keyboard as any).exportController;
-      if (!exportController || typeof exportController.importEncryptedJSON !== 'function') {
+      if (typeof this.keyboard.importConfig !== 'function') {
         return new Error('Import functionality not available in SDK');
       }
-      const result = await exportController.importEncryptedJSON(file);
+      const result = await this.keyboard.importConfig(file);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {

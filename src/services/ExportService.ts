@@ -78,7 +78,7 @@ class ExportService {
   private convertLightingToConfig(lighting: any): KeyboardConfig['light']['main'] {
     return {
       open: lighting.open ?? true,
-      mode: String(lighting.mode ?? 0),
+      mode: lighting.mode ?? 0,
       staticColors: lighting.colors || ['#FF0000'],
       selectStaticColor: lighting.staticColor ?? 0,
       luminance: lighting.luminance ?? 100,
@@ -92,7 +92,7 @@ class ExportService {
   private getDefaultLightConfig(): KeyboardConfig['light']['main'] {
     return {
       open: true,
-      mode: '0',
+      mode: 0,
       staticColors: ['#FF0000'],
       selectStaticColor: 0,
       luminance: 100,

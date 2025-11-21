@@ -794,27 +794,6 @@ class ExportService {
       
       if (keysWithCustomLight.length > 0) {
         console.log(`Restoring custom RGB for ${keysWithCustomLight.length} keys...`);
-        console.log('Ensuring keyboard is in custom mode...');
-        
-        const currentLighting = await KeyboardService.getLighting();
-        if (!(currentLighting instanceof Error)) {
-          const { dynamicColorId, ...params } = currentLighting;
-          const customModeParams: any = {
-            ...params,
-            type: 'custom',
-            mode: 21,
-            open: true,
-          };
-          
-          const switchResult = await KeyboardService.setLighting(customModeParams);
-          if (switchResult instanceof Error) {
-            console.error('Failed to switch to custom mode:', switchResult.message);
-            return;
-          }
-          
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-        
         console.log('Step 1: Loading SDK working buffer with getCustomLighting()...');
 
         for (let i = 0; i < keysWithCustomLight.length; i += 80) {

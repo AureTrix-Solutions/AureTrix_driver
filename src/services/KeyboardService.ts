@@ -7,6 +7,7 @@ import { useConnectionStore } from '../store/connection';
 class KeyboardService {
   private keyboard: XDKeyboard;
   private connectedDevice: Device | null = null;
+  private isAutoConnecting: boolean = false;
 
   // Initialization
   constructor() {
@@ -18,13 +19,27 @@ class KeyboardService {
       navigator.hid.addEventListener('connect', this.handleConnect);
       navigator.hid.addEventListener('disconnect', this.handleDisconnect);
     }
+    this.cleanupLegacyStorage();
     this.reconnectIfPaired();
   }
 
-  private reconnectIfPaired(): void {
+  private cleanupLegacyStorage(): void {
+    localStorage.removeItem('pairedDeviceId');
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('pairedDeviceData_')) {
+        localStorage.removeItem(key);
+      }
+    });
+  }
+
+  private async reconnectIfPaired(): Promise<void> {
     const savedStableId = localStorage.getItem('pairedStableId');
     if (savedStableId) {
-      this.reconnect(savedStableId);
+      try {
+        await this.autoConnect();
+      } catch (error) {
+        console.error('Failed to reconnect on startup:', error);
+      }
     }
   }
 
@@ -36,23 +51,6 @@ class KeyboardService {
     } catch (error) {
       console.error('Failed to get devices:', error);
       return [];
-    }
-  }
-
-  async reconnect(stableId: string): Promise<void | Error> {
-    try {
-      const savedDeviceData = localStorage.getItem(`pairedDeviceData_${stableId}`);
-      if (!savedDeviceData) {
-        throw new Error('No saved device data for reconnection');
-      }
-      const device = JSON.parse(savedDeviceData) as Device;
-      await this.keyboard.reconnection(device.data, device.id);
-      this.connectedDevice = device;
-      const connectionStore = useConnectionStore();
-      await connectionStore.onAutoConnectSuccess(device);
-    } catch (error) {
-      console.error('Failed to reconnect:', error);
-      return error as Error;
     }
   }
 
@@ -78,13 +76,6 @@ class KeyboardService {
       await this.init(result.id);
       this.connectedDevice = result;
       localStorage.setItem('pairedStableId', fallbackId);
-      localStorage.setItem(`pairedDeviceData_${fallbackId}`, JSON.stringify(result));
-      localStorage.removeItem('pairedDeviceId');
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('pairedDeviceData_') && !key.endsWith(fallbackId)) {
-          localStorage.removeItem(key);
-        }
-      });
       return result;
     } catch (error) {
       console.error('Failed to request device:', error);
@@ -93,14 +84,19 @@ class KeyboardService {
   }
 
   async autoConnect(): Promise<Device | null> {
-    try {
-      if (!('hid' in navigator)) {
-        console.error('WebHID not supported in this browser');
-        return null;
-      }
-      const savedStableId = localStorage.getItem('pairedStableId');
-      if (!savedStableId) return null;
+    if (this.isAutoConnecting) {
+      console.log('Auto-connect already in progress, skipping...');
+      return null;
+    }
+    if (!('hid' in navigator)) {
+      console.error('WebHID not supported in this browser');
+      return null;
+    }
+    const savedStableId = localStorage.getItem('pairedStableId');
+    if (!savedStableId) return null;
 
+    this.isAutoConnecting = true;
+    try {
       let attempts = 0;
       const maxAttempts = 3;
       while (attempts < maxAttempts) {
@@ -144,6 +140,8 @@ class KeyboardService {
     } catch (error) {
       console.error('Failed to auto-connect:', error);
       return null;
+    } finally {
+      this.isAutoConnecting = false;
     }
   }
 
@@ -165,7 +163,7 @@ class KeyboardService {
     this.connectedDevice = null;
     const connectionStore = useConnectionStore();
     connectionStore.disconnect();
-    localStorage.removeItem('pairedDeviceId');
+    localStorage.removeItem('pairedStableId');
   }
 
   // Base Info and Layout

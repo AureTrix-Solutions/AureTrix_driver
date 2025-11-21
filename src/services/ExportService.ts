@@ -130,7 +130,7 @@ class ExportService {
           row: keyLocation?.row ?? 0,
           keyValue,
           performance: this.getDefaultPerformance(),
-          advancedKeys: {},
+          advancedKeys: { advancedType: 'none' },
           customKeys: { fn0: null, fn1: null, fn2: null, fn3: null },
           light: { custom: { R: 255, G: 255, B: 255, key: keyValue } },
         });
@@ -337,6 +337,8 @@ class ExportService {
       if (activeType) {
         advancedKeys.advancedType = activeType;
         advancedKeys.value = activeValue;
+      } else {
+        advancedKeys.advancedType = 'none';
       }
 
       keyData.advancedKeys = advancedKeys;

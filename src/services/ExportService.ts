@@ -1,7 +1,6 @@
 import KeyboardService from './KeyboardService';
 import { useBatchProcessing } from '../composables/useBatchProcessing';
 import type { KeyboardConfig, Keyboards } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
-import { ConfigValidator } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
 
 class ExportService {
   private processBatches = useBatchProcessing().processBatches;
@@ -474,15 +473,6 @@ class ExportService {
     try {
       console.log('Gathering keyboard configuration...');
       const config = await this.gatherKeyboardSnapshot();
-      
-      console.log('Validating configuration before export...');
-      const validation = ConfigValidator.validateConfig(config);
-      if (!validation.isValid) {
-        const errorMsg = `Configuration validation failed: ${validation.error}`;
-        console.error(errorMsg);
-        return { success: false, error: errorMsg };
-      }
-      console.log('Configuration validation passed ✓');
       
       console.log('Exporting configuration to file...');
       KeyboardService.exportConfig(config, filename);

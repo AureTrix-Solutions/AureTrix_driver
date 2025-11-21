@@ -189,7 +189,9 @@ export default defineComponent({
     },
     async handleProfileClick(profileId: number) {
       const result = await this.profileStore.switchProfile(profileId);
-      if (!result.success && result.error) {
+      if (result.success) {
+        window.location.reload();
+      } else if (result.error) {
         console.error('Failed to switch profile:', result.error);
       }
     },

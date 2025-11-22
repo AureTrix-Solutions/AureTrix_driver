@@ -181,9 +181,11 @@ export default defineComponent({
   color: v.$text-color;
 
   h2 {
-    color: v.$primary-color;
-    margin-bottom: 10px;
+    color: v.$accent-color;
+    margin-bottom: 20px;
     margin-top: 0px;
+    font-family: v.$font-style;
+    font-weight: 400;
   }
 
   .controls {
@@ -196,6 +198,8 @@ export default defineComponent({
     label {
       margin-right: 5px;
       color: v.$text-color;
+      font-family: v.$font-style;
+      font-weight: 300;
     }
 
     select {
@@ -205,35 +209,43 @@ export default defineComponent({
       color: v.$text-color;
       border: 1px solid rgba(255, 255, 255, 0.2);
       font-size: 1rem;
+      font-family: v.$font-style;
       min-width: 150px;
     }
 
     .btn-create, .btn-import {
       padding: 8px 16px;
       border-radius: v.$border-radius;
-      border: none;
+      background-color: color.adjust(v.$background-dark, $lightness: -100%);
+      color: v.$primary-color;
+      border: v.$border-style;
       cursor: pointer;
       font-size: 0.9rem;
-      transition: all 0.3s;
-      font-weight: bold;
+      font-weight: 400;
+      font-family: v.$font-style;
+      transition: background-color 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background-color: color.adjust(v.$background-dark, $lightness: 10%);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
     }
 
     .btn-create {
       background-color: v.$accent-color;
       color: v.$background-dark;
 
-      &:hover {
+      &:hover:not(:disabled) {
         background-color: color.adjust(v.$accent-color, $lightness: 10%);
       }
     }
 
     .btn-import {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: v.$text-color;
-
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.2);
-      }
+      color: v.$accent-color;
     }
   }
 

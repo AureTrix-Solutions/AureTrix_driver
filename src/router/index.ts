@@ -14,6 +14,7 @@ const routes = [
   { path: '/socd', component: () => import('@/pages/SOCD.vue'), name: 'SOCD' },
   { path: '/macro', component: () => import('@/pages/Macro.vue'), name: 'Macro' },
   { path: '/layout-preview', component: () => import('@/pages/LayoutPreview.vue'), name: 'LayoutPreview' },
+  { path: '/layout-creator', component: () => import('@/pages/LayoutCreator.vue'), name: 'LayoutCreator' },
   { path: '/performance', component: () => import('@/pages/Performance.vue'), name: 'Performance' },
   { path: '/debug', component: () => import('@/pages/Debug.vue'), name: 'Debug' },
   { path: '/rapid-trigger', component: () => import('@/pages/RapidTrigger.vue'), name: 'RapidTrigger' },

@@ -11,7 +11,7 @@
           </option>
         </optgroup>
       </select>
-      <button @click="showCreateModal = true" class="btn-create">Create New Layout</button>
+      <router-link to="/layout-creator" class="btn-create">Create New Layout</router-link>
       <button @click="triggerImport" class="btn-import">Import Layout</button>
       <input ref="fileInput" type="file" accept=".json" @change="handleFileImport" style="display: none" />
     </div>
@@ -26,28 +26,21 @@
       </div>
     </div>
 
-    <!-- Layout Creator Modal -->
-    <LayoutCreatorModal :visible="showCreateModal" @close="showCreateModal = false" @saved="handleLayoutSaved" />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from 'vue';
 import { getLayoutConfig, refreshCustomLayouts } from '@utils/layoutConfigs';
-import LayoutCreatorModal from '@/components/LayoutCreatorModal.vue';
 import LayoutStorageService, { type CustomLayoutConfig } from '@/services/LayoutStorageService';
 
 export default defineComponent({
   name: 'LayoutPreview',
-  components: {
-    LayoutCreatorModal
-  },
   setup() {
     const layout = ref<any[][]>([]);
     const selectedLayout = ref<number | string | null>(null); // Can be number or productName string
     const layouts = [61, 67, 68, 80, 82, 84, 87]; // Supported layouts
     const customLayouts = ref<CustomLayoutConfig[]>([]);
-    const showCreateModal = ref(false);
     const fileInput = ref<HTMLInputElement | null>(null);
 
     const layoutData = ref<any>({ rows: 0, cols: 0, keyPositions: [], gaps: [] });
@@ -162,8 +155,6 @@ export default defineComponent({
       gridStyle,
       getKeyStyle,
       updateLayout,
-      showCreateModal,
-      handleLayoutSaved,
       triggerImport,
       handleFileImport,
       fileInput,
@@ -224,6 +215,8 @@ export default defineComponent({
       font-weight: 400;
       font-family: v.$font-style;
       transition: background-color 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
 
       &:hover:not(:disabled) {
         background-color: color.adjust(v.$background-dark, $lightness: 10%);

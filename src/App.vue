@@ -82,6 +82,9 @@
             System Mode
             <span class="arrow" :class="{ open: openQuickSettings === 'systemMode' }">></span>
           </div>
+          <button class="factory-reset-btn" @click="showFactoryResetModal" :disabled="!connectionStore.isConnected">
+            Factory Reset
+          </button>
         </div>
       </nav>
       <p class="copyright">Copyright©2025 AureTrix</p>
@@ -125,6 +128,9 @@
       </div>
     </div>
 
+    <!-- Factory Reset Modal -->
+    <FactoryResetModal v-if="isFactoryResetModalVisible" @confirm="handleFactoryReset" @cancel="hideFactoryResetModal" />
+
     <!-- Main Content Area -->
     <main class="main-content">
       <router-view />
@@ -139,6 +145,7 @@ import { useConnectionStore } from './store/connection';
 import { useProfileStore } from './store/profileStore';
 import KeyboardService from './services/KeyboardService';
 import ExportService from './services/ExportService';
+import FactoryResetModal from './components/FactoryResetModal.vue';
 
 const POLLING_RATE_OPTIONS = [
   { value: 0, label: '8KHz' },
@@ -160,6 +167,7 @@ export default defineComponent({
   components: {
     RouterLink,
     RouterView,
+    FactoryResetModal,
   },
   setup() {
     const connectionStore = useConnectionStore();
@@ -206,7 +214,8 @@ export default defineComponent({
       pollingRateOptions: POLLING_RATE_OPTIONS,
       currentPollingRate: 0,
       systemModeOptions: SYSTEM_MODE_OPTIONS,
-      currentSystemMode: 'win' as 'win' | 'mac'
+      currentSystemMode: 'win' as 'win' | 'mac',
+      isFactoryResetModalVisible: false
     };
   },
   computed: {
@@ -280,6 +289,25 @@ export default defineComponent({
       const result = await KeyboardService.setSystemMode(this.currentSystemMode);
       if (result instanceof Error) {
         console.error('Failed to set system mode:', result.message);
+      }
+    },
+    showFactoryResetModal() {
+      this.isFactoryResetModalVisible = true;
+    },
+    hideFactoryResetModal() {
+      this.isFactoryResetModalVisible = false;
+    },
+    async handleFactoryReset() {
+      this.hideFactoryResetModal();
+      const result = await KeyboardService.factoryReset();
+      if (result instanceof Error) {
+        console.error('Factory reset failed:', result.message);
+        alert('Factory reset failed. Please try again.');
+      } else if (result === true) {
+        alert('Factory reset successful! Your keyboard has been restored to factory settings.');
+      } else {
+        console.error('Unexpected factory reset result:', result);
+        alert('Factory reset completed with unexpected result.');
       }
     },
     async syncHardwareSettings() {
@@ -721,6 +749,32 @@ export default defineComponent({
 
 .quick-settings-section {
   margin-top: 20px;
+}
+
+.factory-reset-btn {
+  width: 100%;
+  font-family: v.$font-style;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: v.$border-radius;
+  background-color: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.85rem;
+  text-align: center;
+  font-weight: 500;
+
+  &:hover:not(:disabled) {
+    background-color: rgba(255, 68, 68, 0.2);
+    border-color: rgba(255, 68, 68, 0.5);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 .quick-settings-header {

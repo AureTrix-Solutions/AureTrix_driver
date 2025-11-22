@@ -8,6 +8,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 22, 2025 - Factory Reset Quick Setting**
+- **Factory Reset Button**: Added "Factory Reset" button to Quick Settings below System Mode
+- **Confirmation Modal**: Created FactoryResetModal component with clear warning about data loss
+- **User Protection**: Modal warns users to export profiles first, lists what will be deleted (key mappings, macros, RGB, performance settings, profiles)
+- **SDK Integration**: `factoryReset()` method calls SDK's `factoryDataReset()` with `ORDER_TYPE_RESTORE_FACTORY_SETTINGS` command
+- **Error Handling**: Validates results and shows user-friendly alerts on success/failure
+- **Visual Design**: Red-styled button clearly indicates destructive action; disabled when keyboard not connected
+- **Result**: Users can safely reset keyboard to factory settings with proper warnings and confirmation flow
+
 **November 22, 2025 - System Mode Quick Settings Complete**
 - **Removed Polling Rate Store**: Eliminated unnecessary `pollingRateStore.ts` Pinia store; polling rate state now managed directly in App.vue as reactive data
 - **Simplified Architecture**: Both polling rate and system mode use direct KeyboardService calls instead of store wrappers, reducing complexity

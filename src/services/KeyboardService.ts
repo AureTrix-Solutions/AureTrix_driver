@@ -1054,6 +1054,20 @@ class KeyboardService {
     }
   }
 
+  async factoryReset(): Promise<boolean | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.factoryDataReset();
+      if (result instanceof Error) return result;
+      return result === true;
+    } catch (error) {
+      console.error('Failed to factory reset:', error);
+      return error as Error;
+    }
+  }
+
   exportConfig(data: any, filename: string): void {
     if (!this.connectedDevice) {
       throw new Error('No device connected');

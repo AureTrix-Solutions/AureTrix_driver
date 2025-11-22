@@ -324,7 +324,7 @@ export default defineComponent({
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 5px;
 }
 
 .nav-item {
@@ -549,7 +549,7 @@ export default defineComponent({
   height: 1px;
   background: linear-gradient(to right, rgba(v.$text-color, 0.3), rgba(v.$text-color, 0.1));
   border-radius: 1px;
-  margin-top: 15px;
+  margin-top: 5px;
 }
 
 @keyframes slideInRight {

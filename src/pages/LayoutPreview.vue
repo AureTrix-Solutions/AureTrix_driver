@@ -4,8 +4,18 @@
     <div class="controls">
       <label for="layout-select">Select Layout: </label>
       <select v-model="selectedLayout" id="layout-select" @change="updateLayout">
-        <option v-for="layout in layouts" :key="layout" :value="layout">{{ `${layout}-key` }}</option>
+        <optgroup label="Standard Layouts">
+          <option v-for="layout in layouts" :key="layout" :value="layout">{{ `${layout}-key` }}</option>
+        </optgroup>
+        <optgroup v-if="customLayouts.length > 0" label="Custom Layouts">
+          <option v-for="layout in customLayouts" :key="layout.productName" :value="layout.productName">
+            {{ layout.productName }}
+          </option>
+        </optgroup>
       </select>
+      <button @click="showCreateModal = true" class="btn-create">Create New Layout</button>
+      <button @click="triggerImport" class="btn-import">Import Layout</button>
+      <input ref="fileInput" type="file" accept=".json" @change="handleFileImport" style="display: none" />
     </div>
     <div v-if="layout.length" class="key-grid" :style="gridStyle">
       <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
@@ -17,28 +27,41 @@
         ></div>
       </div>
     </div>
+
+    <!-- Layout Creator Modal -->
+    <LayoutCreatorModal :visible="showCreateModal" @close="showCreateModal = false" @saved="handleLayoutSaved" />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from 'vue';
-import { getLayoutConfig } from '@utils/layoutConfigs';
+import { getLayoutConfig, refreshCustomLayouts } from '@utils/layoutConfigs';
+import LayoutCreatorModal from '@/components/LayoutCreatorModal.vue';
+import LayoutStorageService, { type CustomLayoutConfig } from '@/services/LayoutStorageService';
 
 export default defineComponent({
   name: 'LayoutPreview',
+  components: {
+    LayoutCreatorModal
+  },
   setup() {
     const layout = ref<any[][]>([]);
-    const selectedLayout = ref<number | null>(null); // Initial null to force load from storage
+    const selectedLayout = ref<number | string | null>(null); // Can be number or productName string
     const layouts = [61, 67, 68, 80, 82, 84, 87]; // Supported layouts
+    const customLayouts = ref<CustomLayoutConfig[]>([]);
+    const showCreateModal = ref(false);
+    const fileInput = ref<HTMLInputElement | null>(null);
+
+    const layoutData = ref<any>({ rows: 0, cols: 0, keyPositions: [], gaps: [] });
 
     // Grid computation
     const gridStyle = computed(() => {
-      const { keyPositions, gaps } = getLayoutConfig(selectedLayout.value ?? 82);
+      const { keyPositions, gaps } = layoutData.value;
       if (!keyPositions || keyPositions.length === 0) {
         return { height: '0px', width: '0px' };
       }
-      const containerHeight = keyPositions.reduce((max, row, i) => max + Math.max(...row.map(pos => pos[1] + pos[3])) + (gaps[i] || 0), 0);
-      const maxRowWidth = Math.max(...keyPositions.map(row => row.reduce((sum, pos) => sum + pos[2], 0)));
+      const containerHeight = keyPositions.reduce((max: number, row: any, i: number) => max + Math.max(...row.map((pos: any) => pos[1] + pos[3])) + (gaps[i] || 0), 0);
+      const maxRowWidth = Math.max(...keyPositions.map((row: any) => row.reduce((sum: number, pos: any) => sum + pos[2], 0)));
       return {
         position: 'relative',
         height: `${containerHeight}px`,
@@ -48,7 +71,7 @@ export default defineComponent({
     });
 
     const getKeyStyle = (rowIdx: number, colIdx: number) => {
-      const { keyPositions, gaps } = getLayoutConfig(selectedLayout.value ?? 82);
+      const { keyPositions, gaps } = layoutData.value;
       const rowLength = keyPositions[rowIdx]?.length || 0;
       if (!keyPositions || !keyPositions[rowIdx] || !Array.isArray(keyPositions[rowIdx]) || colIdx >= rowLength) {
         return { width: '0px', height: '0px', left: '0px', top: '0px' };
@@ -67,30 +90,85 @@ export default defineComponent({
     };
 
     // Layout update
-    const updateLayout = () => {
-      const { keyPositions } = getLayoutConfig(selectedLayout.value ?? 82);
-      layout.value = keyPositions;
+    const updateLayout = async () => {
+      const productName = typeof selectedLayout.value === 'string' ? selectedLayout.value : undefined;
+      const keyCount = typeof selectedLayout.value === 'number' ? selectedLayout.value : 82;
+      
+      const config = await getLayoutConfig(keyCount, undefined, undefined, undefined, undefined, productName);
+      layoutData.value = config;
+      layout.value = config.keyPositions;
       localStorage.setItem('lastSelectedLayout', selectedLayout.value?.toString() ?? '82');
     };
 
+    // Load custom layouts
+    const loadCustomLayouts = async () => {
+      try {
+        customLayouts.value = await LayoutStorageService.getAllLayouts();
+        await refreshCustomLayouts();
+      } catch (error) {
+        console.warn('Failed to load custom layouts:', error);
+      }
+    };
+
+    const handleLayoutSaved = async () => {
+      await loadCustomLayouts();
+      await updateLayout();
+    };
+
+    const triggerImport = () => {
+      fileInput.value?.click();
+    };
+
+    const handleFileImport = async (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (file) {
+        try {
+          await LayoutStorageService.importLayout(file);
+          await loadCustomLayouts();
+          await updateLayout();
+        } catch (error) {
+          console.error('Failed to import layout:', error);
+          alert('Failed to import layout. Please check the file format.');
+        }
+      }
+    };
+
     // Restore from localStorage on mount
-    onMounted(() => {
+    onMounted(async () => {
+      await loadCustomLayouts();
+      
       const savedLayout = localStorage.getItem('lastSelectedLayout');
-      if (savedLayout && layouts.includes(parseInt(savedLayout))) {
-        selectedLayout.value = parseInt(savedLayout);
+      if (savedLayout) {
+        // Check if it's a custom layout
+        const isCustom = customLayouts.value.some(layout => layout.productName === savedLayout);
+        if (isCustom) {
+          selectedLayout.value = savedLayout;
+        } else if (layouts.includes(parseInt(savedLayout))) {
+          selectedLayout.value = parseInt(savedLayout);
+        } else {
+          selectedLayout.value = 82; // Fallback
+        }
       } else {
         selectedLayout.value = 82; // Fallback
       }
-      updateLayout();
+      
+      await updateLayout();
     });
 
     return {
       layout,
       selectedLayout,
       layouts,
+      customLayouts,
       gridStyle,
       getKeyStyle,
       updateLayout,
+      showCreateModal,
+      handleLayoutSaved,
+      triggerImport,
+      handleFileImport,
+      fileInput,
     };
   },
 });
@@ -115,6 +193,7 @@ export default defineComponent({
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-wrap: wrap;
 
     label {
       margin-right: 5px;
@@ -128,6 +207,35 @@ export default defineComponent({
       color: v.$text-color;
       border: 1px solid rgba(255, 255, 255, 0.2);
       font-size: 1rem;
+      min-width: 150px;
+    }
+
+    .btn-create, .btn-import {
+      padding: 8px 16px;
+      border-radius: v.$border-radius;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+      font-weight: bold;
+    }
+
+    .btn-create {
+      background-color: v.$accent-color;
+      color: v.$background-dark;
+
+      &:hover {
+        background-color: color.adjust(v.$accent-color, $lightness: 10%);
+      }
+    }
+
+    .btn-import {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: v.$text-color;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
     }
   }
 

@@ -1,4 +1,5 @@
 // layoutConfigs.ts
+import LayoutStorageService, { type CustomLayoutConfig } from '@/services/LayoutStorageService';
 
 const mmToPx = (mm: number) => Math.round(mm * 4); // Increased to 4px/mm for larger keys
 
@@ -7,6 +8,17 @@ type LayoutConfig = {
   gapsAfterCol: Record<number, Record<number, number>>[];
   rowSpacing: number[];
 };
+
+let customLayoutsCache: CustomLayoutConfig[] = [];
+
+async function loadCustomLayouts() {
+  try {
+    customLayoutsCache = await LayoutStorageService.getAllLayouts();
+  } catch (error) {
+    console.warn('Failed to load custom layouts:', error);
+    customLayoutsCache = [];
+  }
+}
 
 const layoutMap: Record<number, LayoutConfig> = {
   61: { // 60%
@@ -105,11 +117,35 @@ const layoutMap: Record<number, LayoutConfig> = {
   },
 };
 
-export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[]) => {
+export const getLayoutConfig = async (keyCount: number, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[], productName?: string) => {
+  // Load custom layouts if not already cached
+  if (customLayoutsCache.length === 0) {
+    await loadCustomLayouts();
+  }
+
+  // Check for custom layout by productName first
+  if (productName) {
+    const customLayout = customLayoutsCache.find(layout => layout.productName === productName);
+    if (customLayout) {
+      const config: LayoutConfig = {
+        keySizes: customLayout.keySizes,
+        gapsAfterCol: customLayout.gapsAfterCol,
+        rowSpacing: customLayout.rowSpacing
+      };
+      return processLayoutConfig(config, baseLayout, customKeySizes, customGapsAfterCol, customRowSpacing);
+    }
+  }
+
+  // Fall back to keyCount-based lookup
   const config = layoutMap[keyCount];
   if (!config) {
     throw new Error(`Unsupported key count: ${keyCount}`);
   }
+
+  return processLayoutConfig(config, baseLayout, customKeySizes, customGapsAfterCol, customRowSpacing);
+};
+
+function processLayoutConfig(config: LayoutConfig, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[]) {
 
   let rows = 0;
   let cols = 0;
@@ -166,4 +202,9 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
   }
 
   return { rows, cols, keyPositions: convertedPositions, gaps: Array(rows).fill(0) }; // Gaps handled in left
-};
+}
+
+// Helper function to refresh custom layouts cache
+export async function refreshCustomLayouts() {
+  await loadCustomLayouts();
+}

@@ -1,0 +1,27 @@
+KeyboardService.ts:71 Selected raw HID device: HIDDevice {oninputreport: null, opened: false, vendorId: 7331, productId: 1793, productName: 'Slice75 HE', …}
+KeyboardService.ts:79 Constructed result device: {data: HIDDevice, id: 'f3a4501b-a31e-40c0-9322-956d1a0ee409', usage: 1, usagePage: 65440, vendorId: 7331, …}
+connection.ts:53 Base info: {BoardID: 520292097, KeyboardLayout: 31, KeyType: 3, CustomerID: 0, ProductionId: 0, …}
+KeyboardService.ts:838 {type: 'ORDER_TYPE_CONFIG'}
+KeyboardService.ts:838 paramparamparamparam {type: 'ORDER_TYPE_CONFIG'}
+KeyboardService.ts:938 {type: 'ORDER_TYPE_ROES'}
+KeyboardService.ts:938 paramparamparamparam {type: 'ORDER_TYPE_ROES'}
+KeyboardService.ts:940 ORDER_TYPE_ROES raw result: 0
+KeyboardService.ts:1041 {type: 'ORDER_TYPE_QUERY_WIN_MODEL'}
+KeyboardService.ts:1041 paramparamparamparam {type: 'ORDER_TYPE_QUERY_WIN_MODEL'}
+KeyboardService.ts:1083 paramparamparamparam {type: 'ORDER_TYPE_RESTORE_FACTORY_SETTINGS'}
+KeyboardService.ts:188 Disconnect detected during factory reset, waiting for SDK auto-reconnect...
+KeyboardService.ts:188 Disconnect detected during factory reset, waiting for SDK auto-reconnect...
+KeyboardService.ts:188 Disconnect detected during factory reset, waiting for SDK auto-reconnect...
+KeyboardService.ts:172 Reconnect detected after factory reset, SDK handling reconnection...
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1706  this.isUpgrading false
+KeyboardService.ts:92 Auto-connect already in progress, skipping...
+KeyboardService.ts:92 Auto-connect already in progress, skipping...
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1636 Reconnection failed: NotAllowedError: Failed to open the device.
+reconnection @ @sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1636
+await in reconnection
+reconnection @ @sparklinkplayjoy_sdk-keyboard.js?v=b164615f:4093
+onConnect @ @sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1706
+KeyboardService.ts:121 Auto-connect SDK matched device: {data: HIDDevice, id: 'f3a4501b-a31e-40c0-9322-956d1a0ee409', usage: 1, usagePage: 65440, vendorId: 7331, …}
+connection.ts:85 Base info: {BoardID: 520292097, KeyboardLayout: 31, KeyType: 3, CustomerID: 0, ProductionId: 0, …}
+KeyboardService.ts:838 {type: 'ORDER_TYPE_CONFIG'}
+KeyboardService.ts:838 paramparamparamparam {type: 'ORDER_TYPE_CONFIG'}

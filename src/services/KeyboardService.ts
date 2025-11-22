@@ -12,6 +12,7 @@ class KeyboardService {
   private pollingRateTimeout: ReturnType<typeof setTimeout> | null = null;
   private isFactoryResetting: boolean = false;
   private factoryResetTimeout: ReturnType<typeof setTimeout> | null = null;
+  private originalConsoleError: typeof console.error | null = null;
 
   // Initialization
   constructor() {
@@ -44,6 +45,27 @@ class KeyboardService {
       } catch (error) {
         console.error('Failed to reconnect on startup:', error);
       }
+    }
+  }
+
+  private suppressSDKReconnectError(): void {
+    if (this.originalConsoleError) return;
+    
+    this.originalConsoleError = console.error;
+    console.error = (...args: any[]) => {
+      const message = args.join(' ');
+      if ((this.isPollingRateChanging || this.isFactoryResetting) && 
+          message.includes('Failed to open the device')) {
+        return;
+      }
+      this.originalConsoleError?.apply(console, args);
+    };
+  }
+
+  private restoreConsoleError(): void {
+    if (!this.isPollingRateChanging && !this.isFactoryResetting && this.originalConsoleError) {
+      console.error = this.originalConsoleError;
+      this.originalConsoleError = null;
     }
   }
 
@@ -175,6 +197,9 @@ class KeyboardService {
         this.factoryResetTimeout = null;
       }
       this.isFactoryResetting = false;
+    }
+    if (!this.isPollingRateChanging && !this.isFactoryResetting) {
+      this.restoreConsoleError();
     }
     this.autoConnect();
   }
@@ -959,10 +984,12 @@ class KeyboardService {
         this.pollingRateTimeout = null;
       }
       
+      this.suppressSDKReconnectError();
       this.isPollingRateChanging = true;
       const result = await this.keyboard.setRateOfReturn(value);
       if (result instanceof Error) {
         this.isPollingRateChanging = false;
+        this.restoreConsoleError();
         return result;
       }
       
@@ -971,6 +998,7 @@ class KeyboardService {
           console.warn('Polling rate change timeout - attempting SDK session recovery');
           this.isPollingRateChanging = false;
           this.pollingRateTimeout = null;
+          this.restoreConsoleError();
           
           try {
             const savedStableId = localStorage.getItem('pairedStableId');
@@ -1025,6 +1053,7 @@ class KeyboardService {
     } catch (error) {
       console.error('Failed to set polling rate:', error);
       this.isPollingRateChanging = false;
+      this.restoreConsoleError();
       if (this.pollingRateTimeout) {
         clearTimeout(this.pollingRateTimeout);
         this.pollingRateTimeout = null;
@@ -1079,10 +1108,12 @@ class KeyboardService {
         this.factoryResetTimeout = null;
       }
       
+      this.suppressSDKReconnectError();
       this.isFactoryResetting = true;
       const result = await this.keyboard.factoryDataReset();
       if (result instanceof Error) {
         this.isFactoryResetting = false;
+        this.restoreConsoleError();
         return result;
       }
       
@@ -1091,6 +1122,7 @@ class KeyboardService {
           console.warn('Factory reset timeout - attempting SDK session recovery');
           this.isFactoryResetting = false;
           this.factoryResetTimeout = null;
+          this.restoreConsoleError();
           
           try {
             const savedStableId = localStorage.getItem('pairedStableId');
@@ -1145,6 +1177,7 @@ class KeyboardService {
     } catch (error) {
       console.error('Failed to factory reset:', error);
       this.isFactoryResetting = false;
+      this.restoreConsoleError();
       if (this.factoryResetTimeout) {
         clearTimeout(this.factoryResetTimeout);
         this.factoryResetTimeout = null;

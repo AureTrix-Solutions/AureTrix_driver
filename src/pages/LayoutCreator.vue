@@ -184,9 +184,7 @@ export default defineComponent({
         top += mmToPx(uToMm(1)); // Standard key height from keyUnits.ts
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        if (gap && gap > 0) {
-          top += mmToPx(gap);
-        }
+        top += mmToPx((gap || 0) + 1); // User-defined gap + 1mm built-in spacing
       }
 
       // Calculate left position
@@ -223,9 +221,7 @@ export default defineComponent({
         totalHeight += mmToPx(uToMm(1)); // Standard key height from keyUnits.ts
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        if (gap && gap > 0) {
-          totalHeight += mmToPx(gap);
-        }
+        totalHeight += mmToPx((gap || 0) + 1); // User-defined gap + 1mm built-in spacing
       }
 
       let maxWidth = 0;
@@ -368,7 +364,7 @@ export default defineComponent({
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        rowSpacing.push((gap || 0) + uToMm(1)); // Standard key height from keyUnits.ts
+        rowSpacing.push((gap || 0) + uToMm(1) + 1); // User gap + key height + 1mm built-in spacing
       }
 
       const layout = {
@@ -422,7 +418,7 @@ export default defineComponent({
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        rowSpacing.push((gap || 0) + uToMm(1)); // Standard key height from keyUnits.ts
+        rowSpacing.push((gap || 0) + uToMm(1) + 1); // User gap + key height + 1mm built-in spacing
       }
 
       const layout = {
@@ -492,7 +488,7 @@ export default defineComponent({
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        rowSpacingArr.push((gap || 0) + uToMm(1)); // Standard key height from keyUnits.ts
+        rowSpacingArr.push((gap || 0) + uToMm(1) + 1); // User gap + key height + 1mm built-in spacing
       }
       const rowSpacingCompact = arrayToCompactSyntax(rowSpacingArr);
 
@@ -545,7 +541,7 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        rowSpacing.push((gap || 0) + uToMm(1)); // Standard key height from keyUnits.ts
+        rowSpacing.push((gap || 0) + uToMm(1) + 1); // User gap + key height + 1mm built-in spacing
       }
 
       const layout = {

@@ -445,6 +445,13 @@ export default defineComponent({
         return gaps;
       });
 
+      // Helper to format gap object with numeric keys
+      const formatGapObject = (gaps: Record<number, number>): string => {
+        if (Object.keys(gaps).length === 0) return '{}';
+        const entries = Object.entries(gaps).map(([key, value]) => `${key}: ${value}`);
+        return `{ ${entries.join(', ')} }`;
+      };
+
       // Check if all gapsAfterCol are empty
       const allEmpty = gapsAfterColData.every(g => Object.keys(g).length === 0);
       let gapsAfterColCompact: string;
@@ -453,10 +460,8 @@ export default defineComponent({
         // All empty - use Array.fill({})
         gapsAfterColCompact = `Array(${gapsAfterColData.length}).fill({})`;
       } else {
-        // Mixed - stringify each entry
-        const gapsStrings = gapsAfterColData.map(g => 
-          Object.keys(g).length > 0 ? JSON.stringify(g) : '{}'
-        );
+        // Mixed - format each entry with numeric keys
+        const gapsStrings = gapsAfterColData.map(g => formatGapObject(g));
         gapsAfterColCompact = `[${gapsStrings.join(', ')}]`;
       }
 

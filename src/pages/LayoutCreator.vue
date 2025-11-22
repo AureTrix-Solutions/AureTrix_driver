@@ -56,7 +56,7 @@
               </div>
 
               <!-- Key Editor -->
-              <div v-if="selectedKeys.length > 0" class="key-editor-section">
+              <div class="key-editor-section">
                 <div class="editor-header">
                   <h4>Edit Keys ({{ selectedKeys.length }} selected)</h4>
                   <button @click="clearSelection" class="clear-selection-btn">Clear Selection</button>

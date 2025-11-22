@@ -234,19 +234,6 @@ export default defineComponent({
         cursor: not-allowed;
       }
     }
-
-    .btn-create {
-      background-color: v.$accent-color;
-      color: v.$background-dark;
-
-      &:hover:not(:disabled) {
-        background-color: color.adjust(v.$accent-color, $lightness: 10%);
-      }
-    }
-
-    .btn-import {
-      color: v.$accent-color;
-    }
   }
 
   .key-grid {

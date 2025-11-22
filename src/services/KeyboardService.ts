@@ -90,7 +90,6 @@ class KeyboardService {
         throw new Error('No HID device selected. Please ensure a keyboard is connected and select it.');
       }
       const device = devices[0];
-      console.log('Selected raw HID device:', device); // Essential for debugging device properties
       if (!device.opened) {
         await device.open();
       }
@@ -98,7 +97,6 @@ class KeyboardService {
       const existingDevice = sdkDevices.find(d => d.data.vendorId === device.vendorId && d.data.productId === device.productId && d.data.serialNumber === device.serialNumber);
       const fallbackId = device.id || `${device.vendorId}-${device.productId}-${device.serialNumber || 'unknown'}`;
       const result = existingDevice || { id: fallbackId, data: device, productName: device.productName || 'Unknown' };
-      console.log('Constructed result device:', result); // Essential for debugging constructed device
       await this.init(result.id);
       this.connectedDevice = result;
       localStorage.setItem('pairedStableId', fallbackId);
@@ -111,7 +109,6 @@ class KeyboardService {
 
   async autoConnect(): Promise<Device | null> {
     if (this.isAutoConnecting) {
-      console.log('Auto-connect already in progress, skipping...');
       return null;
     }
     if (!('hid' in navigator)) {
@@ -140,7 +137,6 @@ class KeyboardService {
             const targetSdkDevice = sdkDevices.find(d => d.data.vendorId === targetHidDevice.vendorId && d.data.productId === targetHidDevice.productId && d.data.serialNumber === targetHidDevice.serialNumber);
             const fallbackId = targetHidDevice.id || `${targetHidDevice.vendorId}-${targetHidDevice.productId}-${targetHidDevice.serialNumber || 'unknown'}`;
             const device = targetSdkDevice || { id: fallbackId, data: targetHidDevice, productName: targetHidDevice.productName || 'Unknown' };
-            console.log('Auto-connect SDK matched device:', device); // Essential for debugging auto-connect
             await this.init(device.id);
             this.connectedDevice = device;
             const connectionStore = useConnectionStore();
@@ -183,7 +179,6 @@ class KeyboardService {
 
   private handleConnect = (event: HIDConnectionEvent): void => {
     if (this.isPollingRateChanging) {
-      console.log('Reconnect detected after polling rate change, SDK handling reconnection...');
       if (this.pollingRateTimeout) {
         clearTimeout(this.pollingRateTimeout);
         this.pollingRateTimeout = null;
@@ -191,7 +186,6 @@ class KeyboardService {
       this.isPollingRateChanging = false;
     }
     if (this.isFactoryResetting) {
-      console.log('Reconnect detected after factory reset, SDK handling reconnection...');
       if (this.factoryResetTimeout) {
         clearTimeout(this.factoryResetTimeout);
         this.factoryResetTimeout = null;
@@ -205,12 +199,7 @@ class KeyboardService {
   }
 
   private handleDisconnect = (event: HIDConnectionEvent): void => {
-    if (this.isPollingRateChanging) {
-      console.log('Disconnect detected during polling rate change, waiting for SDK auto-reconnect...');
-      return;
-    }
-    if (this.isFactoryResetting) {
-      console.log('Disconnect detected during factory reset, waiting for SDK auto-reconnect...');
+    if (this.isPollingRateChanging || this.isFactoryResetting) {
       return;
     }
     
@@ -962,7 +951,6 @@ class KeyboardService {
       }
       const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_ROES' });
       if (result instanceof Error) return result;
-      console.log('ORDER_TYPE_ROES raw result:', result);
       return result;
     } catch (error) {
       console.error('Failed to get polling rate:', error);
@@ -1025,10 +1013,7 @@ class KeyboardService {
               return;
             }
             
-            console.log('Device still enumerated - clearing stale connection and waiting for handleConnect to reconnect...');
-            const oldDevice = this.connectedDevice;
             this.connectedDevice = null;
-            
             await new Promise(resolve => setTimeout(resolve, 5000));
             
             if (!this.connectedDevice) {
@@ -1036,8 +1021,6 @@ class KeyboardService {
               const connectionStore = useConnectionStore();
               connectionStore.disconnect();
               localStorage.removeItem('pairedStableId');
-            } else {
-              console.log('SDK reconnection succeeded via handleConnect event');
             }
           } catch (error) {
             console.error('Error during timeout recovery:', error);
@@ -1149,10 +1132,7 @@ class KeyboardService {
               return;
             }
             
-            console.log('Device still enumerated - clearing stale connection and waiting for handleConnect to reconnect...');
-            const oldDevice = this.connectedDevice;
             this.connectedDevice = null;
-            
             await new Promise(resolve => setTimeout(resolve, 5000));
             
             if (!this.connectedDevice) {
@@ -1160,8 +1140,6 @@ class KeyboardService {
               const connectionStore = useConnectionStore();
               connectionStore.disconnect();
               localStorage.removeItem('pairedStableId');
-            } else {
-              console.log('SDK reconnection succeeded via handleConnect event');
             }
           } catch (error) {
             console.error('Error during timeout recovery:', error);

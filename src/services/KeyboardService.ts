@@ -10,6 +10,8 @@ class KeyboardService {
   private isAutoConnecting: boolean = false;
   private isPollingRateChanging: boolean = false;
   private pollingRateTimeout: ReturnType<typeof setTimeout> | null = null;
+  private isFactoryResetting: boolean = false;
+  private factoryResetTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Initialization
   constructor() {
@@ -166,12 +168,24 @@ class KeyboardService {
       }
       this.isPollingRateChanging = false;
     }
+    if (this.isFactoryResetting) {
+      console.log('Reconnect detected after factory reset, SDK handling reconnection...');
+      if (this.factoryResetTimeout) {
+        clearTimeout(this.factoryResetTimeout);
+        this.factoryResetTimeout = null;
+      }
+      this.isFactoryResetting = false;
+    }
     this.autoConnect();
   }
 
   private handleDisconnect = (event: HIDConnectionEvent): void => {
     if (this.isPollingRateChanging) {
       console.log('Disconnect detected during polling rate change, waiting for SDK auto-reconnect...');
+      return;
+    }
+    if (this.isFactoryResetting) {
+      console.log('Disconnect detected during factory reset, waiting for SDK auto-reconnect...');
       return;
     }
     
@@ -1059,11 +1073,82 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
+      
+      if (this.factoryResetTimeout) {
+        clearTimeout(this.factoryResetTimeout);
+        this.factoryResetTimeout = null;
+      }
+      
+      this.isFactoryResetting = true;
       const result = await this.keyboard.factoryDataReset();
-      if (result instanceof Error) return result;
+      if (result instanceof Error) {
+        this.isFactoryResetting = false;
+        return result;
+      }
+      
+      this.factoryResetTimeout = setTimeout(async () => {
+        if (this.isFactoryResetting) {
+          console.warn('Factory reset timeout - attempting SDK session recovery');
+          this.isFactoryResetting = false;
+          this.factoryResetTimeout = null;
+          
+          try {
+            const savedStableId = localStorage.getItem('pairedStableId');
+            if (!savedStableId) {
+              console.error('No saved device ID after timeout - cleaning up');
+              this.connectedDevice = null;
+              const connectionStore = useConnectionStore();
+              connectionStore.disconnect();
+              return;
+            }
+            
+            const hidDevices = await navigator.hid.getDevices();
+            const deviceStillPresent = hidDevices.some(d => {
+              const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
+              return fallbackId === savedStableId;
+            });
+            
+            if (!deviceStillPresent) {
+              console.error('Device no longer enumerated after timeout - cleaning up');
+              this.connectedDevice = null;
+              const connectionStore = useConnectionStore();
+              connectionStore.disconnect();
+              localStorage.removeItem('pairedStableId');
+              return;
+            }
+            
+            console.log('Device still enumerated - clearing stale connection and waiting for handleConnect to reconnect...');
+            const oldDevice = this.connectedDevice;
+            this.connectedDevice = null;
+            
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            
+            if (!this.connectedDevice) {
+              console.error('SDK reconnection failed after 5s - cleaning up connection state');
+              const connectionStore = useConnectionStore();
+              connectionStore.disconnect();
+              localStorage.removeItem('pairedStableId');
+            } else {
+              console.log('SDK reconnection succeeded via handleConnect event');
+            }
+          } catch (error) {
+            console.error('Error during timeout recovery:', error);
+            this.connectedDevice = null;
+            const connectionStore = useConnectionStore();
+            connectionStore.disconnect();
+            localStorage.removeItem('pairedStableId');
+          }
+        }
+      }, 5000);
+      
       return result === true;
     } catch (error) {
       console.error('Failed to factory reset:', error);
+      this.isFactoryResetting = false;
+      if (this.factoryResetTimeout) {
+        clearTimeout(this.factoryResetTimeout);
+        this.factoryResetTimeout = null;
+      }
       return error as Error;
     }
   }

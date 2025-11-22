@@ -1,0 +1,29 @@
+KeyboardService.ts:90 Auto-connect already in progress, skipping...
+KeyboardService.ts:119 Auto-connect SDK matched device: {data: HIDDevice, id: '4c759f91-6833-4f09-b521-af9c3e3df5d5', usage: 1, usagePage: 65440, vendorId: 7331, …}
+connection.ts:85 Base info: {BoardID: 520292097, KeyboardLayout: 31, KeyType: 3, CustomerID: 0, ProductionId: 0, …}
+KeyboardService.ts:824 {type: 'ORDER_TYPE_CONFIG'}
+KeyboardService.ts:824 paramparamparamparam {type: 'ORDER_TYPE_CONFIG'}
+KeyboardService.ts:924 {type: 'ORDER_TYPE_ROES'}
+KeyboardService.ts:924 paramparamparamparam {type: 'ORDER_TYPE_ROES'}
+KeyboardService.ts:926 ORDER_TYPE_ROES raw result: 0
+KeyboardService.ts:1043 {type: 'ORDER_TYPE_QUERY_WIN_MODEL'}
+KeyboardService.ts:1043 paramparamparamparam {type: 'ORDER_TYPE_QUERY_WIN_MODEL'}
+KeyboardService.ts:1044 {type: 'ORDER_TYPE_QUERY_MAC_MODEL'}
+KeyboardService.ts:1044 paramparamparamparam {type: 'ORDER_TYPE_QUERY_MAC_MODEL'}
+KeyboardService.ts:1045 ORDER_TYPE_QUERY_WIN_MODEL result: {currentSystem: 'win', hasWinMode: true}
+KeyboardService.ts:1046 ORDER_TYPE_QUERY_MAC_MODEL result: {currentSystem: 'win', hasMacMode: true}
+App.vue:295 System mode query results: {win: {…}, mac: {…}}
+KeyboardService.ts:949 paramparamparamparam {type: 'ORDER_TYPE_ROES', hArgs: Array(1)}
+KeyboardService.ts:174 Disconnect detected during polling rate change, waiting for SDK auto-reconnect...
+KeyboardService.ts:174 Disconnect detected during polling rate change, waiting for SDK auto-reconnect...
+KeyboardService.ts:174 Disconnect detected during polling rate change, waiting for SDK auto-reconnect...
+KeyboardService.ts:162 Reconnect detected after polling rate change, SDK handling reconnection...
+KeyboardService.ts:119 Auto-connect SDK matched device: {id: '7331-1793-unknown', data: HIDDevice, productName: 'Slice75 HE'}
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1706  this.isUpgrading false
+KeyboardService.ts:90 Auto-connect already in progress, skipping...
+KeyboardService.ts:90 Auto-connect already in progress, skipping...
+@sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1636 Reconnection failed: NotAllowedError: Failed to open the device.
+reconnection @ @sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1636
+await in reconnection
+reconnection @ @sparklinkplayjoy_sdk-keyboard.js?v=b164615f:4093
+onConnect @ @sparklinkplayjoy_sdk-keyboard.js?v=b164615f:1706

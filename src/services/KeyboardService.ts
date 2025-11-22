@@ -983,7 +983,28 @@ class KeyboardService {
               return;
             }
             
-            console.log('Device still enumerated - attempting autoConnect to restore SDK session');
+            console.log('Device still enumerated - waiting for autoConnect to complete if in progress');
+            let waitAttempts = 0;
+            while (this.isAutoConnecting && waitAttempts < 20) {
+              await new Promise(resolve => setTimeout(resolve, 200));
+              waitAttempts++;
+            }
+            
+            if (this.isAutoConnecting) {
+              console.warn('AutoConnect still in progress after 4s wait - will verify connection state');
+              if (this.connectedDevice) {
+                console.log('Device appears connected after wait - assuming SDK reconnection succeeded');
+                return;
+              } else {
+                console.error('Device still null after wait - cleaning up');
+                const connectionStore = useConnectionStore();
+                connectionStore.disconnect();
+                localStorage.removeItem('pairedStableId');
+                return;
+              }
+            }
+            
+            console.log('Attempting autoConnect to restore SDK session');
             const reconnected = await this.autoConnect();
             if (!reconnected) {
               console.error('AutoConnect failed after timeout - cleaning up');
@@ -1000,6 +1021,11 @@ class KeyboardService {
               if (baseInfo instanceof Error) {
                 console.error('SDK session validation failed - cleaning up stale connection');
                 this.connectedDevice = null;
+                const connectionStore = useConnectionStore();
+                connectionStore.disconnect();
+                localStorage.removeItem('pairedStableId');
+              } else if (!this.connectedDevice) {
+                console.error('Connected device is null after validation - cleaning up');
                 const connectionStore = useConnectionStore();
                 connectionStore.disconnect();
                 localStorage.removeItem('pairedStableId');

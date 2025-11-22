@@ -40,11 +40,12 @@
                 </div>
               </div>
 
-              <!-- Row Counts and Gaps -->
+              <!-- Row Counts and Gaps - Horizontal Layout -->
               <div class="row-gap-section">
-                <div v-for="i in 6" :key="`row-gap-${i}`" class="row-gap-row">
-                  <div class="input-group">
-                    <div class="label">R{{ i - 1 }}</div>
+                <!-- Row Counts Row -->
+                <div class="row-inputs-row">
+                  <div v-for="i in 6" :key="`row-${i}`" class="input-group">
+                    <div class="label">Row{{ i - 1 }}</div>
                     <input 
                       v-model.number="rowCounts[i - 1]" 
                       type="number" 
@@ -54,8 +55,11 @@
                       class="number-input"
                     />
                   </div>
-                  <div class="input-group">
-                    <div class="label">G{{ i - 1 }} (mm)</div>
+                </div>
+                <!-- Gap Inputs Row -->
+                <div class="gap-inputs-row">
+                  <div v-for="i in 6" :key="`gap-${i}`" class="input-group">
+                    <div class="label">Gap{{ i - 1 }} (mm)</div>
                     <input 
                       v-model.number="rowGaps[i - 1]" 
                       type="number" 
@@ -97,6 +101,7 @@
               <div class="action-buttons">
                 <button @click="saveLayout" class="action-btn">Save Layout</button>
                 <button @click="exportLayout" class="action-btn">Export JSON</button>
+                <button @click="exportCompactCode" class="action-btn">Export Compact Code</button>
                 <button @click="goBack" class="action-btn cancel">Cancel</button>
               </div>
             </div>
@@ -274,6 +279,50 @@ export default defineComponent({
       }
     };
 
+    // Helper function to convert array to compact syntax
+    const arrayToCompactSyntax = (arr: number[]): string => {
+      const segments: string[] = [];
+      let i = 0;
+
+      while (i < arr.length) {
+        const current = arr[i];
+        let count = 1;
+
+        // Count consecutive identical values
+        while (i + count < arr.length && arr[i + count] === current) {
+          count++;
+        }
+
+        if (count >= 3) {
+          // Use Array.fill() for 3 or more consecutive values
+          segments.push(`Array(${count}).fill(${current})`);
+          i += count;
+        } else {
+          // Add individual values
+          for (let j = 0; j < count; j++) {
+            segments.push(String(current));
+          }
+          i += count;
+        }
+      }
+
+      // Format output
+      if (segments.length === 1 && segments[0].startsWith('Array(')) {
+        return segments[0];
+      } else if (segments.every(s => !s.startsWith('Array('))) {
+        return `[${segments.join(', ')}]`;
+      } else {
+        // Mixed format - use concat
+        const first = segments[0].startsWith('Array(') ? segments[0] : `[${segments[0]}]`;
+        if (segments.length === 1) return first;
+        
+        const rest = segments.slice(1).map(s => 
+          s.startsWith('Array(') ? s : s
+        );
+        return `${first}.concat(${rest.join(', ')})`;
+      }
+    };
+
     const saveLayout = async () => {
       if (!productName.value.trim()) {
         notification.value = { message: 'Please enter a product name', isError: true };
@@ -374,6 +423,78 @@ export default defineComponent({
       notification.value = { message: 'Layout exported successfully!', isError: false };
     };
 
+    const exportCompactCode = () => {
+      if (!productName.value.trim()) {
+        notification.value = { message: 'Please enter a product name', isError: true };
+        return;
+      }
+
+      if (!virtualKeyboard.value.length) {
+        notification.value = { message: 'Please add rows to create a layout', isError: true };
+        return;
+      }
+
+      // Generate compact keySizes
+      const keySizesCompact: string[] = virtualKeyboard.value.map(row => {
+        const sizes = row.map(key => uToMm(key.size));
+        return arrayToCompactSyntax(sizes);
+      });
+
+      // Generate gapsAfterCol
+      const gapsAfterColData = virtualKeyboard.value.map(row => {
+        const gaps: Record<number, number> = {};
+        row.forEach((key, idx) => {
+          if (key.gap > 0) {
+            gaps[idx] = key.gap;
+          }
+        });
+        return gaps;
+      });
+
+      // Check if all gapsAfterCol are empty
+      const allEmpty = gapsAfterColData.every(g => Object.keys(g).length === 0);
+      let gapsAfterColCompact: string;
+      
+      if (allEmpty) {
+        // All empty - use Array.fill({})
+        gapsAfterColCompact = `Array(${gapsAfterColData.length}).fill({})`;
+      } else {
+        // Mixed - stringify each entry
+        const gapsStrings = gapsAfterColData.map(g => 
+          Object.keys(g).length > 0 ? JSON.stringify(g) : '{}'
+        );
+        gapsAfterColCompact = `[${gapsStrings.join(', ')}]`;
+      }
+
+      // Generate rowSpacing
+      const rowSpacingArr: number[] = [];
+      for (let i = 0; i < virtualKeyboard.value.length; i++) {
+        const actualGapIdx = getActualRowIndex(i);
+        const gap = rowGaps.value[actualGapIdx];
+        rowSpacingArr.push(gap && gap > 0 ? gap : 1);
+      }
+      const rowSpacingCompact = arrayToCompactSyntax(rowSpacingArr);
+
+      // Build compact code
+      const compactCode = `{
+  keySizes: [
+${keySizesCompact.map(row => `    ${row},`).join('\n')}
+  ],
+  gapsAfterCol: ${gapsAfterColCompact},
+  rowSpacing: ${rowSpacingCompact},
+  hasAxisList: ${hasAxisList.value}
+}`;
+
+      // Copy to clipboard
+      navigator.clipboard.writeText(compactCode).then(() => {
+        notification.value = { message: 'Compact code copied to clipboard!', isError: false };
+      }).catch(() => {
+        // Fallback: show in console
+        console.log('Compact Layout Code:\n', compactCode);
+        notification.value = { message: 'Compact code logged to console!', isError: false };
+      });
+    };
+
     const goBack = () => {
       router.push('/layout-preview');
     };
@@ -393,6 +514,7 @@ export default defineComponent({
       updateSelectedKey,
       saveLayout,
       exportLayout,
+      exportCompactCode,
       goBack
     };
   }
@@ -517,7 +639,7 @@ export default defineComponent({
     position: relative;
     margin-right: auto;
     margin-left: auto;
-    margin-top: -50px;
+    margin-top: 20px;
     justify-content: center;
   }
 
@@ -558,7 +680,6 @@ export default defineComponent({
       display: flex;
       flex-direction: column;
       gap: 6px;
-      flex: 1;
 
       .label {
         color: v.$text-color;
@@ -589,14 +710,14 @@ export default defineComponent({
     }
 
     .row-gap-section {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      display: flex;
+      flex-direction: column;
       gap: 12px;
 
-      .row-gap-row {
+      .row-inputs-row, .gap-inputs-row {
         display: flex;
-        gap: 8px;
-        align-items: flex-end;
+        gap: 12px;
+        justify-content: flex-start;
       }
     }
 

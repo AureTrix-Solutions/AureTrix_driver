@@ -435,6 +435,43 @@ export default defineComponent({
   }
 }
 
+.main-nav-section {
+  margin-bottom: 15px;
+}
+
+.main-nav-separator-top {
+  height: 1px;
+  background: linear-gradient(to right, rgba(v.$text-color, 0.3), rgba(v.$text-color, 0.1));
+  border-radius: 1px;
+  margin-bottom: 15px;
+}
+
+.main-nav-header {
+  margin-bottom: 12px;
+}
+
+.main-nav-title {
+  color: v.$text-color;
+  font-family: v.$font-style;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.main-nav-separator {
+  height: 1px;
+  background: linear-gradient(to right, rgba(v.$text-color, 0.3), rgba(v.$text-color, 0.1));
+  border-radius: 1px;
+}
+
+.main-nav-separator-bottom {
+  height: 1px;
+  background: linear-gradient(to right, rgba(v.$text-color, 0.3), rgba(v.$text-color, 0.1));
+  border-radius: 1px;
+  margin-top: 15px;
+}
+
 .profiles-section {
   margin-top: 50px;
 }

@@ -183,9 +183,14 @@ This document provides a comprehensive index of all functional pages in the Aure
 ✅ Rapid Trigger  
 ✅ Lighting  
 
-### Placeholder Pages (2)
+### Placeholder Pages (7)
 ⏳ Profiles - Configuration management (planned)  
-⏳ Advanced Config - Advanced features (planned)  
+⏳ DKS - DKS configuration (planned)  
+⏳ MPT - MPT configuration (planned)  
+⏳ MT - MT configuration (planned)  
+⏳ TGL - TGL configuration (planned)  
+⏳ END SOCD - END SOCD configuration (planned)  
+⏳ Macro - Macro configuration (planned)  
 
 ---
 

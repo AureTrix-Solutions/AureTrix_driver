@@ -27,7 +27,7 @@ The application runs entirely in the browser and communicates with compatible ke
 ### Planned Features (Placeholder Pages)
 - **RGB Lighting Control**: Per-key RGB and logo lighting configuration
 - **Profile Management UI**: Built-in interface for managing multiple keyboard profiles
-- **Advanced Configuration**: DKS (Dynamic Keystroke), MPT (Magnetic Point Triggering), SOCD settings
+- **Advanced Settings**: DKS, MPT, MT, TGL, END SOCD, and Macro configuration pages
 
 ## Prerequisites
 
@@ -83,7 +83,7 @@ The application runs entirely in the browser and communicates with compatible ke
    - **Debug**: Inspect raw keyboard data and SDK responses in real-time
    - **Layout Preview**: Visualize your keyboard's physical layout geometry
    
-   _Note: Lighting, Profiles, and Advanced Config pages are planned features (placeholders)._
+   _Note: Lighting, Profiles, and Advanced settings pages (DKS, MPT, MT, TGL, END SOCD, Macro) are planned features (placeholders)._
 
 ### Important Notes
 

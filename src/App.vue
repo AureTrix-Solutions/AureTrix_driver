@@ -201,7 +201,12 @@ export default defineComponent({
         {
           name: 'Advanced',
           items: [
-            { name: 'Advanced Config', path: '/advanced-config' },
+            { name: 'DKS', path: '/dks' },
+            { name: 'MPT', path: '/mpt' },
+            { name: 'MT', path: '/mt' },
+            { name: 'TGL', path: '/tgl' },
+            { name: 'END SOCD', path: '/endsocd' },
+            { name: 'Macro', path: '/macro' },
             { name: 'Layout Preview', path: '/layout-preview' }
           ],
           isCategory: true

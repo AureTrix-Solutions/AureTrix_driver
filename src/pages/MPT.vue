@@ -1,7 +1,7 @@
 <template>
   <div class="page">
-    <h2>Advanced Config</h2>
-    <p>Advanced configuration will be added here.</p>
+    <h2>MPT</h2>
+    <p>MPT configuration will be added here.</p>
   </div>
 </template>
 

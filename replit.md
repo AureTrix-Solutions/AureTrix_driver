@@ -8,14 +8,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**November 22, 2025 - Factory Reset Quick Setting**
+**November 22, 2025 - Factory Reset with Auto-Reconnection**
 - **Factory Reset Button**: Added "Factory Reset" button to Quick Settings below System Mode
 - **Confirmation Modal**: Created FactoryResetModal component with clear warning about data loss
 - **User Protection**: Modal warns users to export profiles first, lists what will be deleted (key mappings, macros, RGB, performance settings, profiles)
-- **SDK Integration**: `factoryReset()` method calls SDK's `factoryDataReset()` with `ORDER_TYPE_RESTORE_FACTORY_SETTINGS` command
-- **Error Handling**: Validates results and shows user-friendly alerts on success/failure
+- **SDK Integration**: `factoryReset()` method calls SDK's `factoryDataReset()` to trigger hardware reset
+- **Automatic Reconnection**: Mirrors polling rate pattern with `isFactoryResetting` flag and 5-second timeout recovery
+- **Reconnection Flow**: Factory reset triggers hardware disconnect → `handleDisconnect` skips cleanup when flag is true → `handleConnect` clears flag/timeout when device reconnects → timeout fallback (5s) cleans up if reconnection fails
+- **State Management**: Flag and timeout cleared synchronously in `handleConnect` before `autoConnect()` call, eliminating race conditions
+- **Error Handling**: All error paths properly clear flag and timeout; validates results and shows user-friendly alerts
 - **Visual Design**: Red-styled button clearly indicates destructive action; disabled when keyboard not connected
-- **Result**: Users can safely reset keyboard to factory settings with proper warnings and confirmation flow
+- **Result**: Users can reset keyboard to factory settings; device automatically reconnects without manual intervention
 
 **November 22, 2025 - System Mode Quick Settings Complete**
 - **Removed Polling Rate Store**: Eliminated unnecessary `pollingRateStore.ts` Pinia store; polling rate state now managed directly in App.vue as reactive data

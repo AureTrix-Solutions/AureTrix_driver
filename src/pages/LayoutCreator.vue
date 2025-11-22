@@ -25,7 +25,6 @@
           <button @click="exportCompactCode" class="select-btn">Export Layout</button>
           <button @click="importLayout" class="select-btn">Import Layout</button>
           <button @click="shareLayout" class="select-btn">Share</button>
-          <button @click="clearSelection" class="select-btn">Clear Selection</button>
           <button @click="goBack" class="select-btn">Cancel</button>
           <input ref="importFileInput" type="file" accept=".json,.txt" @change="handleImportFile" style="display: none" />
         </div>
@@ -77,6 +76,7 @@
             <div class="settings-section">
               <div class="header-row">
                 <h3>Edit Keys ({{ selectedKeys.length }} selected)</h3>
+                <button @click="clearSelection" class="clear-selection-btn">Clear Selection</button>
               </div>
               <div class="key-editor-controls">
                 <div class="input-group">
@@ -829,6 +829,9 @@ export default defineComponent({
     margin-bottom: 10px;
 
     .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 16px;
 
       h3 {
@@ -837,6 +840,23 @@ export default defineComponent({
         font-size: 1.5rem;
         font-weight: 400;
         font-family: v.$font-style;
+      }
+
+      .clear-selection-btn {
+        padding: 6px 12px;
+        background-color: color.adjust(v.$background-dark, $lightness: -100%);
+        color: v.$accent-color;
+        border: v.$border-style;
+        border-radius: v.$border-radius;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 400;
+        font-family: v.$font-style;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: color.adjust(v.$background-dark, $lightness: 10%);
+        }
       }
     }
 

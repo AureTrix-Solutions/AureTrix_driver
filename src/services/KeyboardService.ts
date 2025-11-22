@@ -983,61 +983,19 @@ class KeyboardService {
               return;
             }
             
-            console.log('Device still enumerated - waiting for autoConnect to complete if in progress');
-            let waitAttempts = 0;
-            while (this.isAutoConnecting && waitAttempts < 20) {
-              await new Promise(resolve => setTimeout(resolve, 200));
-              waitAttempts++;
-            }
+            console.log('Device still enumerated - clearing stale connection and waiting for handleConnect to reconnect...');
+            const oldDevice = this.connectedDevice;
+            this.connectedDevice = null;
             
-            if (this.isAutoConnecting) {
-              console.warn('AutoConnect still in progress after 4s wait - will verify connection state');
-              if (this.connectedDevice) {
-                console.log('Device appears connected after wait - assuming SDK reconnection succeeded');
-                return;
-              } else {
-                console.error('Device still null after wait - cleaning up');
-                const connectionStore = useConnectionStore();
-                connectionStore.disconnect();
-                localStorage.removeItem('pairedStableId');
-                return;
-              }
-            }
+            await new Promise(resolve => setTimeout(resolve, 5000));
             
-            console.log('Attempting autoConnect to restore SDK session');
-            const reconnected = await this.autoConnect();
-            if (!reconnected) {
-              console.error('AutoConnect failed after timeout - cleaning up');
-              this.connectedDevice = null;
+            if (!this.connectedDevice) {
+              console.error('SDK reconnection failed after 5s - cleaning up connection state');
               const connectionStore = useConnectionStore();
               connectionStore.disconnect();
               localStorage.removeItem('pairedStableId');
-              return;
-            }
-            
-            console.log('AutoConnect succeeded - validating SDK session health');
-            try {
-              const baseInfo = await this.getBaseInfo();
-              if (baseInfo instanceof Error) {
-                console.error('SDK session validation failed - cleaning up stale connection');
-                this.connectedDevice = null;
-                const connectionStore = useConnectionStore();
-                connectionStore.disconnect();
-                localStorage.removeItem('pairedStableId');
-              } else if (!this.connectedDevice) {
-                console.error('Connected device is null after validation - cleaning up');
-                const connectionStore = useConnectionStore();
-                connectionStore.disconnect();
-                localStorage.removeItem('pairedStableId');
-              } else {
-                console.log('SDK session validated successfully after polling rate change');
-              }
-            } catch (validationError) {
-              console.error('SDK session validation threw error - cleaning up:', validationError);
-              this.connectedDevice = null;
-              const connectionStore = useConnectionStore();
-              connectionStore.disconnect();
-              localStorage.removeItem('pairedStableId');
+            } else {
+              console.log('SDK reconnection succeeded via handleConnect event');
             }
           } catch (error) {
             console.error('Error during timeout recovery:', error);

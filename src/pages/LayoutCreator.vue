@@ -129,7 +129,7 @@ export default defineComponent({
     const selectedKeyData = ref<VirtualKey>({ size: 1, sizeMm: uToMm(1), gap: 0 });
     const notification = ref<{ message: string; isError: boolean } | null>(null);
 
-    const mmToPx = (mm: number) => mm * 4;
+    const mmToPx = (mm: number) => mm * 3.7795275591;
 
     onMounted(async () => {
       productName.value = connectionStore.deviceInfo?.productName || 'Custom Keyboard';

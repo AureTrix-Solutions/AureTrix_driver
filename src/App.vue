@@ -205,7 +205,8 @@ export default defineComponent({
             { name: 'MPT', path: '/mpt' },
             { name: 'MT', path: '/mt' },
             { name: 'TGL', path: '/tgl' },
-            { name: 'END SOCD', path: '/endsocd' },
+            { name: 'END', path: '/end' },
+            { name: 'SOCD', path: '/socd' },
             { name: 'Macro', path: '/macro' },
             { name: 'Layout Preview', path: '/layout-preview' }
           ],

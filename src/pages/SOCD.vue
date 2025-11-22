@@ -1,7 +1,7 @@
 <template>
   <div class="page">
-    <h2>END SOCD</h2>
-    <p>END SOCD configuration will be added here.</p>
+    <h2>SOCD</h2>
+    <p>SOCD configuration will be added here.</p>
   </div>
 </template>
 

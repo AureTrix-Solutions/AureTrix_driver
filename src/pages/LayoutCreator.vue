@@ -9,14 +9,9 @@
     <div class="layout-creator-container">
       <div v-if="virtualKeyboard.length" class="key-grid" :style="gridStyle">
         <div v-for="(row, rIdx) in virtualKeyboard" :key="`vrow-${rIdx}`" class="key-row">
-          <div
-            v-for="(key, kIdx) in row"
-            :key="`vkey-${rIdx}-${kIdx}`"
-            class="key-btn"
-            :class="{ 'creator-key-selected': isKeySelected(rIdx, kIdx) }"
-            :style="getKeyStyle(rIdx, kIdx)"
-            @click="selectKey(rIdx, kIdx)"
-          >
+          <div v-for="(key, kIdx) in row" :key="`vkey-${rIdx}-${kIdx}`" class="key-btn"
+            :class="{ 'creator-key-selected': isKeySelected(rIdx, kIdx) }" :style="getKeyStyle(rIdx, kIdx)"
+            @click="selectKey(rIdx, kIdx)">
             <div class="key-label">{{ key.size }}u</div>
           </div>
         </div>
@@ -46,28 +41,16 @@
                 <div class="row-inputs-row">
                   <div v-for="i in 6" :key="`row-${i}`" class="input-group">
                     <div class="label">Row{{ i - 1 }}</div>
-                    <input 
-                      v-model.number="rowCounts[i - 1]" 
-                      type="number" 
-                      min="0" 
-                      placeholder="0"
-                      @input="generateVirtualKeyboard"
-                      class="number-input"
-                    />
+                    <input v-model.number="rowCounts[i - 1]" type="number" min="0" placeholder="0"
+                      @input="generateVirtualKeyboard" class="number-input" />
                   </div>
                 </div>
                 <!-- Gap Inputs Row -->
                 <div class="gap-inputs-row">
                   <div v-for="i in 6" :key="`gap-${i}`" class="input-group">
                     <div class="label">Gap{{ i - 1 }} (mm)</div>
-                    <input 
-                      v-model.number="rowGaps[i - 1]" 
-                      type="number" 
-                      min="0"
-                      step="0.5"
-                      placeholder="0"
-                      class="number-input"
-                    />
+                    <input v-model.number="rowGaps[i - 1]" type="number" min="0" step="0.5" placeholder="0"
+                      class="number-input" />
                   </div>
                 </div>
               </div>
@@ -89,7 +72,8 @@
                   </div>
                   <div class="input-group">
                     <div class="label">Gap After (mm)</div>
-                    <input v-model.number="selectedKeyData.gap" type="number" min="0" step="0.5" @input="updateSelectedKey" class="number-input" />
+                    <input v-model.number="selectedKeyData.gap" type="number" min="0" step="0.5"
+                      @input="updateSelectedKey" class="number-input" />
                   </div>
                 </div>
               </div>
@@ -128,13 +112,13 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const connectionStore = useConnectionStore();
-    
+
     const productName = ref('');
     const hasAxisList = ref(false);
     const rowCounts = ref<(number | undefined)[]>([undefined, undefined, undefined, undefined, undefined, undefined]);
     const rowGaps = ref<(number | undefined)[]>([undefined, undefined, undefined, undefined, undefined, undefined]);
     const virtualKeyboard = ref<VirtualKey[][]>([]);
-    
+
     const selectedKeys = ref<{ row: number; col: number }[]>([]);
     const selectedKeyData = ref<VirtualKey>({ size: 1, gap: 0 });
     const notification = ref<{ message: string; isError: boolean } | null>(null);
@@ -143,7 +127,7 @@ export default defineComponent({
 
     onMounted(async () => {
       productName.value = connectionStore.deviceInfo?.productName || 'Custom Keyboard';
-      
+
       try {
         const axisResult = await KeyboardService.getAxisList();
         if (!(axisResult instanceof Error)) {
@@ -156,7 +140,7 @@ export default defineComponent({
 
     const generateVirtualKeyboard = () => {
       const keyboard: VirtualKey[][] = [];
-      
+
       for (let i = 0; i < rowCounts.value.length; i++) {
         const count = rowCounts.value[i];
         if (count && count > 0) {
@@ -167,7 +151,7 @@ export default defineComponent({
           keyboard.push(row);
         }
       }
-      
+
       virtualKeyboard.value = keyboard;
       selectedKeys.value = [];
     };
@@ -214,7 +198,7 @@ export default defineComponent({
 
       const key = currentRow[colIdx];
       const width = mmToPx(uToMm(key.size));
-      const height = mmToPx(17);
+      const height = mmToPx(19.05);
 
       return {
         position: 'absolute' as const,
@@ -272,7 +256,7 @@ export default defineComponent({
 
     const selectKey = (row: number, col: number) => {
       const keyIndex = selectedKeys.value.findIndex(k => k.row === row && k.col === col);
-      
+
       if (keyIndex >= 0) {
         // Key is already selected - deselect it
         selectedKeys.value.splice(keyIndex, 1);
@@ -339,8 +323,8 @@ export default defineComponent({
         // Mixed format - use concat
         const first = segments[0].startsWith('Array(') ? segments[0] : `[${segments[0]}]`;
         if (segments.length === 1) return first;
-        
-        const rest = segments.slice(1).map(s => 
+
+        const rest = segments.slice(1).map(s =>
           s.startsWith('Array(') ? s : s
         );
         return `${first}.concat(${rest.join(', ')})`;
@@ -358,7 +342,7 @@ export default defineComponent({
         return;
       }
 
-      const keySizes: number[][] = virtualKeyboard.value.map(row => 
+      const keySizes: number[][] = virtualKeyboard.value.map(row =>
         row.map(key => uToMm(key.size))
       );
 
@@ -412,7 +396,7 @@ export default defineComponent({
         return;
       }
 
-      const keySizes: number[][] = virtualKeyboard.value.map(row => 
+      const keySizes: number[][] = virtualKeyboard.value.map(row =>
         row.map(key => uToMm(key.size))
       );
 
@@ -485,7 +469,7 @@ export default defineComponent({
       // Check if all gapsAfterCol are empty
       const allEmpty = gapsAfterColData.every(g => Object.keys(g).length === 0);
       let gapsAfterColCompact: string;
-      
+
       if (allEmpty) {
         // All empty - use Array.fill({})
         gapsAfterColCompact = `Array(${gapsAfterColData.length}).fill({})`;
@@ -535,7 +519,7 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
         return;
       }
 
-      const keySizes: number[][] = virtualKeyboard.value.map(row => 
+      const keySizes: number[][] = virtualKeyboard.value.map(row =>
         row.map(key => uToMm(key.size))
       );
 
@@ -768,7 +752,9 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
         font-family: v.$font-style;
       }
 
-      .text-input, .number-input, .select-input {
+      .text-input,
+      .number-input,
+      .select-input {
         padding: 6px 8px;
         background-color: color.adjust(v.$background-dark, $lightness: -5%);
         border: v.$border-style;
@@ -794,7 +780,8 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
       flex-direction: column;
       gap: 12px;
 
-      .row-inputs-row, .gap-inputs-row {
+      .row-inputs-row,
+      .gap-inputs-row {
         display: flex;
         gap: 12px;
         justify-content: flex-start;

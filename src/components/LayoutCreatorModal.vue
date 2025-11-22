@@ -440,28 +440,30 @@ export default defineComponent({
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  font-family: v.$font-style;
 }
 
 .modal-content {
   background-color: v.$background-dark;
-  border: 1px solid rgba(v.$accent-color, 0.3);
-  border-radius: 15px;
+  border: v.$border-style;
+  border-radius: v.$border-radius;
   width: 90%;
   max-width: 1200px;
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  font-family: v.$font-style;
 }
 
 .modal-header {
   padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: v.$border-style;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -469,13 +471,16 @@ export default defineComponent({
   h2 {
     margin: 0;
     color: v.$primary-color;
+    font-size: 1.5rem;
+    font-weight: 400;
+    font-family: v.$font-style;
   }
 
   .close-btn {
     background: none;
     border: none;
     color: v.$text-color;
-    font-size: 2rem;
+    font-size: 1.5rem;
     cursor: pointer;
     padding: 0;
     width: 30px;
@@ -483,6 +488,8 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: v.$font-style;
+    transition: color 0.2s ease;
 
     &:hover {
       color: v.$accent-color;
@@ -494,43 +501,56 @@ export default defineComponent({
   padding: 20px;
   flex: 1;
   overflow-y: auto;
+  font-family: v.$font-style;
 }
 
 .info-section {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  border-bottom: v.$border-style;
+  padding-bottom: 20px;
 
   .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 
     label {
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
       color: v.$text-color;
-      font-weight: bold;
+      font-weight: 300;
+      font-size: 0.9rem;
+      font-family: v.$font-style;
     }
 
     input[type="text"] {
       width: 100%;
       padding: 8px;
       border-radius: v.$border-radius;
-      background-color: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background-color: color.adjust(v.$background-dark, $lightness: -5%);
+      border: v.$border-style;
       color: v.$text-color;
       font-size: 1rem;
+      font-family: v.$font-style;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
     }
 
     &.checkbox-group {
       label {
         display: flex;
         align-items: center;
-        cursor: pointer;
+        cursor: default;
 
         input[type="checkbox"] {
           margin-right: 10px;
+          cursor: not-allowed;
         }
 
         span {
-          font-weight: normal;
+          font-weight: 300;
+          font-size: 0.9rem;
         }
       }
     }
@@ -540,21 +560,25 @@ export default defineComponent({
 .layout-builder {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 24px;
 }
 
 .builder-section, .preview-section {
   h3 {
     color: v.$primary-color;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
+    margin-top: 0;
+    font-size: 1.2rem;
+    font-weight: 400;
+    font-family: v.$font-style;
   }
 }
 
 .bulk-controls {
-  background-color: rgba(v.$accent-color, 0.1);
+  border: v.$border-style;
   border-radius: v.$border-radius;
-  padding: 15px;
-  margin-bottom: 20px;
+  padding: 12px;
+  margin-bottom: 16px;
 
   .bulk-row-creation {
     display: flex;
@@ -563,35 +587,47 @@ export default defineComponent({
 
     label {
       color: v.$text-color;
-      font-weight: bold;
+      font-weight: 300;
+      font-size: 0.9rem;
+      font-family: v.$font-style;
     }
 
     input {
       width: 80px;
-      padding: 5px;
-      border-radius: 5px;
+      padding: 6px;
+      border-radius: v.$border-radius;
       background-color: v.$background-dark;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: v.$border-style;
       color: v.$text-color;
+      font-family: v.$font-style;
+      text-align: center;
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
+      }
     }
   }
 }
 
 .column-gaps-section {
-  background-color: rgba(255, 255, 255, 0.03);
+  border: v.$border-style;
   border-radius: v.$border-radius;
-  padding: 15px;
-  margin-bottom: 20px;
+  padding: 12px;
+  margin-bottom: 16px;
 
   h4 {
-    color: v.$accent-color;
-    margin-bottom: 10px;
+    color: v.$primary-color;
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+    font-weight: 400;
+    font-family: v.$font-style;
   }
 
   .gap-controls {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   .gap-item {
@@ -602,47 +638,69 @@ export default defineComponent({
     label {
       color: v.$text-color;
       min-width: 120px;
+      font-weight: 300;
+      font-size: 0.9rem;
+      font-family: v.$font-style;
     }
 
     input {
       width: 100px;
-      padding: 5px;
-      border-radius: 5px;
+      padding: 6px;
+      border-radius: v.$border-radius;
       background-color: v.$background-dark;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: v.$border-style;
       color: v.$text-color;
+      font-family: v.$font-style;
+      text-align: center;
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
+      }
     }
   }
 }
 
 .row-builder {
-  background-color: rgba(255, 255, 255, 0.03);
+  border: v.$border-style;
   border-radius: v.$border-radius;
-  padding: 15px;
-  margin-bottom: 15px;
+  padding: 12px;
+  margin-bottom: 12px;
 
   .row-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: v.$border-style;
 
     h4 {
       margin: 0;
-      color: v.$accent-color;
+      color: v.$primary-color;
+      font-size: 1rem;
+      font-weight: 400;
+      font-family: v.$font-style;
     }
 
     .row-bulk-controls {
       display: flex;
-      gap: 5px;
+      gap: 6px;
       align-items: center;
 
       input {
-        padding: 5px;
-        border-radius: 5px;
+        padding: 4px 6px;
+        border-radius: v.$border-radius;
         background-color: v.$background-dark;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: v.$border-style;
         color: v.$text-color;
+        font-family: v.$font-style;
+        text-align: center;
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
+        }
       }
     }
   }
@@ -650,30 +708,37 @@ export default defineComponent({
   .keys-container {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
   .key-item {
     display: grid;
     grid-template-columns: auto 1fr auto 1fr auto;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
-    padding: 8px;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 5px;
+    padding: 6px 8px;
+    border-radius: v.$border-radius;
 
     label {
       color: v.$text-color;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+      font-weight: 300;
+      font-family: v.$font-style;
     }
 
     select, input {
-      padding: 5px;
-      border-radius: 5px;
+      padding: 4px 6px;
+      border-radius: v.$border-radius;
       background-color: v.$background-dark;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: v.$border-style;
       color: v.$text-color;
+      font-family: v.$font-style;
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
+      }
     }
   }
 
@@ -681,29 +746,41 @@ export default defineComponent({
     display: flex;
     gap: 10px;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: v.$border-style;
 
     label {
       color: v.$text-color;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+      font-weight: 300;
+      font-family: v.$font-style;
     }
 
     input {
-      padding: 5px;
-      border-radius: 5px;
+      padding: 4px 6px;
+      border-radius: v.$border-radius;
       background-color: v.$background-dark;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: v.$border-style;
       color: v.$text-color;
       width: 100px;
+      font-family: v.$font-style;
+      text-align: center;
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
+      }
     }
   }
 }
 
 .preview-container {
-  background-color: rgba(255, 255, 255, 0.03);
+  border: v.$border-style;
   border-radius: v.$border-radius;
   padding: 20px;
   min-height: 200px;
+  background-color: color.adjust(v.$background-dark, $lightness: -3%);
 }
 
 .preview-row {
@@ -711,30 +788,35 @@ export default defineComponent({
 }
 
 .preview-key {
-  background-color: #444;
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: v.$border-style;
+  border-radius: v.$border-radius;
+  background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.1);
 }
 
 .modal-footer {
   padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: v.$border-style;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  font-family: v.$font-style;
 }
 
 .btn, .btn-sm {
   padding: 8px 16px;
   border-radius: v.$border-radius;
-  border: none;
+  border: v.$border-style;
   cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s;
+  font-size: 0.9rem;
+  font-weight: 400;
+  transition: background-color 0.2s ease;
+  font-family: v.$font-style;
 
   &.btn-primary {
     background-color: v.$accent-color;
     color: v.$background-dark;
+    border-color: v.$accent-color;
 
     &:hover {
       background-color: color.adjust(v.$accent-color, $lightness: 10%);
@@ -742,20 +824,22 @@ export default defineComponent({
   }
 
   &.btn-secondary {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: v.$text-color;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+    color: v.$primary-color;
+    border: v.$border-style;
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: color.adjust(v.$background-dark, $lightness: 10%);
     }
   }
 
   &.btn-danger {
-    background-color: #d32f2f;
-    color: white;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+    color: #ff4444;
+    border: 1px solid rgba(#ff4444, 0.3);
 
     &:hover {
-      background-color: #b71c1c;
+      background-color: color.adjust(v.$background-dark, $lightness: 10%);
     }
   }
 }

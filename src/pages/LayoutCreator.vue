@@ -1,6 +1,6 @@
 <template>
   <div class="layout-creator-page">
-    <h2 class="title">Create Custom Layout</h2>
+    <h2 class="title">Keyboard Creator</h2>
     <div v-if="notification" class="notification" :class="{ error: notification.isError }">
       {{ notification.message }}
       <button @click="notification = null" class="dismiss-btn">&times;</button>

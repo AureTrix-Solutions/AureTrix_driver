@@ -193,6 +193,7 @@ export default defineComponent({
     return {
       menuItems: [
         { name: 'Connect', path: '/', isCategory: false },
+        { name: 'Keyboard Creator', path: '/layout-creator', isCategory: false },
         {
           name: 'Basic Settings',
           items: [
@@ -248,8 +249,7 @@ export default defineComponent({
               name: 'Macro', 
               path: '/macro',
               tooltip: 'Records and plays back a custom sequence of keystrokes, mouse actions, delays, and triggers on a single keypress. Supports complex combos, rapid commands, or repetitive tasks with precise timing control.'
-            },
-            { name: 'Keyboard Creator', path: '/layout-creator' }
+            }
           ],
           isCategory: true
         },

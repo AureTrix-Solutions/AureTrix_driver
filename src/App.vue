@@ -100,12 +100,21 @@
           <router-link v-for="sub in openCategory.items" :key="sub.name" :to="sub.path" class="flyout-item"
             @click="closeCategory">
             <span class="flyout-item-text">{{ sub.name }}</span>
-            <span v-if="sub.tooltip" class="help-icon" @click.stop.prevent>
+            <span v-if="sub.tooltip" class="help-icon" 
+              @mouseenter="showTooltip(sub.tooltip, $event)"
+              @mouseleave="hideTooltip"
+              @click.stop.prevent>
               ?
-              <span class="tooltip-text">{{ sub.tooltip }}</span>
             </span>
           </router-link>
         </nav>
+      </div>
+    </div>
+
+    <!-- Tooltip Flyout -->
+    <div v-if="activeTooltip" class="tooltip-flyout" :style="{ top: tooltipTop + 'px' }">
+      <div class="tooltip-flyout-content">
+        {{ activeTooltip }}
       </div>
     </div>
 
@@ -256,7 +265,9 @@ export default defineComponent({
       currentPollingRate: 0,
       systemModeOptions: SYSTEM_MODE_OPTIONS,
       currentSystemMode: 'win' as 'win' | 'mac',
-      isFactoryResetModalVisible: false
+      isFactoryResetModalVisible: false,
+      activeTooltip: null as string | null,
+      tooltipTop: 0
     };
   },
   computed: {
@@ -315,6 +326,14 @@ export default defineComponent({
     },
     closeQuickSettings() {
       this.openQuickSettings = null;
+    },
+    showTooltip(tooltip: string, event: MouseEvent) {
+      const target = event.currentTarget as HTMLElement;
+      this.tooltipTop = target.getBoundingClientRect().top;
+      this.activeTooltip = tooltip;
+    },
+    hideTooltip() {
+      this.activeTooltip = null;
     },
     async handlePollingRateChange() {
       if (this.currentPollingRate < 0 || this.currentPollingRate > 6) {
@@ -661,44 +680,30 @@ export default defineComponent({
   &:hover {
     background-color: rgba(v.$accent-color, 0.5);
     transform: scale(1.1);
-
-    .tooltip-text {
-      display: block;
-    }
   }
 }
 
-.tooltip-text {
-  display: none;
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-left: 10px;
-  width: 280px;
-  background-color: rgba(0, 0, 0, 0.95);
-  color: v.$text-color;
-  text-align: left;
-  padding: 12px;
-  border-radius: 8px;
-  z-index: 1000;
-  font-size: 0.85rem;
-  line-height: 1.4;
+.tooltip-flyout {
+  position: fixed;
+  left: calc(225px + 220px + 10px);
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
   border: 1px solid rgba(v.$accent-color, 0.3);
+  border-radius: 15px;
+  z-index: 25;
+  animation: slideInLeft 0.2s ease-out;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  font-weight: normal;
-  white-space: normal;
+}
 
-  &::before {
-    content: '';
-    position: absolute;
-    left: -6px;
-    top: 50%;
-    transform: translateY(-50%);
-    border-width: 6px;
-    border-style: solid;
-    border-color: transparent rgba(0, 0, 0, 0.95) transparent transparent;
-  }
+.tooltip-flyout-content {
+  padding: 15px;
+  color: v.$text-color;
+  font-family: v.$font-style;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  text-align: left;
 }
 
 .main-nav-section {

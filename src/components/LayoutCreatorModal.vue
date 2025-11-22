@@ -15,8 +15,8 @@
           </div>
           <div class="form-group checkbox-group">
             <label>
-              <input v-model="hasAxisList" type="checkbox" />
-              <span>Supports Axis List (Controller Emulation)</span>
+              <input v-model="hasAxisList" type="checkbox" disabled />
+              <span>Supports Axis List (Controller Emulation) - Auto-detected</span>
             </label>
           </div>
         </div>
@@ -25,11 +25,37 @@
           <div class="builder-section">
             <h3>Layout Builder</h3>
             
+            <!-- Bulk Row Creation -->
+            <div class="bulk-controls">
+              <div class="bulk-row-creation">
+                <label>Number of Rows</label>
+                <input v-model.number="bulkRowCount" type="number" min="1" max="20" />
+                <button @click="addBulkRows" class="btn-sm">Create Rows</button>
+              </div>
+            </div>
+
+            <!-- Global Column Gaps -->
+            <div class="column-gaps-section">
+              <h4>Global Column Gaps</h4>
+              <div class="gap-controls">
+                <div v-for="(gap, colIdx) in columnGaps" :key="`col-gap-${colIdx}`" class="gap-item">
+                  <label>After Column {{ colIdx + 1 }}</label>
+                  <input v-model.number="columnGaps[colIdx]" type="number" min="0" step="0.5" @input="updatePreview" />
+                  <button @click="removeColumnGap(colIdx)" class="btn-sm btn-danger">×</button>
+                </div>
+                <button @click="addColumnGap" class="btn-sm">+ Add Column Gap</button>
+              </div>
+            </div>
+            
             <!-- Rows -->
             <div v-for="(row, rIdx) in rows" :key="`row-${rIdx}`" class="row-builder">
               <div class="row-header">
                 <h4>Row {{ rIdx + 1 }}</h4>
-                <button @click="removeRow(rIdx)" class="btn-sm btn-danger">Remove Row</button>
+                <div class="row-bulk-controls">
+                  <input v-model.number="row.bulkKeyCount" type="number" min="1" placeholder="Key count" style="width: 80px;" />
+                  <button @click="populateRowKeys(rIdx)" class="btn-sm">Populate</button>
+                  <button @click="removeRow(rIdx)" class="btn-sm btn-danger">Remove Row</button>
+                </div>
               </div>
 
               <!-- Keys in this row -->
@@ -98,6 +124,7 @@ interface KeyConfig {
 interface RowConfig {
   keys: KeyConfig[];
   spacingBelow: number;
+  bulkKeyCount?: number;
 }
 
 export default defineComponent({
@@ -114,6 +141,8 @@ export default defineComponent({
     const productName = ref('');
     const hasAxisList = ref(false);
     const rows = ref<RowConfig[]>([]);
+    const bulkRowCount = ref(6);
+    const columnGaps = ref<number[]>([]);
 
     // Keyboard units mapping (units to mm)
     const keyUnits = [
@@ -158,7 +187,8 @@ export default defineComponent({
     const addRow = () => {
       rows.value.push({
         keys: [{ size: 18, gapAfter: 0 }],
-        spacingBelow: 18
+        spacingBelow: 18,
+        bulkKeyCount: 16
       });
       updatePreview();
     };
@@ -175,6 +205,37 @@ export default defineComponent({
 
     const removeKey = (rowIdx: number, keyIdx: number) => {
       rows.value[rowIdx].keys.splice(keyIdx, 1);
+      updatePreview();
+    };
+
+    const addBulkRows = () => {
+      const count = bulkRowCount.value || 1;
+      for (let i = 0; i < count; i++) {
+        rows.value.push({
+          keys: [{ size: 18, gapAfter: 0 }],
+          spacingBelow: 18,
+          bulkKeyCount: 16
+        });
+      }
+      updatePreview();
+    };
+
+    const populateRowKeys = (rowIdx: number) => {
+      const row = rows.value[rowIdx];
+      const count = row.bulkKeyCount || 1;
+      row.keys = [];
+      for (let i = 0; i < count; i++) {
+        row.keys.push({ size: 18, gapAfter: 0 });
+      }
+      updatePreview();
+    };
+
+    const addColumnGap = () => {
+      columnGaps.value.push(0);
+    };
+
+    const removeColumnGap = (colIdx: number) => {
+      columnGaps.value.splice(colIdx, 1);
       updatePreview();
     };
 
@@ -208,8 +269,15 @@ export default defineComponent({
           });
 
           left += width + mmToPx(1);
+          
+          // Apply per-key gap
           if (key.gapAfter > 0) {
             left += mmToPx(key.gapAfter);
+          }
+          
+          // Apply global column gap
+          if (columnGaps.value[kIdx] && columnGaps.value[kIdx] > 0) {
+            left += mmToPx(columnGaps.value[kIdx]);
           }
         }
 
@@ -220,7 +288,14 @@ export default defineComponent({
       previewKeys.value = generatedRows;
       
       const maxWidth = Math.max(...rows.value.map(row => {
-        return row.keys.reduce((sum, key) => sum + mmToPx(key.size) + mmToPx(1) + mmToPx(key.gapAfter), 0);
+        let totalWidth = 0;
+        row.keys.forEach((key, kIdx) => {
+          totalWidth += mmToPx(key.size) + mmToPx(1) + mmToPx(key.gapAfter);
+          if (columnGaps.value[kIdx] && columnGaps.value[kIdx] > 0) {
+            totalWidth += mmToPx(columnGaps.value[kIdx]);
+          }
+        });
+        return totalWidth;
       }), 100);
 
       previewStyle.value = {
@@ -236,8 +311,12 @@ export default defineComponent({
       const gapsAfterCol = rows.value.map(row => {
         const gaps: Record<number, number> = {};
         row.keys.forEach((key, idx) => {
-          if (key.gapAfter > 0) {
-            gaps[idx] = key.gapAfter;
+          // Merge per-key gaps with global column gaps
+          const perKeyGap = key.gapAfter || 0;
+          const columnGap = columnGaps.value[idx] || 0;
+          const totalGap = perKeyGap + columnGap;
+          if (totalGap > 0) {
+            gaps[idx] = totalGap;
           }
         });
         return gaps;
@@ -269,8 +348,12 @@ export default defineComponent({
       const gapsAfterCol = rows.value.map(row => {
         const gaps: Record<number, number> = {};
         row.keys.forEach((key, idx) => {
-          if (key.gapAfter > 0) {
-            gaps[idx] = key.gapAfter;
+          // Merge per-key gaps with global column gaps
+          const perKeyGap = key.gapAfter || 0;
+          const columnGap = columnGaps.value[idx] || 0;
+          const totalGap = perKeyGap + columnGap;
+          if (totalGap > 0) {
+            gaps[idx] = totalGap;
           }
         });
         return gaps;
@@ -295,8 +378,12 @@ export default defineComponent({
       const gapsAfterCol = rows.value.map(row => {
         const gaps: Record<number, number> = {};
         row.keys.forEach((key, idx) => {
-          if (key.gapAfter > 0) {
-            gaps[idx] = key.gapAfter;
+          // Merge per-key gaps with global column gaps
+          const perKeyGap = key.gapAfter || 0;
+          const columnGap = columnGaps.value[idx] || 0;
+          const totalGap = perKeyGap + columnGap;
+          if (totalGap > 0) {
+            gaps[idx] = totalGap;
           }
         });
         return gaps;
@@ -322,10 +409,16 @@ export default defineComponent({
       hasAxisList,
       rows,
       keyUnits,
+      bulkRowCount,
+      columnGaps,
       addRow,
       removeRow,
       addKey,
       removeKey,
+      addBulkRows,
+      populateRowKeys,
+      addColumnGap,
+      removeColumnGap,
       previewKeys,
       previewStyle,
       updatePreview,
@@ -457,6 +550,71 @@ export default defineComponent({
   }
 }
 
+.bulk-controls {
+  background-color: rgba(v.$accent-color, 0.1);
+  border-radius: v.$border-radius;
+  padding: 15px;
+  margin-bottom: 20px;
+
+  .bulk-row-creation {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+
+    label {
+      color: v.$text-color;
+      font-weight: bold;
+    }
+
+    input {
+      width: 80px;
+      padding: 5px;
+      border-radius: 5px;
+      background-color: v.$background-dark;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: v.$text-color;
+    }
+  }
+}
+
+.column-gaps-section {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-radius: v.$border-radius;
+  padding: 15px;
+  margin-bottom: 20px;
+
+  h4 {
+    color: v.$accent-color;
+    margin-bottom: 10px;
+  }
+
+  .gap-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .gap-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+
+    label {
+      color: v.$text-color;
+      min-width: 120px;
+    }
+
+    input {
+      width: 100px;
+      padding: 5px;
+      border-radius: 5px;
+      background-color: v.$background-dark;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: v.$text-color;
+    }
+  }
+}
+
 .row-builder {
   background-color: rgba(255, 255, 255, 0.03);
   border-radius: v.$border-radius;
@@ -472,6 +630,20 @@ export default defineComponent({
     h4 {
       margin: 0;
       color: v.$accent-color;
+    }
+
+    .row-bulk-controls {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+
+      input {
+        padding: 5px;
+        border-radius: 5px;
+        background-color: v.$background-dark;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: v.$text-color;
+      }
     }
   }
 

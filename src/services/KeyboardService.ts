@@ -8,6 +8,8 @@ class KeyboardService {
   private keyboard: XDKeyboard;
   private connectedDevice: Device | null = null;
   private isAutoConnecting: boolean = false;
+  private isPollingRateChanging: boolean = false;
+  private pollingRateReconnectTimeout: NodeJS.Timeout | null = null;
 
   // Initialization
   constructor() {
@@ -160,6 +162,94 @@ class KeyboardService {
   }
 
   private handleDisconnect = (event: HIDConnectionEvent): void => {
+    if (this.isPollingRateChanging) {
+      console.log('Disconnect detected during polling rate change, will attempt reconnection...');
+      if (this.pollingRateReconnectTimeout) {
+        clearTimeout(this.pollingRateReconnectTimeout);
+      }
+      this.pollingRateReconnectTimeout = setTimeout(() => {
+        this.handlePollingRateReconnect();
+      }, 300);
+      return;
+    }
+    
+    this.connectedDevice = null;
+    const connectionStore = useConnectionStore();
+    connectionStore.disconnect();
+    localStorage.removeItem('pairedStableId');
+  }
+
+  private async handlePollingRateReconnect(): Promise<void> {
+    this.pollingRateReconnectTimeout = null;
+    
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        const savedStableId = localStorage.getItem('pairedStableId');
+        if (!savedStableId) {
+          console.error('No saved device ID for reconnection');
+          this.cleanupFailedReconnect();
+          return;
+        }
+
+        const hidDevices = await navigator.hid.getDevices();
+        const targetHidDevice = hidDevices.find(d => {
+          const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
+          return fallbackId === savedStableId;
+        });
+
+        if (!targetHidDevice) {
+          if (attempts < maxAttempts - 1) {
+            console.warn(`Device not found, attempt ${attempts + 1}/${maxAttempts}, retrying...`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            attempts++;
+            continue;
+          }
+          console.error('Device not found for reconnection after all attempts');
+          this.cleanupFailedReconnect();
+          return;
+        }
+
+        if (!targetHidDevice.opened) {
+          await targetHidDevice.open();
+        }
+
+        const sdkDevices = await this.getDevices();
+        const targetSdkDevice = sdkDevices.find(d => 
+          d.data.vendorId === targetHidDevice.vendorId && 
+          d.data.productId === targetHidDevice.productId && 
+          d.data.serialNumber === targetHidDevice.serialNumber
+        );
+        
+        const fallbackId = targetHidDevice.id || `${targetHidDevice.vendorId}-${targetHidDevice.productId}-${targetHidDevice.serialNumber || 'unknown'}`;
+        const device = targetSdkDevice || { id: fallbackId, data: targetHidDevice, productName: targetHidDevice.productName || 'Unknown' };
+
+        await this.keyboard.reconnection(targetHidDevice, device.id);
+        
+        this.connectedDevice = device;
+        const connectionStore = useConnectionStore();
+        await connectionStore.onAutoConnectSuccess(device);
+        
+        console.log('Successfully reconnected after polling rate change');
+        this.isPollingRateChanging = false;
+        return;
+      } catch (error) {
+        console.warn(`Reconnection attempt ${attempts + 1} failed:`, error);
+        if (attempts === maxAttempts - 1) {
+          console.error('Failed to reconnect after polling rate change after all attempts:', error);
+          this.cleanupFailedReconnect();
+          return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+    }
+  }
+
+  private cleanupFailedReconnect(): void {
+    this.isPollingRateChanging = false;
     this.connectedDevice = null;
     const connectionStore = useConnectionStore();
     connectionStore.disconnect();
@@ -924,11 +1014,17 @@ class KeyboardService {
       if (value < 0 || value > 6) {
         return new Error('Polling rate value must be between 0 and 6');
       }
+      
+      this.isPollingRateChanging = true;
       const result = await this.keyboard.setRateOfReturn(value);
-      if (result instanceof Error) return result;
+      if (result instanceof Error) {
+        this.isPollingRateChanging = false;
+        return result;
+      }
       return result;
     } catch (error) {
       console.error('Failed to set polling rate:', error);
+      this.isPollingRateChanging = false;
       return error as Error;
     }
   }

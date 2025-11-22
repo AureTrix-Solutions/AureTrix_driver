@@ -627,7 +627,7 @@ export default defineComponent({
     };
 
     const goBack = () => {
-      router.push('/layout-preview');
+      window.location.reload();
     };
 
     return {

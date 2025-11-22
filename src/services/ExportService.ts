@@ -729,6 +729,28 @@ class ExportService {
       return { success: false, error: (error as Error).message };
     }
   }
+
+  async exportProfileDebug(): Promise<{ success: boolean; error?: string }> {
+    try {
+      const config = await this.gatherKeyboardSnapshot();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `debug-profile-${timestamp}.json`;
+      const jsonStr = JSON.stringify(config, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to export debug profile:', error);
+      return { success: false, error: (error as Error).message };
+    }
+  }
 }
 
 export default new ExportService();

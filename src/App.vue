@@ -66,6 +66,9 @@
         <button class="import-btn" @click="importProfile" :disabled="!connectionStore.isConnected">
           Import Profile
         </button>
+        <button class="debug-export-btn" @click="exportProfileDebug" :disabled="!connectionStore.isConnected">
+          Debug Export JSON
+        </button>
         <div class="import-separator"></div>
 
         <!-- Quick Settings Section -->
@@ -406,6 +409,16 @@ export default defineComponent({
       } catch (error) {
         console.error('Import profile error:', error);
       }
+    },
+    async exportProfileDebug() {
+      try {
+        const exportResult = await ExportService.exportProfileDebug();
+        if (!exportResult.success) {
+          console.error('Failed to export debug profile:', exportResult.error);
+        }
+      } catch (error) {
+        console.error('Export debug profile error:', error);
+      }
     }
   }
 });
@@ -732,6 +745,31 @@ export default defineComponent({
 
   &:hover:not(:disabled) {
     background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.debug-export-btn {
+  width: 100%;
+  font-family: v.$font-style;
+  padding: 10px;
+  margin-top: -5px;
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  border-radius: v.$border-radius;
+  background-color: rgba(100, 150, 255, 0.05);
+  color: #6496ff;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.85rem;
+  text-align: center;
+
+  &:hover:not(:disabled) {
+    background-color: rgba(100, 150, 255, 0.1);
+    border-color: rgba(100, 150, 255, 0.5);
   }
 
   &:disabled {

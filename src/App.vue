@@ -457,7 +457,7 @@ export default defineComponent({
 }
 
 .flyout-content {
-  padding: 15px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
 }
@@ -687,7 +687,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px;
+  padding: 5px;
 }
 
 .quick-setting-label {

@@ -76,7 +76,7 @@
             <div class="settings-section">
               <div class="header-row">
                 <h3>Edit Keys ({{ selectedKeys.length }} selected)</h3>
-                <button @click="clearSelection" class="clear-selection-btn">Clear Selection</button>
+                <button @click="clearSelection" class="clear-selection-btn">Clear</button>
               </div>
               <div class="key-editor-controls">
                 <div class="input-group">
@@ -830,12 +830,14 @@ export default defineComponent({
 
     .header-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
 
       h3 {
         margin: 0;
+        width: auto;
+        margin-bottom: -5px;
+        margin-right: 10px;
         color: v.$primary-color;
         font-size: 1.5rem;
         font-weight: 400;
@@ -843,16 +845,17 @@ export default defineComponent({
       }
 
       .clear-selection-btn {
-        padding: 6px 12px;
+        padding: 3px 3px;
         background-color: color.adjust(v.$background-dark, $lightness: -100%);
         color: v.$accent-color;
         border: v.$border-style;
         border-radius: v.$border-radius;
         cursor: pointer;
-        font-size: 0.9rem;
-        font-weight: 400;
+        font-size: 0.7rem;
+        font-weight: 500;
         font-family: v.$font-style;
         transition: background-color 0.2s ease;
+        margin-bottom: -10px;
 
         &:hover {
           background-color: color.adjust(v.$background-dark, $lightness: 10%);

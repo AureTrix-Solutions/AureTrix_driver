@@ -8,6 +8,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 22, 2025 - Active Profile Hardware Synchronization**
+- **Hardware-First Active Profile**: Removed `activeProfileId` from localStorage persistence; only profile names/settings persist
+- **Query on Connection**: `syncActiveProfileFromHardware()` queries `ORDER_TYPE_CONFIG` (returns 0-3, maps to profiles 1-4) when keyboard connects
+- **Optimistic UI Updates**: Profile switches set `activeProfileId` immediately for responsive UI
+- **Delayed Verification**: After 500ms, `syncActiveProfileFromHardware()` confirms hardware state matches UI
+- **Single Sync Point**: Eliminated duplicate sync calls; only `onAutoConnectSuccess` and `connectDevice` trigger sync
+- **Result**: UI always reflects actual hardware profile on page load; profile switches feel instant while verifying with hardware
+
 **November 21, 2025 - Production Ready Cleanup**
 - **Removed Debug Features**: Eliminated `exportProfileDebug` and `importProfileDebug` methods from ExportService.ts
 - **Cleaned Up Logging**: Removed verbose console.log statements throughout the codebase, keeping only console.error for critical errors

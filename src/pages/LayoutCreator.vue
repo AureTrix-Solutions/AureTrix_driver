@@ -13,7 +13,7 @@
             v-for="(key, kIdx) in row"
             :key="`vkey-${rIdx}-${kIdx}`"
             class="key-btn"
-            :class="{ 'creator-key-selected': selectedKey?.row === rIdx && selectedKey?.col === kIdx }"
+            :class="{ 'creator-key-selected': isKeySelected(rIdx, kIdx) }"
             :style="getKeyStyle(rIdx, kIdx)"
             @click="selectKey(rIdx, kIdx)"
           >
@@ -73,8 +73,11 @@
               </div>
 
               <!-- Key Editor -->
-              <div v-if="selectedKey" class="key-editor-section">
-                <h4>Edit Key (Row {{ selectedKey.row + 1 }}, Key {{ selectedKey.col + 1 }})</h4>
+              <div v-if="selectedKeys.length > 0" class="key-editor-section">
+                <div class="editor-header">
+                  <h4>Edit Keys ({{ selectedKeys.length }} selected)</h4>
+                  <button @click="clearSelection" class="clear-selection-btn">Clear Selection</button>
+                </div>
                 <div class="key-editor-controls">
                   <div class="input-group">
                     <div class="label">Size</div>
@@ -132,7 +135,7 @@ export default defineComponent({
     const rowGaps = ref<(number | undefined)[]>([undefined, undefined, undefined, undefined, undefined, undefined]);
     const virtualKeyboard = ref<VirtualKey[][]>([]);
     
-    const selectedKey = ref<{ row: number; col: number } | null>(null);
+    const selectedKeys = ref<{ row: number; col: number }[]>([]);
     const selectedKeyData = ref<VirtualKey>({ size: 1, gap: 0 });
     const notification = ref<{ message: string; isError: boolean } | null>(null);
 
@@ -166,7 +169,7 @@ export default defineComponent({
       }
       
       virtualKeyboard.value = keyboard;
-      selectedKey.value = null;
+      selectedKeys.value = [];
     };
 
     const getActualRowIndex = (virtualRowIdx: number): number => {
@@ -263,14 +266,40 @@ export default defineComponent({
       };
     });
 
+    const isKeySelected = (row: number, col: number): boolean => {
+      return selectedKeys.value.some(k => k.row === row && k.col === col);
+    };
+
     const selectKey = (row: number, col: number) => {
-      selectedKey.value = { row, col };
-      selectedKeyData.value = { ...virtualKeyboard.value[row][col] };
+      const keyIndex = selectedKeys.value.findIndex(k => k.row === row && k.col === col);
+      
+      if (keyIndex >= 0) {
+        // Key is already selected - deselect it
+        selectedKeys.value.splice(keyIndex, 1);
+        // Update selectedKeyData to reflect remaining selection
+        if (selectedKeys.value.length > 0) {
+          const firstKey = selectedKeys.value[0];
+          selectedKeyData.value = { ...virtualKeyboard.value[firstKey.row][firstKey.col] };
+        }
+      } else {
+        // Key is not selected - add it to selection
+        selectedKeys.value.push({ row, col });
+        // Update selectedKeyData to reflect the newly selected key
+        selectedKeyData.value = { ...virtualKeyboard.value[row][col] };
+      }
+    };
+
+    const clearSelection = () => {
+      selectedKeys.value = [];
+      selectedKeyData.value = { size: 1, gap: 0 };
     };
 
     const updateSelectedKey = () => {
-      if (selectedKey.value) {
-        virtualKeyboard.value[selectedKey.value.row][selectedKey.value.col] = { ...selectedKeyData.value };
+      if (selectedKeys.value.length > 0) {
+        // Apply changes to all selected keys
+        selectedKeys.value.forEach(key => {
+          virtualKeyboard.value[key.row][key.col] = { ...selectedKeyData.value };
+        });
       }
     };
 
@@ -551,13 +580,15 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
       rowCounts,
       rowGaps,
       virtualKeyboard,
-      selectedKey,
+      selectedKeys,
       selectedKeyData,
       notification,
       gridStyle,
       generateVirtualKeyboard,
       getKeyStyle,
+      isKeySelected,
       selectKey,
+      clearSelection,
       updateSelectedKey,
       saveLayout,
       exportLayout,
@@ -773,6 +804,37 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
     .key-editor-section {
       border-top: v.$border-style;
       padding-top: 16px;
+
+      .editor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+
+        h4 {
+          margin: 0;
+          color: v.$primary-color;
+          font-size: 1rem;
+          font-weight: 400;
+          font-family: v.$font-style;
+        }
+
+        .clear-selection-btn {
+          padding: 4px 12px;
+          font-size: 0.85rem;
+          font-family: v.$font-style;
+          border-radius: v.$border-radius;
+          background-color: rgba(v.$primary-color, 0.1);
+          color: v.$primary-color;
+          border: 1px solid v.$primary-color;
+          cursor: pointer;
+          transition: all 0.2s;
+
+          &:hover {
+            background-color: rgba(v.$primary-color, 0.2);
+          }
+        }
+      }
 
       h4 {
         margin: 0 0 12px 0;

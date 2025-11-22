@@ -8,6 +8,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 22, 2025 - System Mode Quick Settings & Polling Rate Store Removal**
+- **Removed Polling Rate Store**: Eliminated unnecessary `pollingRateStore.ts` Pinia store; polling rate state now managed directly in App.vue as reactive data
+- **Simplified Architecture**: Both polling rate and system mode use direct KeyboardService calls instead of store wrappers, reducing complexity
+- **System Mode Feature**: Added "System Mode" quick setting below Polling Rate with Windows/Mac dropdown selector
+- **SDK Wrappers**: Created `querySystemMode()` using `getApi()` with `ORDER_TYPE_QUERY_WIN_MODEL` and `ORDER_TYPE_QUERY_MAC_MODEL` (logs outputs for analysis)
+- **Hardware Sync**: App.vue watcher calls `syncHardwareSettings()` on connection to sync both polling rate and system mode from hardware
+- **Pending**: System mode query response parsing will be implemented after reviewing console logs from actual hardware connection
+- **Result**: Cleaner codebase with less boilerplate; both quick settings follow identical patterns; polling rate fully functional
+
 **November 22, 2025 - Quick Settings Flyout UI Refinement**
 - **Compact Flyout Design**: Reduced padding on `.flyout-content` (15px→10px) and `.quick-setting-item` (10px→5px) for tighter fit around polling rate dropdown
 - **Visual Polish**: Flyout menu now fits closely to the dropdown selector with minimal margins, improving visual density without compromising readability

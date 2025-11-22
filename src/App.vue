@@ -67,6 +67,18 @@
           Import Profile
         </button>
         <div class="import-separator"></div>
+
+        <!-- Quick Settings Section -->
+        <div class="quick-settings-section">
+          <div class="quick-settings-header">
+            <span class="quick-settings-title">Quick Settings</span>
+            <div class="quick-settings-separator"></div>
+          </div>
+          <div class="nav-item category-header" @click="handleQuickSettingsClick('pollingRate', $event)">
+            Polling Rate
+            <span class="arrow" :class="{ open: openQuickSettings === 'pollingRate' }">></span>
+          </div>
+        </div>
       </nav>
       <p class="copyright">Copyright©2025 AureTrix</p>
     </aside>
@@ -83,6 +95,20 @@
       </div>
     </div>
 
+    <!-- Quick Settings Flyout -->
+    <div v-if="openQuickSettings === 'pollingRate'" class="flyout-menu" :style="{ top: quickSettingsFlyoutTop + 'px' }" @click.self="closeQuickSettings">
+      <div class="flyout-content">
+        <div class="quick-setting-item">
+          <label class="quick-setting-label">Polling Rate:</label>
+          <select v-model.number="selectedPollingRate" @change="handlePollingRateChange" class="polling-rate-select">
+            <option v-for="option in pollingRateOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Content Area -->
     <main class="main-content">
       <router-view />
@@ -95,6 +121,7 @@ import { defineComponent, computed, nextTick } from 'vue';
 import { RouterLink, RouterView } from 'vue-router';
 import { useConnectionStore } from './store/connection';
 import { useProfileStore } from './store/profileStore';
+import { usePollingRateStore, POLLING_RATE_OPTIONS } from './store/pollingRateStore';
 import KeyboardService from './services/KeyboardService';
 import ExportService from './services/ExportService';
 
@@ -106,7 +133,8 @@ export default defineComponent({
   },
   setup() {
     const connectionStore = useConnectionStore();
-    return { connectionStore };
+    const pollingRateStore = usePollingRateStore();
+    return { connectionStore, pollingRateStore };
   },
   data() {
     return {
@@ -143,7 +171,10 @@ export default defineComponent({
       openCategory: null as any,
       flyoutTop: 0,
       editingProfileId: null as number | null,
-      editingProfileName: ''
+      editingProfileName: '',
+      openQuickSettings: null as string | null,
+      quickSettingsFlyoutTop: 0,
+      pollingRateOptions: POLLING_RATE_OPTIONS
     };
   },
   computed: {
@@ -157,6 +188,14 @@ export default defineComponent({
         (typeof info.KeyboardSN === 'string' || (info.KeyboardSN instanceof Uint8Array && info.KeyboardSN.length > 0)) &&
         typeof info.appVersion !== 'undefined' &&
         (typeof info.appVersion === 'string' || (info.appVersion instanceof Uint8Array && info.appVersion.length > 0));
+    },
+    selectedPollingRate: {
+      get() {
+        return this.pollingRateStore.currentPollingRate;
+      },
+      set(value: number) {
+        this.pollingRateStore.currentPollingRate = value;
+      }
     }
   },
   methods: {
@@ -183,6 +222,24 @@ export default defineComponent({
     },
     closeCategory() {
       this.openCategory = null;
+    },
+    handleQuickSettingsClick(setting: string, event: MouseEvent) {
+      if (this.openQuickSettings === setting) {
+        this.closeQuickSettings();
+        return;
+      }
+      const target = event.currentTarget as HTMLElement;
+      this.quickSettingsFlyoutTop = target.offsetTop - 50;
+      this.openQuickSettings = setting;
+    },
+    closeQuickSettings() {
+      this.openQuickSettings = null;
+    },
+    async handlePollingRateChange() {
+      const result = await this.pollingRateStore.setPollingRate(this.selectedPollingRate);
+      if (!result.success) {
+        console.error('Failed to set polling rate:', result.error);
+      }
     },
     async handleProfileClick(profileId: number) {
       const result = await this.profileStore.switchProfile(profileId);
@@ -446,11 +503,11 @@ export default defineComponent({
   height: 1px;
   background: linear-gradient(to right, rgba(v.$text-color, 0.3), rgba(v.$text-color, 0.1));
   border-radius: 1px;
-  margin-bottom: 15px;
+  margin-bottom: 5px;
 }
 
 .main-nav-header {
-  margin-bottom: 12px;
+  margin-bottom: 5px;
 }
 
 .main-nav-title {
@@ -472,11 +529,11 @@ export default defineComponent({
   height: 1px;
   background: linear-gradient(to right, rgba(v.$text-color, 0.3), rgba(v.$text-color, 0.1));
   border-radius: 1px;
-  margin-top: 15px;
+  margin-top: 8px;
 }
 
 .profiles-section {
-  margin-top: 50px;
+  margin-top: 20px;
 }
 
 .profiles-header {
@@ -599,6 +656,70 @@ export default defineComponent({
   background: linear-gradient(to right, rgba(v.$text-color, 0.3), rgba(v.$text-color, 0.1));
   border-radius: 1px;
   margin-top: 5px;
+}
+
+.quick-settings-section {
+  margin-top: 20px;
+}
+
+.quick-settings-header {
+  margin-bottom: 12px;
+}
+
+.quick-settings-title {
+  color: v.$text-color;
+  font-family: v.$font-style;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.quick-settings-separator {
+  height: 1px;
+  background: linear-gradient(to right, rgba(v.$text-color, 0.3), rgba(v.$text-color, 0.1));
+  border-radius: 1px;
+}
+
+.quick-setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.quick-setting-label {
+  color: v.$text-color;
+  font-family: v.$font-style;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.polling-rate-select {
+  font-family: v.$font-style;
+  padding: 8px;
+  border: 1px solid rgba(v.$text-color, 0.2);
+  border-radius: v.$border-radius;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  color: v.$primary-color;
+  cursor: pointer;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.3s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(v.$text-color, 0.4);
+  }
+
+  &:focus {
+    border-color: v.$accent-color;
+  }
+
+  option {
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+    color: v.$primary-color;
+  }
 }
 
 @keyframes slideInRight {

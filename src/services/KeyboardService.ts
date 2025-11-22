@@ -901,6 +901,38 @@ class KeyboardService {
     }
   }
 
+  async getPollingRate(): Promise<number | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_ROES' });
+      if (result instanceof Error) return result;
+      console.log('ORDER_TYPE_ROES raw result:', result);
+      return result;
+    } catch (error) {
+      console.error('Failed to get polling rate:', error);
+      return error as Error;
+    }
+  }
+
+  async setPollingRate(value: number): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      if (value < 0 || value > 6) {
+        return new Error('Polling rate value must be between 0 and 6');
+      }
+      const result = await this.keyboard.setRateOfReturn(value);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to set polling rate:', error);
+      return error as Error;
+    }
+  }
+
   exportConfig(data: any, filename: string): void {
     if (!this.connectedDevice) {
       throw new Error('No device connected');

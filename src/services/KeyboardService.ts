@@ -801,6 +801,22 @@ class KeyboardService {
     }
   }
 
+  async getActiveProfile(): Promise<number | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_CONFIG' });
+      if (result instanceof Error) return result;
+      // SDK returns sArg as 0-3, we use 1-4 for profile IDs
+      const profileId = (result.sArg ?? 0) + 1;
+      return profileId;
+    } catch (error) {
+      console.error('Failed to get active profile:', error);
+      return error as Error;
+    }
+  }
+
   async getDks(key: number, type?: string): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {

@@ -1,6 +1,7 @@
 // connection.ts
 import { defineStore } from 'pinia';
 import KeyboardService from '@services/KeyboardService';
+import { useProfileStore } from './profileStore';
 
 export const useConnectionStore = defineStore('connection', {
   // State
@@ -57,6 +58,10 @@ export const useConnectionStore = defineStore('connection', {
             this.status = `Connected to ${this.deviceInfo.productName}, but failed to load details.`;
           }
           this.isConnected = true;
+          
+          // Sync active profile from hardware
+          const profileStore = useProfileStore();
+          await profileStore.syncActiveProfileFromHardware();
         } else {
           this.status = 'No compatible device found.';
         }
@@ -85,6 +90,10 @@ export const useConnectionStore = defineStore('connection', {
         this.status = `Auto-connected to ${this.deviceInfo.productName}, but failed to load details.`;
       }
       this.isConnected = true;
+      
+      // Sync active profile from hardware
+      const profileStore = useProfileStore();
+      await profileStore.syncActiveProfileFromHardware();
     },
   },
 });

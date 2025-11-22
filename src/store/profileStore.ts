@@ -29,8 +29,21 @@ export const useProfileStore = defineStore('profiles', {
       if (result instanceof Error) {
         return { success: false, error: result.message };
       }
+      // Optimistic update for immediate UI feedback
       this.activeProfileId = id;
+      
+      // Verify with hardware after a short delay to allow firmware to update
+      setTimeout(async () => {
+        await this.syncActiveProfileFromHardware();
+      }, 500);
+      
       return { success: true };
+    },
+    async syncActiveProfileFromHardware(): Promise<void> {
+      const profileId = await KeyboardService.getActiveProfile();
+      if (!(profileId instanceof Error)) {
+        this.activeProfileId = profileId;
+      }
     },
     setActiveProfile(id: number) {
       if (id >= 1 && id <= 4) {
@@ -46,6 +59,6 @@ export const useProfileStore = defineStore('profiles', {
   },
   persist: {
     key: 'keyboard-profiles',
-    paths: ['profiles', 'activeProfileId'],
+    paths: ['profiles'],
   },
 });

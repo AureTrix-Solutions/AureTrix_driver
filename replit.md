@@ -8,6 +8,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 22, 2025 - Polling Rate Quick Settings with Auto-Reconnection**
+- **Quick Settings UI**: Added dedicated "Quick Settings" section in sidebar with polling rate selector (8KHz down to 125Hz)
+- **Hardware Sync**: Polling rate automatically syncs from keyboard on connection using `ORDER_TYPE_ROES` query
+- **Automatic Reconnection**: Implemented SDK `reconnection()` wrapper to handle device disconnect/reconnect after polling rate changes
+- **Reconnection Flow**: When `setRateOfReturn` triggers hardware reset, KeyboardService detects disconnect via flag, waits 300ms, then calls SDK's `reconnection()` method with retry logic (3 attempts, 500ms delays)
+- **State Management**: `pollingRateStore` manages current value with validation (0-6 range) and hardware sync on both manual and auto-connect
+- **Robust Cleanup**: Failed reconnections properly clear connection state via `cleanupFailedReconnect()` to prevent inconsistent UI states
+- **Result**: Users can change polling rate seamlessly; keyboard automatically reconnects after hardware reset without manual intervention
+
 **November 22, 2025 - Active Profile Hardware Synchronization**
 - **Hardware-First Active Profile**: Removed `activeProfileId` from localStorage persistence; only profile names/settings persist
 - **Query on Connection**: `syncActiveProfileFromHardware()` queries `ORDER_TYPE_CONFIG` (returns 0-3, maps to profiles 1-4) when keyboard connects

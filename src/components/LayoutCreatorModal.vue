@@ -803,9 +803,11 @@ export default defineComponent({
   font-family: v.$font-style;
 }
 
-.btn, .btn-sm {
+.btn {
   padding: 8px 16px;
   border-radius: v.$border-radius;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  color: v.$primary-color;
   border: v.$border-style;
   cursor: pointer;
   font-size: 0.9rem;
@@ -813,39 +815,56 @@ export default defineComponent({
   transition: background-color 0.2s ease;
   font-family: v.$font-style;
 
+  &:hover:not(:disabled) {
+    background-color: color.adjust(v.$background-dark, $lightness: 10%);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   &.btn-primary {
     background-color: v.$accent-color;
     color: v.$background-dark;
-    border-color: v.$accent-color;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: color.adjust(v.$accent-color, $lightness: 10%);
     }
   }
 
   &.btn-secondary {
-    background-color: color.adjust(v.$background-dark, $lightness: -100%);
-    color: v.$primary-color;
-    border: v.$border-style;
-
-    &:hover {
-      background-color: color.adjust(v.$background-dark, $lightness: 10%);
-    }
+    color: v.$accent-color;
   }
 
   &.btn-danger {
-    background-color: color.adjust(v.$background-dark, $lightness: -100%);
-    color: #ff4444;
-    border: 1px solid rgba(#ff4444, 0.3);
-
-    &:hover {
-      background-color: color.adjust(v.$background-dark, $lightness: 10%);
-    }
+    color: rgba(#ff4444, 0.8);
   }
 }
 
 .btn-sm {
   padding: 4px 8px;
+  border-radius: v.$border-radius;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  color: v.$primary-color;
+  border: v.$border-style;
+  cursor: pointer;
   font-size: 0.85rem;
+  font-weight: 400;
+  transition: background-color 0.2s ease;
+  font-family: v.$font-style;
+
+  &:hover:not(:disabled) {
+    background-color: color.adjust(v.$background-dark, $lightness: 10%);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &.btn-danger {
+    color: rgba(#ff4444, 0.8);
+  }
 }
 </style>

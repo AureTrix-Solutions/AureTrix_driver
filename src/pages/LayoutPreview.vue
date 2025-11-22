@@ -90,11 +90,11 @@ export default defineComponent({
     };
 
     // Layout update
-    const updateLayout = async () => {
+    const updateLayout = () => {
       const productName = typeof selectedLayout.value === 'string' ? selectedLayout.value : undefined;
       const keyCount = typeof selectedLayout.value === 'number' ? selectedLayout.value : 82;
       
-      const config = await getLayoutConfig(keyCount, undefined, undefined, undefined, undefined, productName);
+      const config = getLayoutConfig(keyCount, undefined, undefined, undefined, undefined, productName);
       layoutData.value = config;
       layout.value = config.keyPositions;
       localStorage.setItem('lastSelectedLayout', selectedLayout.value?.toString() ?? '82');

@@ -5,6 +5,7 @@ import App from './App.vue';
 import router from './router';
 import KeyboardService from './services/KeyboardService';
 import { useConnectionStore } from './store/connection';
+import { loadCustomLayouts } from './utils/layoutConfigs';
 import './styles/variables.scss';
 
 const app = createApp(App);
@@ -19,4 +20,7 @@ app.provide('KeyboardService', KeyboardService);
 const connectionStore = useConnectionStore();
 connectionStore.autoConnect();
 
-app.mount('#app');
+// Preload custom layouts cache before mounting
+loadCustomLayouts().then(() => {
+  app.mount('#app');
+});

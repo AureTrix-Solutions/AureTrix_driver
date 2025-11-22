@@ -11,7 +11,7 @@ type LayoutConfig = {
 
 let customLayoutsCache: CustomLayoutConfig[] = [];
 
-async function loadCustomLayouts() {
+export async function loadCustomLayouts() {
   try {
     customLayoutsCache = await LayoutStorageService.getAllLayouts();
   } catch (error) {
@@ -117,13 +117,8 @@ const layoutMap: Record<number, LayoutConfig> = {
   },
 };
 
-export const getLayoutConfig = async (keyCount: number, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[], productName?: string) => {
-  // Load custom layouts if not already cached
-  if (customLayoutsCache.length === 0) {
-    await loadCustomLayouts();
-  }
-
-  // Check for custom layout by productName first
+export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[], productName?: string) => {
+  // Check for custom layout by productName first (cache preloaded at app startup)
   if (productName) {
     const customLayout = customLayoutsCache.find(layout => layout.productName === productName);
     if (customLayout) {

@@ -19,15 +19,24 @@
         </div>
       </div>
       <nav class="sidebar-nav">
-        <template v-for="item in menuItems" :key="item.name">
-          <router-link v-if="!item.isCategory" :to="item.path" class="nav-item">
-            {{ item.name }}
-          </router-link>
-          <div v-else class="nav-item category-header" @click="handleCategoryClick(item, $event)">
-            {{ item.name }}
-            <span class="arrow" :class="{ open: openCategory === item }">></span>
+        <!-- Main Navigation Section -->
+        <div class="main-nav-section">
+          <div class="main-nav-separator-top"></div>
+          <div class="main-nav-header">
+            <span class="main-nav-title">Main</span>
+            <div class="main-nav-separator"></div>
           </div>
-        </template>
+          <template v-for="item in menuItems" :key="item.name">
+            <router-link v-if="!item.isCategory" :to="item.path" class="nav-item">
+              {{ item.name }}
+            </router-link>
+            <div v-else class="nav-item category-header" @click="handleCategoryClick(item, $event)">
+              {{ item.name }}
+              <span class="arrow" :class="{ open: openCategory === item }">></span>
+            </div>
+          </template>
+          <div class="main-nav-separator-bottom"></div>
+        </div>
 
         <!-- Profile Quick Access Grid -->
         <div class="profiles-section">

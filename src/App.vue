@@ -217,37 +217,37 @@ export default defineComponent({
             { 
               name: 'Dynamic Key Stroke', 
               path: '/dks',
-              tooltip: 'This feature allows you to assign up to four different actions to a single key, triggered at various points of a single press and release cycle (e.g., press start, bottom out, release start, full release). This is often used in games to enable actions like walking with a light press and sprinting with a deep press on the same key.'
+              tooltip: 'Enables a single key to trigger up to four distinct actions based on actuation and release points during the full travel of the keypress. For example, light press for walking, deep press for sprinting, partial release for a third action, and full release for a fourth.'
             },
             { 
               name: 'Multi-Point Trigger', 
               path: '/mpt',
-              tooltip: 'Similar to DKS, MPT (or Multi-action Keystroke) allows you to set multiple, distinct actuation points within a single key\'s travel, with each point triggering a different action. This provides layered inputs and enhanced control without needing extra keys or complex macros.'
+              tooltip: 'Assigns up to three independent actions to one key, each triggered at a user-defined actuation depth. Example: halfway press activates one function, full press activates another, and release from a specific depth triggers a third.'
             },
             { 
               name: 'Mod Tap', 
               path: '/mt',
-              tooltip: 'Mod Tap allows a key to function as a modifier (like Ctrl or Shift) when held, but sends a normal keypress when tapped quickly. This dual functionality helps reduce the number of keys needed for complex shortcuts.'
+              tooltip: 'Dual-function behavior: a quick tap sends one keycode (e.g., Shift), while pressing and holding sends a different modifier or layer key (e.g., Ctrl) that remains active for as long as the key is held.'
             },
             { 
               name: 'Toggle', 
               path: '/tgl',
-              tooltip: 'This function transforms a key into a switch that stays "on" after one press and turns "off" after a second press. Instead of holding down a key (like a sprint button), you tap it once to activate the function continuously and tap it again to deactivate it, which is ideal for managing persistent actions.'
+              tooltip: 'Converts a momentary action into a latching one. A short tap toggles the function on or off permanently until tapped again (e.g., toggle run mode), while holding the key still performs the original held behavior.'
             },
             { 
               name: 'End', 
               path: '/end',
-              tooltip: 'The term "end" or "endgame" is less a specific function of Hall Effect keyboards and more a term used within the broader keyboard community to describe a user\'s ideal keyboard setup—one that is so perfect for their needs that they feel they have "ended" their search for better gear. It is not a software feature to be programmed.'
+              tooltip: 'Delays the specified keycode or action until the physical key is released, rather than triggering on press. Ideal for precise timing, movement cancels, or release-based commands in gaming.'
             },
             { 
               name: 'SOCD', 
               path: '/socd',
-              tooltip: 'Stands for Simultaneous Opposing Cardinal Directions (cleaner). This feature defines how the keyboard handles conflicting directional inputs pressed at the same time (e.g., pressing both "Left" and "Right" in a game). An SOCD cleaner applies specific rules (like prioritizing the last input, or canceling both) to ensure valid, consistent input, which is particularly useful in fighting games and rhythm games.'
+              tooltip: 'Resolves conflicting directional inputs (e.g., Left + Right simultaneously) according to selected rules (Last Input Priority, Neutral, or First Input Priority), preventing invalid or locked movement states—commonly used in fighting games.'
             },
             { 
               name: 'Macro', 
               path: '/macro',
-              tooltip: 'This function allows you to record a sequence of multiple key presses, clicks, and delays and bind the entire sequence to a single key. Pressing that key then executes the entire string of commands automatically, which is a powerful tool for automating complex or repetitive tasks.'
+              tooltip: 'Records and plays back a custom sequence of keystrokes, mouse actions, delays, and triggers on a single keypress. Supports complex combos, rapid commands, or repetitive tasks with precise timing control.'
             },
             { name: 'Layout Preview', path: '/layout-preview' }
           ],

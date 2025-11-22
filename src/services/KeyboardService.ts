@@ -808,8 +808,11 @@ class KeyboardService {
       }
       const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_CONFIG' });
       if (result instanceof Error) return result;
+      console.log('ORDER_TYPE_CONFIG raw result:', result);
+      console.log('ORDER_TYPE_CONFIG sArg value:', result.sArg);
       // SDK returns sArg as 0-3, we use 1-4 for profile IDs
       const profileId = (result.sArg ?? 0) + 1;
+      console.log('Mapped profile ID (sArg + 1):', profileId);
       return profileId;
     } catch (error) {
       console.error('Failed to get active profile:', error);

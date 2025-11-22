@@ -99,7 +99,11 @@
         <nav class="flyout-nav">
           <router-link v-for="sub in openCategory.items" :key="sub.name" :to="sub.path" class="flyout-item"
             @click="closeCategory">
-            {{ sub.name }}
+            <span class="flyout-item-text">{{ sub.name }}</span>
+            <span v-if="sub.tooltip" class="help-icon" @click.stop.prevent>
+              ?
+              <span class="tooltip-text">{{ sub.tooltip }}</span>
+            </span>
           </router-link>
         </nav>
       </div>
@@ -201,13 +205,41 @@ export default defineComponent({
         {
           name: 'Advanced',
           items: [
-            { name: 'Dynamic Key Stroke', path: '/dks' },
-            { name: 'Multi-Point Trigger', path: '/mpt' },
-            { name: 'Mod Tap', path: '/mt' },
-            { name: 'Toggle', path: '/tgl' },
-            { name: 'End', path: '/end' },
-            { name: 'SOCD', path: '/socd' },
-            { name: 'Macro', path: '/macro' },
+            { 
+              name: 'Dynamic Key Stroke', 
+              path: '/dks',
+              tooltip: 'This feature allows you to assign up to four different actions to a single key, triggered at various points of a single press and release cycle (e.g., press start, bottom out, release start, full release). This is often used in games to enable actions like walking with a light press and sprinting with a deep press on the same key.'
+            },
+            { 
+              name: 'Multi-Point Trigger', 
+              path: '/mpt',
+              tooltip: 'Similar to DKS, MPT (or Multi-action Keystroke) allows you to set multiple, distinct actuation points within a single key\'s travel, with each point triggering a different action. This provides layered inputs and enhanced control without needing extra keys or complex macros.'
+            },
+            { 
+              name: 'Mod Tap', 
+              path: '/mt',
+              tooltip: 'Mod Tap allows a key to function as a modifier (like Ctrl or Shift) when held, but sends a normal keypress when tapped quickly. This dual functionality helps reduce the number of keys needed for complex shortcuts.'
+            },
+            { 
+              name: 'Toggle', 
+              path: '/tgl',
+              tooltip: 'This function transforms a key into a switch that stays "on" after one press and turns "off" after a second press. Instead of holding down a key (like a sprint button), you tap it once to activate the function continuously and tap it again to deactivate it, which is ideal for managing persistent actions.'
+            },
+            { 
+              name: 'End', 
+              path: '/end',
+              tooltip: 'The term "end" or "endgame" is less a specific function of Hall Effect keyboards and more a term used within the broader keyboard community to describe a user\'s ideal keyboard setup—one that is so perfect for their needs that they feel they have "ended" their search for better gear. It is not a software feature to be programmed.'
+            },
+            { 
+              name: 'SOCD', 
+              path: '/socd',
+              tooltip: 'Stands for Simultaneous Opposing Cardinal Directions (cleaner). This feature defines how the keyboard handles conflicting directional inputs pressed at the same time (e.g., pressing both "Left" and "Right" in a game). An SOCD cleaner applies specific rules (like prioritizing the last input, or canceling both) to ensure valid, consistent input, which is particularly useful in fighting games and rhythm games.'
+            },
+            { 
+              name: 'Macro', 
+              path: '/macro',
+              tooltip: 'This function allows you to record a sequence of multiple key presses, clicks, and delays and bind the entire sequence to a single key. Pressing that key then executes the entire string of commands automatically, which is a powerful tool for automating complex or repetitive tasks.'
+            },
             { name: 'Layout Preview', path: '/layout-preview' }
           ],
           isCategory: true
@@ -555,6 +587,7 @@ export default defineComponent({
   min-height: 0px;
   max-height:500px;
   overflow-y: auto;
+  overflow-x: visible;
   border: 1px solid rgba(v.$text-color, 0.2);
   background-color: color.adjust(v.$background-dark, $lightness: -100%);
   border-radius: 15px;
@@ -586,6 +619,11 @@ export default defineComponent({
   border-radius: v.$border-radius;
   transition: background-color 0.3s;
   font-size: 0.95rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  position: relative;
 
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
@@ -596,6 +634,70 @@ export default defineComponent({
     ;
     color: rgba($color: #000000, $alpha: 1.0);
     font-weight: bold;
+  }
+}
+
+.flyout-item-text {
+  flex: 1;
+  text-align: center;
+}
+
+.help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: rgba(v.$accent-color, 0.3);
+  color: v.$accent-color;
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: help;
+  flex-shrink: 0;
+  position: relative;
+  transition: background-color 0.3s, transform 0.2s;
+
+  &:hover {
+    background-color: rgba(v.$accent-color, 0.5);
+    transform: scale(1.1);
+
+    .tooltip-text {
+      display: block;
+    }
+  }
+}
+
+.tooltip-text {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 10px;
+  width: 280px;
+  background-color: rgba(0, 0, 0, 0.95);
+  color: v.$text-color;
+  text-align: left;
+  padding: 12px;
+  border-radius: 8px;
+  z-index: 1000;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  border: 1px solid rgba(v.$accent-color, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  font-weight: normal;
+  white-space: normal;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent rgba(0, 0, 0, 0.95) transparent transparent;
   }
 }
 

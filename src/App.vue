@@ -422,8 +422,8 @@ export default defineComponent({
 .profile-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 15px;
+  gap: 6px;
+  margin-top: 50px;
 }
 
 .profile-btn {
@@ -496,7 +496,7 @@ export default defineComponent({
   width: 100%;
   font-family: v.$font-style;
   padding: 10px;
-  margin-top: 10px;
+  margin-top: -5px;
   border: 1px solid rgba(v.$text-color, 0.2);
   border-radius: v.$border-radius;
   background-color: color.adjust(v.$background-dark, $lightness: -100%);

@@ -8,6 +8,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 22, 2025 - Quick Settings Flyout UI Refinement**
+- **Compact Flyout Design**: Reduced padding on `.flyout-content` (15px→10px) and `.quick-setting-item` (10px→5px) for tighter fit around polling rate dropdown
+- **Visual Polish**: Flyout menu now fits closely to the dropdown selector with minimal margins, improving visual density without compromising readability
+- **Preserved Category Flyouts**: Changes maintain proper spacing for multi-item category flyouts (Basic Settings, Customization, Advanced)
+- **Result**: Quick Settings flyout has a more refined, professional appearance with compact spacing around the polling rate selector
+
 **November 22, 2025 - Polling Rate Quick Settings with Auto-Reconnection**
 - **Quick Settings UI**: Added dedicated "Quick Settings" section in sidebar with polling rate selector (8KHz down to 125Hz)
 - **Hardware Sync**: Polling rate automatically syncs from keyboard on connection using `ORDER_TYPE_ROES` query

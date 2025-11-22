@@ -1,7 +1,7 @@
 # AureTrix Keyboard Driver
 
 ## Overview
-AureTrix is a web-based configuration tool for hall effect keyboards compatible with the SparkLink SDK. It provides a professional, browser-based interface for customizing keyboard behavior without requiring native drivers. Key capabilities include multi-layer key remapping, macro creation, comprehensive RGB lighting control, advanced hall effect features (Dynamic Keystroke, Magnetic Point Triggering, Rapid Trigger), sensor calibration, profile management, and a real-time debugging interface. The application runs entirely in the browser using the WebHID API, aiming to be the leading configuration solution for SparkLink-compatible hall effect keyboards.
+AureTrix is a web-based configuration tool for hall effect keyboards compatible with the SparkLink SDK. It provides a professional, browser-based interface for customizing keyboard behavior without requiring native drivers. Key capabilities include multi-layer key remapping, macro creation, comprehensive RGB lighting control, advanced hall effect features (Dynamic Keystroke, Magnetic Point Triggering, Rapid Trigger), sensor calibration, profile management, a real-time debugging interface, and a custom layout creator with controller emulation metadata support. The application runs entirely in the browser using the WebHID API, aiming to be the leading configuration solution for SparkLink-compatible hall effect keyboards.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -17,14 +17,16 @@ User interactions trigger `KeyboardService` methods, which encapsulate SparkLink
 -   **KeyboardService.ts:** Abstraction layer for hardware interaction, managing device discovery, WebHID pairing, auto-reconnection, SparkLink SDK API wrappers, and connection lifecycle.
 -   **ExportService.ts:** Handles complete profile backup and restore functionality, orchestrating data collection, assembling `KeyboardConfig` objects, and managing export/import operations via the SDK.
 -   **DebugKeyboardService.ts:** A dedicated service for development and testing, offering SDK access without interfering with the main application state.
+-   **LayoutStorageService.ts:** Manages custom keyboard layouts using IndexedDB for persistent storage, handles JSON export/import for backups, and generates GitHub issue submission links for community contributions.
 
 ### Key Technical Decisions
 1.  **WebHID over Native Drivers:** Chosen for cross-platform compatibility, no installation, and browser security.
 2.  **Batch Processing for SDK Calls:** Crucial for managing hardware communication efficiency when sending numerous updates.
-3.  **Service Separation Pattern:** Separates `KeyboardService`, `ExportService`, and `DebugKeyboardService` for clear separation of concerns.
-4.  **Layout Configuration System:** Centralized management of absolute positioning data for accurate rendering of diverse keyboard layouts.
+3.  **Service Separation Pattern:** Separates `KeyboardService`, `ExportService`, `LayoutStorageService`, and `DebugKeyboardService` for clear separation of concerns.
+4.  **Layout Configuration System:** Centralized management of absolute positioning data for accurate rendering of diverse keyboard layouts. Supports both standard layouts (61, 67, 68, 80, 82, 84, 87 key) and custom user-created layouts stored in IndexedDB with productName-based lookup priority.
 5.  **Type Safety with TypeScript:** Ensures type consistency across the application, especially between physical keys and remapped values in SDK calls and UI.
 6.  **Complete Configuration Snapshot:** Export collects the full keyboard state by querying all keys using batch processing, reconstructing the macro library, and using `getApi()` for system settings lacking dedicated getters.
+7.  **Custom Layout Creator:** Provides a visual layout builder using keyboard units (1u, 1.25u, etc.) for user-friendly design, bulk row/key creation for efficiency, global column gaps for consistent spacing, and automatic controller emulation metadata detection via `getAxisList()` SDK call. Layouts are stored locally in IndexedDB and can be exported as JSON or submitted to GitHub for community sharing.
 
 ## External Dependencies
 

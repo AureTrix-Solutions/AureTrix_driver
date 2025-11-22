@@ -126,7 +126,7 @@ export default defineComponent({
     const virtualKeyboard = ref<VirtualKey[][]>([]);
 
     const selectedKeys = ref<{ row: number; col: number }[]>([]);
-    const selectedKeyData = ref<VirtualKey>({ size: 1, sizeMm: 18, gap: 0 });
+    const selectedKeyData = ref<VirtualKey>({ size: 1, sizeMm: 19.05, gap: 0 });
     const notification = ref<{ message: string; isError: boolean } | null>(null);
 
     const mmToPx = (mm: number) => mm * 4;
@@ -152,7 +152,7 @@ export default defineComponent({
         if (count && count > 0) {
           const row: VirtualKey[] = [];
           for (let j = 0; j < count; j++) {
-            row.push({ size: 1, sizeMm: 18, gap: 0 }); // Default 1u = 18mm
+            row.push({ size: 1, sizeMm: 19.05, gap: 0 }); // Default 1u = 18mm
           }
           keyboard.push(row);
         }
@@ -181,7 +181,7 @@ export default defineComponent({
 
       // Calculate top position
       for (let i = 0; i < rowIdx; i++) {
-        top += mmToPx(18); // Standard key height (18mm)
+        top += mmToPx(19.05); // Standard key height (18mm)
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
         if (gap && gap > 0) {
@@ -220,7 +220,7 @@ export default defineComponent({
 
       let totalHeight = 0;
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
-        totalHeight += mmToPx(18); // Standard key height (18mm)
+        totalHeight += mmToPx(19.05); // Standard key height (18mm)
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
         if (gap && gap > 0) {
@@ -422,7 +422,7 @@ export default defineComponent({
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        rowSpacing.push((gap || 0) + 18); // 18mm is standard key height
+        rowSpacing.push((gap || 0) + 19.05); // 18mm is standard key height
       }
 
       const layout = {
@@ -492,7 +492,7 @@ export default defineComponent({
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        rowSpacingArr.push((gap || 0) + 18); // 18mm is standard key height
+        rowSpacingArr.push((gap || 0) + 19.05); // 18mm is standard key height
       }
       const rowSpacingCompact = arrayToCompactSyntax(rowSpacingArr);
 
@@ -545,7 +545,7 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        rowSpacing.push((gap || 0) + 18); // 18mm is standard key height
+        rowSpacing.push((gap || 0) + 19.05); // 18mm is standard key height
       }
 
       const layout = {

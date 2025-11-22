@@ -1,101 +1,104 @@
 <template>
-  <div class="layout-creator">
-    <div class="header">
-      <h1>Create Custom Layout</h1>
-      <div class="actions">
-        <button @click="saveLayout" class="action-btn">Save Layout</button>
-        <button @click="exportLayout" class="action-btn">Export JSON</button>
-        <button @click="goBack" class="action-btn">Cancel</button>
-      </div>
+  <div class="layout-creator-page">
+    <h2 class="title">Create Custom Layout</h2>
+    <div v-if="notification" class="notification" :class="{ error: notification.isError }">
+      {{ notification.message }}
+      <button @click="notification = null" class="dismiss-btn">&times;</button>
     </div>
 
-    <div class="creator-content">
-      <!-- Setup Section -->
-      <div class="setup-section">
-        <div class="form-row">
-          <label>Product Name</label>
-          <input v-model="productName" type="text" placeholder="Keyboard name" class="compact-input" />
-        </div>
-
-        <div class="form-row">
-          <label>Row Counts</label>
-          <div class="row-inputs">
-            <div v-for="i in 6" :key="`row-${i}`" class="row-input-item">
-              <span>Row{{ i }}</span>
-              <input 
-                v-model.number="rowCounts[i - 1]" 
-                type="number" 
-                min="0" 
-                :placeholder="`0`"
-                @input="generateVirtualKeyboard"
-                class="compact-input"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <label>Row Gaps (mm)</label>
-          <div class="gap-inputs">
-            <div v-for="i in 6" :key="`gap-${i}`" class="gap-input-item">
-              <span>gap{{ i - 1 }}</span>
-              <input 
-                v-model.number="rowGaps[i - 1]" 
-                type="number" 
-                min="0"
-                step="0.5"
-                :placeholder="`0`"
-                class="compact-input"
-              />
-            </div>
+    <div class="layout-creator-container">
+      <div v-if="virtualKeyboard.length" class="key-grid" :style="gridStyle">
+        <div v-for="(row, rIdx) in virtualKeyboard" :key="`vrow-${rIdx}`" class="key-row">
+          <div
+            v-for="(key, kIdx) in row"
+            :key="`vkey-${rIdx}-${kIdx}`"
+            class="key-btn"
+            :class="{ 'creator-key-selected': selectedKey?.row === rIdx && selectedKey?.col === kIdx }"
+            :style="getKeyStyle(rIdx, kIdx)"
+            @click="selectKey(rIdx, kIdx)"
+          >
+            <div class="key-label">{{ key.size }}u</div>
           </div>
         </div>
       </div>
+      <div v-else class="no-layout">
+        <p>Enter row counts below to generate virtual keyboard</p>
+      </div>
+      <div class="bottom-section">
+        <div class="parent">
+          <div class="settings-panel">
+            <div class="settings-section">
+              <div class="header-row">
+                <h3>Layout Configuration</h3>
+              </div>
 
-      <!-- Virtual Keyboard -->
-      <div class="keyboard-section">
-        <h3>Virtual Keyboard</h3>
-        <div class="virtual-keyboard" :style="keyboardContainerStyle">
-          <div 
-            v-for="(row, rIdx) in virtualKeyboard" 
-            :key="`vrow-${rIdx}`" 
-            class="virtual-row"
-            :style="getRowStyle(rIdx)"
-          >
-            <div
-              v-for="(key, kIdx) in row"
-              :key="`vkey-${rIdx}-${kIdx}`"
-              class="virtual-key"
-              :class="{ selected: selectedKey?.row === rIdx && selectedKey?.col === kIdx }"
-              :style="getKeyStyle(key)"
-              @click="selectKey(rIdx, kIdx)"
-            >
-              <div class="key-label">{{ key.size }}u</div>
-            </div>
-          </div>
-        </div>
+              <!-- Product Name -->
+              <div class="input-row">
+                <div class="input-group">
+                  <div class="label">Product Name</div>
+                  <input v-model="productName" type="text" placeholder="Enter keyboard name" class="text-input" />
+                </div>
+              </div>
 
-        <!-- Key Editor -->
-        <div v-if="selectedKey" class="key-editor">
-          <h4>Edit Key (Row {{ selectedKey.row + 1 }}, Key {{ selectedKey.col + 1 }})</h4>
-          <div class="editor-controls">
-            <div class="editor-item">
-              <label>Size</label>
-              <select v-model.number="selectedKeyData.size" @change="updateSelectedKey">
-                <option :value="1">1u</option>
-                <option :value="1.25">1.25u</option>
-                <option :value="1.5">1.5u</option>
-                <option :value="1.75">1.75u</option>
-                <option :value="2">2u</option>
-                <option :value="2.25">2.25u</option>
-                <option :value="2.75">2.75u</option>
-                <option :value="6.25">6.25u</option>
-                <option :value="6.5">6.5u</option>
-              </select>
-            </div>
-            <div class="editor-item">
-              <label>Gap After (mm)</label>
-              <input v-model.number="selectedKeyData.gap" type="number" min="0" step="0.5" @input="updateSelectedKey" />
+              <!-- Row Counts and Gaps -->
+              <div class="row-gap-section">
+                <div v-for="i in 6" :key="`row-gap-${i}`" class="row-gap-row">
+                  <div class="input-group">
+                    <div class="label">R{{ i - 1 }}</div>
+                    <input 
+                      v-model.number="rowCounts[i - 1]" 
+                      type="number" 
+                      min="0" 
+                      placeholder="0"
+                      @input="generateVirtualKeyboard"
+                      class="number-input"
+                    />
+                  </div>
+                  <div class="input-group">
+                    <div class="label">G{{ i - 1 }} (mm)</div>
+                    <input 
+                      v-model.number="rowGaps[i - 1]" 
+                      type="number" 
+                      min="0"
+                      step="0.5"
+                      placeholder="0"
+                      class="number-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Key Editor -->
+              <div v-if="selectedKey" class="key-editor-section">
+                <h4>Edit Key (Row {{ selectedKey.row + 1 }}, Key {{ selectedKey.col + 1 }})</h4>
+                <div class="key-editor-controls">
+                  <div class="input-group">
+                    <div class="label">Size</div>
+                    <select v-model.number="selectedKeyData.size" @change="updateSelectedKey" class="select-input">
+                      <option :value="1">1u</option>
+                      <option :value="1.25">1.25u</option>
+                      <option :value="1.5">1.5u</option>
+                      <option :value="1.75">1.75u</option>
+                      <option :value="2">2u</option>
+                      <option :value="2.25">2.25u</option>
+                      <option :value="2.75">2.75u</option>
+                      <option :value="6.25">6.25u</option>
+                      <option :value="6.5">6.5u</option>
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <div class="label">Gap After (mm)</div>
+                    <input v-model.number="selectedKeyData.gap" type="number" min="0" step="0.5" @input="updateSelectedKey" class="number-input" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="action-buttons">
+                <button @click="saveLayout" class="action-btn">Save Layout</button>
+                <button @click="exportLayout" class="action-btn">Export JSON</button>
+                <button @click="goBack" class="action-btn cancel">Cancel</button>
+              </div>
             </div>
           </div>
         </div>
@@ -112,8 +115,8 @@ import LayoutStorageService from '@/services/LayoutStorageService';
 import KeyboardService from '@/services/KeyboardService';
 
 interface VirtualKey {
-  size: number; // in keyboard units (1u, 1.25u, etc.)
-  gap: number; // gap after this key in mm
+  size: number;
+  gap: number;
 }
 
 export default defineComponent({
@@ -130,6 +133,7 @@ export default defineComponent({
     
     const selectedKey = ref<{ row: number; col: number } | null>(null);
     const selectedKeyData = ref<VirtualKey>({ size: 1, gap: 0 });
+    const notification = ref<{ message: string; isError: boolean } | null>(null);
 
     const mmToPx = (mm: number) => mm * 4;
     const uToMm = (u: number) => u * 18;
@@ -165,28 +169,6 @@ export default defineComponent({
       selectedKey.value = null;
     };
 
-    const getRowStyle = (rowIdx: number) => {
-      let topOffset = 0;
-      
-      // Calculate cumulative top offset based on previous rows and gaps
-      for (let i = 0; i < rowIdx; i++) {
-        topOffset += mmToPx(18); // Key height
-        
-        // Find the actual gap index (accounting for skipped rows)
-        const actualGapIdx = getActualRowIndex(i);
-        const gap = rowGaps.value[actualGapIdx];
-        if (gap && gap > 0) {
-          topOffset += mmToPx(gap);
-        } else {
-          topOffset += mmToPx(1); // Default 1mm gap
-        }
-      }
-      
-      return {
-        top: `${topOffset}px`
-      };
-    };
-
     const getActualRowIndex = (virtualRowIdx: number): number => {
       let count = 0;
       for (let i = 0; i < rowCounts.value.length; i++) {
@@ -200,20 +182,54 @@ export default defineComponent({
       return 0;
     };
 
-    const getKeyStyle = (key: VirtualKey) => {
+    const getKeyStyle = (rowIdx: number, colIdx: number) => {
+      let top = 0;
+      let left = 0;
+
+      // Calculate top position
+      for (let i = 0; i < rowIdx; i++) {
+        top += mmToPx(18);
+        const actualGapIdx = getActualRowIndex(i);
+        const gap = rowGaps.value[actualGapIdx];
+        if (gap && gap > 0) {
+          top += mmToPx(gap);
+        } else {
+          top += mmToPx(1);
+        }
+      }
+
+      // Calculate left position
+      const currentRow = virtualKeyboard.value[rowIdx];
+      for (let i = 0; i < colIdx; i++) {
+        const key = currentRow[i];
+        left += mmToPx(uToMm(key.size));
+        if (key.gap > 0) {
+          left += mmToPx(key.gap);
+        }
+        left += mmToPx(1);
+      }
+
+      const key = currentRow[colIdx];
+      const width = mmToPx(uToMm(key.size));
+      const height = mmToPx(17);
+
       return {
-        width: `${mmToPx(uToMm(key.size))}px`,
-        height: `${mmToPx(17)}px`,
-        marginRight: key.gap > 0 ? `${mmToPx(key.gap)}px` : `${mmToPx(1)}px`
+        position: 'absolute' as const,
+        top: `${top}px`,
+        left: `${left}px`,
+        width: `${width}px`,
+        height: `${height}px`
       };
     };
 
-    const keyboardContainerStyle = computed(() => {
+    const gridStyle = computed(() => {
+      if (!virtualKeyboard.value.length) {
+        return { height: '300px', width: '600px' };
+      }
+
       let totalHeight = 0;
-      
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
         totalHeight += mmToPx(18);
-        
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
         if (gap && gap > 0) {
@@ -222,10 +238,28 @@ export default defineComponent({
           totalHeight += mmToPx(1);
         }
       }
-      
+
+      let maxWidth = 0;
+      virtualKeyboard.value.forEach(row => {
+        let rowWidth = 0;
+        row.forEach(key => {
+          rowWidth += mmToPx(uToMm(key.size));
+          if (key.gap > 0) {
+            rowWidth += mmToPx(key.gap);
+          }
+          rowWidth += mmToPx(1);
+        });
+        if (rowWidth > maxWidth) {
+          maxWidth = rowWidth;
+        }
+      });
+
       return {
-        minHeight: `${totalHeight}px`,
-        position: 'relative' as const
+        position: 'relative' as const,
+        height: `${totalHeight}px`,
+        width: `${maxWidth}px`,
+        minHeight: '300px',
+        maxHeight: '500px'
       };
     });
 
@@ -242,11 +276,15 @@ export default defineComponent({
 
     const saveLayout = async () => {
       if (!productName.value.trim()) {
-        alert('Please enter a product name');
+        notification.value = { message: 'Please enter a product name', isError: true };
         return;
       }
 
-      // Convert virtual keyboard to LayoutConfig format
+      if (!virtualKeyboard.value.length) {
+        notification.value = { message: 'Please add rows to create a layout', isError: true };
+        return;
+      }
+
       const keySizes: number[][] = virtualKeyboard.value.map(row => 
         row.map(key => uToMm(key.size))
       );
@@ -280,17 +318,24 @@ export default defineComponent({
 
       try {
         await LayoutStorageService.saveLayout(layout);
-        alert('Layout saved successfully!');
-        router.push('/layout-preview');
+        notification.value = { message: 'Layout saved successfully!', isError: false };
+        setTimeout(() => {
+          router.push('/layout-preview');
+        }, 1500);
       } catch (error) {
         console.error('Failed to save layout:', error);
-        alert('Failed to save layout. Please try again.');
+        notification.value = { message: 'Failed to save layout. Please try again.', isError: true };
       }
     };
 
     const exportLayout = () => {
       if (!productName.value.trim()) {
-        alert('Please enter a product name');
+        notification.value = { message: 'Please enter a product name', isError: true };
+        return;
+      }
+
+      if (!virtualKeyboard.value.length) {
+        notification.value = { message: 'Please add rows to create a layout', isError: true };
         return;
       }
 
@@ -326,6 +371,7 @@ export default defineComponent({
       };
 
       LayoutStorageService.exportLayout(layout);
+      notification.value = { message: 'Layout exported successfully!', isError: false };
     };
 
     const goBack = () => {
@@ -339,9 +385,9 @@ export default defineComponent({
       virtualKeyboard,
       selectedKey,
       selectedKeyData,
-      keyboardContainerStyle,
+      notification,
+      gridStyle,
       generateVirtualKeyboard,
-      getRowStyle,
       getKeyStyle,
       selectKey,
       updateSelectedKey,
@@ -353,221 +399,175 @@ export default defineComponent({
 });
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 @use 'sass:color';
 @use '@styles/variables' as v;
 
-.layout-creator {
+.layout-creator-page {
   padding: 20px;
-  font-family: v.$font-style;
-  max-width: 1400px;
-  margin: 0 auto;
-}
+  color: v.$text-color;
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: v.$border-style;
-
-  h1 {
-    margin: 0;
+  .title {
+    width: 500px;
     color: v.$primary-color;
-    font-size: 1.8rem;
-    font-weight: 400;
-  }
-
-  .actions {
-    display: flex;
-    gap: 8px;
-  }
-
-  .action-btn {
-    padding: 6px 12px;
-    background-color: color.adjust(v.$background-dark, $lightness: -100%);
-    color: v.$primary-color;
-    border: v.$border-style;
-    border-radius: v.$border-radius;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 400;
+    margin-bottom: 10px;
+    margin-top: 0px;
+    font-size: 1.5rem;
+    font-weight: 600;
     font-family: v.$font-style;
-    transition: background-color 0.2s ease;
-
-    &:hover:not(:disabled) {
-      background-color: color.adjust(v.$background-dark, $lightness: 10%);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  }
-}
-
-.creator-content {
-  display: grid;
-  grid-template-columns: 400px 1fr;
-  gap: 24px;
-}
-
-.setup-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  .form-row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-
-    label {
-      color: v.$text-color;
-      font-size: 0.9rem;
-      font-weight: 300;
-    }
-
-    .compact-input {
-      padding: 4px 8px;
-      background-color: color.adjust(v.$background-dark, $lightness: -5%);
-      border: v.$border-style;
-      border-radius: v.$border-radius;
-      color: v.$text-color;
-      font-family: v.$font-style;
-      font-size: 0.9rem;
-      width: 100%;
-
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
-      }
-    }
   }
 
-  .row-inputs, .gap-inputs {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
-
-  .row-input-item, .gap-input-item {
+  .notification {
+    padding: 10px;
+    margin-bottom: 0px;
+    border-radius: v.$border-radius;
+    background-color: rgba(v.$background-dark, 1.1);
+    color: v.$text-color;
     display: flex;
     align-items: center;
-    gap: 4px;
 
-    span {
-      color: v.$text-color;
-      font-size: 0.85rem;
-      font-weight: 300;
-      min-width: 40px;
+    &.error {
+      background-color: color.mix(#ef4444, v.$background-dark, 50%);
     }
 
-    input {
-      flex: 1;
-      padding: 4px 6px;
-      background-color: color.adjust(v.$background-dark, $lightness: -5%);
-      border: v.$border-style;
-      border-radius: v.$border-radius;
+    .dismiss-btn {
+      margin-left: auto;
+      padding: 0 6px;
+      background: none;
+      border: none;
       color: v.$text-color;
+      cursor: pointer;
+      font-size: 1rem;
       font-family: v.$font-style;
-      font-size: 0.85rem;
-      text-align: center;
 
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
+      &:hover {
+        color: rgba(v.$text-color, 0.6);
       }
     }
   }
-}
 
-.keyboard-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  h3 {
-    margin: 0;
-    color: v.$primary-color;
-    font-size: 1.2rem;
-    font-weight: 400;
+  .layout-creator-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
   }
 
-  .virtual-keyboard {
+  .no-layout {
+    text-align: center;
+    color: v.$text-color;
+    font-size: 1rem;
+    font-family: v.$font-style;
+    padding: 60px 20px;
     border: v.$border-style;
     border-radius: v.$border-radius;
-    padding: 20px;
     background-color: color.adjust(v.$background-dark, $lightness: -3%);
-    overflow-x: auto;
   }
 
-  .virtual-row {
+  .key-grid {
+    display: block !important;
+    position: relative;
+    width: fit-content;
+    margin: 0 auto;
+    flex-shrink: 0;
+    visibility: visible !important;
+    z-index: 1;
+  }
+
+  .key-row {
+    display: contents;
+  }
+
+  .key-btn {
     position: absolute;
-    left: 20px;
-    display: flex;
-    gap: 0;
-  }
-
-  .virtual-key {
+    padding: 4px;
     border: v.$border-style;
     border-radius: v.$border-radius;
     background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
+    color: v.$text-color;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     transition: all 0.2s ease;
+    box-sizing: border-box;
+    user-select: none;
+    text-align: center;
+    font-family: v.$font-style;
+    visibility: visible !important;
+    z-index: 2;
 
     &:hover {
       background: linear-gradient(to bottom, color.adjust(v.$background-dark, $lightness: 5%) 70%, color.adjust(v.$background-dark, $lightness: 15%) 100%);
     }
 
-    &.selected {
+    &.creator-key-selected {
       border-color: v.$accent-color;
-      box-shadow: 0 0 0 2px v.$accent-color;
+      box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
     }
 
     .key-label {
-      color: v.$text-color;
-      font-size: 0.75rem;
+      font-size: 0.85rem;
       font-weight: 300;
     }
   }
 
-  .key-editor {
-    border: v.$border-style;
-    border-radius: v.$border-radius;
-    padding: 16px;
-    background-color: color.adjust(v.$background-dark, $lightness: -3%);
+  .bottom-section {
+    display: flex;
+    flex: 1;
+    flex-shrink: 0;
+    gap: 10px;
+    position: relative;
+    margin-right: auto;
+    margin-left: auto;
+    margin-top: -50px;
+    justify-content: center;
+  }
 
-    h4 {
-      margin: 0 0 12px 0;
-      color: v.$primary-color;
-      font-size: 1rem;
-      font-weight: 400;
+  .parent {
+    display: flex;
+    gap: 10px;
+  }
+
+  .settings-panel {
+    width: 1425px;
+    padding: 20px;
+    border: 1px solid rgba(v.$text-color, 0.2);
+    border-radius: v.$border-radius;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  }
+
+  .settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .header-row {
+      h3 {
+        margin: 0;
+        color: v.$primary-color;
+        font-size: 1.2rem;
+        font-weight: 400;
+        font-family: v.$font-style;
+      }
     }
 
-    .editor-controls {
+    .input-row {
       display: flex;
       gap: 16px;
     }
 
-    .editor-item {
+    .input-group {
       display: flex;
       flex-direction: column;
       gap: 6px;
       flex: 1;
 
-      label {
+      .label {
         color: v.$text-color;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         font-weight: 300;
+        font-family: v.$font-style;
       }
 
-      select, input {
+      .text-input, .number-input, .select-input {
         padding: 6px 8px;
         background-color: color.adjust(v.$background-dark, $lightness: -5%);
         border: v.$border-style;
@@ -579,6 +579,69 @@ export default defineComponent({
         &:focus {
           outline: none;
           box-shadow: 0 0 0 2px rgba(v.$accent-color, 0.3);
+        }
+      }
+
+      .number-input {
+        text-align: center;
+        width: 80px;
+      }
+    }
+
+    .row-gap-section {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+
+      .row-gap-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+      }
+    }
+
+    .key-editor-section {
+      border-top: v.$border-style;
+      padding-top: 16px;
+
+      h4 {
+        margin: 0 0 12px 0;
+        color: v.$primary-color;
+        font-size: 1rem;
+        font-weight: 400;
+        font-family: v.$font-style;
+      }
+
+      .key-editor-controls {
+        display: flex;
+        gap: 16px;
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      padding-top: 16px;
+      border-top: v.$border-style;
+
+      .action-btn {
+        padding: 8px 16px;
+        background-color: color.adjust(v.$background-dark, $lightness: -100%);
+        color: v.$primary-color;
+        border: v.$border-style;
+        border-radius: v.$border-radius;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 400;
+        font-family: v.$font-style;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: color.adjust(v.$background-dark, $lightness: 10%);
+        }
+
+        &.cancel {
+          color: v.$text-color;
         }
       }
     }

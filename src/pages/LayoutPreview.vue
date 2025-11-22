@@ -4,9 +4,7 @@
     <div class="controls">
       <label for="layout-select">Select Layout: </label>
       <select v-model="selectedLayout" id="layout-select" @change="updateLayout">
-        <optgroup label="Standard Layouts">
-          <option v-for="layout in layouts" :key="layout" :value="layout">{{ `${layout}-key` }}</option>
-        </optgroup>
+        <option v-for="layout in layouts" :key="layout" :value="layout">{{ `${layout}-key` }}</option>
         <optgroup v-if="customLayouts.length > 0" label="Custom Layouts">
           <option v-for="layout in customLayouts" :key="layout.productName" :value="layout.productName">
             {{ layout.productName }}

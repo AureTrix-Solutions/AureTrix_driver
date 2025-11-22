@@ -4,7 +4,7 @@ export interface CustomLayoutConfig {
   productName: string;
   hasAxisList: boolean;
   keySizes: number[][];
-  gapsAfterCol: Record<number, Record<number, number>>[];
+  gapsAfterCol: Record<number, number>[];
   rowSpacing: number[];
   createdAt: number;
   updatedAt: number;
@@ -130,14 +130,84 @@ class LayoutStorageService {
     });
   }
 
+  private arrayToCompactSyntax(arr: number[]): string {
+    if (arr.length === 0) return '[]';
+
+    const segments: string[] = [];
+    let i = 0;
+
+    while (i < arr.length) {
+      const current = arr[i];
+      let count = 1;
+      
+      // Count consecutive identical values
+      while (i + count < arr.length && arr[i + count] === current) {
+        count++;
+      }
+
+      if (count >= 3) {
+        segments.push(`Array(${count}).fill(${current})`);
+        i += count;
+      } else {
+        for (let j = 0; j < count; j++) {
+          segments.push(String(current));
+        }
+        i += count;
+      }
+    }
+
+    if (segments.length === 1 && segments[0].startsWith('Array(')) {
+      return segments[0];
+    } else if (segments.every(s => !s.startsWith('Array('))) {
+      return `[${segments.join(', ')}]`;
+    } else {
+      const first = segments[0].startsWith('Array(') ? segments[0] : `[${segments[0]}]`;
+      if (segments.length === 1) return first;
+      
+      const rest = segments.slice(1).map(s => 
+        s.startsWith('Array(') ? s : s
+      );
+      return `${first}.concat(${rest.join(', ')})`;
+    }
+  }
+
+  private formatGapObject(gaps: Record<number, number>): string {
+    if (Object.keys(gaps).length === 0) return '{}';
+    const entries = Object.entries(gaps).map(([key, value]) => `${key}: ${value}`);
+    return `{ ${entries.join(', ')} }`;
+  }
+
   generateGitHubIssueLink(layout: CustomLayoutConfig): string {
     const keyCount = layout.keySizes.reduce((sum, row) => sum + row.length, 0);
     
-    const configCode = `  ${keyCount}: { // ${layout.productName}${layout.hasAxisList ? ' (Axis List Support)' : ''}
-    keySizes: ${JSON.stringify(layout.keySizes, null, 6).replace(/\n/g, '\n    ')},
-    gapsAfterCol: ${JSON.stringify(layout.gapsAfterCol, null, 6).replace(/\n/g, '\n    ')},
-    rowSpacing: ${JSON.stringify(layout.rowSpacing, null, 6).replace(/\n/g, '\n    ')},
-  },`;
+    // Generate compact keySizes
+    const keySizesCompact: string[] = layout.keySizes.map(row => {
+      return this.arrayToCompactSyntax(row);
+    });
+
+    // Generate compact gapsAfterCol
+    const allEmpty = layout.gapsAfterCol.every(g => Object.keys(g).length === 0);
+    let gapsAfterColCompact: string;
+    
+    if (allEmpty) {
+      gapsAfterColCompact = `Array(${layout.gapsAfterCol.length}).fill({})`;
+    } else {
+      const gapsStrings = layout.gapsAfterCol.map(g => this.formatGapObject(g));
+      gapsAfterColCompact = `[${gapsStrings.join(', ')}]`;
+    }
+
+    // Generate compact rowSpacing
+    const rowSpacingCompact = this.arrayToCompactSyntax(layout.rowSpacing);
+
+    // Build compact code wrapped in productName
+    const configCode = `"${layout.productName}": {
+  keySizes: [
+${keySizesCompact.map(row => `    ${row},`).join('\n')}
+  ],
+  gapsAfterCol: ${gapsAfterColCompact},
+  rowSpacing: ${rowSpacingCompact},
+  hasAxisList: ${layout.hasAxisList}
+}`;
 
     const issueTitle = `New Keyboard Layout: ${layout.productName}`;
     const issueBody = `## Keyboard Information
@@ -146,7 +216,7 @@ class LayoutStorageService {
 - **Axis List Support**: ${layout.hasAxisList ? 'Yes' : 'No'}
 
 ## Layout Configuration
-Add this to \`layoutConfigs.ts\`:
+Add this to \`communityLayout.ts\`:
 
 \`\`\`typescript
 ${configCode}
@@ -156,7 +226,7 @@ ${configCode}
 - Created: ${new Date(layout.createdAt).toLocaleDateString()}
 - Updated: ${new Date(layout.updatedAt).toLocaleDateString()}`;
 
-    const repoUrl = 'https://github.com/YOUR_USERNAME/YOUR_REPO/issues/new';
+    const repoUrl = 'https://github.com/auretrix/auretrix/issues/new';
     const encodedTitle = encodeURIComponent(issueTitle);
     const encodedBody = encodeURIComponent(issueBody);
     

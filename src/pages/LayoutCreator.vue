@@ -96,6 +96,7 @@
                 <button @click="saveLayout" class="action-btn">Save Layout</button>
                 <button @click="exportLayout" class="action-btn">Export JSON</button>
                 <button @click="exportCompactCode" class="action-btn">Export Compact Code</button>
+                <button @click="shareLayout" class="action-btn">Share</button>
                 <button @click="goBack" class="action-btn cancel">Cancel</button>
               </div>
             </div>
@@ -346,7 +347,7 @@ export default defineComponent({
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        rowSpacing.push(gap && gap > 0 ? gap : 1);
+        rowSpacing.push((gap || 0) + uToMm(1));
       }
 
       const layout = {
@@ -400,7 +401,7 @@ export default defineComponent({
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        rowSpacing.push(gap && gap > 0 ? gap : 1);
+        rowSpacing.push((gap || 0) + uToMm(1));
       }
 
       const layout = {
@@ -470,12 +471,12 @@ export default defineComponent({
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
-        rowSpacingArr.push(gap && gap > 0 ? gap : 1);
+        rowSpacingArr.push((gap || 0) + uToMm(1));
       }
       const rowSpacingCompact = arrayToCompactSyntax(rowSpacingArr);
 
-      // Build compact code
-      const compactCode = `{
+      // Build compact code wrapped in productName
+      const compactCode = `"${productName.value}": {
   keySizes: [
 ${keySizesCompact.map(row => `    ${row},`).join('\n')}
   ],
@@ -492,6 +493,53 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
         console.log('Compact Layout Code:\n', compactCode);
         notification.value = { message: 'Compact code logged to console!', isError: false };
       });
+    };
+
+    const shareLayout = () => {
+      if (!productName.value.trim()) {
+        notification.value = { message: 'Please enter a product name', isError: true };
+        return;
+      }
+
+      if (!virtualKeyboard.value.length) {
+        notification.value = { message: 'Please add rows to create a layout', isError: true };
+        return;
+      }
+
+      const keySizes: number[][] = virtualKeyboard.value.map(row => 
+        row.map(key => uToMm(key.size))
+      );
+
+      const gapsAfterCol = virtualKeyboard.value.map(row => {
+        const gaps: Record<number, number> = {};
+        row.forEach((key, idx) => {
+          if (key.gap > 0) {
+            gaps[idx] = key.gap;
+          }
+        });
+        return gaps;
+      });
+
+      const rowSpacing: number[] = [];
+      for (let i = 0; i < virtualKeyboard.value.length; i++) {
+        const actualGapIdx = getActualRowIndex(i);
+        const gap = rowGaps.value[actualGapIdx];
+        rowSpacing.push((gap || 0) + uToMm(1));
+      }
+
+      const layout = {
+        productName: productName.value,
+        hasAxisList: hasAxisList.value,
+        keySizes,
+        gapsAfterCol,
+        rowSpacing,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+
+      const githubUrl = LayoutStorageService.generateGitHubIssueLink(layout);
+      window.open(githubUrl, '_blank');
+      notification.value = { message: 'Opening GitHub issue page...', isError: false };
     };
 
     const goBack = () => {
@@ -514,6 +562,7 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
       saveLayout,
       exportLayout,
       exportCompactCode,
+      shareLayout,
       goBack,
       KEY_SIZES
     };

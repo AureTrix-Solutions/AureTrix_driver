@@ -30,18 +30,24 @@
         </template>
 
         <!-- Profile Quick Access Grid -->
-        <div class="profile-grid">
-          <button v-for="profile in profileStore.profiles" :key="profile.id" class="profile-btn"
-            :class="{ active: profileStore.activeProfileId === profile.id }" @click="handleProfileClick(profile.id)">
-            <input v-if="editingProfileId === profile.id" v-model="editingProfileName" @blur="finishEditing"
-              @keyup.enter="finishEditing" @keyup.esc="cancelEditing" class="profile-name-input"
-              :ref="`profileInput-${profile.id}`" @click.stop />
-            <span v-else class="profile-name">{{ profile.name }}</span>
-            <span v-if="editingProfileId !== profile.id" class="edit-icon" @click.stop="startEditing(profile.id)"
-              role="button" tabindex="0" @keyup.enter="startEditing(profile.id)" aria-label="Edit profile name">
-              ✏️
-            </span>
-          </button>
+        <div class="profiles-section">
+          <div class="profiles-header">
+            <span class="profiles-title">Profiles</span>
+            <div class="profiles-separator"></div>
+          </div>
+          <div class="profile-grid">
+            <button v-for="profile in profileStore.profiles" :key="profile.id" class="profile-btn"
+              :class="{ active: profileStore.activeProfileId === profile.id }" @click="handleProfileClick(profile.id)">
+              <input v-if="editingProfileId === profile.id" v-model="editingProfileName" @blur="finishEditing"
+                @keyup.enter="finishEditing" @keyup.esc="cancelEditing" class="profile-name-input"
+                :ref="`profileInput-${profile.id}`" @click.stop />
+              <span v-else class="profile-name">{{ profile.name }}</span>
+              <span v-if="editingProfileId !== profile.id" class="edit-icon" @click.stop="startEditing(profile.id)"
+                role="button" tabindex="0" @keyup.enter="startEditing(profile.id)" aria-label="Edit profile name">
+                ✏️
+              </span>
+            </button>
+          </div>
         </div>
         
         <!-- Profile Control Buttons -->
@@ -419,11 +425,33 @@ export default defineComponent({
   }
 }
 
+.profiles-section {
+  margin-top: 50px;
+}
+
+.profiles-header {
+  margin-bottom: 12px;
+}
+
+.profiles-title {
+  color: v.$text-color;
+  font-family: v.$font-style;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.profiles-separator {
+  height: 1px;
+  background: linear-gradient(to right, rgba(v.$text-color, 0.3), rgba(v.$text-color, 0.1));
+  border-radius: 1px;
+}
+
 .profile-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
-  margin-top: 50px;
 }
 
 .profile-btn {

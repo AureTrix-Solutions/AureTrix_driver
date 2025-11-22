@@ -226,7 +226,7 @@ ${configCode}
 - Created: ${new Date(layout.createdAt).toLocaleDateString()}
 - Updated: ${new Date(layout.updatedAt).toLocaleDateString()}`;
 
-    const repoUrl = 'https://github.com/auretrix/auretrix/issues/new';
+    const repoUrl = 'https://github.com/BlastHappy82/AureTrix_driver/issues/new';
     const encodedTitle = encodeURIComponent(issueTitle);
     const encodedBody = encodeURIComponent(issueBody);
     

@@ -12,8 +12,7 @@ export const KEY_SIZES: KeySize[] = [
   { units: 2, mm: 37, label: '2u (37mm)' },
   { units: 2.25, mm: 41.7, label: '2.25u (41.7mm)' },
   { units: 2.75, mm: 51.2, label: '2.75u (51.2mm)' },
-  { units: 6.25, mm: 117.7, label: '6.25u (117.7mm)' },
-  { units: 6.5, mm: 117, label: '6.5u (117mm)' }
+  { units: 6.25, mm: 117.7, label: '6.25u (117.7mm)' }
 ];
 
 export const KEY_SIZE_MAP = new Map<number, number>(

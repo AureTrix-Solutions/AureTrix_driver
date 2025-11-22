@@ -292,7 +292,11 @@ export default defineComponent({
       
       const systemModeResult = await KeyboardService.querySystemMode();
       if (!(systemModeResult instanceof Error)) {
-        console.log('System mode query results:', systemModeResult);
+        if (systemModeResult === 'win' || systemModeResult === 'mac') {
+          this.currentSystemMode = systemModeResult;
+        }
+      } else {
+        console.error('Failed to sync system mode from hardware:', systemModeResult.message);
       }
     },
     async handleProfileClick(profileId: number) {

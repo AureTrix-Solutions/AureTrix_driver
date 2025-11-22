@@ -1019,16 +1019,21 @@ class KeyboardService {
     }
   }
 
-  async querySystemMode(): Promise<{ win: any; mac: any } | Error> {
+  async querySystemMode(): Promise<'win' | 'mac' | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const winResult = await this.keyboard.getApi({ type: 'ORDER_TYPE_QUERY_WIN_MODEL' });
-      const macResult = await this.keyboard.getApi({ type: 'ORDER_TYPE_QUERY_MAC_MODEL' });
-      console.log('ORDER_TYPE_QUERY_WIN_MODEL result:', winResult);
-      console.log('ORDER_TYPE_QUERY_MAC_MODEL result:', macResult);
-      return { win: winResult, mac: macResult };
+      const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_QUERY_WIN_MODEL' });
+      if (result instanceof Error) return result;
+      if (!result || typeof result.currentSystem !== 'string') {
+        return new Error('Invalid system mode response from device');
+      }
+      const mode = result.currentSystem;
+      if (mode !== 'win' && mode !== 'mac') {
+        return new Error(`Unexpected system mode value: ${mode}`);
+      }
+      return mode;
     } catch (error) {
       console.error('Failed to query system mode:', error);
       return error as Error;

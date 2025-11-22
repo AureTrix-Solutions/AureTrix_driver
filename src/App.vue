@@ -99,7 +99,6 @@
     <div v-if="openQuickSettings === 'pollingRate'" class="flyout-menu" :style="{ top: quickSettingsFlyoutTop + 'px' }" @click.self="closeQuickSettings">
       <div class="flyout-content">
         <div class="quick-setting-item">
-          <label class="quick-setting-label">Polling Rate:</label>
           <select v-model.number="selectedPollingRate" @change="handlePollingRateChange" class="polling-rate-select">
             <option v-for="option in pollingRateOptions" :key="option.value" :value="option.value">
               {{ option.label }}
@@ -407,9 +406,10 @@ export default defineComponent({
   }
 
   &.router-link-active {
-    background-color: rgba($color: #a088242e, $alpha: 1.0);
-    color: rgba($color: #000000, $alpha: 1.0);
-    font-weight: bold;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+    color: v.$accent-color;
+    font-family: v.$font-style;
+    border-color: v.$accent-color;
   }
 }
 
@@ -419,6 +419,7 @@ export default defineComponent({
   justify-content: space-between;
   align-items: center;
   text-decoration: none;
+  font-family: v.$font-style;
   color: v.$primary-color;
   padding: 10px;
   border: 1px solid rgba(v.$text-color, 0.2);
@@ -445,8 +446,8 @@ export default defineComponent({
   top: 20px; // Base offset for sidebar padding
   width: 220px;
   height: auto;
-  min-height: 100px;
-  max-height: 500px;
+  min-height: 0px;
+  max-height:500px;
   overflow-y: auto;
   border: 1px solid rgba(v.$text-color, 0.2);
   background-color: color.adjust(v.$background-dark, $lightness: -100%);
@@ -473,7 +474,7 @@ export default defineComponent({
 .flyout-item {
   text-decoration: none;
   color: v.$primary-color;
-  padding: 8px 10px;
+  padding: 2px 5px;
   background-color: color.adjust(v.$background-dark, $lightness: -100%);
   border: 1px solid rgba(v.$text-color, 0.2);
   border-radius: v.$border-radius;
@@ -497,6 +498,7 @@ export default defineComponent({
   flex-direction: column;
   gap: 5px;
   margin-bottom: 15px;
+  font-family: v.$font-style;
 }
 
 .main-nav-separator-top {

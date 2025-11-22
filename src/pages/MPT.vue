@@ -1,7 +1,7 @@
 <template>
   <div class="page">
-    <h2>MPT</h2>
-    <p>MPT configuration will be added here.</p>
+    <h2>Multi-Point Trigger</h2>
+    <p>Multi-Point Trigger configuration will be added here.</p>
   </div>
 </template>
 

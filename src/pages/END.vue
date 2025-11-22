@@ -1,7 +1,7 @@
 <template>
   <div class="page">
-    <h2>END</h2>
-    <p>END configuration will be added here.</p>
+    <h2>End</h2>
+    <p>End configuration will be added here.</p>
   </div>
 </template>
 

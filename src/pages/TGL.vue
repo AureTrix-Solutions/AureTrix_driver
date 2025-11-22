@@ -1,7 +1,7 @@
 <template>
   <div class="page">
-    <h2>TGL</h2>
-    <p>TGL configuration will be added here.</p>
+    <h2>Toggle</h2>
+    <p>Toggle configuration will be added here.</p>
   </div>
 </template>
 

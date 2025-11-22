@@ -201,11 +201,11 @@ export default defineComponent({
         {
           name: 'Advanced',
           items: [
-            { name: 'DKS', path: '/dks' },
-            { name: 'MPT', path: '/mpt' },
-            { name: 'MT', path: '/mt' },
-            { name: 'TGL', path: '/tgl' },
-            { name: 'END', path: '/end' },
+            { name: 'Dynamic Key Stroke', path: '/dks' },
+            { name: 'Multi-Point Trigger', path: '/mpt' },
+            { name: 'Mod Tap', path: '/mt' },
+            { name: 'Toggle', path: '/tgl' },
+            { name: 'End', path: '/end' },
             { name: 'SOCD', path: '/socd' },
             { name: 'Macro', path: '/macro' },
             { name: 'Layout Preview', path: '/layout-preview' }

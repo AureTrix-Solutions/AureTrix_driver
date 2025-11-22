@@ -1,7 +1,7 @@
 <template>
   <div class="page">
-    <h2>MT</h2>
-    <p>MT configuration will be added here.</p>
+    <h2>Mod Tap</h2>
+    <p>Mod Tap configuration will be added here.</p>
   </div>
 </template>
 

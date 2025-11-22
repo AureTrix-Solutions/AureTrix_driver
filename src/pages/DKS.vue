@@ -1,7 +1,7 @@
 <template>
   <div class="page">
-    <h2>DKS</h2>
-    <p>DKS configuration will be added here.</p>
+    <h2>Dynamic Key Stroke</h2>
+    <p>Dynamic Key Stroke configuration will be added here.</p>
   </div>
 </template>
 

@@ -8,6 +8,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 22, 2025 - Console Error Filtering for Hardware Resets**
+- **SDK Error Suppression**: Implemented console.error filtering to hide benign SDK reconnection errors during polling rate changes and factory resets
+- **Smart Filtering**: Wrapper intercepts console.error calls and filters out "Failed to open the device" messages only when `isPollingRateChanging` or `isFactoryResetting` flags are true
+- **Context Preservation**: Uses `.apply(console, args)` to maintain native console binding, preventing "Illegal invocation" errors on Safari/WebKit browsers
+- **Conditional Restoration**: `restoreConsoleError()` only restores original console.error when BOTH flags are false, preventing premature restoration during back-to-back operations
+- **All Cleanup Paths**: Console restored in `handleConnect`, timeout fallback callbacks, and error catch blocks with proper flag checks
+- **User Experience**: Eliminates confusing "Failed to open the device" errors that appeared during successful reconnections; users see clean console output
+- **Result**: SDK's failed reconnection attempts are silently suppressed while our event-based reconnection succeeds without console noise
+
 **November 22, 2025 - Factory Reset with Auto-Reconnection**
 - **Factory Reset Button**: Added "Factory Reset" button to Quick Settings below System Mode
 - **Confirmation Modal**: Created FactoryResetModal component with clear warning about data loss

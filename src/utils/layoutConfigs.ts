@@ -26,7 +26,7 @@ const layoutMap: Record<number, LayoutConfig> = {
       Array(13).fill(18).concat(37), // row 0
       [27.4].concat(Array(12).fill(18), 27.4), // row 1
       [32.3].concat(Array(11).fill(18), 41.7), // row 2
-      [41.7].concat(Array(10).fill(18), 51.1), // row 3
+      [41.7].concat(Array(10).fill(18), 51.2), // row 3
       Array(3).fill(22.8).concat(117.7, Array(4).fill(22.8)), // row 4
     ],
     gapsAfterCol: Array(5).fill({}),
@@ -100,10 +100,10 @@ const layoutMap: Record<number, LayoutConfig> = {
     keySizes: [
       Array(16).fill(18), // row 0
       Array(13).fill(18).concat(37, Array(3).fill(18)), // row 1
-      [27.3].concat(Array(12).fill(18), 27.3, Array(3).fill(18)), // row 2
-      [32].concat(Array(11).fill(18), 41.7), // row 3
+      [27.4].concat(Array(12).fill(18), 27.4, Array(3).fill(18)), // row 2
+      [32.3].concat(Array(11).fill(18), 41.7), // row 3
       [41.7].concat(Array(10).fill(18), 51.2, 18), // row 4
-      Array(3).fill(22.8).concat(117.2, Array(4).fill(22.8), Array(3).fill(18)), // row 5
+      Array(3).fill(22.8).concat(117.7, Array(4).fill(22.8), Array(3).fill(18)), // row 5
     ],
     gapsAfterCol: [
       { 0: 19, 4: 10, 8: 9, 12: 9 },

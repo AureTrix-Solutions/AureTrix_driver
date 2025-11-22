@@ -79,15 +79,9 @@
                   <div class="input-group">
                     <div class="label">Size</div>
                     <select v-model.number="selectedKeyData.size" @change="updateSelectedKey" class="select-input">
-                      <option :value="1">1u</option>
-                      <option :value="1.25">1.25u</option>
-                      <option :value="1.5">1.5u</option>
-                      <option :value="1.75">1.75u</option>
-                      <option :value="2">2u</option>
-                      <option :value="2.25">2.25u</option>
-                      <option :value="2.75">2.75u</option>
-                      <option :value="6.25">6.25u</option>
-                      <option :value="6.5">6.5u</option>
+                      <option v-for="keySize in KEY_SIZES" :key="keySize.units" :value="keySize.units">
+                        {{ keySize.label }}
+                      </option>
                     </select>
                   </div>
                   <div class="input-group">
@@ -118,6 +112,7 @@ import { useRouter } from 'vue-router';
 import { useConnectionStore } from '@/store/connection';
 import LayoutStorageService from '@/services/LayoutStorageService';
 import KeyboardService from '@/services/KeyboardService';
+import { uToMm, KEY_SIZES } from '@/utils/keyUnits';
 
 interface VirtualKey {
   size: number;
@@ -141,7 +136,6 @@ export default defineComponent({
     const notification = ref<{ message: string; isError: boolean } | null>(null);
 
     const mmToPx = (mm: number) => mm * 4;
-    const uToMm = (u: number) => u * 18;
 
     onMounted(async () => {
       productName.value = connectionStore.deviceInfo?.productName || 'Custom Keyboard';
@@ -193,7 +187,7 @@ export default defineComponent({
 
       // Calculate top position
       for (let i = 0; i < rowIdx; i++) {
-        top += mmToPx(18);
+        top += mmToPx(uToMm(1));
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
         if (gap && gap > 0) {
@@ -234,7 +228,7 @@ export default defineComponent({
 
       let totalHeight = 0;
       for (let i = 0; i < virtualKeyboard.value.length; i++) {
-        totalHeight += mmToPx(18);
+        totalHeight += mmToPx(uToMm(1));
         const actualGapIdx = getActualRowIndex(i);
         const gap = rowGaps.value[actualGapIdx];
         if (gap && gap > 0) {
@@ -515,7 +509,8 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
       saveLayout,
       exportLayout,
       exportCompactCode,
-      goBack
+      goBack,
+      KEY_SIZES
     };
   }
 });

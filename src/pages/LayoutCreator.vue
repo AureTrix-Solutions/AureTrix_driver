@@ -27,11 +27,20 @@
                 <h3>Layout Configuration</h3>
               </div>
 
-              <!-- Product Name -->
+              <!-- Product Name and Load Saved -->
               <div class="input-row">
                 <div class="input-group">
                   <div class="label">Product Name</div>
                   <input v-model="productName" type="text" placeholder="Enter keyboard name" class="text-input" />
+                </div>
+                <div class="input-group">
+                  <div class="label">Load Saved Layout</div>
+                  <select v-model="selectedSavedLayout" @change="loadSelectedLayout" class="select-input">
+                    <option value="">-- Select a saved layout --</option>
+                    <option v-for="layout in savedLayouts" :key="layout.productName" :value="layout.productName">
+                      {{ layout.productName }}
+                    </option>
+                  </select>
                 </div>
               </div>
 
@@ -86,10 +95,11 @@
               <!-- Action Buttons -->
               <div class="action-buttons">
                 <button @click="saveLayout" class="action-btn">Save Layout</button>
-                <button @click="exportLayout" class="action-btn">Export JSON</button>
-                <button @click="exportCompactCode" class="action-btn">Export Compact Code</button>
+                <button @click="exportCompactCode" class="action-btn">Export Layout</button>
+                <button @click="importLayout" class="action-btn">Import Layout</button>
                 <button @click="shareLayout" class="action-btn">Share</button>
                 <button @click="goBack" class="action-btn cancel">Cancel</button>
+                <input ref="importFileInput" type="file" accept=".json,.txt" @change="handleImportFile" style="display: none" />
               </div>
             </div>
           </div>
@@ -128,8 +138,19 @@ export default defineComponent({
     const selectedKeys = ref<{ row: number; col: number }[]>([]);
     const selectedKeyData = ref<VirtualKey>({ size: 1, sizeMm: uToMm(1), gap: 0 });
     const notification = ref<{ message: string; isError: boolean } | null>(null);
+    const savedLayouts = ref<any[]>([]);
+    const selectedSavedLayout = ref('');
+    const importFileInput = ref<HTMLInputElement | null>(null);
 
     const mmToPx = (mm: number) => mm * 3.7795275591;
+
+    const loadSavedLayouts = async () => {
+      try {
+        savedLayouts.value = await LayoutStorageService.getAllLayouts();
+      } catch (error) {
+        console.warn('Failed to load saved layouts:', error);
+      }
+    };
 
     onMounted(async () => {
       productName.value = connectionStore.deviceInfo?.productName || 'Custom Keyboard';
@@ -142,6 +163,8 @@ export default defineComponent({
       } catch (error) {
         console.warn('Could not fetch axis list:', error);
       }
+
+      await loadSavedLayouts();
     });
 
     const generateVirtualKeyboard = () => {
@@ -380,16 +403,15 @@ export default defineComponent({
       try {
         await LayoutStorageService.saveLayout(layout);
         notification.value = { message: 'Layout saved successfully!', isError: false };
-        setTimeout(() => {
-          router.push('/layout-preview');
-        }, 1500);
+        // Reload saved layouts list after saving
+        await loadSavedLayouts();
       } catch (error) {
         console.error('Failed to save layout:', error);
         notification.value = { message: 'Failed to save layout. Please try again.', isError: true };
       }
     };
 
-    const exportLayout = () => {
+    const exportCompactCode = () => {
       if (!productName.value.trim()) {
         notification.value = { message: 'Please enter a product name', isError: true };
         return;
@@ -431,85 +453,19 @@ export default defineComponent({
         updatedAt: Date.now()
       };
 
-      LayoutStorageService.exportLayout(layout);
+      // Download as JSON file
+      const json = JSON.stringify(layout, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${productName.value.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_layout.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
       notification.value = { message: 'Layout exported successfully!', isError: false };
-    };
-
-    const exportCompactCode = () => {
-      if (!productName.value.trim()) {
-        notification.value = { message: 'Please enter a product name', isError: true };
-        return;
-      }
-
-      if (!virtualKeyboard.value.length) {
-        notification.value = { message: 'Please add rows to create a layout', isError: true };
-        return;
-      }
-
-      // Generate compact keySizes
-      const keySizesCompact: string[] = virtualKeyboard.value.map(row => {
-        const sizes = row.map(key => key.sizeMm); // Use actual mm value
-        return arrayToCompactSyntax(sizes);
-      });
-
-      // Generate gapsAfterCol
-      const gapsAfterColData = virtualKeyboard.value.map(row => {
-        const gaps: Record<number, number> = {};
-        row.forEach((key, idx) => {
-          if (key.gap > 0) {
-            gaps[idx] = key.gap;
-          }
-        });
-        return gaps;
-      });
-
-      // Helper to format gap object with numeric keys
-      const formatGapObject = (gaps: Record<number, number>): string => {
-        if (Object.keys(gaps).length === 0) return '{}';
-        const entries = Object.entries(gaps).map(([key, value]) => `${key}: ${value}`);
-        return `{ ${entries.join(', ')} }`;
-      };
-
-      // Check if all gapsAfterCol are empty
-      const allEmpty = gapsAfterColData.every(g => Object.keys(g).length === 0);
-      let gapsAfterColCompact: string;
-
-      if (allEmpty) {
-        // All empty - use Array.fill({})
-        gapsAfterColCompact = `Array(${gapsAfterColData.length}).fill({})`;
-      } else {
-        // Mixed - format each entry with numeric keys
-        const gapsStrings = gapsAfterColData.map(g => formatGapObject(g));
-        gapsAfterColCompact = `[${gapsStrings.join(', ')}]`;
-      }
-
-      // Generate rowSpacing
-      const rowSpacingArr: number[] = [];
-      for (let i = 0; i < virtualKeyboard.value.length; i++) {
-        const actualGapIdx = getActualRowIndex(i);
-        const gap = rowGaps.value[actualGapIdx];
-        rowSpacingArr.push((gap || 0) + uToMm(1) + 1); // User gap + key height + 1mm built-in spacing
-      }
-      const rowSpacingCompact = arrayToCompactSyntax(rowSpacingArr);
-
-      // Build compact code wrapped in productName
-      const compactCode = `"${productName.value}": {
-  keySizes: [
-${keySizesCompact.map(row => `    ${row},`).join('\n')}
-  ],
-  gapsAfterCol: ${gapsAfterColCompact},
-  rowSpacing: ${rowSpacingCompact},
-  hasAxisList: ${hasAxisList.value}
-}`;
-
-      // Copy to clipboard
-      navigator.clipboard.writeText(compactCode).then(() => {
-        notification.value = { message: 'Compact code copied to clipboard!', isError: false };
-      }).catch(() => {
-        // Fallback: show in console
-        console.log('Compact Layout Code:\n', compactCode);
-        notification.value = { message: 'Compact code logged to console!', isError: false };
-      });
     };
 
     const shareLayout = () => {
@@ -559,6 +515,120 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
       notification.value = { message: 'Opening GitHub issue page...', isError: false };
     };
 
+    const loadSelectedLayout = async () => {
+      if (!selectedSavedLayout.value) return;
+
+      try {
+        const layout = await LayoutStorageService.getLayout(selectedSavedLayout.value);
+        if (!layout) {
+          notification.value = { message: 'Layout not found', isError: true };
+          return;
+        }
+
+        // Populate the editor with the saved layout
+        productName.value = layout.productName;
+        hasAxisList.value = layout.hasAxisList || false;
+
+        // Reconstruct virtualKeyboard from keySizes and gapsAfterCol
+        const keyboard: VirtualKey[][] = [];
+        layout.keySizes.forEach((row: number[], rowIdx: number) => {
+          const vRow: VirtualKey[] = [];
+          row.forEach((sizeMm: number, colIdx: number) => {
+            const gap = layout.gapsAfterCol[rowIdx]?.[colIdx] || 0;
+            // Find closest preset size for UI
+            const closestPreset = KEY_SIZES.reduce((prev, curr) => {
+              return Math.abs(uToMm(curr.units) - sizeMm) < Math.abs(uToMm(prev.units) - sizeMm) ? curr : prev;
+            });
+            vRow.push({ size: closestPreset.units, sizeMm, gap });
+          });
+          keyboard.push(vRow);
+        });
+
+        virtualKeyboard.value = keyboard;
+
+        // Reconstruct rowCounts and rowGaps
+        const newRowCounts: (number | undefined)[] = [undefined, undefined, undefined, undefined, undefined, undefined];
+        const newRowGaps: (number | undefined)[] = [undefined, undefined, undefined, undefined, undefined, undefined];
+        
+        keyboard.forEach((row, idx) => {
+          newRowCounts[idx] = row.length;
+          // Extract user-defined gap from rowSpacing (rowSpacing = gap + uToMm(1) + 1)
+          const totalSpacing = layout.rowSpacing[idx] || 0;
+          newRowGaps[idx] = totalSpacing - uToMm(1) - 1;
+        });
+
+        rowCounts.value = newRowCounts;
+        rowGaps.value = newRowGaps;
+        selectedKeys.value = [];
+
+        notification.value = { message: 'Layout loaded successfully!', isError: false };
+      } catch (error) {
+        console.error('Failed to load layout:', error);
+        notification.value = { message: 'Failed to load layout', isError: true };
+      }
+    };
+
+    const importLayout = () => {
+      importFileInput.value?.click();
+    };
+
+    const handleImportFile = async (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const layout = JSON.parse(text);
+
+        // Validate layout structure
+        if (!layout.productName || !layout.keySizes || !layout.rowSpacing) {
+          notification.value = { message: 'Invalid layout file format', isError: true };
+          return;
+        }
+
+        // Same loading logic as loadSelectedLayout
+        productName.value = layout.productName;
+        hasAxisList.value = layout.hasAxisList || false;
+
+        const keyboard: VirtualKey[][] = [];
+        layout.keySizes.forEach((row: number[], rowIdx: number) => {
+          const vRow: VirtualKey[] = [];
+          row.forEach((sizeMm: number, colIdx: number) => {
+            const gap = layout.gapsAfterCol[rowIdx]?.[colIdx] || 0;
+            const closestPreset = KEY_SIZES.reduce((prev, curr) => {
+              return Math.abs(uToMm(curr.units) - sizeMm) < Math.abs(uToMm(prev.units) - sizeMm) ? curr : prev;
+            });
+            vRow.push({ size: closestPreset.units, sizeMm, gap });
+          });
+          keyboard.push(vRow);
+        });
+
+        virtualKeyboard.value = keyboard;
+
+        const newRowCounts: (number | undefined)[] = [undefined, undefined, undefined, undefined, undefined, undefined];
+        const newRowGaps: (number | undefined)[] = [undefined, undefined, undefined, undefined, undefined, undefined];
+        
+        keyboard.forEach((row, idx) => {
+          newRowCounts[idx] = row.length;
+          const totalSpacing = layout.rowSpacing[idx] || 0;
+          newRowGaps[idx] = totalSpacing - uToMm(1) - 1;
+        });
+
+        rowCounts.value = newRowCounts;
+        rowGaps.value = newRowGaps;
+        selectedKeys.value = [];
+
+        notification.value = { message: 'Layout imported successfully!', isError: false };
+      } catch (error) {
+        console.error('Failed to import layout:', error);
+        notification.value = { message: 'Failed to import layout file', isError: true };
+      }
+
+      // Reset file input
+      if (target) target.value = '';
+    };
+
     const goBack = () => {
       router.push('/layout-preview');
     };
@@ -571,6 +641,9 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
       selectedKeys,
       selectedKeyData,
       notification,
+      savedLayouts,
+      selectedSavedLayout,
+      importFileInput,
       gridStyle,
       generateVirtualKeyboard,
       getKeyStyle,
@@ -580,8 +653,10 @@ ${keySizesCompact.map(row => `    ${row},`).join('\n')}
       onSizePresetChange,
       updateSelectedKey,
       saveLayout,
-      exportLayout,
       exportCompactCode,
+      importLayout,
+      handleImportFile,
+      loadSelectedLayout,
       shareLayout,
       goBack,
       KEY_SIZES

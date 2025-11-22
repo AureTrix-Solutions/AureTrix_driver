@@ -249,7 +249,7 @@ export default defineComponent({
               path: '/macro',
               tooltip: 'Records and plays back a custom sequence of keystrokes, mouse actions, delays, and triggers on a single keypress. Supports complex combos, rapid commands, or repetitive tasks with precise timing control.'
             },
-            { name: 'Layout Preview', path: '/layout-preview' }
+            { name: 'Keyboard Creator', path: '/layout-creator' }
           ],
           isCategory: true
         },

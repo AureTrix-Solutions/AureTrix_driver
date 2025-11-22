@@ -11,9 +11,6 @@
           </option>
         </optgroup>
       </select>
-      <router-link to="/layout-creator" class="btn-create">Create New Layout</router-link>
-      <button @click="triggerImport" class="btn-import">Import Layout</button>
-      <input ref="fileInput" type="file" accept=".json" @change="handleFileImport" style="display: none" />
     </div>
     <div v-if="layout.length" class="key-grid" :style="gridStyle">
       <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
@@ -41,7 +38,6 @@ export default defineComponent({
     const selectedLayout = ref<number | string | null>(null); // Can be number or productName string
     const layouts = [61, 67, 68, 80, 82, 84, 87]; // Supported layouts
     const customLayouts = ref<CustomLayoutConfig[]>([]);
-    const fileInput = ref<HTMLInputElement | null>(null);
 
     const layoutData = ref<any>({ rows: 0, cols: 0, keyPositions: [], gaps: [] });
 
@@ -106,25 +102,6 @@ export default defineComponent({
       await updateLayout();
     };
 
-    const triggerImport = () => {
-      fileInput.value?.click();
-    };
-
-    const handleFileImport = async (event: Event) => {
-      const target = event.target as HTMLInputElement;
-      const file = target.files?.[0];
-      if (file) {
-        try {
-          await LayoutStorageService.importLayout(file);
-          await loadCustomLayouts();
-          await updateLayout();
-        } catch (error) {
-          console.error('Failed to import layout:', error);
-          alert('Failed to import layout. Please check the file format.');
-        }
-      }
-    };
-
     // Restore from localStorage on mount
     onMounted(async () => {
       await loadCustomLayouts();
@@ -155,9 +132,6 @@ export default defineComponent({
       gridStyle,
       getKeyStyle,
       updateLayout,
-      triggerImport,
-      handleFileImport,
-      fileInput,
     };
   },
 });

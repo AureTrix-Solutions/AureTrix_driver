@@ -78,6 +78,10 @@
             Polling Rate
             <span class="arrow" :class="{ open: openQuickSettings === 'pollingRate' }">></span>
           </div>
+          <div class="nav-item category-header" @click="handleQuickSettingsClick('systemMode', $event)">
+            System Mode
+            <span class="arrow" :class="{ open: openQuickSettings === 'systemMode' }">></span>
+          </div>
         </div>
       </nav>
       <p class="copyright">Copyright©2025 AureTrix</p>
@@ -95,12 +99,25 @@
       </div>
     </div>
 
-    <!-- Quick Settings Flyout -->
+    <!-- Quick Settings Flyout - Polling Rate -->
     <div v-if="openQuickSettings === 'pollingRate'" class="flyout-menu" :style="{ top: quickSettingsFlyoutTop + 'px' }" @click.self="closeQuickSettings">
       <div class="flyout-content">
         <div class="quick-setting-item">
-          <select v-model.number="selectedPollingRate" @change="handlePollingRateChange" class="polling-rate-select">
+          <select v-model.number="currentPollingRate" @change="handlePollingRateChange" class="polling-rate-select">
             <option v-for="option in pollingRateOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Settings Flyout - System Mode -->
+    <div v-if="openQuickSettings === 'systemMode'" class="flyout-menu" :style="{ top: quickSettingsFlyoutTop + 'px' }" @click.self="closeQuickSettings">
+      <div class="flyout-content">
+        <div class="quick-setting-item">
+          <select v-model="currentSystemMode" @change="handleSystemModeChange" class="polling-rate-select">
+            <option v-for="option in systemModeOptions" :key="option.value" :value="option.value">
               {{ option.label }}
             </option>
           </select>
@@ -120,9 +137,23 @@ import { defineComponent, computed, nextTick } from 'vue';
 import { RouterLink, RouterView } from 'vue-router';
 import { useConnectionStore } from './store/connection';
 import { useProfileStore } from './store/profileStore';
-import { usePollingRateStore, POLLING_RATE_OPTIONS } from './store/pollingRateStore';
 import KeyboardService from './services/KeyboardService';
 import ExportService from './services/ExportService';
+
+const POLLING_RATE_OPTIONS = [
+  { value: 0, label: '8KHz' },
+  { value: 1, label: '4KHz' },
+  { value: 2, label: '2KHz' },
+  { value: 3, label: '1KHz' },
+  { value: 4, label: '500Hz' },
+  { value: 5, label: '250Hz' },
+  { value: 6, label: '125Hz' },
+];
+
+const SYSTEM_MODE_OPTIONS = [
+  { value: 'win', label: 'Windows' },
+  { value: 'mac', label: 'Mac' },
+];
 
 export default defineComponent({
   name: 'App',
@@ -132,8 +163,7 @@ export default defineComponent({
   },
   setup() {
     const connectionStore = useConnectionStore();
-    const pollingRateStore = usePollingRateStore();
-    return { connectionStore, pollingRateStore };
+    return { connectionStore };
   },
   data() {
     return {
@@ -173,7 +203,10 @@ export default defineComponent({
       editingProfileName: '',
       openQuickSettings: null as string | null,
       quickSettingsFlyoutTop: 0,
-      pollingRateOptions: POLLING_RATE_OPTIONS
+      pollingRateOptions: POLLING_RATE_OPTIONS,
+      currentPollingRate: 0,
+      systemModeOptions: SYSTEM_MODE_OPTIONS,
+      currentSystemMode: 'win' as 'win' | 'mac'
     };
   },
   computed: {
@@ -188,12 +221,11 @@ export default defineComponent({
         typeof info.appVersion !== 'undefined' &&
         (typeof info.appVersion === 'string' || (info.appVersion instanceof Uint8Array && info.appVersion.length > 0));
     },
-    selectedPollingRate: {
-      get() {
-        return this.pollingRateStore.currentPollingRate;
-      },
-      set(value: number) {
-        this.pollingRateStore.currentPollingRate = value;
+  },
+  watch: {
+    'connectionStore.isConnected'(newVal) {
+      if (newVal) {
+        this.syncHardwareSettings();
       }
     }
   },
@@ -216,7 +248,7 @@ export default defineComponent({
         return;
       }
       const target = event.currentTarget as HTMLElement;
-      this.flyoutTop = target.offsetTop - 50;
+      this.flyoutTop = target.offsetTop - 35;
       this.openCategory = item;
     },
     closeCategory() {
@@ -228,16 +260,39 @@ export default defineComponent({
         return;
       }
       const target = event.currentTarget as HTMLElement;
-      this.quickSettingsFlyoutTop = target.offsetTop - 50;
+      this.quickSettingsFlyoutTop = target.offsetTop - 20;
       this.openQuickSettings = setting;
     },
     closeQuickSettings() {
       this.openQuickSettings = null;
     },
     async handlePollingRateChange() {
-      const result = await this.pollingRateStore.setPollingRate(this.selectedPollingRate);
-      if (!result.success) {
-        console.error('Failed to set polling rate:', result.error);
+      if (this.currentPollingRate < 0 || this.currentPollingRate > 6) {
+        console.error('Invalid polling rate value');
+        return;
+      }
+      const result = await KeyboardService.setPollingRate(this.currentPollingRate);
+      if (result instanceof Error) {
+        console.error('Failed to set polling rate:', result.message);
+      }
+    },
+    async handleSystemModeChange() {
+      const result = await KeyboardService.setSystemMode(this.currentSystemMode);
+      if (result instanceof Error) {
+        console.error('Failed to set system mode:', result.message);
+      }
+    },
+    async syncHardwareSettings() {
+      const pollingRateResult = await KeyboardService.getPollingRate();
+      if (!(pollingRateResult instanceof Error)) {
+        if (typeof pollingRateResult === 'number' && pollingRateResult >= 0 && pollingRateResult <= 6) {
+          this.currentPollingRate = pollingRateResult;
+        }
+      }
+      
+      const systemModeResult = await KeyboardService.querySystemMode();
+      if (!(systemModeResult instanceof Error)) {
+        console.log('System mode query results:', systemModeResult);
       }
     },
     async handleProfileClick(profileId: number) {

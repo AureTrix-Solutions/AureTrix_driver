@@ -1035,6 +1035,36 @@ class KeyboardService {
     }
   }
 
+  async querySystemMode(): Promise<{ win: any; mac: any } | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const winResult = await this.keyboard.getApi({ type: 'ORDER_TYPE_QUERY_WIN_MODEL' });
+      const macResult = await this.keyboard.getApi({ type: 'ORDER_TYPE_QUERY_MAC_MODEL' });
+      console.log('ORDER_TYPE_QUERY_WIN_MODEL result:', winResult);
+      console.log('ORDER_TYPE_QUERY_MAC_MODEL result:', macResult);
+      return { win: winResult, mac: macResult };
+    } catch (error) {
+      console.error('Failed to query system mode:', error);
+      return error as Error;
+    }
+  }
+
+  async setSystemMode(mode: 'win' | 'mac'): Promise<any | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.keyboard.switchSystemMode(mode);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error('Failed to set system mode:', error);
+      return error as Error;
+    }
+  }
+
   exportConfig(data: any, filename: string): void {
     if (!this.connectedDevice) {
       throw new Error('No device connected');

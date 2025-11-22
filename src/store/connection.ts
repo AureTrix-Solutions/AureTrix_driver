@@ -62,11 +62,6 @@ export const useConnectionStore = defineStore('connection', {
           // Sync active profile from hardware
           const profileStore = useProfileStore();
           await profileStore.syncActiveProfileFromHardware();
-          
-          // Sync polling rate from hardware
-          const { usePollingRateStore } = await import('./pollingRateStore');
-          const pollingRateStore = usePollingRateStore();
-          await pollingRateStore.syncPollingRateFromHardware();
         } else {
           this.status = 'No compatible device found.';
         }
@@ -99,11 +94,6 @@ export const useConnectionStore = defineStore('connection', {
       // Sync active profile from hardware
       const profileStore = useProfileStore();
       await profileStore.syncActiveProfileFromHardware();
-      
-      // Sync polling rate from hardware
-      const { usePollingRateStore } = await import('./pollingRateStore');
-      const pollingRateStore = usePollingRateStore();
-      await pollingRateStore.syncPollingRateFromHardware();
     },
   },
 });

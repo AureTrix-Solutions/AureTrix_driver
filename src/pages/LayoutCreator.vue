@@ -26,13 +26,13 @@
           <button @click="importLayout" class="select-btn">Import Layout</button>
           <button @click="shareLayout" class="select-btn">Share</button>
           <button @click="clearSelection" class="select-btn">Clear Selection</button>
-          <button @click="goBack" class="select-btn cancel">Cancel</button>
+          <button @click="goBack" class="select-btn">Cancel</button>
           <input ref="importFileInput" type="file" accept=".json,.txt" @change="handleImportFile" style="display: none" />
         </div>
         <div class="parent">
           <div class="settings-panel">
+            <!-- Product Name and Load Saved -->
             <div class="settings-section">
-              <!-- Product Name and Load Saved -->
               <div class="input-row">
                 <div class="input-group">
                   <div class="label">Product Name</div>
@@ -48,54 +48,54 @@
                   </select>
                 </div>
               </div>
+            </div>
 
-              <!-- Row Keycount/Gap Section -->
-              <div class="row-gap-section">
-                <div class="header-row">
-                  <h3>Row Keycount/Gap</h3>
-                </div>
-                <!-- Row Counts Row -->
-                <div class="row-inputs-row">
-                  <div v-for="i in 6" :key="`row-${i}`" class="input-group">
-                    <div class="label">Row{{ i - 1 }}</div>
-                    <input v-model.number="rowCounts[i - 1]" type="number" min="0" placeholder="0"
-                      @input="generateVirtualKeyboard" class="number-input" />
-                  </div>
-                </div>
-                <!-- Gap Inputs Row -->
-                <div class="gap-inputs-row">
-                  <div v-for="i in 6" :key="`gap-${i}`" class="input-group">
-                    <div class="label">Gap{{ i - 1 }} (mm)</div>
-                    <input v-model.number="rowGaps[i - 1]" type="number" min="0" step="0.1" placeholder="0"
-                      class="number-input" />
-                  </div>
+            <!-- Row Keycount/Gap Section -->
+            <div class="settings-section">
+              <div class="header-row">
+                <h3>Row Keycount/Gap</h3>
+              </div>
+              <!-- Row Counts Row -->
+              <div class="row-inputs-row">
+                <div v-for="i in 6" :key="`row-${i}`" class="input-group">
+                  <div class="label">Row{{ i - 1 }}</div>
+                  <input v-model.number="rowCounts[i - 1]" type="number" min="0" placeholder="0"
+                    @input="generateVirtualKeyboard" class="number-input" />
                 </div>
               </div>
-
-              <!-- Edit Keys Section -->
-              <div class="key-editor-section">
-                <div class="header-row">
-                  <h3>Edit Keys ({{ selectedKeys.length }} selected)</h3>
+              <!-- Gap Inputs Row -->
+              <div class="gap-inputs-row">
+                <div v-for="i in 6" :key="`gap-${i}`" class="input-group">
+                  <div class="label">Gap{{ i - 1 }} (mm)</div>
+                  <input v-model.number="rowGaps[i - 1]" type="number" min="0" step="0.1" placeholder="0"
+                    class="number-input" />
                 </div>
-                <div class="key-editor-controls">
-                  <div class="input-group">
-                    <div class="label">Size (Preset)</div>
-                    <select v-model.number="selectedKeyData.size" @change="onSizePresetChange" class="select-input">
-                      <option v-for="keySize in KEY_SIZES" :key="keySize.units" :value="keySize.units">
-                        {{ keySize.label }}
-                      </option>
-                    </select>
-                  </div>
-                  <div class="input-group">
-                    <div class="label">Size (mm)</div>
-                    <input v-model.number="selectedKeyData.sizeMm" type="number" min="0" step="0.1"
-                      @input="updateSelectedKey" class="number-input" />
-                  </div>
-                  <div class="input-group">
-                    <div class="label">Gap After (mm)</div>
-                    <input v-model.number="selectedKeyData.gap" type="number" min="0" step="0.1"
-                      @input="updateSelectedKey" class="number-input" />
-                  </div>
+              </div>
+            </div>
+
+            <!-- Edit Keys Section -->
+            <div class="settings-section">
+              <div class="header-row">
+                <h3>Edit Keys ({{ selectedKeys.length }} selected)</h3>
+              </div>
+              <div class="key-editor-controls">
+                <div class="input-group">
+                  <div class="label">Size (Preset)</div>
+                  <select v-model.number="selectedKeyData.size" @change="onSizePresetChange" class="select-input">
+                    <option v-for="keySize in KEY_SIZES" :key="keySize.units" :value="keySize.units">
+                      {{ keySize.label }}
+                    </option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <div class="label">Size (mm)</div>
+                  <input v-model.number="selectedKeyData.sizeMm" type="number" min="0" step="0.1"
+                    @input="updateSelectedKey" class="number-input" />
+                </div>
+                <div class="input-group">
+                  <div class="label">Gap After (mm)</div>
+                  <input v-model.number="selectedKeyData.gap" type="number" min="0" step="0.1"
+                    @input="updateSelectedKey" class="number-input" />
                 </div>
               </div>
             </div>
@@ -780,7 +780,7 @@ export default defineComponent({
     position: relative;
     margin-right: auto;
     margin-left: auto;
-    margin-top: -50px;
+    margin-top: 20px;
     justify-content: center;
   }
 
@@ -806,10 +806,6 @@ export default defineComponent({
       &:hover {
         background-color: color.adjust(v.$background-dark, $lightness: 10%);
       }
-
-      &.cancel {
-        color: v.$text-color;
-      }
     }
   }
 
@@ -827,15 +823,18 @@ export default defineComponent({
   }
 
   .settings-section {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    flex-shrink: 0;
+    border: 1px solid rgba(v.$text-color, 0.2);
+    padding: 15px;
+    margin-bottom: 10px;
 
     .header-row {
+      margin-bottom: 16px;
+
       h3 {
         margin: 0;
         color: v.$primary-color;
-        font-size: 1.2rem;
+        font-size: 1.5rem;
         font-weight: 400;
         font-family: v.$font-style;
       }
@@ -881,51 +880,17 @@ export default defineComponent({
       }
     }
 
-    .row-gap-section {
-      border-top: v.$border-style;
-      padding-top: 16px;
-
-      .header-row {
-        margin-bottom: 12px;
-
-        h3 {
-          margin: 0;
-          color: v.$primary-color;
-          font-size: 1.5rem;
-          font-weight: 400;
-          font-family: v.$font-style;
-        }
-      }
-
-      .row-inputs-row,
-      .gap-inputs-row {
-        display: flex;
-        gap: 12px;
-        justify-content: flex-start;
-        margin-bottom: 12px;
-      }
+    .row-inputs-row,
+    .gap-inputs-row {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-start;
+      margin-bottom: 12px;
     }
 
-    .key-editor-section {
-      border-top: v.$border-style;
-      padding-top: 16px;
-
-      .header-row {
-        margin-bottom: 12px;
-
-        h3 {
-          margin: 0;
-          color: v.$primary-color;
-          font-size: 1.5rem;
-          font-weight: 400;
-          font-family: v.$font-style;
-        }
-      }
-
-      .key-editor-controls {
-        display: flex;
-        gap: 16px;
-      }
+    .key-editor-controls {
+      display: flex;
+      gap: 16px;
     }
   }
 }

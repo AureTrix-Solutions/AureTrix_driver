@@ -57,6 +57,7 @@
         <button class="import-btn" @click="importProfile" :disabled="!connectionStore.isConnected">
           Import Profile
         </button>
+        <div class="import-separator"></div>
       </nav>
       <p class="copyright">Copyright©2025 AureTrix</p>
     </aside>
@@ -542,6 +543,13 @@ export default defineComponent({
     opacity: 0.4;
     cursor: not-allowed;
   }
+}
+
+.import-separator {
+  height: 1px;
+  background: linear-gradient(to right, rgba(v.$text-color, 0.3), rgba(v.$text-color, 0.1));
+  border-radius: 1px;
+  margin-top: 15px;
 }
 
 @keyframes slideInRight {

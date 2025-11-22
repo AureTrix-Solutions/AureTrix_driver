@@ -40,11 +40,8 @@ export const useProfileStore = defineStore('profiles', {
       return { success: true };
     },
     async syncActiveProfileFromHardware(): Promise<void> {
-      console.log('syncActiveProfileFromHardware called');
       const profileId = await KeyboardService.getActiveProfile();
-      console.log('Received profile ID from hardware:', profileId);
       if (!(profileId instanceof Error)) {
-        console.log('Setting activeProfileId to:', profileId);
         this.activeProfileId = profileId;
       }
     },

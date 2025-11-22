@@ -20,13 +20,18 @@
         <p>Enter row counts below to generate virtual keyboard</p>
       </div>
       <div class="bottom-section">
+        <div class="selection-buttons">
+          <button @click="saveLayout" class="select-btn">Save Layout</button>
+          <button @click="exportCompactCode" class="select-btn">Export Layout</button>
+          <button @click="importLayout" class="select-btn">Import Layout</button>
+          <button @click="shareLayout" class="select-btn">Share</button>
+          <button @click="clearSelection" class="select-btn">Clear Selection</button>
+          <button @click="goBack" class="select-btn cancel">Cancel</button>
+          <input ref="importFileInput" type="file" accept=".json,.txt" @change="handleImportFile" style="display: none" />
+        </div>
         <div class="parent">
           <div class="settings-panel">
             <div class="settings-section">
-              <div class="header-row">
-                <h3>Layout Configuration</h3>
-              </div>
-
               <!-- Product Name and Load Saved -->
               <div class="input-row">
                 <div class="input-group">
@@ -44,8 +49,11 @@
                 </div>
               </div>
 
-              <!-- Row Counts and Gaps - Horizontal Layout -->
+              <!-- Row Keycount/Gap Section -->
               <div class="row-gap-section">
+                <div class="header-row">
+                  <h3>Row Keycount/Gap</h3>
+                </div>
                 <!-- Row Counts Row -->
                 <div class="row-inputs-row">
                   <div v-for="i in 6" :key="`row-${i}`" class="input-group">
@@ -64,11 +72,10 @@
                 </div>
               </div>
 
-              <!-- Key Editor -->
+              <!-- Edit Keys Section -->
               <div class="key-editor-section">
-                <div class="editor-header">
-                  <h4>Edit Keys ({{ selectedKeys.length }} selected)</h4>
-                  <button @click="clearSelection" class="clear-selection-btn">Clear Selection</button>
+                <div class="header-row">
+                  <h3>Edit Keys ({{ selectedKeys.length }} selected)</h3>
                 </div>
                 <div class="key-editor-controls">
                   <div class="input-group">
@@ -90,16 +97,6 @@
                       @input="updateSelectedKey" class="number-input" />
                   </div>
                 </div>
-              </div>
-
-              <!-- Action Buttons -->
-              <div class="action-buttons">
-                <button @click="saveLayout" class="action-btn">Save Layout</button>
-                <button @click="exportCompactCode" class="action-btn">Export Layout</button>
-                <button @click="importLayout" class="action-btn">Import Layout</button>
-                <button @click="shareLayout" class="action-btn">Share</button>
-                <button @click="goBack" class="action-btn cancel">Cancel</button>
-                <input ref="importFileInput" type="file" accept=".json,.txt" @change="handleImportFile" style="display: none" />
               </div>
             </div>
           </div>
@@ -783,8 +780,37 @@ export default defineComponent({
     position: relative;
     margin-right: auto;
     margin-left: auto;
-    margin-top: 20px;
+    margin-top: -50px;
     justify-content: center;
+  }
+
+  .selection-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .select-btn {
+      padding: 8px 8px;
+      background-color: color.adjust(v.$background-dark, $lightness: -100%);
+      color: v.$accent-color;
+      border: v.$border-style;
+      border-radius: v.$border-radius;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 400;
+      transition: background-color 0.2s ease;
+      width: 120px;
+      text-align: center;
+      font-family: v.$font-style;
+
+      &:hover {
+        background-color: color.adjust(v.$background-dark, $lightness: 10%);
+      }
+
+      &.cancel {
+        color: v.$text-color;
+      }
+    }
   }
 
   .parent {
@@ -856,15 +882,27 @@ export default defineComponent({
     }
 
     .row-gap-section {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      border-top: v.$border-style;
+      padding-top: 16px;
+
+      .header-row {
+        margin-bottom: 12px;
+
+        h3 {
+          margin: 0;
+          color: v.$primary-color;
+          font-size: 1.5rem;
+          font-weight: 400;
+          font-family: v.$font-style;
+        }
+      }
 
       .row-inputs-row,
       .gap-inputs-row {
         display: flex;
         gap: 12px;
         justify-content: flex-start;
+        margin-bottom: 12px;
       }
     }
 
@@ -872,76 +910,21 @@ export default defineComponent({
       border-top: v.$border-style;
       padding-top: 16px;
 
-      .editor-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+      .header-row {
         margin-bottom: 12px;
 
-        h4 {
+        h3 {
           margin: 0;
           color: v.$primary-color;
-          font-size: 1rem;
+          font-size: 1.5rem;
           font-weight: 400;
           font-family: v.$font-style;
         }
-
-        .clear-selection-btn {
-          padding: 4px 12px;
-          font-size: 0.85rem;
-          font-family: v.$font-style;
-          border-radius: v.$border-radius;
-          background-color: rgba(v.$primary-color, 0.1);
-          color: v.$primary-color;
-          border: 1px solid v.$primary-color;
-          cursor: pointer;
-          transition: all 0.2s;
-
-          &:hover {
-            background-color: rgba(v.$primary-color, 0.2);
-          }
-        }
-      }
-
-      h4 {
-        margin: 0 0 12px 0;
-        color: v.$primary-color;
-        font-size: 1rem;
-        font-weight: 400;
-        font-family: v.$font-style;
       }
 
       .key-editor-controls {
         display: flex;
         gap: 16px;
-      }
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-      padding-top: 16px;
-      border-top: v.$border-style;
-
-      .action-btn {
-        padding: 8px 16px;
-        background-color: color.adjust(v.$background-dark, $lightness: -100%);
-        color: v.$primary-color;
-        border: v.$border-style;
-        border-radius: v.$border-radius;
-        cursor: pointer;
-        font-size: 0.9rem;
-        font-weight: 400;
-        font-family: v.$font-style;
-        transition: background-color 0.2s ease;
-
-        &:hover {
-          background-color: color.adjust(v.$background-dark, $lightness: 10%);
-        }
-
-        &.cancel {
-          color: v.$text-color;
-        }
       }
     }
   }

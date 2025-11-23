@@ -12,6 +12,8 @@ class KeyboardService {
   private pollingRateTimeout: ReturnType<typeof setTimeout> | null = null;
   private isFactoryResetting: boolean = false;
   private factoryResetTimeout: ReturnType<typeof setTimeout> | null = null;
+  private isReconnecting: boolean = false;
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private originalConsoleError: typeof console.error | null = null;
 
   // Initialization
@@ -54,7 +56,7 @@ class KeyboardService {
     this.originalConsoleError = console.error;
     console.error = (...args: any[]) => {
       const message = args.join(' ');
-      if ((this.isPollingRateChanging || this.isFactoryResetting) && 
+      if ((this.isPollingRateChanging || this.isFactoryResetting || this.isReconnecting) && 
           message.includes('Failed to open the device')) {
         return;
       }
@@ -63,7 +65,7 @@ class KeyboardService {
   }
 
   private restoreConsoleError(): void {
-    if (!this.isPollingRateChanging && !this.isFactoryResetting && this.originalConsoleError) {
+    if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting && this.originalConsoleError) {
       console.error = this.originalConsoleError;
       this.originalConsoleError = null;
     }
@@ -177,7 +179,8 @@ class KeyboardService {
     }
   }
 
-  private handleConnect = (event: HIDConnectionEvent): void => {
+  private handleConnect = async (event: HIDConnectionEvent): Promise<void> => {
+    // Clear any existing operation timeouts
     if (this.isPollingRateChanging) {
       if (this.pollingRateTimeout) {
         clearTimeout(this.pollingRateTimeout);
@@ -192,10 +195,35 @@ class KeyboardService {
       }
       this.isFactoryResetting = false;
     }
-    if (!this.isPollingRateChanging && !this.isFactoryResetting) {
+    if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting) {
       this.restoreConsoleError();
     }
-    this.autoConnect();
+    
+    // Suppress SDK reconnection errors and attempt auto-connect
+    this.suppressSDKReconnectError();
+    this.isReconnecting = true;
+    
+    // Set a timeout to ensure we don't stay in reconnecting mode forever
+    this.reconnectTimeout = setTimeout(() => {
+      if (this.isReconnecting) {
+        console.warn('Reconnection timeout - cleaning up reconnection state');
+        this.isReconnecting = false;
+        this.reconnectTimeout = null;
+        this.restoreConsoleError();
+      }
+    }, 5000);
+    
+    try {
+      await this.autoConnect();
+    } finally {
+      // Clear reconnecting state after autoConnect completes
+      this.isReconnecting = false;
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = null;
+      }
+      this.restoreConsoleError();
+    }
   }
 
   private handleDisconnect = (event: HIDConnectionEvent): void => {

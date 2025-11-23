@@ -28,9 +28,6 @@
           <button @click="goBack" class="select-btn">Cancel</button>
           <input ref="importFileInput" type="file" accept=".json,.txt" @change="handleImportFile" style="display: none" />
         </div>
-        <div v-if="isCommunityLayoutExists" class="share-disabled-message">
-          A community layout already exists for "{{ productName }}". You can save custom modifications locally using Save Layout.
-        </div>
         <div class="parent">
           <div class="settings-panel">
             <!-- Product Name and Load Saved -->
@@ -104,6 +101,9 @@
             </div>
           </div>
         </div>
+      </div>
+      <div v-if="isCommunityLayoutExists" class="share-disabled-message">
+        A community layout already exists for "{{ productName }}". You can save custom modifications locally using Save Layout.
       </div>
     </div>
   </div>

@@ -59,7 +59,7 @@
                 <div v-for="i in 6" :key="`row-${i}`" class="input-group">
                   <div class="label">Row{{ i - 1 }}</div>
                   <input v-model.number="rowCounts[i - 1]" type="number" min="0" placeholder="0"
-                    @input="generateVirtualKeyboard" class="number-input" />
+                    class="number-input" />
                 </div>
               </div>
               <!-- Gap Inputs Row -->
@@ -107,7 +107,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
+import { defineComponent, ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useConnectionStore } from '@/store/connection';
 import LayoutStorageService from '@/services/LayoutStorageService';
@@ -131,6 +131,7 @@ export default defineComponent({
     const rowCounts = ref<(number | undefined)[]>([undefined, undefined, undefined, undefined, undefined, undefined]);
     const rowGaps = ref<(number | undefined)[]>([undefined, undefined, undefined, undefined, undefined, undefined]);
     const virtualKeyboard = ref<VirtualKey[][]>([]);
+    const previousRowCounts = ref<(number | undefined)[]>([undefined, undefined, undefined, undefined, undefined, undefined]);
 
     const selectedKeys = ref<{ row: number; col: number }[]>([]);
     const selectedKeyData = ref<VirtualKey>({ size: 1, sizeMm: uToMm(1), gap: 0 });
@@ -165,14 +166,37 @@ export default defineComponent({
     });
 
     const generateVirtualKeyboard = () => {
-      const keyboard: VirtualKey[][] = [];
+      const oldKeyboard = virtualKeyboard.value;
+      
+      // Build a map from actual row index to old virtual keyboard row
+      // using the PREVIOUS rowCounts snapshot
+      const oldRowMap = new Map<number, VirtualKey[]>();
+      let oldVirtualRowIdx = 0;
+      for (let i = 0; i < previousRowCounts.value.length; i++) {
+        const count = previousRowCounts.value[i];
+        if (count && count > 0 && oldVirtualRowIdx < oldKeyboard.length) {
+          oldRowMap.set(i, oldKeyboard[oldVirtualRowIdx]);
+          oldVirtualRowIdx++;
+        }
+      }
 
+      // Build new keyboard using CURRENT rowCounts, preserving data by actual row index
+      const keyboard: VirtualKey[][] = [];
       for (let i = 0; i < rowCounts.value.length; i++) {
         const count = rowCounts.value[i];
         if (count && count > 0) {
           const row: VirtualKey[] = [];
+          const oldRow = oldRowMap.get(i); // Get old data for this actual row index
+          
           for (let j = 0; j < count; j++) {
-            row.push({ size: 1, sizeMm: uToMm(1), gap: 0 }); // Default 1u from keyUnits.ts
+            const existingKey = oldRow?.[j];
+            if (existingKey) {
+              // Copy existing key data from the same actual row position
+              row.push({ ...existingKey });
+            } else {
+              // Create new default key for new positions
+              row.push({ size: 1, sizeMm: uToMm(1), gap: 0 });
+            }
           }
           keyboard.push(row);
         }
@@ -180,7 +204,19 @@ export default defineComponent({
 
       virtualKeyboard.value = keyboard;
       selectedKeys.value = [];
+      
+      // Update snapshot for next change
+      previousRowCounts.value = [...rowCounts.value];
     };
+
+    // Watch rowCounts for changes and regenerate keyboard while preserving existing key data
+    watch(
+      rowCounts,
+      () => {
+        generateVirtualKeyboard();
+      },
+      { deep: true }
+    );
 
     const getActualRowIndex = (virtualRowIdx: number): number => {
       let count = 0;
@@ -557,6 +593,9 @@ export default defineComponent({
         rowCounts.value = newRowCounts;
         rowGaps.value = newRowGaps;
         selectedKeys.value = [];
+        
+        // Update snapshot to prevent watcher from wiping loaded data
+        previousRowCounts.value = [...newRowCounts];
 
         notification.value = { message: 'Layout loaded successfully!', isError: false };
       } catch (error) {
@@ -615,6 +654,9 @@ export default defineComponent({
         rowCounts.value = newRowCounts;
         rowGaps.value = newRowGaps;
         selectedKeys.value = [];
+        
+        // Update snapshot to prevent watcher from wiping imported data
+        previousRowCounts.value = [...newRowCounts];
 
         notification.value = { message: 'Layout imported successfully!', isError: false };
       } catch (error) {

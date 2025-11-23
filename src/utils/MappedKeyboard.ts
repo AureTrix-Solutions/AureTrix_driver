@@ -3,8 +3,7 @@ import KeyboardService from '@services/KeyboardService';
 import { getLayoutConfig } from '@utils/layoutConfigs';
 import type { IDefKeyInfo } from '../types/types';
 import { useConnectionStore } from '../store/connection';
-
-const mmToPx = (mm: number) => Math.round(mm * 4);
+import { mmToPx } from '@utils/keyUnits';
 
 export function useMappedKeyboard(layerIndex: Ref<number | null>) {
   const connectionStore = useConnectionStore();

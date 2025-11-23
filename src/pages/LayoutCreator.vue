@@ -112,7 +112,7 @@ import { useRouter } from 'vue-router';
 import { useConnectionStore } from '@/store/connection';
 import LayoutStorageService from '@/services/LayoutStorageService';
 import KeyboardService from '@/services/KeyboardService';
-import { uToMm, KEY_SIZES } from '@/utils/keyUnits';
+import { uToMm, KEY_SIZES, mmToPx } from '@/utils/keyUnits';
 
 interface VirtualKey {
   size: number; // units (1, 1.25, 2, etc.)
@@ -139,8 +139,6 @@ export default defineComponent({
     const savedLayouts = ref<any[]>([]);
     const selectedSavedLayout = ref('');
     const importFileInput = ref<HTMLInputElement | null>(null);
-
-    const mmToPx = (mm: number) => mm * 3.7795275591;
 
     const loadSavedLayouts = async () => {
       try {

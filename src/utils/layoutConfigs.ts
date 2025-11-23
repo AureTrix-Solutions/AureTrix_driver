@@ -1,8 +1,7 @@
 // layoutConfigs.ts
 import LayoutStorageService, { type CustomLayoutConfig } from '@/services/LayoutStorageService';
 import { sharedLayoutMap } from './sharedLayout';
-
-const mmToPx = (mm: number) => Math.round(mm * 4); // Increased to 4px/mm for larger keys
+import { mmToPx } from '@utils/keyUnits';
 
 type LayoutConfig = {
   keySizes: number[][];
@@ -24,87 +23,87 @@ export async function loadCustomLayouts() {
 const layoutMap: Record<number, LayoutConfig> = {
   61: { // 60%
     keySizes: [
-      Array(13).fill(18).concat(37), // row 0
-      [27.4].concat(Array(12).fill(18), 27.4), // row 1
-      [32.3].concat(Array(11).fill(18), 41.7), // row 2
-      [41.7].concat(Array(10).fill(18), 51.2), // row 3
-      Array(3).fill(22.8).concat(117.7, Array(4).fill(22.8)), // row 4
+      Array(13).fill(19.05).concat(35.999), // row 0
+      [27.5].concat(Array(12).fill(19.05), 27.5), // row 1
+      [32.3].concat(Array(11).fill(19.05), 42.8625), // row 2
+      [42.8625].concat(Array(10).fill(19.05), 51.2), // row 3
+      Array(3).fill(23.8125).concat(119.38, Array(4).fill(23.8125)), // row 4
     ],
     gapsAfterCol: Array(5).fill({}),
-    rowSpacing: [18, 18, 18, 18],
+    rowSpacing: [20.05, 20.05, 20.05, 20.05],
   },
   67: { // 65% 67-key
     keySizes: [
-      Array(13).fill(18).concat(37, 18), // row 0
-      [27.4].concat(Array(12).fill(18), 27.4, 18), // row 1
-      [32.3].concat(Array(11).fill(18), 41.7, 18), // row 2
-      [41.7].concat(Array(10).fill(18), 32.3, Array(2).fill(18)), // row 3
-      Array(3).fill(22.8).concat(117.7, Array(2).fill(22.8), Array(3).fill(18)), // row 4
+      Array(13).fill(19.05).concat(35.999, 19.05), // row 0
+      [27.5].concat(Array(12).fill(19.05), 27.5, 19.05), // row 1
+      [32.3].concat(Array(11).fill(19.05), 42.8625, 19.05), // row 2
+      [42.8625].concat(Array(10).fill(19.05), 32.3, Array(2).fill(19.05)), // row 3
+      Array(3).fill(23.8125).concat(119.38, Array(2).fill(23.8125), Array(3).fill(19.05)), // row 4
     ],
     gapsAfterCol: [
       {}, {}, {}, {}, { 5: 9.5 }
     ],
-    rowSpacing: [18, 18, 18, 18],
+    rowSpacing: [20.05, 20.05, 20.05, 20.05],
   },
   68: { // 65% 68-key
     keySizes: [
-      Array(13).fill(18).concat(37, 18), // row 0
-      [27.4].concat(Array(12).fill(18), 27.4, 18), // row 1
-      [32.3].concat(Array(11).fill(18), 41.7, 18), // row 2
-      [41.7].concat(Array(10).fill(18), 32.3, Array(2).fill(18)), // row 3
-      Array(3).fill(22.8).concat(117.7, Array(6).fill(18)), // row 4
+      Array(13).fill(19.05).concat(35.999, 19.05), // row 0
+      [27.5].concat(Array(12).fill(19.05), 27.5, 19.05), // row 1
+      [32.3].concat(Array(11).fill(19.05), 42.8625, 19.05), // row 2
+      [42.8625].concat(Array(10).fill(19.05), 32.3, Array(2).fill(19.05)), // row 3
+      Array(3).fill(23.8125).concat(119.38, Array(6).fill(19.05)), // row 4
     ],
     gapsAfterCol: Array(5).fill({}),
-    rowSpacing: [18, 18, 18, 18],
+    rowSpacing: [20.05, 20.05, 20.05, 20.05],
   },
   80: { // 75% 80-key
     keySizes: [
-      Array(15).fill(18), // row 0
-      Array(13).fill(18).concat(37, 18), // row 1
-      [27.4].concat(Array(12).fill(18), 27.4, 18), // row 2
-      [32.3].concat(Array(11).fill(18), 41.7), // row 3
-      [41.7].concat(Array(10).fill(18), 32.3, 18), // row 4
-      Array(3).fill(22.8).concat(117.7, Array(2).fill(22.8), Array(3).fill(18)), // row 5
+      Array(15).fill(19.05), // row 0
+      Array(13).fill(19.05).concat(35.999, 19.05), // row 1
+      [27.5].concat(Array(12).fill(19.05), 27.5, 19.05), // row 2
+      [32.3].concat(Array(11).fill(19.05), 42.8625), // row 3
+      [42.8625].concat(Array(10).fill(19.05), 32.3, 19.05), // row 4
+      Array(3).fill(23.8125).concat(119.38, Array(2).fill(23.8125), Array(3).fill(19.05)), // row 5
     ],
     gapsAfterCol: [
       { 0: 4.7, 4: 4.7, 8: 4.7, 12: 4.7 }, {}, {}, {}, {}, { 5: 9.5 }
     ],
-    rowSpacing: [22, 18, 18, 18, 18],
+    rowSpacing: [23.28, 20.05, 20.05, 20.05, 20.05],
   },
   82: { // 75% 82-key
     keySizes: [
-      Array(14).fill(18), // row 0
-      Array(13).fill(18).concat(37, 18), // row 1
-      [27.4].concat(Array(12).fill(18), 27.4, 18), // row 2
-      [32.3].concat(Array(11).fill(18), 41.7, 18), // row 3
-      [41.7].concat(Array(10).fill(18), 32.3, Array(2).fill(18)), // row 4
-      Array(3).fill(22.8).concat(117.7, Array(2).fill(22.8), Array(3).fill(18)), // row 5
+      Array(14).fill(19.05), // row 0
+      Array(13).fill(19.05).concat(35.999, 19.05), // row 1
+      [27.5].concat(Array(12).fill(19.05), 27.5, 19.05), // row 2
+      [32.3].concat(Array(11).fill(19.05), 42.8625, 19.05), // row 3
+      [42.8625].concat(Array(10).fill(19.05), 32.3, Array(2).fill(19.05)), // row 4
+      Array(3).fill(23.8125).concat(119.38, Array(2).fill(23.8125), Array(3).fill(19.05)), // row 5
     ],
     gapsAfterCol: [
       { 0: 9.4, 4: 9.4, 8: 9.4, 12: 9.4 }, {}, {}, {}, {}, { 5: 9.5 }
     ],
-    rowSpacing: [22, 18, 18, 18, 18],
+    rowSpacing: [23.28, 20.05, 20.05, 20.05, 20.05],
   },
   84: { // 75% 84-key
     keySizes: [
-      Array(16).fill(18), // row 0
-      Array(13).fill(18).concat(37, 18), // row 1
-      [27.4].concat(Array(12).fill(18), 27.4, 18), // row 2
-      [32.3].concat(Array(11).fill(18), 41.7, 18), // row 3
-      [41.7].concat(Array(10).fill(18), 32.3, Array(2).fill(18)), // row 4
-      Array(3).fill(22.8).concat(117.7, Array(6).fill(18)), // row 5
+      Array(16).fill(19.05), // row 0
+      Array(13).fill(19.05).concat(35.999, 19.05), // row 1
+      [27.5].concat(Array(12).fill(19.05), 27.5, 19.05), // row 2
+      [32.3].concat(Array(11).fill(19.05), 42.8625, 19.05), // row 3
+      [42.8625].concat(Array(10).fill(19.05), 32.3, Array(2).fill(19.05)), // row 4
+      Array(3).fill(23.8125).concat(119.38, Array(6).fill(19.05)), // row 5
     ],
     gapsAfterCol: Array(6).fill({}),
-    rowSpacing: [18, 18, 18, 18, 18],
+    rowSpacing: [20.05, 20.05, 20.05, 20.05, 20.05],
   },
   87: { // TKL 87-key
     keySizes: [
-      Array(16).fill(18), // row 0
-      Array(13).fill(18).concat(37, Array(3).fill(18)), // row 1
-      [27.4].concat(Array(12).fill(18), 27.4, Array(3).fill(18)), // row 2
-      [32.3].concat(Array(11).fill(18), 41.7), // row 3
-      [41.7].concat(Array(10).fill(18), 51.2, 18), // row 4
-      Array(3).fill(22.8).concat(117.7, Array(4).fill(22.8), Array(3).fill(18)), // row 5
+      Array(16).fill(19.05), // row 0
+      Array(13).fill(19.05).concat(35.999, Array(3).fill(19.05)), // row 1
+      [27.5].concat(Array(12).fill(19.05), 27.5, Array(3).fill(19.05)), // row 2
+      [32.3].concat(Array(11).fill(19.05), 42.8625), // row 3
+      [42.8625].concat(Array(10).fill(19.05), 51.2, 19.05), // row 4
+      Array(3).fill(23.8125).concat(119.38, Array(4).fill(23.8125), Array(3).fill(19.05)), // row 5
     ],
     gapsAfterCol: [
       { 0: 19, 4: 10, 8: 9, 12: 9 },
@@ -114,7 +113,7 @@ const layoutMap: Record<number, LayoutConfig> = {
       { 11: 28 },
       { 7: 9 }
     ],
-    rowSpacing: [27, 18, 18, 18, 18],
+    rowSpacing: [28.58, 20.05, 20.05, 20.05, 20.05],
   },
 };
 
@@ -167,7 +166,7 @@ function processLayoutConfig(config: LayoutConfig, baseLayout?: any[][], customK
       const baseCols = baseLayout[rIdx] ? baseLayout[rIdx].length : 0;
       if (baseCols > 0 && baseCols !== row.length) {
         if (baseCols > row.length) {
-          return [...row, ...Array(baseCols - row.length).fill(12)]; // Pad with 12mm
+          return [...row, ...Array(baseCols - row.length).fill(19.05)]; // Pad with 1u (19.05mm)
         }
         return row.slice(0, baseCols); // Truncate if too long
       }
@@ -184,11 +183,11 @@ function processLayoutConfig(config: LayoutConfig, baseLayout?: any[][], customK
     let cumulativeTop = 0;
     // Accumulate top based on row spacing
     for (let i = 0; i < rIdx; i++) {
-      cumulativeTop += mmToPx(rowSpacing[i] || 18); // Default to 18mm if undefined
+      cumulativeTop += mmToPx(rowSpacing[i] || 20.05); // Default to 20.05mm (19.05mm + 1mm spacing)
     }
     const top = cumulativeTop;
     const positions = rowSizes.map((width, cIdx) => {
-      const pos = [left, top, width, 17]; // [left, top, width, height]
+      const pos = [left, top, width, 19.05]; // [left, top, width, height] - 1u height
       left += mmToPx(width) + mmToPx(1); // 1mm default spacing
       if (gapsAfterCol[rIdx] && gapsAfterCol[rIdx][cIdx]) {
         left += mmToPx(gapsAfterCol[rIdx][cIdx]);
@@ -204,7 +203,7 @@ function processLayoutConfig(config: LayoutConfig, baseLayout?: any[][], customK
   ) || [];
 
   if (convertedPositions.length === 0) {
-    convertedPositions = Array(rows).fill(undefined).map(() => Array(cols).fill([0, 0, mmToPx(17), mmToPx(17)]));
+    convertedPositions = Array(rows).fill(undefined).map(() => Array(cols).fill([0, 0, mmToPx(19.05), mmToPx(19.05)]));
   }
 
   return { rows, cols, keyPositions: convertedPositions, gaps: Array(rows).fill(0) }; // Gaps handled in left

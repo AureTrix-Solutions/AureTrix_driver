@@ -20,6 +20,8 @@ export const KEY_SIZE_MAP = new Map<number, number>(
   KEY_SIZES.map(({ units, mm }) => [units, mm]),
 );
 
+export const MM_TO_PX = 3.7795275591;
+
 export function uToMm(units: number): number {
   return KEY_SIZE_MAP.get(units) ?? units * 19.05;
 }
@@ -27,4 +29,8 @@ export function uToMm(units: number): number {
 export function mmToU(mm: number): number {
   const entry = KEY_SIZES.find((size) => size.mm === mm);
   return entry?.units ?? mm / 19.05;
+}
+
+export function mmToPx(mm: number): number {
+  return Math.round(mm * MM_TO_PX);
 }

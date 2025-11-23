@@ -227,12 +227,12 @@ class KeyboardService {
     // Set timeout to cleanup reconnection state if no reconnection happens
     this.reconnectTimeout = setTimeout(() => {
       if (this.isReconnecting) {
-        console.warn('Reconnection timeout - cleaning up reconnection state');
+        // Silent cleanup - reconnection didn't happen within expected timeframe
         this.isReconnecting = false;
         this.reconnectTimeout = null;
         this.restoreConsoleError();
       }
-    }, 5000);
+    }, 10000);
     
     this.connectedDevice = null;
     const connectionStore = useConnectionStore();

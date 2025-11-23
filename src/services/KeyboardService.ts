@@ -51,8 +51,12 @@ class KeyboardService {
   }
 
   private suppressSDKReconnectError(): void {
-    if (this.originalConsoleError) return;
+    if (this.originalConsoleError) {
+      console.warn('[DEBUG] suppressSDKReconnectError already active, skipping');
+      return;
+    }
     
+    console.warn('[DEBUG] Activating SDK error suppression');
     this.originalConsoleError = console.error;
     console.error = (...args: any[]) => {
       // Convert all args to strings, handling Error objects properly
@@ -63,23 +67,32 @@ class KeyboardService {
         return String(arg);
       }).join(' ');
       
+      console.warn(`[DEBUG] console.error intercepted: "${message}"`);
+      console.warn(`[DEBUG] Flags - polling:${this.isPollingRateChanging}, factory:${this.isFactoryResetting}, reconnect:${this.isReconnecting}`);
+      
       // Suppress SDK reconnection errors during managed operations
       if (this.isPollingRateChanging || this.isFactoryResetting || this.isReconnecting) {
         if (message.includes('Reconnection failed') || 
             message.includes('NotAllowedError') || 
             message.includes('Failed to open the device')) {
+          console.warn('[DEBUG] SDK reconnection error SUPPRESSED');
           return;
         }
       }
       
+      console.warn('[DEBUG] Error NOT suppressed, passing through');
       this.originalConsoleError?.apply(console, args);
     };
   }
 
   private restoreConsoleError(): void {
+    console.warn(`[DEBUG] restoreConsoleError called - polling:${this.isPollingRateChanging}, factory:${this.isFactoryResetting}, reconnect:${this.isReconnecting}`);
     if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting && this.originalConsoleError) {
+      console.warn('[DEBUG] Restoring original console.error');
       console.error = this.originalConsoleError;
       this.originalConsoleError = null;
+    } else {
+      console.warn('[DEBUG] NOT restoring console.error (flags still active or no override)');
     }
   }
 
@@ -1035,8 +1048,10 @@ class KeyboardService {
         this.pollingRateTimeout = null;
       }
       
+      console.warn('[DEBUG] setPollingRate: Activating error suppression');
       this.suppressSDKReconnectError();
       this.isPollingRateChanging = true;
+      console.warn('[DEBUG] setPollingRate: isPollingRateChanging = true');
       const result = await this.keyboard.setRateOfReturn(value);
       if (result instanceof Error) {
         this.isPollingRateChanging = false;

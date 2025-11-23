@@ -508,10 +508,11 @@ export default defineComponent({
       display: flex;
       flex-direction: column;
       padding: 10px;
+      margin-top: 30px;
       align-self: center;
       border: v.$border-style;
       border-radius: v.$border-radius;
-      background-color: color.adjust(v.$background-dark, $lightness: -2%);
+      background-color: color.adjust(v.$background-dark, $lightness: -100%);
       font-family: v.$font-style;
 
       .virtual-keys {

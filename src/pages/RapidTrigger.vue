@@ -841,9 +841,6 @@ export default defineComponent({
 .rapid-trigger-page {
   padding: 20px;
   color: v.$text-color;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
 
   .title {
     width: 500px;
@@ -1026,7 +1023,7 @@ export default defineComponent({
     position: relative;
     margin-right: auto;
     margin-left: auto;
-    margin-top: -50px;
+    margin-top: -10px;
     justify-content: center;
   }
 

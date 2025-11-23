@@ -288,6 +288,24 @@ export default defineComponent({
       if (newVal) {
         this.syncHardwareSettings();
       }
+    },
+    openCategory(newVal) {
+      if (newVal) {
+        nextTick(() => {
+          document.addEventListener('click', this.handleClickOutsideCategory);
+        });
+      } else {
+        document.removeEventListener('click', this.handleClickOutsideCategory);
+      }
+    },
+    openQuickSettings(newVal) {
+      if (newVal) {
+        nextTick(() => {
+          document.addEventListener('click', this.handleClickOutsideQuickSettings);
+        });
+      } else {
+        document.removeEventListener('click', this.handleClickOutsideQuickSettings);
+      }
     }
   },
   methods: {
@@ -315,6 +333,15 @@ export default defineComponent({
     closeCategory() {
       this.openCategory = null;
     },
+    handleClickOutsideCategory(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const flyoutMenu = document.querySelector('.flyout-menu');
+      const sidebar = document.querySelector('.sidebar');
+      
+      if (flyoutMenu && !flyoutMenu.contains(target) && sidebar && !sidebar.contains(target)) {
+        this.closeCategory();
+      }
+    },
     handleQuickSettingsClick(setting: string, event: MouseEvent) {
       if (this.openQuickSettings === setting) {
         this.closeQuickSettings();
@@ -326,6 +353,35 @@ export default defineComponent({
     },
     closeQuickSettings() {
       this.openQuickSettings = null;
+    },
+    handleClickOutsideQuickSettings(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      
+      // Check if clicked inside a flyout menu
+      const flyoutMenu = target.closest('.flyout-menu');
+      if (flyoutMenu) {
+        // Check if this flyout menu is a quick settings menu (contains .quick-setting-item)
+        const isQuickSettingsFlyout = flyoutMenu.querySelector('.quick-setting-item');
+        if (isQuickSettingsFlyout) {
+          // Click is inside the quick settings flyout, don't close
+          return;
+        }
+      }
+      
+      // Check if clicked on the quick settings menu item in sidebar
+      const sidebar = target.closest('.sidebar');
+      if (sidebar) {
+        const clickedNavItem = target.closest('.nav-item.category-header');
+        if (clickedNavItem && 
+            (clickedNavItem.textContent?.includes('Polling Rate') || 
+             clickedNavItem.textContent?.includes('System Mode'))) {
+          // Click is on the quick settings toggle in sidebar, let the click handler manage it
+          return;
+        }
+      }
+      
+      // Otherwise, close the quick settings
+      this.closeQuickSettings();
     },
     showTooltip(tooltip: string, event: MouseEvent) {
       const target = event.currentTarget as HTMLElement;

@@ -609,7 +609,7 @@ export default defineComponent({
     position:relative;
     margin-right: auto;
     margin-left: auto;
-    margin-top: -50px;
+    margin-top: -10px;
     justify-content:center;
  
   }

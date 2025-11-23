@@ -30,7 +30,7 @@
       <!-- Key Test Toggle -->
       <div class="input-group">
         <label for="key-test-toggle">Enable Key Test:</label>
-        <input type="checkbox" v-model="keyTestEnabled" id="key-test-toggle" :disabled="selectedKeys.length === 0" @change="console.log('Checkbox changed to', $event.target.checked)" />
+        <input type="checkbox" v-model="keyTestEnabled" id="key-test-toggle" :disabled="selectedKeys.length === 0" />
       </div>
     </div>
 

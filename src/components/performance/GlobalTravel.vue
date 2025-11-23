@@ -222,8 +222,6 @@ export default defineComponent({
       const keys = props.selectedKeys.map(key => key.physicalKeyValue || key.keyValue);
       
       try {
-        console.log(`[GLOBALTRAVEL] Setting ${keys.length} keys to global mode`);
-        
         // Step 1: Fetch current global settings
         const globalSettingsResult = await KeyboardService.getGlobalTouchTravel();
         if (globalSettingsResult instanceof Error) {
@@ -238,8 +236,6 @@ export default defineComponent({
         if (isNaN(globalTravelValue) || isNaN(globalPressDead) || isNaN(globalReleaseDead)) {
           throw new Error('Invalid global settings: one or more values are not valid numbers');
         }
-        
-        console.log(`[GLOBALTRAVEL] Global settings: travel=${globalTravelValue}, pressDead=${globalPressDead}, releaseDead=${globalReleaseDead}`);
         
         // Step 2: Apply global values to each key before switching mode
         await processBatches(keys, async (physicalKeyValue) => {
@@ -263,11 +259,7 @@ export default defineComponent({
           if (modeResult instanceof Error) {
             throw new Error(`Failed to switch performance mode for key ${physicalKeyValue}`);
           }
-          
-          console.log(`[GLOBALTRAVEL] Successfully set key ${physicalKeyValue} to global mode with values`);
         });
-        
-        console.log(`[GLOBALTRAVEL] Successfully set all keys to global mode`);
         
         // Sync UI state with the values we just applied
         globalTravel.value = globalTravelValue;
@@ -275,7 +267,6 @@ export default defineComponent({
         releaseDead.value = globalReleaseDead;
         
         // Emit mode change so parent can update keyModeMap
-        console.log(`[GLOBALTRAVEL] Emitting mode-changed event:`, keys, 'global');
         emit('mode-changed', keys, 'global');
         
         // Update overlay to show the values we actually applied

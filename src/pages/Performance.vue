@@ -269,7 +269,6 @@ export default defineComponent({
 
         // Assign the new object to trigger reactivity
         singleOverlayByKey.value = newSingleOverlays;
-        console.log(`[PERFORMANCE] Refreshed overlays for ${singleModeKeys.length} single mode keys`);
       } catch (error) {
         console.error('Failed to update single mode overlays:', error);
         notification.value = {
@@ -305,31 +304,6 @@ export default defineComponent({
       }
     });
 
-    watch(() => useTravelProfilesStore().selectedProfile, (profile) => {
-      console.log('Performance: Profile changed:', profile?.switchName, 'Max Travel:', profile?.maxTravel);
-    }, { immediate: true });
-
-    // Debug watchers
-    watch(keyModeMap, (newMap, oldMap) => {
-      console.log('[PERFORMANCE] keyModeMap changed:', { newMap, oldMap });
-    }, { deep: true });
-
-    watch(globalOverlayValues, (newVal, oldVal) => {
-      console.log('[PERFORMANCE] globalOverlayValues changed:', { newVal, oldVal });
-    });
-
-    watch(singleOverlayByKey, (newVal, oldVal) => {
-      console.log('[PERFORMANCE] singleOverlayByKey changed:', { newVal, oldVal });
-    }, { deep: true });
-
-    watch(overlayData, (newVal, oldVal) => {
-      console.log('[PERFORMANCE] overlayData (computed) changed:', { 
-        newKeys: Object.keys(newVal),
-        oldKeys: Object.keys(oldVal || {}),
-        newCount: Object.keys(newVal).length,
-        oldCount: Object.keys(oldVal || {}).length
-      });
-    });
 
     onMounted(() => {
       setTimeout(async () => {
@@ -361,7 +335,6 @@ export default defineComponent({
         
         // Assign the complete map to trigger reactivity
         keyModeMap.value = newKeyModeMap;
-        console.log(`[PERFORMANCE] Initialized modes for ${keyIds.length} keys`);
       } catch (error) {
         console.error('Failed to initialize key modes:', error);
       }
@@ -369,8 +342,6 @@ export default defineComponent({
 
     // Handle mode changes from child components
     const handleModeChange = (keyIds: number[], newMode: 'global' | 'single') => {
-      console.log(`[PERFORMANCE] handleModeChange called:`, keyIds, newMode);
-      
       // Create new object for keyModeMap to trigger reactivity
       const newKeyModeMap = { ...keyModeMap.value };
       keyIds.forEach(keyId => {
@@ -386,8 +357,6 @@ export default defineComponent({
         });
         singleOverlayByKey.value = newSingleOverlays;
       }
-      
-      console.log(`[PERFORMANCE] Updated keyModeMap:`, keyModeMap.value);
     };
 
     return {

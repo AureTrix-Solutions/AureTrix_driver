@@ -113,7 +113,6 @@ async function startCalibration(): Promise<void> {
               const newVal = newTravels[r][c];
               if (newVal > currentMax) {
                 maxTravels.value[r][c] = newVal;
-                console.log(`Updated max travel for row ${r} col ${c}: ${newVal} -> ${Math.round(newVal * 1000)} μm`);
               }
             }
           }
@@ -148,7 +147,6 @@ async function endCalibration(): Promise<void> {
     const result = await KeyboardService.calibrationEnd();
     if (result instanceof Error) throw result;
     calibrating.value = false;
-    console.log('Calibration ended successfully.');
     // Optionally refetch layout or travels post-save
   } catch (err) {
     console.error('Failed to end calibration:', err);

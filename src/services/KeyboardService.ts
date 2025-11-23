@@ -1,10 +1,8 @@
-// KeyboardService.ts
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
 import type { DeviceInit, Device } from '@sparklinkplayjoy/sdk-keyboard';
 import { IDefKeyInfo } from '../types/types';
 import { useConnectionStore } from '../store/connection';
 
-// WebHID type definitions
 interface HIDConnectionEvent extends Event {
   device: HIDDevice;
 }
@@ -26,7 +24,6 @@ class KeyboardService {
   private initializationPromise: Promise<void> | null = null;
   private isPostReconnectionSuppression: boolean = false;
 
-  // Initialization
   constructor() {
     this.keyboard = new XDKeyboard({
       usage: 1,
@@ -65,7 +62,6 @@ class KeyboardService {
     
     this.originalConsoleError = console.error;
     console.error = (...args: any[]) => {
-      // Convert all args to strings, handling Error objects properly
       const message = args.map(arg => {
         if (arg instanceof Error) {
           return `${arg.name}: ${arg.message}`;
@@ -93,7 +89,6 @@ class KeyboardService {
     }
   }
 
-  // Connection Management
   async getDevices(): Promise<Device[]> {
     try {
       const devices = await this.keyboard.getDevices();
@@ -215,7 +210,6 @@ class KeyboardService {
           return true;
         }
       } catch (error) {
-        // SDK not ready yet, continue retrying
       }
       
       if (attempt < maxAttempts - 1) {
@@ -267,7 +261,6 @@ class KeyboardService {
       console.error(`Keyboard initialization failed (attempt ${retryCount + 1}/${maxRetries + 1}):`, errorMessage);
       
       if (retryCount < maxRetries && this.connectedDevice) {
-        console.log(`Retrying initialization in ${(retryCount + 1) * 1000}ms...`);
         await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 1000));
         
         if (this.connectedDevice) {
@@ -283,18 +276,12 @@ class KeyboardService {
   private async syncHardwareSettings(): Promise<void> {
     try {
       const pollingRate = await this.getPollingRate();
-      if (!(pollingRate instanceof Error)) {
-        console.log('Polling rate synced:', pollingRate);
-      }
     } catch (error) {
       console.error('Failed to sync polling rate:', error);
     }
     
     try {
       const systemMode = await this.querySystemMode();
-      if (!(systemMode instanceof Error)) {
-        console.log('System mode synced:', systemMode);
-      }
     } catch (error) {
       console.error('Failed to sync system mode:', error);
     }
@@ -401,7 +388,6 @@ class KeyboardService {
     connectionStore.disconnect();
   }
 
-  // Base Info and Layout
   async getBaseInfo(): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {
@@ -489,7 +475,6 @@ class KeyboardService {
     }
   }
 
-  // Key Configuration
   async setKey(keyConfigs: { key: number; layout: number; value: number }[]): Promise<void | Error> {
     try {
       await this.keyboard.setKey(keyConfigs);
@@ -528,7 +513,6 @@ class KeyboardService {
     }
   }
 
-  // Global Touch Travel
   async getGlobalTouchTravel(): Promise<{ globalTouchTravel: number } | Error> {
     try {
       if (!this.connectedDevice) {
@@ -557,7 +541,6 @@ class KeyboardService {
     }
   }
 
-  // Performance Mode
   async getPerformanceMode(key: number): Promise<{ touchMode: string; advancedKeyMode: number } | Error> {
     try {
       if (!this.connectedDevice) {
@@ -586,7 +569,6 @@ class KeyboardService {
     }
   }
 
-  // DB Travel
   async getDbTravel(key: number, dbLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
@@ -615,7 +597,6 @@ class KeyboardService {
     }
   }
 
-  // RT Travel
   async getRtTravel(key: number): Promise<{ pressTravel: number; releaseTravel: number } | Error> {
     try {
       if (!this.connectedDevice) {
@@ -658,7 +639,6 @@ class KeyboardService {
     }
   }
 
-  // DP/DR Thresholds
   async getDpDr(key: number): Promise<{ dpThreshold: number; drThreshold: number } | Error> {
     try {
       if (!this.connectedDevice) {
@@ -701,7 +681,6 @@ class KeyboardService {
     }
   }
 
-  // Axis Settings
   async getAxis(key: number): Promise<{ axis: number } | Error> {
     try {
       if (!this.connectedDevice) {
@@ -730,7 +709,6 @@ class KeyboardService {
     }
   }
 
-  // Single Travel
   async getSingleTravel(key: number, decimal: number = 2): Promise<number | Error> {
     try {
       if (!this.connectedDevice) {
@@ -759,7 +737,6 @@ class KeyboardService {
     }
   }
 
-  // DKS Travel
   async getDksTravel(key: number, dksLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
@@ -788,7 +765,6 @@ class KeyboardService {
     }
   }
 
-  // Calibration
   async calibrationStart(): Promise<Calibration | Error> {
     try {
       if (!this.connectedDevice) {
@@ -817,7 +793,6 @@ class KeyboardService {
     }
   }
 
-  // Advanced Calibration and Travel
   async getRm6X21Calibration(): Promise<{ calibrations: number[]; travels: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
@@ -863,7 +838,6 @@ class KeyboardService {
     }
   }
 
-  // RGB Lighting Methods
   async getLighting(): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {

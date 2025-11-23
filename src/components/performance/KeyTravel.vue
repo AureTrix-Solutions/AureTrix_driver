@@ -65,17 +65,14 @@ export default defineComponent({
 
     // Forward overlay events
     const setOverlay = (data: { travel: string; pressDead: string; releaseDead: string } | null) => {
-      console.log(`[KEYTRAVEL] Forwarding update-overlay:`, data);
       emit('update-overlay', data);
     };
 
     const setSingleOverlay = (data: { travel: string; pressDead: string; releaseDead: string } | null) => {
-      console.log(`[KEYTRAVEL] Forwarding update-single-overlay:`, data);
       emit('update-single-overlay', data);
     };
 
     const handleModeChange = (keyIds: number[], newMode: 'global' | 'single') => {
-      console.log(`[KEYTRAVEL] Forwarding mode-changed:`, keyIds, newMode);
       emit('mode-changed', keyIds, newMode);
     };
 

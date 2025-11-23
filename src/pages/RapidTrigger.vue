@@ -415,7 +415,6 @@ export default defineComponent({
       }
 
       const keys = selectedKeys.value.map(key => key.physicalKeyValue || key.keyValue);
-      console.log(`[RAPID-TRIGGER] Setting ${keys.length} keys to global mode`);
 
       try {
         const globalSettingsResult = await KeyboardService.getGlobalTouchTravel();
@@ -431,8 +430,6 @@ export default defineComponent({
         if (isNaN(globalTravel) || isNaN(globalPressDead) || isNaN(globalReleaseDead)) {
           throw new Error('Invalid global settings: one or more values are not valid numbers');
         }
-        
-        console.log(`[RAPID-TRIGGER] Global settings: travel=${globalTravel}, pressDead=${globalPressDead}, releaseDead=${globalReleaseDead}`);
 
         await processBatches(keys, async (physicalKeyValue) => {
           const travelResult = await KeyboardService.setSingleTravel(physicalKeyValue, globalTravel);
@@ -459,10 +456,8 @@ export default defineComponent({
         keys.forEach(keyId => {
           delete overlayData.value[keyId];
         });
-        console.log(`[RAPID-TRIGGER] Cleared overlay data for ${keys.length} keys`);
         
         setNotification(`Set ${keys.length} key(s) to global mode successfully`, false);
-        console.log(`[RAPID-TRIGGER] Successfully set ${keys.length} keys to global mode`);
       } catch (error) {
         console.error('Failed to set keys to global mode:', error);
         setNotification('Failed to set keys to global mode', true);
@@ -739,8 +734,6 @@ export default defineComponent({
             console.error(`Failed to fetch RT data for ${keyId}:`, fetchError);
           }
         });
-
-        console.log(`[RAPID-TRIGGER] Refreshed overlays for ${keyIds.length} keys`);
       } catch (error) {
         console.error('Failed to update RT overlays:', error);
         setNotification(`Failed to update overlays: ${(error as Error).message}`, true);

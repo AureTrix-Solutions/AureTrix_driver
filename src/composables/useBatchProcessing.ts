@@ -20,7 +20,6 @@ export const useBatchProcessing = () => {
     for (const batch of batches) {
       await Promise.all(batch.map(updateFn));
       await new Promise(resolve => setTimeout(resolve, delayMs));
-      console.log(`[BATCH] Processed batch of ${batch.length} keys`);
     }
   };
 

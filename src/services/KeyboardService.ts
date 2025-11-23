@@ -14,14 +14,17 @@ class KeyboardService {
   private connectedDevice: Device | null = null;
   private isAutoConnecting: boolean = false;
   private isPollingRateChanging: boolean = false;
+  private pollingRateOperationToken: number | null = null;
   private pollingRateTimeout: ReturnType<typeof setTimeout> | null = null;
   private isFactoryResetting: boolean = false;
+  private factoryResetOperationToken: number | null = null;
   private factoryResetTimeout: ReturnType<typeof setTimeout> | null = null;
   private isReconnecting: boolean = false;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private originalConsoleError: typeof console.error | null = null;
   private errorSuppressionCleanupTimeout: ReturnType<typeof setTimeout> | null = null;
   private initializationPromise: Promise<void> | null = null;
+  private isPostReconnectionSuppression: boolean = false;
 
   // Initialization
   constructor() {
@@ -70,8 +73,8 @@ class KeyboardService {
         return String(arg);
       }).join(' ');
       
-      // Suppress SDK reconnection errors during managed operations
-      if (this.isPollingRateChanging || this.isFactoryResetting || this.isReconnecting) {
+      // Suppress SDK reconnection errors during managed operations and post-reconnection window
+      if (this.isPollingRateChanging || this.isFactoryResetting || this.isReconnecting || this.isPostReconnectionSuppression) {
         if (message.includes('Reconnection failed') || 
             message.includes('NotAllowedError') || 
             message.includes('Failed to open the device')) {
@@ -84,7 +87,7 @@ class KeyboardService {
   }
 
   private restoreConsoleError(): void {
-    if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting && this.originalConsoleError) {
+    if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting && !this.isPostReconnectionSuppression && this.originalConsoleError) {
       console.error = this.originalConsoleError;
       this.originalConsoleError = null;
     }
@@ -298,16 +301,16 @@ class KeyboardService {
   }
 
   private handleConnect = async (event: HIDConnectionEvent): Promise<void> => {
-    // Store operation states to clear after autoConnect completes
-    const wasPollingRateChanging = this.isPollingRateChanging;
-    const wasFactoryResetting = this.isFactoryResetting;
+    // Capture operation tokens to identify which operations were active during this reconnection
+    const pollingRateToken = this.pollingRateOperationToken;
+    const factoryResetToken = this.factoryResetOperationToken;
     
-    // Clear operation timeouts but keep flags active during reconnection
-    if (this.isPollingRateChanging && this.pollingRateTimeout) {
+    // Clear operation timeouts - the operation flags will be managed by the post-reconnection cleanup
+    if (this.pollingRateTimeout) {
       clearTimeout(this.pollingRateTimeout);
       this.pollingRateTimeout = null;
     }
-    if (this.isFactoryResetting && this.factoryResetTimeout) {
+    if (this.factoryResetTimeout) {
       clearTimeout(this.factoryResetTimeout);
       this.factoryResetTimeout = null;
     }
@@ -322,24 +325,34 @@ class KeyboardService {
       // autoConnect() while error suppression is still active
       await this.autoConnect();
     } finally {
-      // Clear all operation flags after reconnection completes
-      if (wasPollingRateChanging) {
-        this.isPollingRateChanging = false;
-      }
-      if (wasFactoryResetting) {
-        this.isFactoryResetting = false;
-      }
+      // Clear isReconnecting immediately - it's only for unmanaged disconnects
       this.isReconnecting = false;
       
-      // Delay restoring console.error to catch any delayed SDK reconnection errors
-      // The SDK sometimes logs errors slightly after our code completes
+      // Activate post-reconnection suppression window to catch delayed SDK errors
+      // The SDK sometimes logs reconnection errors slightly after our code completes
+      // This keeps suppression active independently of operation flags
+      this.isPostReconnectionSuppression = true;
+      
       if (this.errorSuppressionCleanupTimeout) {
         clearTimeout(this.errorSuppressionCleanupTimeout);
       }
       this.errorSuppressionCleanupTimeout = setTimeout(() => {
-        // Only restore if no operations are active - prevents leaking suppression
-        // if a new operation started during the delay window
-        if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting) {
+        // Clear post-reconnection suppression window
+        this.isPostReconnectionSuppression = false;
+        
+        // Clear operation flags only if they match the tokens captured at reconnection start
+        // This prevents clearing flags from new operations that started during the cleanup window
+        if (this.pollingRateOperationToken === pollingRateToken) {
+          this.isPollingRateChanging = false;
+          this.pollingRateOperationToken = null;
+        }
+        if (this.factoryResetOperationToken === factoryResetToken) {
+          this.isFactoryResetting = false;
+          this.factoryResetOperationToken = null;
+        }
+        
+        // Only restore console.error if no operations are active
+        if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting && !this.isPostReconnectionSuppression) {
           this.restoreConsoleError();
         }
         this.errorSuppressionCleanupTimeout = null;
@@ -1162,6 +1175,8 @@ class KeyboardService {
         this.pollingRateTimeout = null;
       }
       
+      // Assign operation token FIRST, before any reconnection can occur
+      this.pollingRateOperationToken = Date.now();
       this.suppressSDKReconnectError();
       this.isPollingRateChanging = true;
       const result = await this.keyboard.setRateOfReturn(value);
@@ -1295,6 +1310,8 @@ class KeyboardService {
         this.factoryResetTimeout = null;
       }
       
+      // Assign operation token FIRST, before any reconnection can occur
+      this.factoryResetOperationToken = Date.now();
       this.suppressSDKReconnectError();
       this.isFactoryResetting = true;
       const result = await this.keyboard.factoryDataReset();

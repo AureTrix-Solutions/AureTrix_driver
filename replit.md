@@ -3,6 +3,12 @@
 ## Overview
 AureTrix is a web-based configuration tool for hall effect keyboards compatible with the SparkLink SDK. It provides a professional, browser-based interface for customizing keyboard behavior without requiring native drivers. Key capabilities include multi-layer key remapping, macro creation, comprehensive RGB lighting control, advanced hall effect features (Dynamic Keystroke, Magnetic Point Triggering, Rapid Trigger), sensor calibration, profile management, a real-time debugging interface, and a custom layout creator with controller emulation metadata support. The application runs entirely in the browser using the WebHID API, aiming to be the leading configuration solution for SparkLink-compatible hall effect keyboards.
 
+## Recent Changes
+### November 23, 2025 - Codebase Cleanup
+-   **Console Logging Cleanup:** Removed 29 non-essential console.log statements across 9 files (KeyboardService, RapidTrigger, GlobalTravel, Performance, SingleKeyTravel, KeyTravel, SwitchProfiles, Calibration, useBatchProcessing) while preserving all 240 console.error/warn statements and debug-specific logging in DebugKeyboardService and connection store.
+-   **Comment Cleanup:** Removed 19 redundant comments from App.vue (11 HTML section comments, 8 code comments that described "what" rather than "why"), keeping only essential comments that explain performance optimizations, inline value explanations, and CSS positioning.
+-   **Code Quality:** Maintained full application functionality with no breaking changes. All cleanup focused on removing noise while preserving error visibility and developer context.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 

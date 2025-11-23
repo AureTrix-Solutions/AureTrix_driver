@@ -24,9 +24,12 @@
           <button @click="saveLayout" class="select-btn">Save Layout</button>
           <button @click="exportCompactCode" class="select-btn">Export Layout</button>
           <button @click="importLayout" class="select-btn">Import Layout</button>
-          <button @click="shareLayout" class="select-btn">Share</button>
+          <button @click="shareLayout" class="select-btn" :disabled="isCommunityLayoutExists">Share</button>
           <button @click="goBack" class="select-btn">Cancel</button>
           <input ref="importFileInput" type="file" accept=".json,.txt" @change="handleImportFile" style="display: none" />
+        </div>
+        <div v-if="isCommunityLayoutExists" class="share-disabled-message">
+          A community layout already exists for "{{ productName }}". You can save custom modifications locally using Save Layout.
         </div>
         <div class="parent">
           <div class="settings-panel">
@@ -113,6 +116,7 @@ import { useConnectionStore } from '@/store/connection';
 import LayoutStorageService from '@/services/LayoutStorageService';
 import KeyboardService from '@/services/KeyboardService';
 import { uToMm, KEY_SIZES, mmToPx } from '@/utils/keyUnits';
+import { sharedLayoutMap } from '@/utils/sharedLayout';
 
 interface VirtualKey {
   size: number; // units (1, 1.25, 2, etc.)
@@ -139,6 +143,11 @@ export default defineComponent({
     const savedLayouts = ref<any[]>([]);
     const selectedSavedLayout = ref('');
     const importFileInput = ref<HTMLInputElement | null>(null);
+
+    const isCommunityLayoutExists = computed(() => {
+      const trimmedName = productName.value.trim();
+      return !!trimmedName && trimmedName in sharedLayoutMap;
+    });
 
     const loadSavedLayouts = async () => {
       try {
@@ -681,6 +690,7 @@ export default defineComponent({
       savedLayouts,
       selectedSavedLayout,
       importFileInput,
+      isCommunityLayoutExists,
       gridStyle,
       generateVirtualKeyboard,
       getKeyStyle,
@@ -846,7 +856,28 @@ export default defineComponent({
       &:hover {
         background-color: color.adjust(v.$background-dark, $lightness: 10%);
       }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        
+        &:hover {
+          background-color: color.adjust(v.$background-dark, $lightness: -100%);
+        }
+      }
     }
+  }
+
+  .share-disabled-message {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: v.$border-radius;
+    background-color: rgba(v.$primary-color, 0.1);
+    color: v.$text-color;
+    font-size: 0.85rem;
+    font-family: v.$font-style;
+    text-align: center;
+    max-width: 500px;
   }
 
   .parent {

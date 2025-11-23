@@ -106,17 +106,7 @@ const layoutMap: Record<number, LayoutConfig> = {
 };
 
 export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[], productName?: string) => {
-  // Priority 1: Check sharedLayout.ts for community-contributed layouts by productName
-  if (productName && sharedLayoutMap[productName]) {
-    const config: LayoutConfig = {
-      keySizes: sharedLayoutMap[productName].keySizes,
-      gapsAfterCol: sharedLayoutMap[productName].gapsAfterCol,
-      rowSpacing: sharedLayoutMap[productName].rowSpacing
-    };
-    return processLayoutConfig(config, baseLayout, customKeySizes, customGapsAfterCol, customRowSpacing);
-  }
-
-  // Priority 2: Check IndexedDB for user-created custom layouts by productName
+  // Priority 1: Check IndexedDB for user-created custom layouts by productName
   if (productName) {
     const customLayout = customLayoutsCache.find(layout => layout.productName === productName);
     if (customLayout) {
@@ -127,6 +117,16 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
       };
       return processLayoutConfig(config, baseLayout, customKeySizes, customGapsAfterCol, customRowSpacing);
     }
+  }
+
+  // Priority 2: Check sharedLayout.ts for community-contributed layouts by productName
+  if (productName && sharedLayoutMap[productName]) {
+    const config: LayoutConfig = {
+      keySizes: sharedLayoutMap[productName].keySizes,
+      gapsAfterCol: sharedLayoutMap[productName].gapsAfterCol,
+      rowSpacing: sharedLayoutMap[productName].rowSpacing
+    };
+    return processLayoutConfig(config, baseLayout, customKeySizes, customGapsAfterCol, customRowSpacing);
   }
 
   // Priority 3: Fall back to keyCount-based lookup from layoutMap

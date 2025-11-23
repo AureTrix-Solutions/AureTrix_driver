@@ -199,29 +199,18 @@ class KeyboardService {
       this.restoreConsoleError();
     }
     
-    // Suppress SDK reconnection errors and attempt auto-connect
-    this.suppressSDKReconnectError();
-    this.isReconnecting = true;
-    
-    // Set a timeout to ensure we don't stay in reconnecting mode forever
-    this.reconnectTimeout = setTimeout(() => {
-      if (this.isReconnecting) {
-        console.warn('Reconnection timeout - cleaning up reconnection state');
-        this.isReconnecting = false;
-        this.reconnectTimeout = null;
-        this.restoreConsoleError();
-      }
-    }, 5000);
+    // Error suppression is already active from handleDisconnect
+    // Clear the reconnection timeout and attempt auto-connect
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
     
     try {
       await this.autoConnect();
     } finally {
       // Clear reconnecting state after autoConnect completes
       this.isReconnecting = false;
-      if (this.reconnectTimeout) {
-        clearTimeout(this.reconnectTimeout);
-        this.reconnectTimeout = null;
-      }
       this.restoreConsoleError();
     }
   }
@@ -230,6 +219,20 @@ class KeyboardService {
     if (this.isPollingRateChanging || this.isFactoryResetting) {
       return;
     }
+    
+    // Activate error suppression BEFORE SDK attempts reconnection
+    this.isReconnecting = true;
+    this.suppressSDKReconnectError();
+    
+    // Set timeout to cleanup reconnection state if no reconnection happens
+    this.reconnectTimeout = setTimeout(() => {
+      if (this.isReconnecting) {
+        console.warn('Reconnection timeout - cleaning up reconnection state');
+        this.isReconnecting = false;
+        this.reconnectTimeout = null;
+        this.restoreConsoleError();
+      }
+    }, 5000);
     
     this.connectedDevice = null;
     const connectionStore = useConnectionStore();

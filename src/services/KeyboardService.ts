@@ -180,60 +180,64 @@ class KeyboardService {
   }
 
   private handleConnect = async (event: HIDConnectionEvent): Promise<void> => {
-    // Clear any existing operation timeouts
-    if (this.isPollingRateChanging) {
-      if (this.pollingRateTimeout) {
-        clearTimeout(this.pollingRateTimeout);
-        this.pollingRateTimeout = null;
-      }
-      this.isPollingRateChanging = false;
+    // Store operation states to clear after autoConnect completes
+    const wasPollingRateChanging = this.isPollingRateChanging;
+    const wasFactoryResetting = this.isFactoryResetting;
+    
+    // Clear operation timeouts but keep flags active during reconnection
+    if (this.isPollingRateChanging && this.pollingRateTimeout) {
+      clearTimeout(this.pollingRateTimeout);
+      this.pollingRateTimeout = null;
     }
-    if (this.isFactoryResetting) {
-      if (this.factoryResetTimeout) {
-        clearTimeout(this.factoryResetTimeout);
-        this.factoryResetTimeout = null;
-      }
-      this.isFactoryResetting = false;
-    }
-    if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting) {
-      this.restoreConsoleError();
+    if (this.isFactoryResetting && this.factoryResetTimeout) {
+      clearTimeout(this.factoryResetTimeout);
+      this.factoryResetTimeout = null;
     }
     
-    // Error suppression is already active from handleDisconnect
-    // Clear the reconnection timeout and attempt auto-connect
+    // Clear the reconnection timeout if set
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
     
     try {
+      // autoConnect() while error suppression is still active
       await this.autoConnect();
     } finally {
-      // Clear reconnecting state after autoConnect completes
+      // Clear all operation flags after reconnection completes
+      if (wasPollingRateChanging) {
+        this.isPollingRateChanging = false;
+      }
+      if (wasFactoryResetting) {
+        this.isFactoryResetting = false;
+      }
       this.isReconnecting = false;
+      
+      // Restore console.error now that all operations are complete
       this.restoreConsoleError();
     }
   }
 
   private handleDisconnect = (event: HIDConnectionEvent): void => {
-    if (this.isPollingRateChanging || this.isFactoryResetting) {
-      return;
+    // Only set up reconnection handling if not already in a managed operation
+    // (polling rate change and factory reset handle their own reconnection logic)
+    if (!this.isPollingRateChanging && !this.isFactoryResetting) {
+      // Activate error suppression BEFORE SDK attempts reconnection
+      this.isReconnecting = true;
+      this.suppressSDKReconnectError();
+      
+      // Set timeout to cleanup reconnection state if no reconnection happens
+      this.reconnectTimeout = setTimeout(() => {
+        if (this.isReconnecting) {
+          // Silent cleanup - reconnection didn't happen within expected timeframe
+          this.isReconnecting = false;
+          this.reconnectTimeout = null;
+          this.restoreConsoleError();
+        }
+      }, 10000);
     }
     
-    // Activate error suppression BEFORE SDK attempts reconnection
-    this.isReconnecting = true;
-    this.suppressSDKReconnectError();
-    
-    // Set timeout to cleanup reconnection state if no reconnection happens
-    this.reconnectTimeout = setTimeout(() => {
-      if (this.isReconnecting) {
-        // Silent cleanup - reconnection didn't happen within expected timeframe
-        this.isReconnecting = false;
-        this.reconnectTimeout = null;
-        this.restoreConsoleError();
-      }
-    }, 10000);
-    
+    // Always update connection state regardless of operation type
     this.connectedDevice = null;
     const connectionStore = useConnectionStore();
     connectionStore.disconnect();

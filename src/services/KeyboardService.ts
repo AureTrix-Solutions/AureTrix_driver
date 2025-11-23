@@ -206,7 +206,6 @@ class KeyboardService {
     this.connectedDevice = null;
     const connectionStore = useConnectionStore();
     connectionStore.disconnect();
-    localStorage.removeItem('pairedStableId');
   }
 
   // Base Info and Layout

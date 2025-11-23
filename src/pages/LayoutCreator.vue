@@ -869,12 +869,17 @@ export default defineComponent({
   }
 
   .share-disabled-message {
-    margin-top: 10px;
+    display: flex;
+    margin-right: auto;
+    margin-left: auto;
+    position: relative;
+    margin-top: -10px;
     padding: 10px;
     border-radius: v.$border-radius;
-    background-color: rgba(v.$primary-color, 0.1);
-    color: v.$text-color;
-    font-size: 0.85rem;
+    background-color: color.adjust(v.$background-dark, $lightness: -100%);
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 400;
     font-family: v.$font-style;
     text-align: center;
     max-width: 500px;

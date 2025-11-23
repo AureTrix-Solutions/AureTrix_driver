@@ -55,11 +55,23 @@ class KeyboardService {
     
     this.originalConsoleError = console.error;
     console.error = (...args: any[]) => {
-      const message = args.join(' ');
-      if ((this.isPollingRateChanging || this.isFactoryResetting || this.isReconnecting) && 
-          message.includes('Failed to open the device')) {
-        return;
+      // Convert all args to strings, handling Error objects properly
+      const message = args.map(arg => {
+        if (arg instanceof Error) {
+          return `${arg.name}: ${arg.message}`;
+        }
+        return String(arg);
+      }).join(' ');
+      
+      // Suppress SDK reconnection errors during managed operations
+      if (this.isPollingRateChanging || this.isFactoryResetting || this.isReconnecting) {
+        if (message.includes('Reconnection failed') || 
+            message.includes('NotAllowedError') || 
+            message.includes('Failed to open the device')) {
+          return;
+        }
       }
+      
       this.originalConsoleError?.apply(console, args);
     };
   }

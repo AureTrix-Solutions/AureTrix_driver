@@ -15,6 +15,7 @@ class KeyboardService {
   private isReconnecting: boolean = false;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private originalConsoleError: typeof console.error | null = null;
+  private errorSuppressionCleanupTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Initialization
   constructor() {
@@ -51,12 +52,8 @@ class KeyboardService {
   }
 
   private suppressSDKReconnectError(): void {
-    if (this.originalConsoleError) {
-      console.warn('[DEBUG] suppressSDKReconnectError already active, skipping');
-      return;
-    }
+    if (this.originalConsoleError) return;
     
-    console.warn('[DEBUG] Activating SDK error suppression');
     this.originalConsoleError = console.error;
     console.error = (...args: any[]) => {
       // Convert all args to strings, handling Error objects properly
@@ -67,32 +64,23 @@ class KeyboardService {
         return String(arg);
       }).join(' ');
       
-      console.warn(`[DEBUG] console.error intercepted: "${message}"`);
-      console.warn(`[DEBUG] Flags - polling:${this.isPollingRateChanging}, factory:${this.isFactoryResetting}, reconnect:${this.isReconnecting}`);
-      
       // Suppress SDK reconnection errors during managed operations
       if (this.isPollingRateChanging || this.isFactoryResetting || this.isReconnecting) {
         if (message.includes('Reconnection failed') || 
             message.includes('NotAllowedError') || 
             message.includes('Failed to open the device')) {
-          console.warn('[DEBUG] SDK reconnection error SUPPRESSED');
           return;
         }
       }
       
-      console.warn('[DEBUG] Error NOT suppressed, passing through');
       this.originalConsoleError?.apply(console, args);
     };
   }
 
   private restoreConsoleError(): void {
-    console.warn(`[DEBUG] restoreConsoleError called - polling:${this.isPollingRateChanging}, factory:${this.isFactoryResetting}, reconnect:${this.isReconnecting}`);
     if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting && this.originalConsoleError) {
-      console.warn('[DEBUG] Restoring original console.error');
       console.error = this.originalConsoleError;
       this.originalConsoleError = null;
-    } else {
-      console.warn('[DEBUG] NOT restoring console.error (flags still active or no override)');
     }
   }
 
@@ -238,12 +226,29 @@ class KeyboardService {
       }
       this.isReconnecting = false;
       
-      // Restore console.error now that all operations are complete
-      this.restoreConsoleError();
+      // Delay restoring console.error to catch any delayed SDK reconnection errors
+      // The SDK sometimes logs errors slightly after our code completes
+      if (this.errorSuppressionCleanupTimeout) {
+        clearTimeout(this.errorSuppressionCleanupTimeout);
+      }
+      this.errorSuppressionCleanupTimeout = setTimeout(() => {
+        // Only restore if no operations are active - prevents leaking suppression
+        // if a new operation started during the delay window
+        if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting) {
+          this.restoreConsoleError();
+        }
+        this.errorSuppressionCleanupTimeout = null;
+      }, 500);
     }
   }
 
   private handleDisconnect = (event: HIDConnectionEvent): void => {
+    // Clear any pending error suppression cleanup
+    if (this.errorSuppressionCleanupTimeout) {
+      clearTimeout(this.errorSuppressionCleanupTimeout);
+      this.errorSuppressionCleanupTimeout = null;
+    }
+    
     // Only set up reconnection handling if not already in a managed operation
     // (polling rate change and factory reset handle their own reconnection logic)
     if (!this.isPollingRateChanging && !this.isFactoryResetting) {
@@ -1048,10 +1053,8 @@ class KeyboardService {
         this.pollingRateTimeout = null;
       }
       
-      console.warn('[DEBUG] setPollingRate: Activating error suppression');
       this.suppressSDKReconnectError();
       this.isPollingRateChanging = true;
-      console.warn('[DEBUG] setPollingRate: isPollingRateChanging = true');
       const result = await this.keyboard.setRateOfReturn(value);
       if (result instanceof Error) {
         this.isPollingRateChanging = false;

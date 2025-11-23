@@ -274,7 +274,8 @@ export default defineComponent({
       currentSystemMode: 'win' as 'win' | 'mac',
       isFactoryResetModalVisible: false,
       activeTooltip: null as string | null,
-      tooltipTop: 0
+      tooltipTop: 0,
+      hasLoadedQuickSettings: false
     };
   },
   computed: {
@@ -291,11 +292,6 @@ export default defineComponent({
     },
   },
   watch: {
-    'connectionStore.isInitialized'(newVal) {
-      if (newVal) {
-        this.syncHardwareSettings();
-      }
-    },
     openCategory(newVal) {
       if (newVal) {
         nextTick(() => {
@@ -349,7 +345,7 @@ export default defineComponent({
         this.closeCategory();
       }
     },
-    handleQuickSettingsClick(setting: string, event: MouseEvent) {
+    async handleQuickSettingsClick(setting: string, event: MouseEvent) {
       if (this.openQuickSettings === setting) {
         this.closeQuickSettings();
         return;
@@ -357,6 +353,12 @@ export default defineComponent({
       const target = event.currentTarget as HTMLElement;
       this.quickSettingsFlyoutTop = target.offsetTop - 20;
       this.openQuickSettings = setting;
+      
+      // Lazy-load quick settings values on first open
+      if (!this.hasLoadedQuickSettings && this.connectionStore.isInitialized) {
+        this.hasLoadedQuickSettings = true;
+        await this.syncHardwareSettings();
+      }
     },
     closeQuickSettings() {
       this.openQuickSettings = null;

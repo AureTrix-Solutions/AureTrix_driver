@@ -428,9 +428,15 @@ export default defineComponent({
     },
     async syncHardwareSettings() {
       const pollingRateResult = await KeyboardService.getPollingRate();
+      console.log('🔍 syncHardwareSettings received pollingRateResult:', pollingRateResult);
+      console.log('🔍 Type check - is Error?', pollingRateResult instanceof Error);
+      console.log('🔍 Type check - is number?', typeof pollingRateResult === 'number');
       if (!(pollingRateResult instanceof Error)) {
         if (typeof pollingRateResult === 'number' && pollingRateResult >= 0 && pollingRateResult <= 6) {
           this.currentPollingRate = pollingRateResult;
+          console.log('✅ Set currentPollingRate to:', this.currentPollingRate);
+        } else {
+          console.log('❌ pollingRateResult failed number validation:', pollingRateResult);
         }
       }
       

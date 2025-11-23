@@ -980,6 +980,9 @@ class KeyboardService {
         return new Error('No device connected');
       }
       const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_ROES' });
+      console.log('🔍 RAW getPollingRate() SDK result:', result);
+      console.log('🔍 Result type:', typeof result);
+      console.log('🔍 Result keys:', result ? Object.keys(result) : 'null');
       if (result instanceof Error) return result;
       return result;
     } catch (error) {

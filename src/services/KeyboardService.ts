@@ -4,6 +4,11 @@ import type { DeviceInit, Device } from '@sparklinkplayjoy/sdk-keyboard';
 import { IDefKeyInfo } from '../types/types';
 import { useConnectionStore } from '../store/connection';
 
+// WebHID type definitions
+interface HIDConnectionEvent extends Event {
+  device: HIDDevice;
+}
+
 class KeyboardService {
   private keyboard: XDKeyboard;
   private connectedDevice: Device | null = null;
@@ -16,6 +21,7 @@ class KeyboardService {
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private originalConsoleError: typeof console.error | null = null;
   private errorSuppressionCleanupTimeout: ReturnType<typeof setTimeout> | null = null;
+  private initializationPromise: Promise<void> | null = null;
 
   // Initialization
   constructor() {
@@ -115,6 +121,7 @@ class KeyboardService {
       await this.init(result.id);
       this.connectedDevice = result;
       localStorage.setItem('pairedStableId', fallbackId);
+      await this.initializeKeyboard();
       return result;
     } catch (error) {
       console.error('Failed to request device:', error);
@@ -156,6 +163,7 @@ class KeyboardService {
             this.connectedDevice = device;
             const connectionStore = useConnectionStore();
             await connectionStore.onAutoConnectSuccess(device);
+            await this.initializeKeyboard();
             return device;
           }
 
@@ -189,6 +197,103 @@ class KeyboardService {
     } catch (error) {
       console.error('Failed to initialize device:', error);
       throw new Error(`Failed to initialize device: ${(error as Error).message}`);
+    }
+  }
+
+  private async waitForSDKReady(): Promise<boolean> {
+    const maxAttempts = 10;
+    const baseDelay = 200;
+    
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_ROES' });
+        
+        if (!(result instanceof Error) && typeof result === 'number') {
+          return true;
+        }
+      } catch (error) {
+        // SDK not ready yet, continue retrying
+      }
+      
+      if (attempt < maxAttempts - 1) {
+        await new Promise(resolve => setTimeout(resolve, baseDelay + (attempt * 100)));
+      }
+    }
+    
+    console.error('SDK readiness timeout: ORDER_TYPE_ROES not responding');
+    return false;
+  }
+
+  async initializeKeyboard(): Promise<void> {
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+    
+    this.initializationPromise = this._initializeKeyboardInternal()
+      .finally(() => {
+        this.initializationPromise = null;
+      });
+    
+    return this.initializationPromise;
+  }
+
+  private async _initializeKeyboardInternal(retryCount: number = 0): Promise<void> {
+    const connectionStore = useConnectionStore();
+    const maxRetries = 2;
+    
+    if (retryCount === 0) {
+      connectionStore.setInitializing();
+    }
+    
+    try {
+      if (!this.connectedDevice) {
+        throw new Error('No device connected');
+      }
+      
+      const isReady = await this.waitForSDKReady();
+      
+      if (!isReady) {
+        throw new Error('SDK failed to become ready - ORDER_TYPE_ROES not responding');
+      }
+      
+      await this.syncHardwareSettings();
+      
+      connectionStore.setInitialized();
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+      console.error(`Keyboard initialization failed (attempt ${retryCount + 1}/${maxRetries + 1}):`, errorMessage);
+      
+      if (retryCount < maxRetries && this.connectedDevice) {
+        console.log(`Retrying initialization in ${(retryCount + 1) * 1000}ms...`);
+        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 1000));
+        
+        if (this.connectedDevice) {
+          return this._initializeKeyboardInternal(retryCount + 1);
+        }
+      }
+      
+      connectionStore.setInitializationError(errorMessage);
+      throw error;
+    }
+  }
+
+  private async syncHardwareSettings(): Promise<void> {
+    try {
+      const pollingRate = await this.getPollingRate();
+      if (!(pollingRate instanceof Error)) {
+        console.log('Polling rate synced:', pollingRate);
+      }
+    } catch (error) {
+      console.error('Failed to sync polling rate:', error);
+    }
+    
+    try {
+      const systemMode = await this.querySystemMode();
+      if (!(systemMode instanceof Error)) {
+        console.log('System mode synced:', systemMode);
+      }
+    } catch (error) {
+      console.error('Failed to sync system mode:', error);
     }
   }
 
@@ -238,7 +343,7 @@ class KeyboardService {
           this.restoreConsoleError();
         }
         this.errorSuppressionCleanupTimeout = null;
-      }, 500);
+      }, 5000);
     }
   }
 
@@ -248,6 +353,9 @@ class KeyboardService {
       clearTimeout(this.errorSuppressionCleanupTimeout);
       this.errorSuppressionCleanupTimeout = null;
     }
+    
+    // Clear initialization promise and state
+    this.initializationPromise = null;
     
     // Only set up reconnection handling if not already in a managed operation
     // (polling rate change and factory reset handle their own reconnection logic)
@@ -270,6 +378,7 @@ class KeyboardService {
     // Always update connection state regardless of operation type
     this.connectedDevice = null;
     const connectionStore = useConnectionStore();
+    connectionStore.clearInitialization();
     connectionStore.disconnect();
   }
 
@@ -293,7 +402,7 @@ class KeyboardService {
             return error as Error;
           }
           attempts++;
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 5000));
         }
       }
       return new Error('Failed to fetch base info: max retries exceeded');
@@ -322,7 +431,7 @@ class KeyboardService {
             return error as Error;
           }
           attempt++;
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 5000));
         }
       }
       return new Error('Failed to fetch keyboard layout: max retries exceeded');
@@ -351,7 +460,7 @@ class KeyboardService {
             return error as Error;
           }
           attempt++;
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 5000));
         }
       }
       return new Error('Failed to fetch layer layout: max retries exceeded');

@@ -5,12 +5,19 @@
       <div class="sidebar-header">
         <img src="@/assets/logo cropped.svg" alt="Keyboard Driver Logo" class="logo">
         <div v-if="connectionStore.status" class="status">
-          <ul v-if="connectionStore.isConnected && isStatusReady">
+          <ul v-if="connectionStore.isInitialized && isStatusReady">
             <li>Connected: {{ connectionStore.deviceInfo?.productName || 'Unknown Device' }}</li>
             <li>SN: {{ decodeString(connectionStore.deviceInfo?.KeyboardSN) || 'N/A' }}</li>
             <li v-if="connectionStore.deviceInfo?.BoardID">Board ID: {{ connectionStore.deviceInfo.BoardID }}</li>
             <li v-if="connectionStore.deviceInfo?.appVersion">Version: {{
               decodeString(connectionStore.deviceInfo?.appVersion) || 'N/A' }}</li>
+          </ul>
+          <ul v-else-if="connectionStore.isInitializing">
+            <li>Initializing keyboard...</li>
+          </ul>
+          <ul v-else-if="connectionStore.initializationError">
+            <li style="color: #ff6b6b;">Initialization failed: {{ connectionStore.initializationError }}</li>
+            <li style="font-size: 0.9em;">Try reconnecting your keyboard</li>
           </ul>
           <ul v-else-if="connectionStore.isConnected">
             <li>Loading device info...</li>
@@ -60,13 +67,13 @@
         </div>
         
         <!-- Profile Control Buttons -->
-        <button class="export-btn" @click="exportProfile" :disabled="!connectionStore.isConnected">
+        <button class="export-btn" @click="exportProfile" :disabled="!connectionStore.isInitialized">
           Export Profile
         </button>
-        <button class="import-btn" @click="importProfile" :disabled="!connectionStore.isConnected">
+        <button class="import-btn" @click="importProfile" :disabled="!connectionStore.isInitialized">
           Import Profile
         </button>
-        <button class="debug-export-btn" @click="exportProfileDebug" :disabled="!connectionStore.isConnected">
+        <button class="debug-export-btn" @click="exportProfileDebug" :disabled="!connectionStore.isInitialized">
           Debug Export JSON
         </button>
         <div class="import-separator"></div>
@@ -85,7 +92,7 @@
             System Mode
             <span class="arrow" :class="{ open: openQuickSettings === 'systemMode' }">></span>
           </div>
-          <button class="factory-reset-btn" @click="showFactoryResetModal" :disabled="!connectionStore.isConnected">
+          <button class="factory-reset-btn" @click="showFactoryResetModal" :disabled="!connectionStore.isInitialized">
             Factory Reset
           </button>
         </div>
@@ -267,8 +274,7 @@ export default defineComponent({
       currentSystemMode: 'win' as 'win' | 'mac',
       isFactoryResetModalVisible: false,
       activeTooltip: null as string | null,
-      tooltipTop: 0,
-      syncHardwareSettingsTimeout: null as ReturnType<typeof setTimeout> | null
+      tooltipTop: 0
     };
   },
   computed: {
@@ -285,23 +291,9 @@ export default defineComponent({
     },
   },
   watch: {
-    'connectionStore.isConnected'(newVal) {
-      // Clear any existing timeout
-      if (this.syncHardwareSettingsTimeout) {
-        clearTimeout(this.syncHardwareSettingsTimeout);
-        this.syncHardwareSettingsTimeout = null;
-      }
-      
+    'connectionStore.isInitialized'(newVal) {
       if (newVal) {
-        // Brief delay to let connection stabilize, then sync settings
-        // The retry logic in getPollingRate/querySystemMode handles SDK readiness
-        this.syncHardwareSettingsTimeout = setTimeout(() => {
-          // Verify device is still connected before syncing
-          if (this.connectionStore.isConnected) {
-            this.syncHardwareSettings();
-          }
-          this.syncHardwareSettingsTimeout = null;
-        }, 200);
+        this.syncHardwareSettings();
       }
     },
     openCategory(newVal) {

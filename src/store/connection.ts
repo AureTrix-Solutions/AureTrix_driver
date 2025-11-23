@@ -7,8 +7,11 @@ export const useConnectionStore = defineStore('connection', {
   // State
   state: () => ({
     isConnected: false,
+    isInitializing: false,
+    isInitialized: false,
     status: '',
     deviceInfo: null as any,
+    initializationError: null as string | null,
   }),
 
   // Actions
@@ -73,8 +76,42 @@ export const useConnectionStore = defineStore('connection', {
     // Disconnect device
     disconnect() {
       this.isConnected = false;
+      this.isInitializing = false;
+      this.isInitialized = false;
+      this.initializationError = null;
       this.status = 'Device disconnected. Please reconnect manually.';
       this.deviceInfo = null;
+    },
+
+    // Set initialization state
+    setInitializing() {
+      this.isInitializing = true;
+      this.isInitialized = false;
+      this.initializationError = null;
+      this.status = 'Initializing keyboard...';
+    },
+
+    // Set initialized state
+    setInitialized() {
+      this.isInitializing = false;
+      this.isInitialized = true;
+      this.initializationError = null;
+      this.status = `Connected to ${this.deviceInfo?.productName || 'keyboard'}`;
+    },
+
+    // Set initialization error
+    setInitializationError(error: string) {
+      this.isInitializing = false;
+      this.isInitialized = false;
+      this.initializationError = error;
+      this.status = `Initialization failed: ${error}`;
+    },
+
+    // Clear initialization state (for reconnects)
+    clearInitialization() {
+      this.isInitializing = false;
+      this.isInitialized = false;
+      this.initializationError = null;
     },
 
     // Handle successful auto-connect callback for reconnects

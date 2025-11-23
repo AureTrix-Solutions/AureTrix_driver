@@ -293,14 +293,15 @@ export default defineComponent({
       }
       
       if (newVal) {
-        // Add delay to ensure SDK is fully ready before querying settings
+        // Brief delay to let connection stabilize, then sync settings
+        // The retry logic in getPollingRate/querySystemMode handles SDK readiness
         this.syncHardwareSettingsTimeout = setTimeout(() => {
           // Verify device is still connected before syncing
           if (this.connectionStore.isConnected) {
             this.syncHardwareSettings();
           }
           this.syncHardwareSettingsTimeout = null;
-        }, 500);
+        }, 200);
       }
     },
     openCategory(newVal) {

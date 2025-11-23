@@ -979,9 +979,26 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_ROES' });
-      if (result instanceof Error) return result;
-      return result;
+      let attempts = 0;
+      const maxAttempts = 5;
+      while (attempts < maxAttempts) {
+        try {
+          const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_ROES' });
+          if (result instanceof Error) throw result;
+          if (typeof result === 'number') {
+            return result;
+          }
+          throw new Error('Invalid polling rate response');
+        } catch (error) {
+          if (attempts === maxAttempts - 1) {
+            console.error('Failed to get polling rate after retries:', error);
+            return error as Error;
+          }
+          attempts++;
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+      }
+      return new Error('Failed to get polling rate: max retries exceeded');
     } catch (error) {
       console.error('Failed to get polling rate:', error);
       return error as Error;
@@ -1080,16 +1097,30 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_QUERY_WIN_MODEL' });
-      if (result instanceof Error) return result;
-      if (!result || typeof result.currentSystem !== 'string') {
-        return new Error('Invalid system mode response from device');
+      let attempts = 0;
+      const maxAttempts = 5;
+      while (attempts < maxAttempts) {
+        try {
+          const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_QUERY_WIN_MODEL' });
+          if (result instanceof Error) throw result;
+          if (!result || typeof result.currentSystem !== 'string') {
+            throw new Error('Invalid system mode response from device');
+          }
+          const mode = result.currentSystem;
+          if (mode !== 'win' && mode !== 'mac') {
+            throw new Error(`Unexpected system mode value: ${mode}`);
+          }
+          return mode;
+        } catch (error) {
+          if (attempts === maxAttempts - 1) {
+            console.error('Failed to query system mode after retries:', error);
+            return error as Error;
+          }
+          attempts++;
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
       }
-      const mode = result.currentSystem;
-      if (mode !== 'win' && mode !== 'mac') {
-        return new Error(`Unexpected system mode value: ${mode}`);
-      }
-      return mode;
+      return new Error('Failed to query system mode: max retries exceeded');
     } catch (error) {
       console.error('Failed to query system mode:', error);
       return error as Error;

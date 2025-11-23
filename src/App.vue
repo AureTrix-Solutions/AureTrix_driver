@@ -1,6 +1,5 @@
 <template>
   <div class="app-container">
-    <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <img src="@/assets/logo cropped.svg" alt="Keyboard Driver Logo" class="logo">
@@ -26,7 +25,6 @@
         </div>
       </div>
       <nav class="sidebar-nav">
-        <!-- Main Navigation Section -->
         <div class="main-nav-section">
           <div class="main-nav-separator-top"></div>
           <div class="main-nav-header">
@@ -45,7 +43,6 @@
           <div class="main-nav-separator-bottom"></div>
         </div>
 
-        <!-- Profile Quick Access Grid -->
         <div class="profiles-section">
           <div class="profiles-header">
             <span class="profiles-title">Profiles</span>
@@ -66,7 +63,6 @@
           </div>
         </div>
         
-        <!-- Profile Control Buttons -->
         <button class="export-btn" @click="exportProfile" :disabled="!connectionStore.isInitialized">
           Export Profile
         </button>
@@ -78,7 +74,6 @@
         </button>
         <div class="import-separator"></div>
 
-        <!-- Quick Settings Section -->
         <div class="quick-settings-section">
           <div class="quick-settings-header">
             <span class="quick-settings-title">Quick Settings</span>
@@ -100,7 +95,6 @@
       <p class="copyright">Copyright©2025 AureTrix</p>
     </aside>
 
-    <!-- Flyout Submenu -->
     <div v-if="openCategory" class="flyout-menu" :style="{ top: flyoutTop + 'px' }" @click.self="closeCategory">
       <div class="flyout-content">
         <nav class="flyout-nav">
@@ -118,14 +112,12 @@
       </div>
     </div>
 
-    <!-- Tooltip Flyout -->
     <div v-if="activeTooltip" class="tooltip-flyout" :style="{ top: tooltipTop + 'px' }">
       <div class="tooltip-flyout-content">
         {{ activeTooltip }}
       </div>
     </div>
 
-    <!-- Quick Settings Flyout - Polling Rate -->
     <div v-if="openQuickSettings === 'pollingRate'" class="flyout-menu" :style="{ top: quickSettingsFlyoutTop + 'px' }" @click.self="closeQuickSettings">
       <div class="flyout-content">
         <div class="quick-setting-item">
@@ -138,7 +130,6 @@
       </div>
     </div>
 
-    <!-- Quick Settings Flyout - System Mode -->
     <div v-if="openQuickSettings === 'systemMode'" class="flyout-menu" :style="{ top: quickSettingsFlyoutTop + 'px' }" @click.self="closeQuickSettings">
       <div class="flyout-content">
         <div class="quick-setting-item">
@@ -151,10 +142,8 @@
       </div>
     </div>
 
-    <!-- Factory Reset Modal -->
     <FactoryResetModal v-if="isFactoryResetModalVisible" @confirm="handleFactoryReset" @cancel="hideFactoryResetModal" />
 
-    <!-- Main Content Area -->
     <main class="main-content">
       <router-view />
     </main>
@@ -366,30 +355,24 @@ export default defineComponent({
     handleClickOutsideQuickSettings(event: MouseEvent) {
       const target = event.target as HTMLElement;
       
-      // Check if clicked inside a flyout menu
       const flyoutMenu = target.closest('.flyout-menu');
       if (flyoutMenu) {
-        // Check if this flyout menu is a quick settings menu (contains .quick-setting-item)
         const isQuickSettingsFlyout = flyoutMenu.querySelector('.quick-setting-item');
         if (isQuickSettingsFlyout) {
-          // Click is inside the quick settings flyout, don't close
           return;
         }
       }
       
-      // Check if clicked on the quick settings menu item in sidebar
       const sidebar = target.closest('.sidebar');
       if (sidebar) {
         const clickedNavItem = target.closest('.nav-item.category-header');
         if (clickedNavItem && 
             (clickedNavItem.textContent?.includes('Polling Rate') || 
              clickedNavItem.textContent?.includes('System Mode'))) {
-          // Click is on the quick settings toggle in sidebar, let the click handler manage it
           return;
         }
       }
       
-      // Otherwise, close the quick settings
       this.closeQuickSettings();
     },
     showTooltip(tooltip: string, event: MouseEvent) {
@@ -409,16 +392,13 @@ export default defineComponent({
       if (result instanceof Error) {
         console.error('Failed to set polling rate:', result.message);
       } else {
-        // Wait for device to reconnect and reinitialize before reloading
-        // Poll the connection store until both initialization AND suppression cleanup are complete
+        // Wait for reconnection and suppression cleanup before reloading
         const waitForReinitialization = async () => {
           const maxWaitTime = 15000; // 15 second timeout
           const startTime = Date.now();
           
           while (Date.now() - startTime < maxWaitTime) {
-            // Wait for BOTH conditions: initialization complete AND suppression window finished
             if (this.connectionStore.isInitialized && !this.connectionStore.isPostReconnectionSuppression) {
-              // Both conditions met - safe to reload immediately
               return true;
             }
             // Check every 200ms

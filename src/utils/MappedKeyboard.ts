@@ -19,7 +19,8 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
       return {};
     }
     const totalKeys = baseLayout.value.flat().length;
-    const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value);
+    const productName = connectionStore.deviceInfo?.productName;
+    const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value, undefined, undefined, undefined, productName);
     if (!keyPositions || keyPositions.length === 0) {
       return { height: '0px', width: '0px' };
     }
@@ -38,7 +39,8 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
       return {};
     }
     const totalKeys = baseLayout.value.flat().length;
-    const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value);
+    const productName = connectionStore.deviceInfo?.productName;
+    const { keyPositions, gaps } = getLayoutConfig(totalKeys, baseLayout.value, undefined, undefined, undefined, productName);
     const rowLength = baseLayout.value[rowIdx]?.length || 0;
     if (!keyPositions || !keyPositions[rowIdx] || !Array.isArray(keyPositions[rowIdx]) || colIdx >= rowLength) {
       return { width: '0px', height: '0px', left: '0px', top: '0px' };

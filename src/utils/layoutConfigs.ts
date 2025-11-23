@@ -1,11 +1,12 @@
 // layoutConfigs.ts
 import LayoutStorageService, { type CustomLayoutConfig } from '@/services/LayoutStorageService';
+import { sharedLayoutMap } from './sharedLayout';
 
 const mmToPx = (mm: number) => Math.round(mm * 4); // Increased to 4px/mm for larger keys
 
 type LayoutConfig = {
   keySizes: number[][];
-  gapsAfterCol: Record<number, Record<number, number>>[];
+  gapsAfterCol: Record<number, number>[];
   rowSpacing: number[];
 };
 
@@ -118,7 +119,17 @@ const layoutMap: Record<number, LayoutConfig> = {
 };
 
 export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[], productName?: string) => {
-  // Check for custom layout by productName first (cache preloaded at app startup)
+  // Priority 1: Check sharedLayout.ts for community-contributed layouts by productName
+  if (productName && sharedLayoutMap[productName]) {
+    const config: LayoutConfig = {
+      keySizes: sharedLayoutMap[productName].keySizes,
+      gapsAfterCol: sharedLayoutMap[productName].gapsAfterCol,
+      rowSpacing: sharedLayoutMap[productName].rowSpacing
+    };
+    return processLayoutConfig(config, baseLayout, customKeySizes, customGapsAfterCol, customRowSpacing);
+  }
+
+  // Priority 2: Check IndexedDB for user-created custom layouts by productName
   if (productName) {
     const customLayout = customLayoutsCache.find(layout => layout.productName === productName);
     if (customLayout) {
@@ -131,7 +142,7 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
     }
   }
 
-  // Fall back to keyCount-based lookup
+  // Priority 3: Fall back to keyCount-based lookup from layoutMap
   const config = layoutMap[keyCount];
   if (!config) {
     throw new Error(`Unsupported key count: ${keyCount}`);
@@ -193,7 +204,7 @@ function processLayoutConfig(config: LayoutConfig, baseLayout?: any[][], customK
   ) || [];
 
   if (convertedPositions.length === 0) {
-    convertedPositions = Array(rows).fill().map(() => Array(cols).fill([0, 0, mmToPx(17), mmToPx(17)]));
+    convertedPositions = Array(rows).fill(undefined).map(() => Array(cols).fill([0, 0, mmToPx(17), mmToPx(17)]));
   }
 
   return { rows, cols, keyPositions: convertedPositions, gaps: Array(rows).fill(0) }; // Gaps handled in left

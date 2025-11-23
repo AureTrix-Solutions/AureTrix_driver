@@ -117,6 +117,7 @@ import LayoutStorageService from '@/services/LayoutStorageService';
 import KeyboardService from '@/services/KeyboardService';
 import { uToMm, KEY_SIZES, mmToPx } from '@/utils/keyUnits';
 import { sharedLayoutMap } from '@/utils/sharedLayout';
+import { refreshCustomLayouts } from '@/utils/layoutConfigs';
 
 interface VirtualKey {
   size: number; // units (1, 1.25, 2, etc.)
@@ -445,6 +446,8 @@ export default defineComponent({
         notification.value = { message: 'Layout saved successfully!', isError: false };
         // Reload saved layouts list after saving
         await loadSavedLayouts();
+        // Refresh the global layout cache so changes are immediately available app-wide
+        await refreshCustomLayouts();
       } catch (error) {
         console.error('Failed to save layout:', error);
         notification.value = { message: 'Failed to save layout. Please try again.', isError: true };

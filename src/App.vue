@@ -267,7 +267,8 @@ export default defineComponent({
       currentSystemMode: 'win' as 'win' | 'mac',
       isFactoryResetModalVisible: false,
       activeTooltip: null as string | null,
-      tooltipTop: 0
+      tooltipTop: 0,
+      syncHardwareSettingsTimeout: null as ReturnType<typeof setTimeout> | null
     };
   },
   computed: {
@@ -285,10 +286,20 @@ export default defineComponent({
   },
   watch: {
     'connectionStore.isConnected'(newVal) {
+      // Clear any existing timeout
+      if (this.syncHardwareSettingsTimeout) {
+        clearTimeout(this.syncHardwareSettingsTimeout);
+        this.syncHardwareSettingsTimeout = null;
+      }
+      
       if (newVal) {
         // Add delay to ensure SDK is fully ready before querying settings
-        setTimeout(() => {
-          this.syncHardwareSettings();
+        this.syncHardwareSettingsTimeout = setTimeout(() => {
+          // Verify device is still connected before syncing
+          if (this.connectionStore.isConnected) {
+            this.syncHardwareSettings();
+          }
+          this.syncHardwareSettingsTimeout = null;
         }, 500);
       }
     },

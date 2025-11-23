@@ -9,6 +9,7 @@ export const useConnectionStore = defineStore('connection', {
     isConnected: false,
     isInitializing: false,
     isInitialized: false,
+    isPostReconnectionSuppression: false,
     status: '',
     deviceInfo: null as any,
     initializationError: null as string | null,
@@ -112,6 +113,11 @@ export const useConnectionStore = defineStore('connection', {
       this.isInitializing = false;
       this.isInitialized = false;
       this.initializationError = null;
+    },
+
+    // Set post-reconnection suppression state
+    setPostReconnectionSuppression(active: boolean) {
+      this.isPostReconnectionSuppression = active;
     },
 
     // Handle successful auto-connect callback for reconnects

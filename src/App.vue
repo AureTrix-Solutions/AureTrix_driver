@@ -410,16 +410,15 @@ export default defineComponent({
         console.error('Failed to set polling rate:', result.message);
       } else {
         // Wait for device to reconnect and reinitialize before reloading
-        // Poll the connection store until isInitialized becomes true again
+        // Poll the connection store until both initialization AND suppression cleanup are complete
         const waitForReinitialization = async () => {
           const maxWaitTime = 15000; // 15 second timeout
           const startTime = Date.now();
           
           while (Date.now() - startTime < maxWaitTime) {
-            if (this.connectionStore.isInitialized) {
-              // Initialization complete - wait 5 more seconds for post-reconnection suppression to finish
-              // The handleConnect method activates a 5-second suppression window after reconnection
-              await new Promise(resolve => setTimeout(resolve, 5000));
+            // Wait for BOTH conditions: initialization complete AND suppression window finished
+            if (this.connectionStore.isInitialized && !this.connectionStore.isPostReconnectionSuppression) {
+              // Both conditions met - safe to reload immediately
               return true;
             }
             // Check every 200ms

@@ -321,42 +321,48 @@ class KeyboardService {
       this.reconnectTimeout = null;
     }
     
+    // Activate post-reconnection suppression window BEFORE reconnection/initialization
+    // This allows the 5-second timer to run in parallel with autoConnect() and initialization
+    // By the time initialization completes, the timer may already be partially or fully elapsed
+    this.isPostReconnectionSuppression = true;
+    const connectionStore = useConnectionStore();
+    connectionStore.setPostReconnectionSuppression(true);
+    
+    if (this.errorSuppressionCleanupTimeout) {
+      clearTimeout(this.errorSuppressionCleanupTimeout);
+    }
+    this.errorSuppressionCleanupTimeout = setTimeout(() => {
+      // Clear post-reconnection suppression window
+      this.isPostReconnectionSuppression = false;
+      
+      // Update store to expose suppression state to UI
+      const connectionStore = useConnectionStore();
+      connectionStore.setPostReconnectionSuppression(false);
+      
+      // Clear operation flags only if they match the tokens captured at reconnection start
+      // This prevents clearing flags from new operations that started during the cleanup window
+      if (this.pollingRateOperationToken === pollingRateToken) {
+        this.isPollingRateChanging = false;
+        this.pollingRateOperationToken = null;
+      }
+      if (this.factoryResetOperationToken === factoryResetToken) {
+        this.isFactoryResetting = false;
+        this.factoryResetOperationToken = null;
+      }
+      
+      // Only restore console.error if no operations are active
+      if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting && !this.isPostReconnectionSuppression) {
+        this.restoreConsoleError();
+      }
+      this.errorSuppressionCleanupTimeout = null;
+    }, 2000);
+    
     try {
       // autoConnect() while error suppression is still active
       await this.autoConnect();
     } finally {
       // Clear isReconnecting immediately - it's only for unmanaged disconnects
       this.isReconnecting = false;
-      
-      // Activate post-reconnection suppression window to catch delayed SDK errors
-      // The SDK sometimes logs reconnection errors slightly after our code completes
-      // This keeps suppression active independently of operation flags
-      this.isPostReconnectionSuppression = true;
-      
-      if (this.errorSuppressionCleanupTimeout) {
-        clearTimeout(this.errorSuppressionCleanupTimeout);
-      }
-      this.errorSuppressionCleanupTimeout = setTimeout(() => {
-        // Clear post-reconnection suppression window
-        this.isPostReconnectionSuppression = false;
-        
-        // Clear operation flags only if they match the tokens captured at reconnection start
-        // This prevents clearing flags from new operations that started during the cleanup window
-        if (this.pollingRateOperationToken === pollingRateToken) {
-          this.isPollingRateChanging = false;
-          this.pollingRateOperationToken = null;
-        }
-        if (this.factoryResetOperationToken === factoryResetToken) {
-          this.isFactoryResetting = false;
-          this.factoryResetOperationToken = null;
-        }
-        
-        // Only restore console.error if no operations are active
-        if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting && !this.isPostReconnectionSuppression) {
-          this.restoreConsoleError();
-        }
-        this.errorSuppressionCleanupTimeout = null;
-      }, 5000);
     }
   }
 

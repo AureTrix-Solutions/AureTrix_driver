@@ -158,8 +158,116 @@ export default defineComponent({
       }
     };
 
+    const hasLoadedHardwareLayout = ref(false);
+
+    const initializeFallbackLayout = () => {
+      // Always show fallback 6-row layout immediately
+      rowCounts.value = [1, 1, 1, 1, 1, 1];
+      previousRowCounts.value = [1, 1, 1, 1, 1, 1];
+      generateVirtualKeyboard();
+    };
+
+    const loadHardwareLayout = async () => {
+      // Try to load actual hardware layout when connection is ready
+      // Don't use hasLoadedHardwareLayout as early return - allow retries
+      
+      try {
+        if (connectionStore.isInitialized && connectionStore.isConnected && !hasLoadedHardwareLayout.value) {
+          // Retry logic to handle delayed SDK responses
+          const maxRetries = 5;
+          let attempt = 0;
+          let baseLayout = null;
+          
+          while (attempt < maxRetries && !baseLayout && !hasLoadedHardwareLayout.value) {
+            baseLayout = await KeyboardService.defKey();
+            if (baseLayout && baseLayout.length > 0) {
+              break; // Got valid layout
+            }
+            // Exponential backoff: 100ms, 200ms, 400ms, 800ms, 1600ms
+            await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt)));
+            attempt++;
+          }
+          
+          if (baseLayout && baseLayout.length > 0 && !hasLoadedHardwareLayout.value) {
+            // Update to hardware's actual row count with 1 key per row
+            const rowCountArray = Array(baseLayout.length).fill(1);
+            // Pad to ensure we have at least 6 slots for consistency
+            while (rowCountArray.length < 6) {
+              rowCountArray.push(undefined);
+            }
+            rowCounts.value = rowCountArray;
+            previousRowCounts.value = [...rowCountArray];
+            hasLoadedHardwareLayout.value = true;
+            generateVirtualKeyboard();
+            
+            // Update product name once we have hardware info
+            if (connectionStore.deviceInfo?.productName) {
+              productName.value = connectionStore.deviceInfo.productName;
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Could not load hardware keyboard layout:', error);
+      }
+    };
+
+    // Reset hardware layout flag when keyboard disconnects
+    watch(
+      () => connectionStore.isConnected,
+      (isConnected) => {
+        if (!isConnected) {
+          hasLoadedHardwareLayout.value = false;
+          // Revert to fallback layout when disconnected
+          initializeFallbackLayout();
+        }
+      }
+    );
+
+    // Watch for device changes (hot-swap scenario) - watch entire deviceInfo object
+    watch(
+      () => JSON.stringify(connectionStore.deviceInfo),
+      async (newInfo, oldInfo) => {
+        // Trigger on initial connection (oldInfo null → newInfo populated) or device change
+        if (newInfo && newInfo !== oldInfo) {
+          hasLoadedHardwareLayout.value = false;
+          // Only show fallback if this is a change, not initial load
+          if (oldInfo) {
+            initializeFallbackLayout();
+          }
+          // Immediately load new hardware layout if connection is ready
+          if (connectionStore.isInitialized) {
+            await loadHardwareLayout();
+          }
+        }
+      }
+    );
+
+    // Watch for connection becoming ready and load hardware layout
+    watch(
+      () => connectionStore.isInitialized,
+      async (isInitialized, wasInitialized) => {
+        // Trigger on rising edge (false → true) or when not yet loaded
+        if (isInitialized && (!wasInitialized || !hasLoadedHardwareLayout.value)) {
+          await loadHardwareLayout();
+        }
+      }
+    );
+
     onMounted(async () => {
-      productName.value = connectionStore.deviceInfo?.productName || 'Custom Keyboard';
+      // Always show fallback layout immediately
+      initializeFallbackLayout();
+
+      // Set initial product name
+      if (connectionStore.deviceInfo?.productName) {
+        productName.value = connectionStore.deviceInfo.productName;
+      } else {
+        productName.value = 'Custom Keyboard';
+      }
+
+      // Try to load hardware layout if already connected
+      if (connectionStore.isInitialized && !hasLoadedHardwareLayout.value) {
+        await loadHardwareLayout();
+      }
 
       try {
         const axisResult = await KeyboardService.getAxisList();

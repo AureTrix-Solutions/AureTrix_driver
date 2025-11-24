@@ -105,6 +105,17 @@ const layoutMap: Record<number, LayoutConfig> = {
 },
 };
 
+// Generate fallback layout dynamically based on baseLayout row count
+// Single column with 1u keys, used when no other layout matches
+function generateFallbackLayout(baseLayout?: any[][]): LayoutConfig {
+  const rowCount = baseLayout && baseLayout.length > 0 ? baseLayout.length : 6;
+  return {
+    keySizes: Array(rowCount).fill([19.05]),
+    gapsAfterCol: Array(rowCount).fill({}),
+    rowSpacing: Array(rowCount).fill(20.05),
+  };
+}
+
 export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[], productName?: string) => {
   // Priority 1: Check IndexedDB for user-created custom layouts by productName
   if (productName) {
@@ -131,8 +142,11 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
 
   // Priority 3: Fall back to keyCount-based lookup from layoutMap
   const config = layoutMap[keyCount];
+  
+  // Priority 4: Last resort - generate fallback single-column layout
   if (!config) {
-    throw new Error(`Unsupported key count: ${keyCount}`);
+    const fallbackConfig = generateFallbackLayout(baseLayout);
+    return processLayoutConfig(fallbackConfig, baseLayout, customKeySizes, customGapsAfterCol, customRowSpacing);
   }
 
   return processLayoutConfig(config, baseLayout, customKeySizes, customGapsAfterCol, customRowSpacing);

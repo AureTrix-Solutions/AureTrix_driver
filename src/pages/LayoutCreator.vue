@@ -56,7 +56,7 @@
               </div>
               <!-- Row Counts Row -->
               <div class="row-inputs-row">
-                <div v-for="i in 6" :key="`row-${i}`" class="input-group">
+                <div v-for="i in displayRowCount" :key="`row-${i}`" class="input-group">
                   <div class="label">Row{{ i - 1 }}</div>
                   <input v-model.number="rowCounts[i - 1]" type="number" min="0" placeholder="0"
                     class="number-input" />
@@ -64,7 +64,7 @@
               </div>
               <!-- Gap Inputs Row -->
               <div class="gap-inputs-row">
-                <div v-for="i in 6" :key="`gap-${i}`" class="input-group">
+                <div v-for="i in displayRowCount" :key="`gap-${i}`" class="input-group">
                   <div class="label">Gap{{ i - 1 }} (mm)</div>
                   <input v-model.number="rowGaps[i - 1]" type="number" min="0" step="0.1" placeholder="0"
                     class="number-input" />
@@ -133,10 +133,10 @@ export default defineComponent({
 
     const productName = ref('');
     const hasAxisList = ref(false);
-    const rowCounts = ref<(number | undefined)[]>([undefined, undefined, undefined, undefined, undefined, undefined]);
-    const rowGaps = ref<(number | undefined)[]>([undefined, undefined, undefined, undefined, undefined, undefined]);
+    const rowCounts = ref<(number | undefined)[]>([]);
+    const rowGaps = ref<(number | undefined)[]>([]);
     const virtualKeyboard = ref<VirtualKey[][]>([]);
-    const previousRowCounts = ref<(number | undefined)[]>([undefined, undefined, undefined, undefined, undefined, undefined]);
+    const previousRowCounts = ref<(number | undefined)[]>([]);
 
     const selectedKeys = ref<{ row: number; col: number }[]>([]);
     const selectedKeyData = ref<VirtualKey>({ size: 1, sizeMm: uToMm(1), gap: 0 });
@@ -150,6 +150,15 @@ export default defineComponent({
       return !!trimmedName && trimmedName in sharedLayoutMap;
     });
 
+    const displayRowCount = computed(() => {
+      const actualRowCount = Math.max(
+        virtualKeyboard.value.length,
+        rowCounts.value.filter(c => c !== undefined).length,
+        6
+      );
+      return Math.min(actualRowCount, 10);
+    });
+
     const loadSavedLayouts = async () => {
       try {
         savedLayouts.value = await LayoutStorageService.getAllLayouts();
@@ -161,23 +170,19 @@ export default defineComponent({
     const hasLoadedHardwareLayout = ref(false);
 
     const initializeFallbackLayout = () => {
-      // Always show fallback 6-row layout immediately with padding
-      const paddedKeySizes = getPaddedKeySizes(null); // null = use default 6 rows
+      const paddedKeySizes = getPaddedKeySizes(null);
       
-      // Build virtualKeyboard from padded keySizes
       const keyboard: VirtualKey[][] = paddedKeySizes.map(row => 
         row.map(sizeMm => ({ size: sizeMm / 19.05, sizeMm, gap: 0 }))
       );
       virtualKeyboard.value = keyboard;
       
-      // Update rowCounts to match actual key counts per row
       const counts = paddedKeySizes.map(row => row.length);
-      // Pad to ensure we have at least 6 slots for UI consistency
-      while (counts.length < 6) {
-        counts.push(undefined);
-      }
-      rowCounts.value = counts;
+      const gaps = paddedKeySizes.map(() => undefined);
+      
       previousRowCounts.value = [...counts];
+      rowCounts.value = counts;
+      rowGaps.value = gaps;
       selectedKeys.value = [];
     };
 
@@ -203,27 +208,22 @@ export default defineComponent({
           }
           
           if (baseLayout && baseLayout.length > 0 && !hasLoadedHardwareLayout.value) {
-            // Get fully padded keySizes using baseLayout
             const paddedKeySizes = getPaddedKeySizes(baseLayout);
             
-            // Build virtualKeyboard from padded keySizes
             const keyboard: VirtualKey[][] = paddedKeySizes.map(row => 
               row.map(sizeMm => ({ size: sizeMm / 19.05, sizeMm, gap: 0 }))
             );
             virtualKeyboard.value = keyboard;
             
-            // Update rowCounts to match actual key counts per row
             const counts = paddedKeySizes.map(row => row.length);
-            // Pad to ensure we have at least 6 slots for UI consistency
-            while (counts.length < 6) {
-              counts.push(undefined);
-            }
-            rowCounts.value = counts;
+            const gaps = paddedKeySizes.map(() => undefined);
+            
             previousRowCounts.value = [...counts];
+            rowCounts.value = counts;
+            rowGaps.value = gaps;
             hasLoadedHardwareLayout.value = true;
             selectedKeys.value = [];
             
-            // Update product name once we have hardware info
             if (connectionStore.deviceInfo?.productName) {
               productName.value = connectionStore.deviceInfo.productName;
             }
@@ -720,23 +720,16 @@ export default defineComponent({
 
         virtualKeyboard.value = keyboard;
 
-        // Reconstruct rowCounts and rowGaps
-        const newRowCounts: (number | undefined)[] = [undefined, undefined, undefined, undefined, undefined, undefined];
-        const newRowGaps: (number | undefined)[] = [undefined, undefined, undefined, undefined, undefined, undefined];
-        
-        keyboard.forEach((row, idx) => {
-          newRowCounts[idx] = row.length;
-          // Extract user-defined gap from rowSpacing (rowSpacing = gap + uToMm(1) + 1)
+        const newRowCounts: (number | undefined)[] = keyboard.map(row => row.length);
+        const newRowGaps: (number | undefined)[] = keyboard.map((row, idx) => {
           const totalSpacing = layout.rowSpacing[idx] || 0;
-          newRowGaps[idx] = totalSpacing - uToMm(1) - 1;
+          return totalSpacing - uToMm(1) - 1;
         });
 
+        previousRowCounts.value = [...newRowCounts];
         rowCounts.value = newRowCounts;
         rowGaps.value = newRowGaps;
         selectedKeys.value = [];
-        
-        // Update snapshot to prevent watcher from wiping loaded data
-        previousRowCounts.value = [...newRowCounts];
 
         notification.value = { message: 'Layout loaded successfully!', isError: false };
       } catch (error) {
@@ -783,21 +776,16 @@ export default defineComponent({
 
         virtualKeyboard.value = keyboard;
 
-        const newRowCounts: (number | undefined)[] = [undefined, undefined, undefined, undefined, undefined, undefined];
-        const newRowGaps: (number | undefined)[] = [undefined, undefined, undefined, undefined, undefined, undefined];
-        
-        keyboard.forEach((row, idx) => {
-          newRowCounts[idx] = row.length;
+        const newRowCounts: (number | undefined)[] = keyboard.map(row => row.length);
+        const newRowGaps: (number | undefined)[] = keyboard.map((row, idx) => {
           const totalSpacing = layout.rowSpacing[idx] || 0;
-          newRowGaps[idx] = totalSpacing - uToMm(1) - 1;
+          return totalSpacing - uToMm(1) - 1;
         });
 
+        previousRowCounts.value = [...newRowCounts];
         rowCounts.value = newRowCounts;
         rowGaps.value = newRowGaps;
         selectedKeys.value = [];
-        
-        // Update snapshot to prevent watcher from wiping imported data
-        previousRowCounts.value = [...newRowCounts];
 
         notification.value = { message: 'Layout imported successfully!', isError: false };
       } catch (error) {
@@ -825,6 +813,7 @@ export default defineComponent({
       selectedSavedLayout,
       importFileInput,
       isCommunityLayoutExists,
+      displayRowCount,
       gridStyle,
       generateVirtualKeyboard,
       getKeyStyle,

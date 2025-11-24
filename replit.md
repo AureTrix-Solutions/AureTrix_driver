@@ -3,6 +3,13 @@
 ## Overview
 AureTrix is a web-based configuration tool for hall effect keyboards compatible with the SparkLink SDK. It provides a professional, browser-based interface for customizing keyboard behavior without requiring native drivers. Key capabilities include multi-layer key remapping, macro creation, comprehensive RGB lighting control, advanced hall effect features (Dynamic Keystroke, Magnetic Point Triggering, Rapid Trigger), sensor calibration, profile management, a real-time debugging interface, and a custom layout creator with controller emulation metadata support. The application runs entirely in the browser using the WebHID API, aiming to be the leading configuration solution for SparkLink-compatible hall effect keyboards.
 
+## Recent Changes
+### November 24, 2025 - Layout Creator Initialization & Fallback System
+-   **Layout Creator Single-Column Initialization:** Updated LayoutCreator.vue to automatically initialize with a single-column layout (1 key per row) instead of starting empty. Users now have an immediate foundation for building layouts, where each row contains one 1u key that works with the auto-padding logic. The row count dynamically adapts to the connected keyboard's actual hardware (via baseLayout), defaulting to 6 rows when no keyboard is connected.
+-   **Robust Connection Lifecycle Handling:** Implemented comprehensive watchers for connection state changes, device hot-swaps, and disconnects. Includes retry logic with exponential backoff (up to 5 attempts over ~3 seconds) to handle delayed SDK responses. Users always see a functional layout that adapts to their hardware.
+-   **Dynamic Fallback Layout System:** Added `generateFallbackLayout()` function in layoutConfigs.ts that provides a last-resort single-column keyboard layout when no IndexedDB custom layout, sharedLayout.ts community layout, or layoutMap keyCount match exists. Prevents users from seeing blank screens or errors when connecting unknown keyboards. Fallback dynamically generates layout based on hardware's actual row count from baseLayout parameter, defaulting to 6 rows if unavailable.
+-   **4-Tier Layout Priority:** Updated layout loading to use IndexedDB → sharedLayout.ts → layoutMap → dynamic fallback, ensuring graceful degradation for all hardware configurations.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 

@@ -117,7 +117,7 @@ import LayoutStorageService from '@/services/LayoutStorageService';
 import KeyboardService from '@/services/KeyboardService';
 import { uToMm, KEY_SIZES, mmToPx } from '@/utils/keyUnits';
 import { sharedLayoutMap } from '@/utils/sharedLayout';
-import { refreshCustomLayouts } from '@/utils/layoutConfigs';
+import { refreshCustomLayouts, getPaddedKeySizes } from '@/utils/layoutConfigs';
 
 interface VirtualKey {
   size: number; // units (1, 1.25, 2, etc.)
@@ -161,10 +161,24 @@ export default defineComponent({
     const hasLoadedHardwareLayout = ref(false);
 
     const initializeFallbackLayout = () => {
-      // Always show fallback 6-row layout immediately
-      rowCounts.value = [1, 1, 1, 1, 1, 1];
-      previousRowCounts.value = [1, 1, 1, 1, 1, 1];
-      generateVirtualKeyboard();
+      // Always show fallback 6-row layout immediately with padding
+      const paddedKeySizes = getPaddedKeySizes(null); // null = use default 6 rows
+      
+      // Build virtualKeyboard from padded keySizes
+      const keyboard: VirtualKey[][] = paddedKeySizes.map(row => 
+        row.map(sizeMm => ({ size: sizeMm / 19.05, sizeMm, gap: 0 }))
+      );
+      virtualKeyboard.value = keyboard;
+      
+      // Update rowCounts to match actual key counts per row
+      const counts = paddedKeySizes.map(row => row.length);
+      // Pad to ensure we have at least 6 slots for UI consistency
+      while (counts.length < 6) {
+        counts.push(undefined);
+      }
+      rowCounts.value = counts;
+      previousRowCounts.value = [...counts];
+      selectedKeys.value = [];
     };
 
     const loadHardwareLayout = async () => {
@@ -189,16 +203,25 @@ export default defineComponent({
           }
           
           if (baseLayout && baseLayout.length > 0 && !hasLoadedHardwareLayout.value) {
-            // Update to hardware's actual row count with 1 key per row
-            const rowCountArray = Array(baseLayout.length).fill(1);
-            // Pad to ensure we have at least 6 slots for consistency
-            while (rowCountArray.length < 6) {
-              rowCountArray.push(undefined);
+            // Get fully padded keySizes using baseLayout
+            const paddedKeySizes = getPaddedKeySizes(baseLayout);
+            
+            // Build virtualKeyboard from padded keySizes
+            const keyboard: VirtualKey[][] = paddedKeySizes.map(row => 
+              row.map(sizeMm => ({ size: sizeMm / 19.05, sizeMm, gap: 0 }))
+            );
+            virtualKeyboard.value = keyboard;
+            
+            // Update rowCounts to match actual key counts per row
+            const counts = paddedKeySizes.map(row => row.length);
+            // Pad to ensure we have at least 6 slots for UI consistency
+            while (counts.length < 6) {
+              counts.push(undefined);
             }
-            rowCounts.value = rowCountArray;
-            previousRowCounts.value = [...rowCountArray];
+            rowCounts.value = counts;
+            previousRowCounts.value = [...counts];
             hasLoadedHardwareLayout.value = true;
-            generateVirtualKeyboard();
+            selectedKeys.value = [];
             
             // Update product name once we have hardware info
             if (connectionStore.deviceInfo?.productName) {

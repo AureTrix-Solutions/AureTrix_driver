@@ -211,6 +211,32 @@ function processLayoutConfig(config: LayoutConfig, baseLayout?: any[][], customK
   return { rows, cols, keyPositions: convertedPositions, gaps: Array(rows).fill(0) }; // Gaps handled in left
 }
 
+// Helper function to get padded keySizes for Keyboard Creator initialization
+// Returns keySizes array (in mm) with all keys as 1u, padded to match baseLayout
+export function getPaddedKeySizes(baseLayout: any[][] | null): number[][] {
+  if (!baseLayout || baseLayout.length === 0) {
+    // Default to 6 rows with 1 key each
+    return Array(6).fill([19.05]);
+  }
+  
+  // Create single-column seed layout matching baseLayout row count
+  const seedKeySizes = Array(baseLayout.length).fill([19.05]);
+  
+  // Apply padding logic (same as processLayoutConfig)
+  const paddedKeySizes = seedKeySizes.map((row, rIdx) => {
+    const baseCols = baseLayout[rIdx] ? baseLayout[rIdx].length : 0;
+    if (baseCols > 0 && baseCols !== row.length) {
+      if (baseCols > row.length) {
+        return [...row, ...Array(baseCols - row.length).fill(19.05)]; // Pad with 1u (19.05mm)
+      }
+      return row.slice(0, baseCols); // Truncate if too long
+    }
+    return row;
+  });
+  
+  return paddedKeySizes;
+}
+
 // Helper function to refresh custom layouts cache
 export async function refreshCustomLayouts() {
   await loadCustomLayouts();

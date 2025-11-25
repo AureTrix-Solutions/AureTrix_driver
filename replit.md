@@ -4,6 +4,13 @@
 AureTrix is a web-based configuration tool for hall effect keyboards compatible with the SparkLink SDK. It provides a professional, browser-based interface for customizing keyboard behavior without requiring native drivers. Key capabilities include multi-layer key remapping, macro creation, comprehensive RGB lighting control, advanced hall effect features (Dynamic Keystroke, Magnetic Point Triggering, Rapid Trigger), sensor calibration, profile management, a real-time debugging interface, and a custom layout creator with controller emulation metadata support. The application runs entirely in the browser using the WebHID API, aiming to be the leading configuration solution for SparkLink-compatible hall effect keyboards.
 
 ## Recent Changes
+### November 25, 2025 - Click-and-Drag Key Selection for RGB Lighting
+-   **Drag Selection in Lighting Page:** Added click-and-drag selection to the RGB Lighting page. Users can now draw a selection rectangle over the virtual keyboard to select multiple keys at once, making it much faster to customize lighting zones.
+-   **Movement Threshold:** Distinguishes between clicks and drags using a 5px movement threshold. Single clicks still toggle individual keys, while dragging beyond 5px enters selection mode.
+-   **Shift Key Additive Mode:** Hold Shift while dragging to add keys to existing selection instead of replacing. Works for both drag selections and single clicks.
+-   **Selection Rectangle Overlay:** Visual dashed rectangle with accent color shows the selection area while dragging.
+-   **Global Mouse Event Handling:** Proper cleanup via global mouseup listener ensures drag state resets even when pointer is released outside the keyboard grid.
+
 ### November 24, 2025 - Dynamic Row Count Support & Full Keyboard Initialization
 -   **Dynamic Row Count Support:** Layout Creator now supports keyboards with any number of rows (up to 10). Added `displayRowCount` computed property that dynamically adjusts UI controls based on actual keyboard structure. Removed hardcoded 6-row limitation from template loops and reactive arrays, allowing full editing capability for 7+ row keyboards (ortholinear, full-size, custom layouts).
 -   **Watcher Synchronization Fix:** Fixed critical issue where `previousRowCounts` was updated after `rowCounts`, causing the watcher to rebuild rows 6+ with default keys. Now updates `previousRowCounts` before `rowCounts` in all initialization paths (fallback, hardware load, saved layout load, import) to preserve hardware data for 7+ row keyboards.

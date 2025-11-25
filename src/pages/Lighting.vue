@@ -4,16 +4,19 @@
 
     <div class="lighting-container">
       <!-- Virtual Keyboard -->
-      <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
+      <div v-if="layout.length && loaded" ref="keyGridRef" class="key-grid" :style="gridStyle"
+        @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp"
+        @mouseleave="handleMouseUp">
         <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
           <div v-for="(keyInfo, cIdx) in row" :key="`k-${rIdx}-${cIdx}`" class="key-btn"
             :class="{ 'lighting-key-selected': isKeySelected(keyInfo) }" :style="getKeyStyleWithCustomColor(rIdx, cIdx)"
-            @click="selectKey(keyInfo)">
+            :data-key-value="keyInfo.physicalKeyValue || keyInfo.keyValue">
             <div class="key-label">
               {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
             </div>
           </div>
         </div>
+        <div v-if="isDragging" class="selection-rectangle" :style="selectionRectStyle"></div>
       </div>
       <div v-else class="no-layout">
         <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
@@ -139,7 +142,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed, watch, reactive, nextTick } from 'vue';
+import { defineComponent, ref, onMounted, onUnmounted, computed, watch, reactive, nextTick } from 'vue';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
 import { useBatchProcessing } from '@/composables/useBatchProcessing';
 import { keyMap } from '@utils/keyMap';
@@ -162,6 +165,171 @@ export default defineComponent({
 
     const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, error } = useMappedKeyboard(ref(0));
     const { processBatches } = useBatchProcessing();
+
+    const keyGridRef = ref<HTMLElement | null>(null);
+    const isDragging = ref(false);
+    const isMouseDown = ref(false);
+    const dragStart = ref({ x: 0, y: 0 });
+    const dragCurrent = ref({ x: 0, y: 0 });
+    const mouseDownTarget = ref<IDefKeyInfo | null>(null);
+    const isShiftPressed = ref(false);
+    const preSelectionKeys = ref<IDefKeyInfo[]>([]);
+    const DRAG_THRESHOLD = 5;
+
+    const selectionRectStyle = computed(() => {
+      const left = Math.min(dragStart.value.x, dragCurrent.value.x);
+      const top = Math.min(dragStart.value.y, dragCurrent.value.y);
+      const width = Math.abs(dragCurrent.value.x - dragStart.value.x);
+      const height = Math.abs(dragCurrent.value.y - dragStart.value.y);
+      return {
+        left: `${left}px`,
+        top: `${top}px`,
+        width: `${width}px`,
+        height: `${height}px`,
+      };
+    });
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') isShiftPressed.value = true;
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') isShiftPressed.value = false;
+    };
+
+    const getKeyInfoFromElement = (element: HTMLElement | null): IDefKeyInfo | null => {
+      if (!element) return null;
+      const keyBtn = element.closest('.key-btn') as HTMLElement;
+      if (!keyBtn) return null;
+      const keyValue = keyBtn.dataset.keyValue;
+      if (!keyValue) return null;
+      const numKeyValue = parseInt(keyValue, 10);
+      return layout.value.flat().find(k => (k.physicalKeyValue || k.keyValue) === numKeyValue) || null;
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (!keyGridRef.value) return;
+      const rect = keyGridRef.value.getBoundingClientRect();
+      dragStart.value = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      dragCurrent.value = { ...dragStart.value };
+      isMouseDown.value = true;
+      isDragging.value = false;
+      mouseDownTarget.value = getKeyInfoFromElement(e.target as HTMLElement);
+      preSelectionKeys.value = isShiftPressed.value ? [...selectedKeys.value] : [];
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isMouseDown.value || !keyGridRef.value) return;
+      const rect = keyGridRef.value.getBoundingClientRect();
+      const currentX = e.clientX - rect.left;
+      const currentY = e.clientY - rect.top;
+      const distance = Math.sqrt(
+        Math.pow(currentX - dragStart.value.x, 2) + Math.pow(currentY - dragStart.value.y, 2)
+      );
+      if (!isDragging.value && distance >= DRAG_THRESHOLD) {
+        isDragging.value = true;
+      }
+      if (isDragging.value) {
+        dragCurrent.value = { x: currentX, y: currentY };
+        updateSelectionFromDrag();
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isMouseDown.value && !isDragging.value && mouseDownTarget.value) {
+        if (isShiftPressed.value) {
+          const physicalKeyValue = mouseDownTarget.value.physicalKeyValue || mouseDownTarget.value.keyValue;
+          const exists = selectedKeys.value.some(k => (k.physicalKeyValue || k.keyValue) === physicalKeyValue);
+          if (!exists) {
+            selectedKeys.value.push(mouseDownTarget.value);
+          }
+        } else {
+          selectKey(mouseDownTarget.value);
+        }
+      }
+      cleanupDragState();
+    };
+
+    const cleanupDragState = () => {
+      isMouseDown.value = false;
+      isDragging.value = false;
+      mouseDownTarget.value = null;
+    };
+
+    const handleGlobalMouseUp = () => {
+      if (isMouseDown.value) {
+        cleanupDragState();
+      }
+    };
+
+    const getKeyBounds = (keyInfo: IDefKeyInfo): { left: number; top: number; right: number; bottom: number } | null => {
+      if (!keyGridRef.value) return null;
+      const keyElements = keyGridRef.value.querySelectorAll('.key-btn');
+      const allKeys = layout.value.flat();
+      const keyIndex = allKeys.findIndex(k => (k.physicalKeyValue || k.keyValue) === (keyInfo.physicalKeyValue || keyInfo.keyValue));
+      if (keyIndex === -1 || keyIndex >= keyElements.length) return null;
+      const keyEl = keyElements[keyIndex] as HTMLElement;
+      const gridRect = keyGridRef.value.getBoundingClientRect();
+      const keyRect = keyEl.getBoundingClientRect();
+      return {
+        left: keyRect.left - gridRect.left,
+        top: keyRect.top - gridRect.top,
+        right: keyRect.right - gridRect.left,
+        bottom: keyRect.bottom - gridRect.top,
+      };
+    };
+
+    const rectsIntersect = (
+      r1: { left: number; top: number; right: number; bottom: number },
+      r2: { left: number; top: number; right: number; bottom: number }
+    ): boolean => {
+      return !(r2.left > r1.right || r2.right < r1.left || r2.top > r1.bottom || r2.bottom < r1.top);
+    };
+
+    const updateSelectionFromDrag = () => {
+      const selectionRect = {
+        left: Math.min(dragStart.value.x, dragCurrent.value.x),
+        top: Math.min(dragStart.value.y, dragCurrent.value.y),
+        right: Math.max(dragStart.value.x, dragCurrent.value.x),
+        bottom: Math.max(dragStart.value.y, dragCurrent.value.y),
+      };
+
+      const allKeys = layout.value.flat();
+      const keysInSelection: IDefKeyInfo[] = [];
+
+      allKeys.forEach(keyInfo => {
+        const keyBounds = getKeyBounds(keyInfo);
+        if (keyBounds && rectsIntersect(selectionRect, keyBounds)) {
+          keysInSelection.push(keyInfo);
+        }
+      });
+
+      if (isShiftPressed.value) {
+        const combined = [...preSelectionKeys.value];
+        keysInSelection.forEach(key => {
+          const physicalKeyValue = key.physicalKeyValue || key.keyValue;
+          if (!combined.some(k => (k.physicalKeyValue || k.keyValue) === physicalKeyValue)) {
+            combined.push(key);
+          }
+        });
+        selectedKeys.value = combined;
+      } else {
+        selectedKeys.value = keysInSelection;
+      }
+    };
+
+    onMounted(() => {
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('keyup', handleKeyUp);
+      window.addEventListener('mouseup', handleGlobalMouseUp);
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      cleanupDragState();
+    });
 
     const customColors = reactive<Record<number, { R: number; G: number; B: number }>>({});
 
@@ -683,6 +851,12 @@ export default defineComponent({
       applyCustomColorThrottled,
       updateVirtualKeyboardColorOnly,
       applyModeSelection,
+      keyGridRef,
+      isDragging,
+      selectionRectStyle,
+      handleMouseDown,
+      handleMouseMove,
+      handleMouseUp,
     };
   },
 });
@@ -767,6 +941,15 @@ export default defineComponent({
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
   }
+}
+
+.selection-rectangle {
+  position: absolute;
+  border: 2px dashed v.$accent-color;
+  background-color: rgba(v.$accent-color, 0.15);
+  pointer-events: none;
+  z-index: 100;
+  border-radius: 4px;
 }
 
 .bottom-section {

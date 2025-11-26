@@ -24,11 +24,11 @@ The application runs entirely in the browser and communicates with compatible ke
 - **Auto-Reconnect**: Seamless reconnection to previously paired devices
 - **Auto-Save**: All configuration changes automatically persist to keyboard firmware
 - **Layout Support**: Supports 61, 67, 68, 80, 82, 84, 87-key physical layouts with 4-tier fallback system
+- **Profile Management UI**: Built-in interface for managing multiple keyboard profiles
 - **Profile Import/Export**: Save and restore keyboard configurations (SDK supports encrypted JSON)
 - **Custom Layout Storage**: IndexedDB storage for user-created keyboard layouts with JSON export/import
 
 ### Planned Features (Placeholder Pages)
-- **Profile Management UI**: Built-in interface for managing multiple keyboard profiles
 - **Advanced Settings**: DKS, MPT, MT, TGL, END, SOCD configuration pages
 
 ## Prerequisites
@@ -84,17 +84,19 @@ The application runs entirely in the browser and communicates with compatible ke
    - **Lighting**: Configure per-key RGB colors with click-and-drag selection for multiple keys
    - **Calibration**: Run sensor calibration for optimal hall effect accuracy
    - **Layout Creator**: Build custom keyboard layouts with visual editor, supporting any row configuration
-   - **Debug**: Inspect raw keyboard data and SDK responses in real-time
    - **Layout Preview**: Visualize your keyboard's physical layout geometry
    
-   _Note: Profiles and Advanced settings pages (DKS, MPT, MT, TGL, END, SOCD) are planned features._
+   _Note: Profiles and Advanced settings pages (DKS, MPT, MT, TGL, END, SOCD, Macro) are planned features._
 
 ### Important Notes
 
 - **WebHID Requirement**: This app requires a Chromium-based browser (Chrome, Edge, Brave). Firefox and Safari do not support WebHID.
 - **HTTPS Only**: WebHID only works over HTTPS (localhost is exempt for development)
-- **Replit Preview**: When running on Replit, open the app in a new tab (not the preview iframe) for WebHID to work properly
 - **Auto-Save**: All configuration changes are automatically saved to the keyboard - no manual save/reload needed
+
+### Development Tools
+
+- **Debug Page**: Available in development builds only for inspecting raw SDK data and keyboard responses. Not included in production builds.
 
 ## Technical Stack
 
@@ -111,37 +113,58 @@ The application runs entirely in the browser and communicates with compatible ke
 
 ```
 src/
-├── pages/           # Route-level components
-│   ├── Connect.vue
-│   ├── KeyMapping.vue
-│   ├── MacroRecording.vue
-│   ├── RapidTrigger.vue
-│   ├── Performance.vue
-│   ├── Lighting.vue
-│   ├── Calibration.vue
-│   ├── LayoutCreator.vue
-│   ├── Debug.vue
-│   └── LayoutPreview.vue
-├── components/      # Reusable UI components
+├── main.ts              # Application entry point
+├── App.vue              # Root component with sidebar navigation
+├── pages/               # Route-level components
+│   ├── Connect.vue          # Device pairing and connection
+│   ├── KeyMapping.vue       # Multi-layer key remapping
+│   ├── MacroRecording.vue   # Visual macro creation
+│   ├── RapidTrigger.vue     # RT parameter configuration
+│   ├── Performance.vue      # Travel distance tuning
+│   ├── Lighting.vue         # Per-key RGB control
+│   ├── Calibration.vue      # Sensor calibration
+│   ├── LayoutCreator.vue    # Custom layout builder
+│   ├── LayoutPreview.vue    # Layout visualization
+│   ├── Debug.vue            # SDK inspector (dev only)
+│   ├── DKS.vue              # Dynamic Keystroke (placeholder)
+│   ├── MPT.vue              # Magnetic Point Trigger (placeholder)
+│   ├── MT.vue               # Mod-Tap (placeholder)
+│   ├── TGL.vue              # Toggle (placeholder)
+│   ├── END.vue              # End key behavior (placeholder)
+│   ├── SOCD.vue             # SOCD handling (placeholder)
+│   └── Macro.vue            # Macro management (placeholder)
+├── components/          # Reusable UI components
+│   ├── FactoryResetModal.vue
 │   └── performance/
-│       └── GlobalTravel.vue
-├── services/        # Hardware abstraction layer
-│   ├── KeyboardService.ts
-│   ├── DebugKeyboardService.ts
-│   ├── ExportService.ts
-│   └── LayoutStorageService.ts
-├── store/           # Pinia state management
-│   ├── connection.ts
+│       ├── GlobalTravel.vue
+│       ├── KeyTravel.vue
+│       ├── SingleKeyTravel.vue
+│       └── SwitchProfiles.vue
+├── services/            # Hardware abstraction layer
+│   ├── KeyboardService.ts       # Main SDK wrapper
+│   ├── DebugKeyboardService.ts  # Dev-only SDK access
+│   ├── ExportService.ts         # Profile backup/restore
+│   └── LayoutStorageService.ts  # IndexedDB layout storage
+├── store/               # Pinia state management
+│   ├── connection.ts        # Device connection state
+│   ├── profileStore.ts      # Keyboard profile state
 │   └── travelProfilesStore.ts
-├── composables/     # Reusable composition functions
+├── composables/         # Reusable composition functions
 │   └── useBatchProcessing.ts
-├── utils/           # Shared utilities
-│   ├── layoutConfigs.ts
-│   ├── sharedLayout.ts
-│   └── MappedKeyboard.ts
-├── router/          # Vue Router configuration
-└── styles/          # Global SCSS styles
-    └── variables.scss
+├── utils/               # Shared utilities
+│   ├── layoutConfigs.ts     # Physical layout definitions
+│   ├── sharedLayout.ts      # Community layout contributions
+│   ├── MappedKeyboard.ts    # Keyboard rendering helper
+│   ├── keyMap.ts            # Key code mappings
+│   ├── keyCategories.ts     # Key grouping definitions
+│   └── keyUnits.ts          # Unit conversion utilities
+├── types/               # TypeScript type definitions
+│   └── types.ts
+├── router/              # Vue Router configuration
+│   └── index.ts
+├── styles/              # Global SCSS styles
+│   └── variables.scss
+└── assets/              # Static assets (SVG icons, images)
 ```
 
 ## Key Technical Decisions

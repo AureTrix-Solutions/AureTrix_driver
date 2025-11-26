@@ -980,7 +980,7 @@ export default defineComponent({
   margin-top: 10px;
   border: 1px solid rgba(255, 68, 68, 0.3);
   border-radius: v.$border-radius;
-  background-color: rgba(255, 68, 68, 0.1);
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
   color: #ff4444;
   cursor: pointer;
   transition: all 0.3s;

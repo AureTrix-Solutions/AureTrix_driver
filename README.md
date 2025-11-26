@@ -13,7 +13,9 @@ The application runs entirely in the browser and communicates with compatible ke
 - **Visual Macro Recording**: Create macros with up to 64 actions without OS interference using a key picker UI
 - **Rapid Trigger Settings**: Configure 5 parameters including initial trigger travel, re-trigger distance, reset distance, and top/bottom deadzones
 - **Performance Tuning**: Adjust travel distances globally or per-key (0.1mm - 4.0mm range) with visual feedback
+- **RGB Lighting Control**: Per-key RGB customization with click-and-drag multi-key selection and Shift-key additive selection
 - **Sensor Calibration**: Calibrate hall effect sensors for optimal performance and accuracy
+- **Layout Creator**: Visual keyboard layout builder with dynamic row support (up to 10 rows), precise mm-level sizing, multi-select editing, and export/import capabilities
 - **Layout Preview**: Visualize keyboard physical layout with accurate geometry
 - **Debug Interface**: Real-time inspection of raw SDK data for development and troubleshooting
 
@@ -21,13 +23,13 @@ The application runs entirely in the browser and communicates with compatible ke
 - **Batch Processing**: Smart batching prevents hardware overload when updating multiple keys (80 keys per batch)
 - **Auto-Reconnect**: Seamless reconnection to previously paired devices
 - **Auto-Save**: All configuration changes automatically persist to keyboard firmware
-- **Layout Support**: Supports 61, 67, 68, 80, 82, 84, 87-key physical layouts
+- **Layout Support**: Supports 61, 67, 68, 80, 82, 84, 87-key physical layouts with 4-tier fallback system
 - **Profile Import/Export**: Save and restore keyboard configurations (SDK supports encrypted JSON)
+- **Custom Layout Storage**: IndexedDB storage for user-created keyboard layouts with JSON export/import
 
 ### Planned Features (Placeholder Pages)
-- **RGB Lighting Control**: Per-key RGB and logo lighting configuration
 - **Profile Management UI**: Built-in interface for managing multiple keyboard profiles
-- **Advanced Settings**: DKS, MPT, MT, TGL, END, SOCD, and Macro configuration pages
+- **Advanced Settings**: DKS, MPT, MT, TGL, END, SOCD configuration pages
 
 ## Prerequisites
 
@@ -79,11 +81,13 @@ The application runs entirely in the browser and communicates with compatible ke
    - **Macro Recording**: Create custom macros with the visual key picker to avoid triggering OS shortcuts
    - **Rapid Trigger**: Fine-tune rapid trigger settings with 5 configurable parameters (initial trigger, re-trigger, reset, top/bottom deadzones)
    - **Performance**: Adjust travel distances globally or per-key (0.1mm - 4.0mm range)
+   - **Lighting**: Configure per-key RGB colors with click-and-drag selection for multiple keys
    - **Calibration**: Run sensor calibration for optimal hall effect accuracy
+   - **Layout Creator**: Build custom keyboard layouts with visual editor, supporting any row configuration
    - **Debug**: Inspect raw keyboard data and SDK responses in real-time
    - **Layout Preview**: Visualize your keyboard's physical layout geometry
    
-   _Note: Lighting, Profiles, and Advanced settings pages (DKS, MPT, MT, TGL, END, SOCD, Macro) are planned features (placeholders)._
+   _Note: Profiles and Advanced settings pages (DKS, MPT, MT, TGL, END, SOCD) are planned features._
 
 ### Important Notes
 
@@ -107,19 +111,25 @@ The application runs entirely in the browser and communicates with compatible ke
 
 ```
 src/
-├── pages/           # Route-level components (8 functional + 3 placeholder)
+├── pages/           # Route-level components
 │   ├── Connect.vue
 │   ├── KeyMapping.vue
 │   ├── MacroRecording.vue
 │   ├── RapidTrigger.vue
 │   ├── Performance.vue
+│   ├── Lighting.vue
 │   ├── Calibration.vue
+│   ├── LayoutCreator.vue
 │   ├── Debug.vue
-│   ├── LayoutPreview.vue
-│   └── Lighting.vue (placeholder)
+│   └── LayoutPreview.vue
+├── components/      # Reusable UI components
+│   └── performance/
+│       └── GlobalTravel.vue
 ├── services/        # Hardware abstraction layer
 │   ├── KeyboardService.ts
-│   └── DebugKeyboardService.ts
+│   ├── DebugKeyboardService.ts
+│   ├── ExportService.ts
+│   └── LayoutStorageService.ts
 ├── store/           # Pinia state management
 │   ├── connection.ts
 │   └── travelProfilesStore.ts
@@ -127,11 +137,20 @@ src/
 │   └── useBatchProcessing.ts
 ├── utils/           # Shared utilities
 │   ├── layoutConfigs.ts
+│   ├── sharedLayout.ts
 │   └── MappedKeyboard.ts
 ├── router/          # Vue Router configuration
 └── styles/          # Global SCSS styles
     └── variables.scss
 ```
+
+## Key Technical Decisions
+
+- **WebHID over Native Drivers**: Cross-platform compatibility without installation
+- **Batch Processing**: Prevents hardware overload with 80-key batches and delays
+- **4-Tier Layout Priority**: IndexedDB (custom) → sharedLayout.ts (community) → layoutMap (standard) → Dynamic fallback
+- **SDK Initialization**: Uses `waitForSDKReady()` with exponential backoff for reliable connection
+- **1u = 19.05mm Standard**: Industry-standard key unit measurement with centralized mm-to-px conversion
 
 ## Documentation
 

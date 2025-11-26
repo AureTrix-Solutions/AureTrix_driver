@@ -1,10 +1,6 @@
 <template>
   <div class="layout-creator-page">
     <h2 class="title">Keyboard Creator</h2>
-    <div v-if="notification" class="notification" :class="{ error: notification.isError }">
-      {{ notification.message }}
-      <button @click="notification = null" class="dismiss-btn">&times;</button>
-    </div>
 
     <div class="layout-creator-container">
       <div v-if="virtualKeyboard.length" class="key-grid" :style="gridStyle">
@@ -140,7 +136,6 @@ export default defineComponent({
 
     const selectedKeys = ref<{ row: number; col: number }[]>([]);
     const selectedKeyData = ref<VirtualKey>({ size: 1, sizeMm: uToMm(1), gap: 0 });
-    const notification = ref<{ message: string; isError: boolean } | null>(null);
     const savedLayouts = ref<any[]>([]);
     const selectedSavedLayout = ref('');
     const importFileInput = ref<HTMLInputElement | null>(null);
@@ -532,12 +527,10 @@ export default defineComponent({
 
     const saveLayout = async () => {
       if (!productName.value.trim()) {
-        notification.value = { message: 'Please enter a product name', isError: true };
         return;
       }
 
       if (!virtualKeyboard.value.length) {
-        notification.value = { message: 'Please add rows to create a layout', isError: true };
         return;
       }
 
@@ -574,25 +567,21 @@ export default defineComponent({
 
       try {
         await LayoutStorageService.saveLayout(layout);
-        notification.value = { message: 'Layout saved successfully!', isError: false };
         // Reload saved layouts list after saving
         await loadSavedLayouts();
         // Refresh the global layout cache so changes are immediately available app-wide
         await refreshCustomLayouts();
       } catch (error) {
         console.error('Failed to save layout:', error);
-        notification.value = { message: 'Failed to save layout. Please try again.', isError: true };
       }
     };
 
     const exportCompactCode = () => {
       if (!productName.value.trim()) {
-        notification.value = { message: 'Please enter a product name', isError: true };
         return;
       }
 
       if (!virtualKeyboard.value.length) {
-        notification.value = { message: 'Please add rows to create a layout', isError: true };
         return;
       }
 
@@ -638,18 +627,14 @@ export default defineComponent({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
-      notification.value = { message: 'Layout exported successfully!', isError: false };
     };
 
     const shareLayout = () => {
       if (!productName.value.trim()) {
-        notification.value = { message: 'Please enter a product name', isError: true };
         return;
       }
 
       if (!virtualKeyboard.value.length) {
-        notification.value = { message: 'Please add rows to create a layout', isError: true };
         return;
       }
 
@@ -686,7 +671,6 @@ export default defineComponent({
 
       const githubUrl = LayoutStorageService.generateGitHubIssueLink(layout);
       window.open(githubUrl, '_blank');
-      notification.value = { message: 'Opening GitHub issue page...', isError: false };
     };
 
     const loadSelectedLayout = async () => {
@@ -695,7 +679,6 @@ export default defineComponent({
       try {
         const layout = await LayoutStorageService.getLayout(selectedSavedLayout.value);
         if (!layout) {
-          notification.value = { message: 'Layout not found', isError: true };
           return;
         }
 
@@ -730,11 +713,8 @@ export default defineComponent({
         rowCounts.value = newRowCounts;
         rowGaps.value = newRowGaps;
         selectedKeys.value = [];
-
-        notification.value = { message: 'Layout loaded successfully!', isError: false };
       } catch (error) {
         console.error('Failed to load layout:', error);
-        notification.value = { message: 'Failed to load layout', isError: true };
       }
     };
 
@@ -753,7 +733,6 @@ export default defineComponent({
 
         // Validate layout structure
         if (!layout.productName || !layout.keySizes || !layout.rowSpacing) {
-          notification.value = { message: 'Invalid layout file format', isError: true };
           return;
         }
 
@@ -786,11 +765,8 @@ export default defineComponent({
         rowCounts.value = newRowCounts;
         rowGaps.value = newRowGaps;
         selectedKeys.value = [];
-
-        notification.value = { message: 'Layout imported successfully!', isError: false };
       } catch (error) {
         console.error('Failed to import layout:', error);
-        notification.value = { message: 'Failed to import layout file', isError: true };
       }
 
       // Reset file input
@@ -808,7 +784,6 @@ export default defineComponent({
       virtualKeyboard,
       selectedKeys,
       selectedKeyData,
-      notification,
       savedLayouts,
       selectedSavedLayout,
       importFileInput,
@@ -851,35 +826,6 @@ export default defineComponent({
     font-size: 1.5rem;
     font-weight: 600;
     font-family: v.$font-style;
-  }
-
-  .notification {
-    padding: 10px;
-    margin-bottom: 0px;
-    border-radius: v.$border-radius;
-    background-color: rgba(v.$background-dark, 1.1);
-    color: v.$text-color;
-    display: flex;
-    align-items: center;
-
-    &.error {
-      background-color: color.mix(#ef4444, v.$background-dark, 50%);
-    }
-
-    .dismiss-btn {
-      margin-left: auto;
-      padding: 0 6px;
-      background: none;
-      border: none;
-      color: v.$text-color;
-      cursor: pointer;
-      font-size: 1rem;
-      font-family: v.$font-style;
-
-      &:hover {
-        color: rgba(v.$text-color, 0.6);
-      }
-    }
   }
 
   .layout-creator-container {

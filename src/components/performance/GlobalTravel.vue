@@ -68,6 +68,7 @@ import { defineComponent, ref, computed, PropType, onMounted, watch } from 'vue'
 import KeyboardService from '@services/KeyboardService';
 import { keyMap } from '@utils/keyMap';
 import { useBatchProcessing } from '@/composables/useBatchProcessing';
+import { useConnectionStore } from '@/store/connection';
 import type { IDefKeyInfo } from '@/types/types';
 
 export default defineComponent({
@@ -89,6 +90,7 @@ export default defineComponent({
   emits: ['update-overlay', 'update-single-overlay', 'mode-changed'],
   setup(props, { emit }) {
     const { processBatches } = useBatchProcessing();
+    const connectionStore = useConnectionStore();
 
     // Core Refs
     const globalTravel = ref(2.0);
@@ -378,8 +380,49 @@ export default defineComponent({
       }
     });
 
-    onMounted(() => {
-      loadGlobalSettings();
+    // Track if we've loaded settings for the current connection session
+    const hasLoadedSettings = ref(false);
+
+    // Watch for SDK becoming fully initialized (ready for API calls)
+    watch(
+      () => connectionStore.isInitialized,
+      async (isInitialized) => {
+        if (isInitialized && props.layout.length > 0 && !hasLoadedSettings.value) {
+          hasLoadedSettings.value = true;
+          await loadGlobalSettings();
+        }
+      }
+    );
+
+    // Watch for connection state to reset flag on disconnect
+    watch(
+      () => connectionStore.isConnected,
+      (isConnected) => {
+        if (!isConnected) {
+          // Reset flag when disconnected so we reload on next connection
+          hasLoadedSettings.value = false;
+        }
+      }
+    );
+
+    // Watch for layout becoming available (async load after SDK ready)
+    watch(
+      () => props.layout.length,
+      async (newLength, oldLength) => {
+        // Only trigger when layout transitions from empty to populated
+        if (newLength > 0 && oldLength === 0 && connectionStore.isInitialized && !hasLoadedSettings.value) {
+          hasLoadedSettings.value = true;
+          await loadGlobalSettings();
+        }
+      }
+    );
+
+    onMounted(async () => {
+      // Only load settings if SDK is fully initialized and layout is available
+      if (connectionStore.isInitialized && props.layout.length > 0 && !hasLoadedSettings.value) {
+        hasLoadedSettings.value = true;
+        await loadGlobalSettings();
+      }
     });
 
     return {

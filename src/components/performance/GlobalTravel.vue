@@ -107,7 +107,13 @@ export default defineComponent({
     const loadGlobalSettings = async () => {
       try {
         const settings = await KeyboardService.getGlobalTouchTravel();
+        console.log('[GlobalTravel] getGlobalTouchTravel response:', settings);
         if (!(settings instanceof Error)) {
+          console.log('[GlobalTravel] Parsed values:', {
+            globalTouchTravel: settings.globalTouchTravel,
+            pressDead: settings.pressDead,
+            releaseDead: settings.releaseDead,
+          });
           if (settings.globalTouchTravel >= 0.1 && settings.globalTouchTravel <= 4.0) {
             globalTravel.value = Number(settings.globalTouchTravel.toFixed(2));
           }
@@ -117,10 +123,18 @@ export default defineComponent({
           if (settings.releaseDead >= 0 && settings.releaseDead <= 1.0) {
             releaseDead.value = Number(settings.releaseDead.toFixed(2));
           }
+          console.log('[GlobalTravel] Applied values:', {
+            globalTravel: globalTravel.value,
+            pressDead: pressDead.value,
+            releaseDead: releaseDead.value,
+          });
+        } else {
+          console.error('[GlobalTravel] getGlobalTouchTravel returned error:', settings);
         }
         prevPressDead.value = pressDead.value;
         prevReleaseDead.value = releaseDead.value;
       } catch (error) {
+        console.error('[GlobalTravel] loadGlobalSettings failed:', error);
       }
     };
 

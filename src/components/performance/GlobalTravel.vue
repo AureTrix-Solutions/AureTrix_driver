@@ -106,31 +106,73 @@ export default defineComponent({
     // Load global settings
     const loadGlobalSettings = async () => {
       try {
+        // Get global travel value from getGlobalTouchTravel
         const settings = await KeyboardService.getGlobalTouchTravel();
         console.log('[GlobalTravel] getGlobalTouchTravel response:', settings);
         if (!(settings instanceof Error)) {
-          console.log('[GlobalTravel] Parsed values:', {
-            globalTouchTravel: settings.globalTouchTravel,
-            pressDead: settings.pressDead,
-            releaseDead: settings.releaseDead,
-          });
           if (settings.globalTouchTravel >= 0.1 && settings.globalTouchTravel <= 4.0) {
             globalTravel.value = Number(settings.globalTouchTravel.toFixed(2));
           }
-          if (settings.pressDead >= 0 && settings.pressDead <= 1.0) {
-            pressDead.value = Number(settings.pressDead.toFixed(2));
-          }
-          if (settings.releaseDead >= 0 && settings.releaseDead <= 1.0) {
-            releaseDead.value = Number(settings.releaseDead.toFixed(2));
-          }
-          console.log('[GlobalTravel] Applied values:', {
-            globalTravel: globalTravel.value,
-            pressDead: pressDead.value,
-            releaseDead: releaseDead.value,
-          });
         } else {
           console.error('[GlobalTravel] getGlobalTouchTravel returned error:', settings);
         }
+
+        // Get deadzone values from getDpDr of a global mode key
+        const keyIds = props.layout.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
+        let foundGlobalKey = false;
+        
+        for (const keyId of keyIds) {
+          try {
+            const mode = await KeyboardService.getPerformanceMode(keyId);
+            if (mode.touchMode === 'global') {
+              const dpdr = await KeyboardService.getDpDr(keyId);
+              console.log('[GlobalTravel] getDpDr response for key', keyId, ':', dpdr);
+              if (!(dpdr instanceof Error) &&
+                  typeof dpdr.pressDead === 'number' && !isNaN(dpdr.pressDead) &&
+                  typeof dpdr.releaseDead === 'number' && !isNaN(dpdr.releaseDead)) {
+                if (dpdr.pressDead >= 0 && dpdr.pressDead <= 1.0) {
+                  pressDead.value = Number(dpdr.pressDead.toFixed(2));
+                }
+                if (dpdr.releaseDead >= 0 && dpdr.releaseDead <= 1.0) {
+                  releaseDead.value = Number(dpdr.releaseDead.toFixed(2));
+                }
+                console.log('[GlobalTravel] Applied deadzone values from getDpDr:', {
+                  pressDead: pressDead.value,
+                  releaseDead: releaseDead.value,
+                });
+                foundGlobalKey = true;
+                break;
+              }
+            }
+          } catch (keyError) {
+            console.warn(`[GlobalTravel] Failed to get mode/dpdr for key ${keyId}:`, keyError);
+          }
+        }
+
+        if (!foundGlobalKey) {
+          console.log('[GlobalTravel] No global mode key found, using first key for deadzone values');
+          // Fallback: use first key's getDpDr values
+          if (keyIds.length > 0) {
+            const dpdr = await KeyboardService.getDpDr(keyIds[0]);
+            if (!(dpdr instanceof Error) &&
+                typeof dpdr.pressDead === 'number' && !isNaN(dpdr.pressDead) &&
+                typeof dpdr.releaseDead === 'number' && !isNaN(dpdr.releaseDead)) {
+              if (dpdr.pressDead >= 0 && dpdr.pressDead <= 1.0) {
+                pressDead.value = Number(dpdr.pressDead.toFixed(2));
+              }
+              if (dpdr.releaseDead >= 0 && dpdr.releaseDead <= 1.0) {
+                releaseDead.value = Number(dpdr.releaseDead.toFixed(2));
+              }
+            }
+          }
+        }
+
+        console.log('[GlobalTravel] Final applied values:', {
+          globalTravel: globalTravel.value,
+          pressDead: pressDead.value,
+          releaseDead: releaseDead.value,
+        });
+
         prevPressDead.value = pressDead.value;
         prevReleaseDead.value = releaseDead.value;
       } catch (error) {
@@ -296,14 +338,44 @@ export default defineComponent({
       }
     };
 
-    // Toggle overlay
-    const toggleOverlay = () => {
+    // Toggle overlay - fetches fresh getDpDr values when showing
+    const toggleOverlay = async () => {
       showOverlay.value = !showOverlay.value;
-      emit('update-overlay', showOverlay.value ? {
-        travel: globalTravel.value.toFixed(2),
-        pressDead: pressDead.value.toFixed(2),
-        releaseDead: releaseDead.value.toFixed(2),
-      } : null);
+      
+      if (showOverlay.value) {
+        // Fetch fresh deadzone values from getDpDr when showing overlay
+        const keyIds = props.layout.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
+        let overlayPressDead = pressDead.value;
+        let overlayReleaseDead = releaseDead.value;
+        
+        // Try to find a global mode key and get its getDpDr values
+        for (const keyId of keyIds) {
+          try {
+            const mode = await KeyboardService.getPerformanceMode(keyId);
+            if (mode.touchMode === 'global') {
+              const dpdr = await KeyboardService.getDpDr(keyId);
+              if (!(dpdr instanceof Error) && 
+                  typeof dpdr.pressDead === 'number' && !isNaN(dpdr.pressDead) &&
+                  typeof dpdr.releaseDead === 'number' && !isNaN(dpdr.releaseDead)) {
+                overlayPressDead = Number(dpdr.pressDead.toFixed(2));
+                overlayReleaseDead = Number(dpdr.releaseDead.toFixed(2));
+                console.log('[GlobalTravel] toggleOverlay getDpDr for key', keyId, ':', dpdr);
+                break;
+              }
+            }
+          } catch (keyError) {
+            console.warn(`[GlobalTravel] toggleOverlay failed to get dpdr for key ${keyId}:`, keyError);
+          }
+        }
+        
+        emit('update-overlay', {
+          travel: globalTravel.value.toFixed(2),
+          pressDead: overlayPressDead.toFixed(2),
+          releaseDead: overlayReleaseDead.toFixed(2),
+        });
+      } else {
+        emit('update-overlay', null);
+      }
     };
 
     // Watchers

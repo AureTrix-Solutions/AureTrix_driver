@@ -321,17 +321,30 @@ export default defineComponent({
       try {
         const keyIds = layout.value.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
         const newKeyModeMap: { [key: number]: 'global' | 'single' } = {};
+        const allDpDrValues: { [key: number]: { pressDead: number; releaseDead: number } } = {};
         
         await processBatches(keyIds, async (keyId) => {
           try {
             const mode = await KeyboardService.getPerformanceMode(keyId);
             newKeyModeMap[keyId] = mode.touchMode as 'global' | 'single';
+            
+            // Fetch and log getDpDr for each key
+            const dpdr = await KeyboardService.getDpDr(keyId);
+            if (!(dpdr instanceof Error)) {
+              allDpDrValues[keyId] = {
+                pressDead: dpdr.pressDead,
+                releaseDead: dpdr.releaseDead,
+              };
+            }
           } catch (error) {
             console.warn(`Failed to fetch performance mode for key ${keyId}:`, error);
             // Default to global if fetch fails
             newKeyModeMap[keyId] = 'global';
           }
         });
+        
+        // Log all getDpDr values
+        console.log('[Performance] getDpDr values for all keys:', allDpDrValues);
         
         // Assign the complete map to trigger reactivity
         keyModeMap.value = newKeyModeMap;

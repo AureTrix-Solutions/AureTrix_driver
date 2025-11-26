@@ -108,13 +108,10 @@ export default defineComponent({
       try {
         // Get global travel value from getGlobalTouchTravel
         const settings = await KeyboardService.getGlobalTouchTravel();
-        console.log('[GlobalTravel] getGlobalTouchTravel response:', settings);
         if (!(settings instanceof Error)) {
           if (settings.globalTouchTravel >= 0.1 && settings.globalTouchTravel <= 4.0) {
             globalTravel.value = Number(settings.globalTouchTravel.toFixed(2));
           }
-        } else {
-          console.error('[GlobalTravel] getGlobalTouchTravel returned error:', settings);
         }
 
         // Get deadzone values from getDpDr of a global mode key
@@ -126,7 +123,6 @@ export default defineComponent({
             const mode = await KeyboardService.getPerformanceMode(keyId);
             if (mode.touchMode === 'global') {
               const dpdr = await KeyboardService.getDpDr(keyId);
-              console.log('[GlobalTravel] getDpDr response for key', keyId, ':', dpdr);
               if (!(dpdr instanceof Error) &&
                   typeof dpdr.pressDead === 'number' && !isNaN(dpdr.pressDead) &&
                   typeof dpdr.releaseDead === 'number' && !isNaN(dpdr.releaseDead)) {
@@ -136,21 +132,16 @@ export default defineComponent({
                 if (dpdr.releaseDead >= 0 && dpdr.releaseDead <= 1.0) {
                   releaseDead.value = Number(dpdr.releaseDead.toFixed(2));
                 }
-                console.log('[GlobalTravel] Applied deadzone values from getDpDr:', {
-                  pressDead: pressDead.value,
-                  releaseDead: releaseDead.value,
-                });
                 foundGlobalKey = true;
                 break;
               }
             }
           } catch (keyError) {
-            console.warn(`[GlobalTravel] Failed to get mode/dpdr for key ${keyId}:`, keyError);
+            // Silently continue to next key
           }
         }
 
         if (!foundGlobalKey) {
-          console.log('[GlobalTravel] No global mode key found, using first key for deadzone values');
           // Fallback: use first key's getDpDr values
           if (keyIds.length > 0) {
             const dpdr = await KeyboardService.getDpDr(keyIds[0]);
@@ -166,12 +157,6 @@ export default defineComponent({
             }
           }
         }
-
-        console.log('[GlobalTravel] Final applied values:', {
-          globalTravel: globalTravel.value,
-          pressDead: pressDead.value,
-          releaseDead: releaseDead.value,
-        });
 
         prevPressDead.value = pressDead.value;
         prevReleaseDead.value = releaseDead.value;
@@ -359,12 +344,11 @@ export default defineComponent({
                   typeof dpdr.releaseDead === 'number' && !isNaN(dpdr.releaseDead)) {
                 overlayPressDead = Number(dpdr.pressDead.toFixed(2));
                 overlayReleaseDead = Number(dpdr.releaseDead.toFixed(2));
-                console.log('[GlobalTravel] toggleOverlay getDpDr for key', keyId, ':', dpdr);
                 break;
               }
             }
           } catch (keyError) {
-            console.warn(`[GlobalTravel] toggleOverlay failed to get dpdr for key ${keyId}:`, keyError);
+            // Silently continue to next key
           }
         }
         

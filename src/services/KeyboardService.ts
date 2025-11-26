@@ -69,7 +69,6 @@ class KeyboardService {
         return String(arg);
       }).join(' ');
       
-      // Suppress SDK reconnection errors during managed operations and post-reconnection window
       if (this.isPollingRateChanging || this.isFactoryResetting || this.isReconnecting || this.isPostReconnectionSuppression) {
         if (message.includes('Reconnection failed') || 
             message.includes('NotAllowedError') || 
@@ -288,11 +287,9 @@ class KeyboardService {
   }
 
   private handleConnect = async (event: HIDConnectionEvent): Promise<void> => {
-    // Capture operation tokens to identify which operations were active during this reconnection
     const pollingRateToken = this.pollingRateOperationToken;
     const factoryResetToken = this.factoryResetOperationToken;
     
-    // Clear operation timeouts - the operation flags will be managed by the post-reconnection cleanup
     if (this.pollingRateTimeout) {
       clearTimeout(this.pollingRateTimeout);
       this.pollingRateTimeout = null;
@@ -301,16 +298,12 @@ class KeyboardService {
       clearTimeout(this.factoryResetTimeout);
       this.factoryResetTimeout = null;
     }
-    
-    // Clear the reconnection timeout if set
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
     
-    // Activate post-reconnection suppression window BEFORE reconnection/initialization
-    // This allows the 5-second timer to run in parallel with autoConnect() and initialization
-    // By the time initialization completes, the timer may already be partially or fully elapsed
+    // Start suppression window before reconnection
     this.isPostReconnectionSuppression = true;
     const connectionStore = useConnectionStore();
     connectionStore.setPostReconnectionSuppression(true);
@@ -319,15 +312,11 @@ class KeyboardService {
       clearTimeout(this.errorSuppressionCleanupTimeout);
     }
     this.errorSuppressionCleanupTimeout = setTimeout(() => {
-      // Clear post-reconnection suppression window
       this.isPostReconnectionSuppression = false;
-      
-      // Update store to expose suppression state to UI
       const connectionStore = useConnectionStore();
       connectionStore.setPostReconnectionSuppression(false);
       
-      // Clear operation flags only if they match the tokens captured at reconnection start
-      // This prevents clearing flags from new operations that started during the cleanup window
+      // Only clear flags if tokens match (no new operations started)
       if (this.pollingRateOperationToken === pollingRateToken) {
         this.isPollingRateChanging = false;
         this.pollingRateOperationToken = null;
@@ -337,7 +326,6 @@ class KeyboardService {
         this.factoryResetOperationToken = null;
       }
       
-      // Only restore console.error if no operations are active
       if (!this.isPollingRateChanging && !this.isFactoryResetting && !this.isReconnecting && !this.isPostReconnectionSuppression) {
         this.restoreConsoleError();
       }
@@ -345,35 +333,27 @@ class KeyboardService {
     }, 2000);
     
     try {
-      // autoConnect() while error suppression is still active
       await this.autoConnect();
     } finally {
-      // Clear isReconnecting immediately - it's only for unmanaged disconnects
       this.isReconnecting = false;
     }
   }
 
   private handleDisconnect = (event: HIDConnectionEvent): void => {
-    // Clear any pending error suppression cleanup
     if (this.errorSuppressionCleanupTimeout) {
       clearTimeout(this.errorSuppressionCleanupTimeout);
       this.errorSuppressionCleanupTimeout = null;
     }
     
-    // Clear initialization promise and state
     this.initializationPromise = null;
     
-    // Only set up reconnection handling if not already in a managed operation
-    // (polling rate change and factory reset handle their own reconnection logic)
+    // Only handle reconnection if not in a managed operation (polling rate/factory reset)
     if (!this.isPollingRateChanging && !this.isFactoryResetting) {
-      // Activate error suppression BEFORE SDK attempts reconnection
       this.isReconnecting = true;
       this.suppressSDKReconnectError();
       
-      // Set timeout to cleanup reconnection state if no reconnection happens
       this.reconnectTimeout = setTimeout(() => {
         if (this.isReconnecting) {
-          // Silent cleanup - reconnection didn't happen within expected timeframe
           this.isReconnecting = false;
           this.reconnectTimeout = null;
           this.restoreConsoleError();
@@ -381,7 +361,6 @@ class KeyboardService {
       }, 10000);
     }
     
-    // Always update connection state regardless of operation type
     this.connectedDevice = null;
     const connectionStore = useConnectionStore();
     connectionStore.clearInitialization();
@@ -1155,7 +1134,6 @@ class KeyboardService {
         this.pollingRateTimeout = null;
       }
       
-      // Assign operation token FIRST, before any reconnection can occur
       this.pollingRateOperationToken = Date.now();
       this.suppressSDKReconnectError();
       this.isPollingRateChanging = true;
@@ -1290,7 +1268,6 @@ class KeyboardService {
         this.factoryResetTimeout = null;
       }
       
-      // Assign operation token FIRST, before any reconnection can occur
       this.factoryResetOperationToken = Date.now();
       this.suppressSDKReconnectError();
       this.isFactoryResetting = true;

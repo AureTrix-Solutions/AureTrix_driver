@@ -29,12 +29,18 @@ The Lighting page provides complete RGB lighting control for SparkLink SDK-compa
 
 ### 3. **Key Selection System**
 - **Visual Selection**: Click keys on virtual keyboard to select/deselect
+- **Click-and-Drag Selection**: Draw a selection rectangle over the virtual keyboard to select multiple keys at once
+  - **Movement threshold**: 5px differentiates clicks from drags
+  - **Single clicks**: Toggle individual keys on/off
+  - **Drag beyond 5px**: Enters selection mode with visual dashed rectangle
+- **Shift-Key Additive Mode**: Hold Shift while dragging or clicking to add keys to existing selection instead of replacing
 - **Quick Presets**:
   - Select All / None: Toggle all keys
   - Select WASD: Toggle W, A, S, D keys
   - Select Letters: Toggle A-Z keys
   - Select Numbers: Toggle 1-0 keys
 - **Toggle Behavior**: If all targets selected → deselect, otherwise add without duplicates
+- **Global Mouse Event Handling**: Proper cleanup via global mouseup listener ensures drag state resets even when pointer is released outside the keyboard grid
 
 ### 4. **Custom RGB Features**
 - Per-key color assignment via color picker
@@ -58,6 +64,9 @@ The Lighting page provides complete RGB lighting control for SparkLink SDK-compa
 ### Virtual Keyboard
 - Grid layout with absolute positioning
 - Click to select keys for custom RGB
+- Click-and-drag to select multiple keys at once
+- Selection rectangle overlay with dashed accent color border during drag
+- Hold Shift to add to existing selection
 - Selected keys highlighted with `lighting-key-selected` class
 - Custom colors displayed with background override in Custom mode
 

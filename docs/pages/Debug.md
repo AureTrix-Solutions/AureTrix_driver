@@ -1,5 +1,7 @@
 # Debug Page Documentation
 
+> **⚠️ Development Only**: This page is intended for development and debugging purposes only. It may not be included in production builds and should not be relied upon by end users.
+
 ## Overview
 The Debug page is a comprehensive developer tool that provides raw access to all SparkLink SDK keyboard data getters. It displays a visual keyboard for key selection and a collapsible debug panel with buttons to fetch every available data type. This page is essential for development, testing, and troubleshooting keyboard configurations.
 
@@ -9,6 +11,9 @@ The Debug page is a comprehensive developer tool that provides raw access to all
 - Verify hardware configuration and status
 - Debug issues with travel, lighting, axis, and other settings
 - Export complete keyboard configuration as JSON
+
+## Audience
+This page is designed for **developers and advanced users only**. It exposes raw SDK data and low-level debugging tools that are not intended for typical keyboard configuration workflows.
 
 ## Key Features
 

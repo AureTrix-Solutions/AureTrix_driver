@@ -157,14 +157,18 @@ Component Mount
   ↓
 loadGlobalSettings()
   ↓
-KeyboardService.getGlobalTouchTravel()
+KeyboardService.getGlobalTouchTravel()  → Gets global travel value
   ↓
-SDK returns { globalTouchTravel, pressDead, releaseDead }
+Find a global-mode key from layout (using getPerformanceMode)
+  ↓
+KeyboardService.getDpDr(globalModeKey)  → Gets deadzones (pressDead, releaseDead)
   ↓
 Update reactive state (globalTravel, pressDead, releaseDead)
   ↓
 Store previous deadzone values for change detection
 ```
+
+**Important:** The global deadzones are fetched via `getDpDr()` from a key that is confirmed to be in global performance mode, not from `getGlobalTouchTravel()` which only returns the travel distance. This is because `getGlobalTouchTravel()` does not return deadzone values.
 
 ### Updating Global Settings
 

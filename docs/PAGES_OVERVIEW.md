@@ -102,7 +102,7 @@ This document provides a comprehensive index of all functional pages in the Aure
 
 ---
 
-### 6. [Debug Page](./pages/Debug.md)
+### 6. [Debug Page](./pages/Debug.md) *(Development Only)*
 **Purpose**: Developer tool for inspecting raw keyboard data
 
 **Key Features**:
@@ -116,6 +116,8 @@ This document provides a comprehensive index of all functional pages in the Aure
 **Primary Use Case**: Development, testing, and troubleshooting
 
 **Dependencies**: DebugKeyboardService
+
+**Note**: This page is intended for development and debugging only. It may not be included in production builds.
 
 ---
 
@@ -161,6 +163,8 @@ This document provides a comprehensive index of all functional pages in the Aure
 - Visual color picker with real-time preview
 - Virtual keyboard displays custom colors
 - Quick selection presets (WASD, letters, numbers, all)
+- **Click-and-drag selection**: Draw selection rectangle over virtual keyboard
+- **Shift-key additive mode**: Hold Shift to add to existing selection
 - Batch processing for smooth multi-key color updates
 - Flash write optimization (preview without save, commit with save)
 
@@ -170,18 +174,62 @@ This document provides a comprehensive index of all functional pages in the Aure
 
 ---
 
+### 10. [Layout Creator Page](./pages/LayoutCreator.md)
+**Purpose**: Visual keyboard layout builder for creating custom physical layouts
+
+**Key Features**:
+- Dynamic row configuration (up to 10 rows)
+- Multi-select key editing
+- Key size presets (1u, 1.25u, 1.5u, etc.) or custom mm values
+- Per-key and per-row gap configuration with 0.1mm precision
+- Hardware layout auto-detection with retry logic
+- IndexedDB persistence for custom layouts
+- JSON export/import for backup and sharing
+- Community sharing via GitHub issue generation
+- 4-tier layout priority system (IndexedDB → sharedLayout.ts → layoutMap → fallback)
+
+**Primary Use Case**: Creating layouts for unsupported or custom keyboards
+
+**Dependencies**: LayoutStorageService, KeyboardService, layoutConfigs, sharedLayout.ts
+
+---
+
+### 11. [Global Features](./pages/GlobalFeatures.md)
+**Purpose**: App-wide sidebar features accessible from any page
+
+**Key Features**:
+- **Profile Selection (P1-P4)**: Quick profile switching with editable names
+- **Profile Export/Import**: Full configuration backup and restore via ExportService
+- **Polling Rate**: Quick setting (8KHz to 125Hz)
+- **System Mode**: Windows/Mac mode toggle
+- **Factory Reset**: With confirmation modal and safety warnings
+
+**Primary Use Case**: Quick access to global keyboard settings without page navigation
+
+**Dependencies**: KeyboardService, ExportService, profileStore, FactoryResetModal component
+
+---
+
 ## Page Status
 
-### Fully Functional Pages (9)
+### Fully Functional Pages (10)
 ✅ Connect  
 ✅ Key Mapping  
 ✅ Macro Recording  
 ✅ Performance  
 ✅ Calibration  
-✅ Debug  
+✅ Debug *(Development Only)*  
 ✅ Layout Preview  
 ✅ Rapid Trigger  
 ✅ Lighting  
+✅ Layout Creator  
+
+### Global Features (App.vue Sidebar)
+✅ Profile Selection (P1-P4)  
+✅ Profile Export/Import  
+✅ Polling Rate Quick Settings  
+✅ System Mode Toggle  
+✅ Factory Reset with Modal  
 
 ### Placeholder Pages (8)
 ⏳ Profiles - Configuration management (planned)  
@@ -409,8 +457,9 @@ These component docs provide detailed technical implementation, SDK integration 
 - **v1.0** (November 2025): Initial comprehensive documentation for 7 functional pages
 - **v1.1** (November 2025): Added Rapid Trigger page documentation (8 functional pages total)
 - **v1.1.1** (November 2025): Added Performance component documentation (GlobalTravel, SingleKeyTravel, KeyTravel, SwitchProfiles)
+- **v1.2** (November 26, 2025): Added Layout Creator page, Global Features (App.vue sidebar), FactoryResetModal component. Marked Debug as dev-only. Added click-and-drag selection to Lighting. Updated page counts to 10 functional pages.
 - Future versions will document remaining placeholder pages as they're implemented
 
 ---
 
-*Last Updated: November 16, 2025*
+*Last Updated: November 26, 2025*

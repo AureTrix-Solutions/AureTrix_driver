@@ -1571,6 +1571,209 @@ console.log('Configuration exported');
 
 ---
 
+## System Configuration
+
+### setPollingRate()
+
+Sets the keyboard's USB polling rate.
+
+```typescript
+async setPollingRate(value: number): Promise<any | Error>
+```
+
+**Parameters:**
+- `value` (number): Polling rate index (0-6)
+
+**Polling Rate Values:**
+| Value | Rate |
+|-------|------|
+| 0 | 8KHz |
+| 1 | 4KHz |
+| 2 | 2KHz |
+| 3 | 1KHz |
+| 4 | 500Hz |
+| 5 | 250Hz |
+| 6 | 125Hz |
+
+**Important:** Changing the polling rate causes the keyboard to disconnect and reconnect. Handle reconnection in your application.
+
+**Example:**
+
+```typescript
+// Set polling rate to 1KHz
+const result = await keyboard.setPollingRate(3);
+if (!(result instanceof Error)) {
+  // Wait for keyboard reconnection
+  await waitForReconnection();
+  window.location.reload();
+}
+```
+
+### getPollingRate()
+
+Gets the current USB polling rate.
+
+```typescript
+async getPollingRate(): Promise<number | Error>
+```
+
+**Returns:** Polling rate index (0-6)
+
+### querySystemMode()
+
+Gets the current system mode (Windows or Mac).
+
+```typescript
+async querySystemMode(): Promise<'win' | 'mac' | Error>
+```
+
+**Returns:** `'win'` for Windows mode, `'mac'` for Mac mode
+
+### setSystemMode()
+
+Sets the keyboard to Windows or Mac mode.
+
+```typescript
+async setSystemMode(mode: 'win' | 'mac'): Promise<any | Error>
+```
+
+**Parameters:**
+- `mode` (string): `'win'` for Windows layout, `'mac'` for Mac layout
+
+**Example:**
+
+```typescript
+// Switch to Mac mode
+await keyboard.setSystemMode('mac');
+```
+
+### switchConfig()
+
+Switches the active keyboard profile.
+
+```typescript
+async switchConfig(configIndex: number): Promise<any | Error>
+```
+
+**Parameters:**
+- `configIndex` (number): Profile index (0-3, representing P1-P4)
+
+**Note:** Profile IDs 1-4 should be converted to indices 0-3 when calling this method.
+
+**Example:**
+
+```typescript
+// Switch to profile 2 (P2)
+const profileId = 2;
+const configIndex = profileId - 1;  // Convert to 0-based index
+await keyboard.switchConfig(configIndex);
+window.location.reload();  // Refresh to load new profile settings
+```
+
+### factoryReset()
+
+Restores the keyboard to factory default settings.
+
+```typescript
+async factoryReset(): Promise<boolean | Error>
+```
+
+**Returns:** `true` on success, `Error` on failure
+
+**Warning:** This operation:
+- Deletes all key mappings and macros
+- Resets RGB lighting settings
+- Clears performance settings and calibration
+- Removes all saved profiles on the keyboard
+
+**Example:**
+
+```typescript
+// Confirm with user before reset
+if (confirm('This will erase all settings. Continue?')) {
+  const result = await keyboard.factoryReset();
+  if (result === true) {
+    alert('Factory reset successful!');
+  }
+}
+```
+
+---
+
+## Advanced Features
+
+### getDks()
+
+Gets Dynamic Keystroke (DKS) configuration for a key.
+
+```typescript
+async getDks(key: number, type?: string): Promise<any | Error>
+```
+
+**Parameters:**
+- `key` (number): Key value to query
+- `type` (string, optional): DKS layout type
+
+### getMpt()
+
+Gets Multi-Point Trigger (MPT) configuration for a key.
+
+```typescript
+async getMpt(key: number): Promise<any | Error>
+```
+
+**Parameters:**
+- `key` (number): Key value to query
+
+### getSocd()
+
+Gets SOCD (Simultaneous Opposite Cardinal Directions) configuration for a key.
+
+```typescript
+async getSocd(key: number, version?: string): Promise<any | Error>
+```
+
+**Parameters:**
+- `key` (number): Key value to query
+- `version` (string, optional): SOCD version
+
+### getMT()
+
+Gets Mod Tap configuration for a key.
+
+```typescript
+async getMT(key: number): Promise<any | Error>
+```
+
+**Parameters:**
+- `key` (number): Key value to query
+
+### getTGL()
+
+Gets Toggle configuration for a key.
+
+```typescript
+async getTGL(key: number): Promise<any | Error>
+```
+
+**Parameters:**
+- `key` (number): Key value to query
+
+### getEND()
+
+Gets End (release-triggered action) configuration for a key.
+
+```typescript
+async getEND(key: number): Promise<any | Error>
+```
+
+**Parameters:**
+- `key` (number): Key value to query
+
+**Note:** These advanced feature methods return raw SDK data. Refer to the SparkLink SDK documentation for detailed response formats.
+
+---
+
 ## Error Handling
 
 ### Error Types
@@ -1946,6 +2149,20 @@ await app.createQuickMacro();
 
 ## Documentation Version History
 
+### v2.1.0 - November 26, 2025
+
+**System Configuration & Advanced Features** - Added comprehensive documentation for system-level and advanced SDK methods.
+
+**New API Documentation:**
+- ✅ **System Configuration section** - Added `setPollingRate()`, `getPollingRate()`, `querySystemMode()`, `setSystemMode()`, `switchConfig()`, `factoryReset()`
+- ✅ **Advanced Features section** - Added `getDks()`, `getMpt()`, `getSocd()`, `getMT()`, `getTGL()`, `getEND()`
+- ✅ **Polling rate table** - Complete mapping of values 0-6 to frequencies (8KHz to 125Hz)
+
+**Clarifications:**
+- ✅ **getDpDr() return type** - Confirmed returns `pressDead` and `releaseDead` properties (not `dpThreshold`/`drThreshold`)
+- ✅ **Profile switching** - Documented 1-4 to 0-3 index conversion for `switchConfig()`
+- ✅ **Factory reset warnings** - Added clear documentation of destructive nature
+
 ### v2.0.0 - November 16, 2025
 
 **Major Corrections & Additions** - Comprehensive review and accuracy improvements based on actual SDK implementation analysis.
@@ -1985,4 +2202,4 @@ For implementation examples, see the AureTrix keyboard driver source code in thi
 
 ---
 
-*Last Updated: November 16, 2025*
+*Last Updated: November 26, 2025*

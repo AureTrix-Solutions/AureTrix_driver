@@ -145,6 +145,7 @@
 import { defineComponent, ref, onMounted, onUnmounted, computed, watch, reactive, nextTick } from 'vue';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
 import { useBatchProcessing } from '@/composables/useBatchProcessing';
+import { useConnectionStore } from '@/store/connection';
 import { keyMap } from '@utils/keyMap';
 import KeyboardService from '@services/KeyboardService';
 import type { IDefKeyInfo } from '../types/types';
@@ -152,6 +153,7 @@ import type { IDefKeyInfo } from '../types/types';
 export default defineComponent({
   name: 'Lighting',
   setup() {
+    const connectionStore = useConnectionStore();
     const initializing = ref(false);
     const lightingEnabled = ref(true);
     const masterLuminance = ref(4);
@@ -780,6 +782,10 @@ export default defineComponent({
     };
 
     const initLightingFromDevice = async () => {
+      if (!connectionStore.isConnected || initializing.value) {
+        return;
+      }
+      
       initializing.value = true;
 
       try {
@@ -811,6 +817,15 @@ export default defineComponent({
         initializing.value = false;
       }
     };
+
+    watch(
+      () => connectionStore.isConnected,
+      async (isConnected, wasConnected) => {
+        if (isConnected && !wasConnected) {
+          await initLightingFromDevice();
+        }
+      }
+    );
 
     onMounted(async () => {
       await fetchLayerLayout();

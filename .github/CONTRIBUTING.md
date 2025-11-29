@@ -146,14 +146,14 @@ const emit = defineEmits<{
 </template>
 
 <style scoped lang="scss">
-@use '@/styles/variables' as *;
+@use '@styles/variables' as v;
 
 .key {
-  background: $surface-color;
-  border-radius: $border-radius;
+  background: v.$surface-color;
+  border-radius: v.$border-radius;
   
   &.selected {
-    border-color: $accent-color;
+    border-color: v.$accent-color;
   }
 }
 </style>
@@ -163,7 +163,7 @@ const emit = defineEmits<{
 
 - Use variables from `src/styles/variables.scss`
 - Follow the existing color scheme and spacing conventions
-- Use `@use '@/styles/variables' as *;` for importing variables
+- Use `@use '@styles/variables' as v;` for importing variables (access via `v.$variable-name`)
 - Maintain consistent component styling across pages
 
 ### Naming Conventions

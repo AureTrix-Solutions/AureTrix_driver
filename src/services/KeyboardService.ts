@@ -320,7 +320,6 @@ class KeyboardService {
   }
 
   private handleConnect = async (event: HIDConnectionEvent): Promise<void> => {
-    // Skip if already connected or connecting - prevents duplicate baseInfo fetches
     if (this.connectedDevice || this.isAutoConnecting || this.autoConnectPromise) {
       return;
     }
@@ -341,7 +340,6 @@ class KeyboardService {
       this.reconnectTimeout = null;
     }
     
-    // Start suppression window before reconnection
     this.isPostReconnectionSuppression = true;
     const connectionStore = useConnectionStore();
     connectionStore.setPostReconnectionSuppression(true);
@@ -354,7 +352,6 @@ class KeyboardService {
       const connectionStore = useConnectionStore();
       connectionStore.setPostReconnectionSuppression(false);
       
-      // Only clear flags if tokens match (no new operations started)
       if (this.pollingRateOperationToken === pollingRateToken) {
         this.isPollingRateChanging = false;
         this.pollingRateOperationToken = null;
@@ -385,7 +382,6 @@ class KeyboardService {
     
     this.initializationPromise = null;
     
-    // Only handle reconnection if not in a managed operation (polling rate/factory reset)
     if (!this.isPollingRateChanging && !this.isFactoryResetting) {
       this.isReconnecting = true;
       this.suppressSDKReconnectError();

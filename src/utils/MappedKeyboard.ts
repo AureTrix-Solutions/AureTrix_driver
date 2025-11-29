@@ -11,9 +11,7 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
   const loaded = ref(false);
   const baseLayout = ref<IDefKeyInfo[][] | null>(null);
   const error = ref<string | null>(null);
-  const hasFetchedOnce = ref(false);
 
-  // Grid computation
   const gridStyle = computed(() => {
     if (!baseLayout.value) {
       return {};
@@ -59,7 +57,6 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
     };
   };
 
-  // Batch key setting with retries
   async function batchSetKey(config: { key: number; layout: number; value: number }[], batchSize: number = 10) {
     for (let i = 0; i < config.length; i += batchSize) {
       const batch = config.slice(i, i + batchSize);
@@ -72,7 +69,6 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
     }
   }
 
-  // Fetch layout for current layer
   async function fetchLayerLayout() {
     if (!connectionStore.isConnected) {
       layout.value = [];
@@ -85,14 +81,15 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
     while (attempt < maxRetries) {
       try {
         const newBaseLayout = await KeyboardService.defKey();
+        if (newBaseLayout instanceof Error) {
+          throw newBaseLayout;
+        }
         if (!newBaseLayout || newBaseLayout.length === 0) {
           throw new Error('Empty or invalid base layout received');
         }
         if (!baseLayout.value) {
           baseLayout.value = newBaseLayout;
-          const totalKeys = newBaseLayout.flat().length;
         }
-        const totalKeys = newBaseLayout.flat().length;
 
         if (layerIndex.value === null) {
           layout.value = baseLayout.value;
@@ -101,20 +98,22 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
         }
 
         const batchSize = 10;
-        const requests = [];
-        for (let i = 0; i < newBaseLayout.flat().length; i += batchSize) {
-          const startIdx = i;
-          const endIdx = Math.min(i + batchSize - 1, newBaseLayout.flat().length - 1);
-          const batch = newBaseLayout.flat().slice(startIdx, endIdx + 1).map(k => ({ key: k.keyValue, layout: layerIndex.value }));
+        const flatLayout = newBaseLayout.flat();
+        const currentLayer = layerIndex.value!;
+        const requests: { key: number; layout: number }[][] = [];
+        for (let i = 0; i < flatLayout.length; i += batchSize) {
+          const batch = flatLayout.slice(i, i + batchSize).map(k => ({ key: k.keyValue, layout: currentLayer }));
           requests.push(batch);
         }
-        const allLayerData = [];
+        const allLayerData: IDefKeyInfo[] = [];
         for (const request of requests) {
           try {
             const layerData = await KeyboardService.getLayoutKeyInfo(request);
-            allLayerData.push(...layerData);
-          } catch (error) {
-            console.error(`Failed to fetch batch for keys ${request[0].key} to ${request[request.length - 1].key} in layer ${layerIndex.value + 1}:`, error);
+            if (!(layerData instanceof Error)) {
+              allLayerData.push(...layerData);
+            }
+          } catch (err) {
+            console.error(`Failed to fetch batch in layer ${(layerIndex.value ?? 0) + 1}:`, err);
           }
         }
 
@@ -125,10 +124,11 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
         const uniqueLayerData = new Map<number, { key: number; value: number }>();
         allLayerData.forEach(item => {
           if (item && typeof item === 'object' && 'key' in item && 'value' in item) {
-            uniqueLayerData.set(item.key, { key: item.key, value: item.value });
+            uniqueLayerData.set((item as { key: number; value: number }).key, { key: (item as { key: number; value: number }).key, value: (item as { key: number; value: number }).value });
           }
         });
 
+        const currentLayerIndex = layerIndex.value ?? 0;
         const layerLayout: IDefKeyInfo[][] = newBaseLayout.map(row =>
           row.map(baseKey => {
             const layerKey = uniqueLayerData.get(baseKey.keyValue);
@@ -138,11 +138,8 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
               if (keyValue === 1) {
                 keyValue = 0;
               }
-            } else {
-              console.warn(`No unique mapping found for key ${baseKey.keyValue} in layer ${layerIndex.value + 1}, using base value: ${keyValue}`);
             }
             if (keyValue < 0 || keyValue > 65535) {
-              console.warn(`Invalid value ${keyValue} for key ${baseKey.keyValue} in layer ${layerIndex.value + 1}, using default: ${baseKey.keyValue}`);
               keyValue = baseKey.keyValue;
             }
             return {
@@ -156,9 +153,9 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
         layout.value = layerLayout;
         loaded.value = true;
         return;
-      } catch (error) {
-        console.error(`Failed to fetch layout for layer ${layerIndex.value !== null ? layerIndex.value + 1 : 'default'} (attempt ${attempt + 1}):`, error);
-        error.value = `Failed to fetch layout: ${(error as Error).message}`;
+      } catch (err) {
+        console.error(`Failed to fetch layout (attempt ${attempt + 1}):`, err);
+        error.value = `Failed to fetch layout: ${(err as Error).message}`;
         layout.value = [];
         loaded.value = false;
       }
@@ -167,7 +164,6 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
-    console.error(`Failed to fetch layout after ${maxRetries} attempts`);
     error.value = 'Failed to load keyboard layout after multiple attempts';
   }
 
@@ -180,10 +176,5 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
     }
   );
 
-  const wrappedFetchLayerLayout = async () => {
-    hasFetchedOnce.value = true;
-    await fetchLayerLayout();
-  };
-
-  return { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout: wrappedFetchLayerLayout, baseLayout, error, batchSetKey };
+  return { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, baseLayout, error, batchSetKey };
 }

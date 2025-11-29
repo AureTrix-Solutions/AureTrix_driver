@@ -131,142 +131,146 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.debug-page {
-  padding: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
+@use 'sass:color';
+@use '@styles/variables' as v;
 
-.title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-  color: var(--text-primary);
+.debug-page {
+  padding: 20px;
+  color: v.$text-color;
+
+  .title {
+    color: v.$primary-color;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-family: v.$font-style;
+  }
 }
 
 .debug-container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 24px;
 }
 
 .key-grid {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-secondary);
-  border-radius: 12px;
-  padding: 1rem;
-  overflow-x: auto;
+  display: block !important;
+  position: relative;
+  width: fit-content;
+  margin: 0 auto;
+  min-height: 300px;
+  max-height: 500px;
+  flex-shrink: 0;
+  visibility: visible !important;
+  z-index: 1;
 }
 
 .key-row {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 4px;
+  display: contents;
 }
 
 .key-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-tertiary);
-  border: 2px solid transparent;
-  border-radius: 6px;
+  position: absolute;
+  padding: 4px;
+  border: v.$border-style;
+  border-radius: v.$border-radius;
+  background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
+  color: v.$text-color;
   cursor: pointer;
-  transition: all 0.15s ease;
-  min-height: 40px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  user-select: none;
+  text-align: center;
+  font-family: v.$font-style;
+  visibility: visible !important;
+  z-index: 2;
 
-  &:hover {
-    background: var(--bg-hover);
-    border-color: var(--accent-color);
+  .key-label {
+    font-size: 1rem;
+    font-weight: 300;
   }
 
   &.key-selected {
-    background: var(--accent-color);
-    border-color: var(--accent-color);
+    border-color: v.$accent-color;
+    box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
+  }
 
-    .key-label {
-      color: #fff;
-    }
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
   }
 }
 
-.key-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  text-align: center;
-  padding: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .no-layout {
-  background: var(--bg-secondary);
-  border-radius: 12px;
-  padding: 3rem;
   text-align: center;
-  color: var(--text-secondary);
+  color: v.$text-color;
+  font-size: 1rem;
+  font-family: v.$font-style;
+  padding: 20px;
 }
 
 .axis-panel {
-  background: var(--bg-secondary);
-  border-radius: 12px;
-  padding: 1.5rem;
+  border: 1px solid rgba(v.$text-color, 0.2);
+  border-radius: v.$border-radius;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  padding: 15px 20px;
 
   h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: var(--text-primary);
+    color: v.$primary-color;
+    margin: 0 0 15px 0;
+    font-size: 1.2rem;
+    font-weight: 400;
+    font-family: v.$font-style;
   }
 }
 
 .no-selection {
-  color: var(--text-secondary);
+  color: rgba(v.$text-color, 0.6);
   font-style: italic;
-  padding: 1rem 0;
+  font-family: v.$font-style;
 }
 
 .axis-content {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 15px;
 }
 
 .selected-key-info {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 10px;
   flex-wrap: wrap;
+  font-family: v.$font-style;
 }
 
 .key-name {
   font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--accent-color);
+  font-weight: 500;
+  color: v.$accent-color;
 }
 
 .key-value {
-  color: var(--text-secondary);
+  color: rgba(v.$text-color, 0.7);
   font-size: 0.9rem;
 }
 
 .refresh-btn {
   margin-left: auto;
-  padding: 0.5rem 1rem;
-  background: var(--accent-color);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
+  padding: 6px 14px;
+  background-color: color.adjust(v.$background-dark, $lightness: -100%);
+  color: v.$accent-color;
+  border: v.$border-style;
+  border-radius: v.$border-radius;
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: background-color 0.2s ease;
+  font-family: v.$font-style;
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    background-color: color.adjust(v.$background-dark, $lightness: 10%);
   }
 
   &:disabled {
@@ -276,12 +280,13 @@ export default defineComponent({
 }
 
 .axis-output {
-  background: var(--bg-tertiary);
-  border-radius: 8px;
-  padding: 1rem;
+  background: rgba(v.$background-dark, 0.5);
+  border: 1px solid rgba(v.$text-color, 0.1);
+  border-radius: v.$border-radius;
+  padding: 15px;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.85rem;
-  color: var(--text-primary);
+  color: v.$text-color;
   overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-word;
@@ -293,9 +298,10 @@ export default defineComponent({
 .axis-error {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 8px;
-  padding: 1rem;
+  border-radius: v.$border-radius;
+  padding: 15px;
   color: #ef4444;
   font-size: 0.9rem;
+  font-family: v.$font-style;
 }
 </style>

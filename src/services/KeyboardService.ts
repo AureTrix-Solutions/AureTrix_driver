@@ -320,7 +320,11 @@ class KeyboardService {
   }
 
   private handleConnect = async (event: HIDConnectionEvent): Promise<void> => {
-    if (this.connectedDevice || this.isAutoConnecting || this.autoConnectPromise) {
+    if (this.connectedDevice) {
+      return;
+    }
+    
+    if (this.isAutoConnecting || this.autoConnectPromise) {
       return;
     }
     
@@ -368,7 +372,21 @@ class KeyboardService {
     }, 2000);
     
     try {
-      await this.autoConnect();
+      const maxRetries = 5;
+      let attempt = 0;
+      
+      while (attempt < maxRetries && !this.connectedDevice) {
+        const result = await this.autoConnect();
+        
+        if (result || this.connectedDevice) {
+          break;
+        }
+        
+        attempt++;
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 500 + (attempt * 200)));
+        }
+      }
     } finally {
       this.isReconnecting = false;
     }

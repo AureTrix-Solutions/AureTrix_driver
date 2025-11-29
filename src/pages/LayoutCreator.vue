@@ -774,7 +774,7 @@ export default defineComponent({
     };
 
     const goBack = () => {
-      window.location.reload();
+      window.location.href = window.location.href;
     };
 
     return {

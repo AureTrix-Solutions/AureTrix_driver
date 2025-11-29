@@ -409,10 +409,10 @@ export default defineComponent({
         
         const success = await waitForReinitialization();
         if (success) {
-          window.location.reload();
+          window.location.href = window.location.href;
         } else {
           console.error('Reconnection timeout - reloading anyway');
-          window.location.reload();
+          window.location.href = window.location.href;
         }
       }
     },
@@ -461,7 +461,7 @@ export default defineComponent({
     async handleProfileClick(profileId: number) {
       const result = await this.profileStore.switchProfile(profileId);
       if (result.success) {
-        window.location.reload();
+        window.location.href = window.location.href;
       } else if (result.error) {
         console.error('Failed to switch profile:', result.error);
       }
@@ -527,7 +527,7 @@ export default defineComponent({
           }
           
           if (importResult.success) {
-            window.location.reload();
+            window.location.href = window.location.href;
           } else {
             console.error('Import failed:', importResult.error || 'Unknown error');
           }

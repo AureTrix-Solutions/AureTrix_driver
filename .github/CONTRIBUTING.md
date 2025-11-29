@@ -185,9 +185,8 @@ Community keyboard layouts are stored in `src/utils/sharedLayout.ts`. To contrib
 1. Open AureTrix and navigate to **Layout Creator**
 2. Connect your keyboard or manually configure row counts
 3. Adjust key sizes and gaps to match your keyboard's physical layout
-4. Click **Export Layout** and choose **Submit to GitHub**
-5. The Layout Creator will generate a pre-filled GitHub issue with your layout data
-6. Review the issue and submit it
+4. Click the **Share** button - this opens a pre-filled GitHub issue
+5. Review the issue and submit it
 
 ### Alternative: Direct PR
 

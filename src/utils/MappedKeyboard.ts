@@ -179,9 +179,12 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
     () => connectionStore.isConnected,
     async (isConnected, wasConnected) => {
       if (!isConnected && wasConnected) {
-        hasFetchedOnce.value = false;
+        layout.value = [];
+        loaded.value = false;
         baseLayout.value = null;
-      } else if (isConnected && !wasConnected && !hasFetchedOnce.value) {
+        hasFetchedOnce.value = false;
+        error.value = null;
+      } else if (isConnected && !wasConnected) {
         await fetchLayerLayout();
         if (loaded.value) {
           hasFetchedOnce.value = true;

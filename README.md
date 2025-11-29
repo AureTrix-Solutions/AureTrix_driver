@@ -185,7 +185,7 @@ Comprehensive documentation is available in the `docs/` directory:
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on:
+Contributions are welcome! Please read our [Contributing Guide](.github/CONTRIBUTING.md) for details on:
 
 - Development setup and prerequisites
 - Code standards and conventions
@@ -195,14 +195,14 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 Quick start:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Make your changes following our [code standards](CONTRIBUTING.md#code-standards)
+3. Make your changes following our [code standards](.github/CONTRIBUTING.md#code-standards)
 4. Submit a pull request
 
-Please also review our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
+Please also review our [Code of Conduct](.github/CODE_OF_CONDUCT.md) before participating.
 
 ## Security
 
-For information about the security model and how to report vulnerabilities, see our [Security Policy](SECURITY.md).
+For information about the security model and how to report vulnerabilities, see our [Security Policy](.github/SECURITY.md).
 
 ## License
 

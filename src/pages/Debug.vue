@@ -40,7 +40,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch } from 'vue';
+import { defineComponent, ref, onMounted } from 'vue';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
 import { keyMap } from '@utils/keyMap';
 import debugKeyboardService from '@services/DebugKeyboardService';
@@ -49,7 +49,7 @@ import type { IDefKeyInfo } from '../types/types';
 export default defineComponent({
   name: 'Debug',
   setup() {
-    const { layout, loaded, gridStyle, getKeyStyle, error } = useMappedKeyboard(ref(0));
+    const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, error } = useMappedKeyboard(ref(0));
 
     const selectedKey = ref<IDefKeyInfo | null>(null);
     const axisData = ref<string>('');
@@ -101,6 +101,10 @@ export default defineComponent({
       const keyValue = selectedKey.value.physicalKeyValue || selectedKey.value.keyValue;
       await fetchAxisData(keyValue);
     };
+
+    onMounted(() => {
+      fetchLayerLayout();
+    });
 
     return {
       layout,

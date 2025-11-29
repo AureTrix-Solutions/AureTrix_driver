@@ -5,12 +5,19 @@ import type { IDefKeyInfo } from '../types/types';
 import { useConnectionStore } from '../store/connection';
 import { mmToPx } from '@utils/keyUnits';
 
+interface LayerKeyInfo {
+  key: number;
+  value: number;
+  layout?: number;
+}
+
 export function useMappedKeyboard(layerIndex: Ref<number | null>) {
   const connectionStore = useConnectionStore();
   const layout = ref<IDefKeyInfo[][]>([]);
   const loaded = ref(false);
   const baseLayout = ref<IDefKeyInfo[][] | null>(null);
   const error = ref<string | null>(null);
+  const hasFetchedOnce = ref(false);
 
   const gridStyle = computed(() => {
     if (!baseLayout.value) {
@@ -105,15 +112,19 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
           const batch = flatLayout.slice(i, i + batchSize).map(k => ({ key: k.keyValue, layout: currentLayer }));
           requests.push(batch);
         }
-        const allLayerData: IDefKeyInfo[] = [];
+        const allLayerData: LayerKeyInfo[] = [];
         for (const request of requests) {
           try {
             const layerData = await KeyboardService.getLayoutKeyInfo(request);
-            if (!(layerData instanceof Error)) {
-              allLayerData.push(...layerData);
+            if (!(layerData instanceof Error) && Array.isArray(layerData)) {
+              for (const item of layerData) {
+                if (item && typeof item === 'object' && 'key' in item && 'value' in item) {
+                  allLayerData.push({ key: (item as LayerKeyInfo).key, value: (item as LayerKeyInfo).value });
+                }
+              }
             }
           } catch (err) {
-            console.error(`Failed to fetch batch in layer ${(layerIndex.value ?? 0) + 1}:`, err);
+            console.error(`Failed to fetch batch in layer ${currentLayer + 1}:`, err);
           }
         }
 
@@ -121,14 +132,11 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
           throw new Error('No layer data received');
         }
 
-        const uniqueLayerData = new Map<number, { key: number; value: number }>();
+        const uniqueLayerData = new Map<number, LayerKeyInfo>();
         allLayerData.forEach(item => {
-          if (item && typeof item === 'object' && 'key' in item && 'value' in item) {
-            uniqueLayerData.set((item as { key: number; value: number }).key, { key: (item as { key: number; value: number }).key, value: (item as { key: number; value: number }).value });
-          }
+          uniqueLayerData.set(item.key, item);
         });
 
-        const currentLayerIndex = layerIndex.value ?? 0;
         const layerLayout: IDefKeyInfo[][] = newBaseLayout.map(row =>
           row.map(baseKey => {
             const layerKey = uniqueLayerData.get(baseKey.keyValue);
@@ -170,11 +178,24 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
   watch(
     () => connectionStore.isConnected,
     async (isConnected, wasConnected) => {
-      if (isConnected && !wasConnected) {
+      if (!isConnected && wasConnected) {
+        hasFetchedOnce.value = false;
+        baseLayout.value = null;
+      } else if (isConnected && !wasConnected && !hasFetchedOnce.value) {
         await fetchLayerLayout();
+        if (loaded.value) {
+          hasFetchedOnce.value = true;
+        }
       }
     }
   );
 
-  return { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, baseLayout, error, batchSetKey };
+  const wrappedFetchLayerLayout = async () => {
+    await fetchLayerLayout();
+    if (loaded.value) {
+      hasFetchedOnce.value = true;
+    }
+  };
+
+  return { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout: wrappedFetchLayerLayout, baseLayout, error, batchSetKey };
 }

@@ -180,33 +180,11 @@ const emit = defineEmits<{
 
 Community keyboard layouts are stored in `src/utils/sharedLayout.ts`. To contribute a layout:
 
-### Using the Layout Creator
-
 1. Open AureTrix and navigate to **Layout Creator**
 2. Connect your keyboard or manually configure row counts
 3. Adjust key sizes and gaps to match your keyboard's physical layout
 4. Click the **Share** button - this opens a pre-filled GitHub issue
 5. Review the issue and submit it
-
-### Alternative: Direct PR
-
-You can also submit a PR adding your layout directly to `sharedLayout.ts`:
-
-```typescript
-// In src/utils/sharedLayout.ts
-export const sharedLayouts: Record<string, LayoutConfig> = {
-  // ... existing layouts
-  
-  'your-keyboard-name': {
-    keyCount: 67,
-    keySizes: [
-      // Row 0: [width, gap] pairs in mm
-      [[19.05, 0], [19.05, 0], ...],
-      // Continue for each row
-    ],
-  },
-};
-```
 
 ## Pull Request Process
 

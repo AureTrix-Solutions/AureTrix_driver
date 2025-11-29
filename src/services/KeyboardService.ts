@@ -11,6 +11,7 @@ class KeyboardService {
   private keyboard: XDKeyboard;
   private connectedDevice: Device | null = null;
   private isAutoConnecting: boolean = false;
+  private autoConnectPromise: Promise<Device | null> | null = null;
   private isPollingRateChanging: boolean = false;
   private pollingRateOperationToken: number | null = null;
   private pollingRateTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -137,6 +138,9 @@ class KeyboardService {
   }
 
   async autoConnect(): Promise<Device | null> {
+    if (this.autoConnectPromise) {
+      return this.autoConnectPromise;
+    }
     if (this.isAutoConnecting) {
       return null;
     }
@@ -148,6 +152,16 @@ class KeyboardService {
     if (!savedStableId) return null;
 
     this.isAutoConnecting = true;
+    this.autoConnectPromise = this._autoConnectInternal(savedStableId);
+    try {
+      return await this.autoConnectPromise;
+    } finally {
+      this.autoConnectPromise = null;
+      this.isAutoConnecting = false;
+    }
+  }
+
+  private async _autoConnectInternal(savedStableId: string): Promise<Device | null> {
     try {
       let attempts = 0;
       const maxAttempts = 3;
@@ -168,9 +182,9 @@ class KeyboardService {
             const device = targetSdkDevice || { id: fallbackId, data: targetHidDevice, productName: targetHidDevice.productName || 'Unknown' };
             await this.init(device.id);
             this.connectedDevice = device;
+            await this.initializeKeyboard();
             const connectionStore = useConnectionStore();
             await connectionStore.onAutoConnectSuccess(device);
-            await this.initializeKeyboard();
             return device;
           }
 
@@ -192,8 +206,6 @@ class KeyboardService {
     } catch (error) {
       console.error('Failed to auto-connect:', error);
       return null;
-    } finally {
-      this.isAutoConnecting = false;
     }
   }
 

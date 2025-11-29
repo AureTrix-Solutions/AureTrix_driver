@@ -1,14 +1,13 @@
 <template>
-  <div class="lighting-debug-page">
-    <h2 class="title">Lighting Debug & Testing</h2>
+  <div class="debug-page">
+    <h2 class="title">Key Debug</h2>
 
-    <div class="lighting-container">
-      <!-- Keyboard Grid -->
+    <div class="debug-container">
       <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
         <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
           <div v-for="(keyInfo, cIdx) in row" :key="`k-${rIdx}-${cIdx}`" class="key-btn"
-            :class="{ 'lighting-key-selected': loaded && selectedKeys.some(k => (k.physicalKeyValue || k.keyValue) === (keyInfo.physicalKeyValue || keyInfo.keyValue)) }"
-            :style="getKeyStyleWithCustomColor(rIdx, cIdx)" @click="selectKey(keyInfo, rIdx, cIdx)">
+            :class="{ 'key-selected': isSelected(keyInfo) }"
+            :style="getKeyStyle(rIdx, cIdx)" @click="selectKey(keyInfo)">
             <div class="key-label">
               {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
             </div>
@@ -19,1229 +18,276 @@
         <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
       </div>
 
-      <div class="bottom-section">
-        <div class="selection-buttons">
-          <button @click="selectAll" class="select-btn">Select All</button>
-          <button @click="selectWASD" class="select-btn">Select WASD</button>
-          <button @click="selectLetters" class="select-btn">Select Letters</button>
-          <button @click="selectNumbers" class="select-btn">Select Numbers</button>
-          <button @click="selectNone" class="select-btn">Select None</button>
+      <div class="axis-panel">
+        <h3>Axis Data</h3>
+        <div v-if="!selectedKey" class="no-selection">
+          Click a key to view its axis data
         </div>
-        <div class="parent">
-          <div class="settings-panel">
-            <!-- RGB Settings Section -->
-            <div class="settings-section">
-              <div class="header-row">
-                <h3>RGB Settings</h3>
-                <button @click="toggleLighting" class="show-btn" :disabled="initializing">
-                  {{ initializing ? 'SYNCING...' : (lightingEnabled ? 'ON' : 'OFF') }}
-                </button>
-              </div>
-              
-              <!-- Row 1: Brightness, Speed, and Lighting Mode -->
-              <div class="settings-row settings-row-three">
-                <div class="input-group">
-                  <div class="label">Brightness</div>
-                  <select v-model.number="masterLuminance" @change="applyMasterLuminance" class="mode-select"
-                    :disabled="initializing || !lightingEnabled">
-                    <option :value="0">0 - Off</option>
-                    <option :value="1">1 - Low</option>
-                    <option :value="2">2 - Medium</option>
-                    <option :value="3">3 - High</option>
-                    <option :value="4">4 - Maximum</option>
-                  </select>
-                </div>
-                <div class="input-group">
-                  <div class="label">Speed</div>
-                  <select v-model.number="masterSpeed" @change="applyMasterSpeed" class="mode-select"
-                    :disabled="initializing || !lightingEnabled">
-                    <option :value="0">0 - Slowest</option>
-                    <option :value="1">1 - Slow</option>
-                    <option :value="2">2 - Medium</option>
-                    <option :value="3">3 - Fast</option>
-                    <option :value="4">4 - Fastest</option>
-                  </select>
-                </div>
-                <div class="input-group">
-                  <div class="label">Lighting Mode</div>
-                  <select v-model.number="selectedMode" @change="applyModeSelection" class="mode-select"
-                    :disabled="initializing || !lightingEnabled">
-                    <option :value="0">Static</option>
-                    <option :value="1">Wave</option>
-                    <option :value="2">Wave 2</option>
-                    <option :value="3">Ripple</option>
-                    <option :value="4">Wheel</option>
-                    <option :value="5">Wheel 2</option>
-                    <option :value="6">Collide</option>
-                    <option :value="7">Spectrum</option>
-                    <option :value="8">Shift</option>
-                    <option :value="9">Spot Shift</option>
-                    <option :value="10">Race</option>
-                    <option :value="11">Rainbow Wave</option>
-                    <option :value="12">Snake</option>
-                    <option :value="13">Twinkle</option>
-                    <option :value="14">Twinkle 2</option>
-                    <option :value="15">Twinkle 3</option>
-                    <option :value="16">Pong</option>
-                    <option :value="17">Pulse</option>
-                    <option :value="18">Radiate</option>
-                    <option :value="19">Column</option>
-                    <option :value="20">Explode</option>
-                    <option :value="21">Custom</option>
-                  </select>
-                  <div v-if="selectedMode === 0 || selectedMode === 21" class="color-picker-wrapper">
-                    <label for="static-color-picker" class="color-display" :style="{ backgroundColor: staticColor }"></label>
-                    <input 
-                      type="color" 
-                      id="static-color-picker"
-                      v-model="staticColor" 
-                      @input="selectedMode === 0 ? applyStaticColorThrottled() : applyCustomColorThrottled()"
-                      @change="selectedMode === 0 ? applyStaticColor() : applyCustomColor()"
-                      :disabled="initializing || !lightingEnabled"
-                      class="color-input"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Row 2: Sleep and Reverse -->
-              <div class="settings-row">
-                <div class="input-group">
-                  <div class="label">Sleep</div>
-                  <select v-model.number="masterSleepDelay" @change="applyMasterSleepDelay" class="mode-select"
-                    :disabled="initializing || !lightingEnabled">
-                    <option :value="0">Never</option>
-                    <option :value="1">1 minute</option>
-                    <option :value="2">2 minutes</option>
-                    <option :value="3">3 minutes</option>
-                    <option :value="5">5 minutes</option>
-                    <option :value="10">10 minutes</option>
-                    <option :value="15">15 minutes</option>
-                    <option :value="20">20 minutes</option>
-                    <option :value="25">25 minutes</option>
-                    <option :value="30">30 minutes</option>
-                    <option :value="45">45 minutes</option>
-                    <option :value="60">60 minutes</option>
-                    <option :value="120">120 minutes</option>
-                  </select>
-                </div>
-                <div class="input-group">
-                  <div class="label">
-                    <input type="checkbox" v-model="masterDirection" @change="applyMasterDirection"
-                      :disabled="initializing || !lightingEnabled" class="direction-checkbox" />
-                    Reverse
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div v-else class="axis-content">
+          <div class="selected-key-info">
+            <span class="key-name">{{ selectedKeyLabel }}</span>
+            <span class="key-value">(Key {{ selectedKey.physicalKeyValue || selectedKey.keyValue }})</span>
+            <button @click="refreshAxis" class="refresh-btn" :disabled="loading">
+              {{ loading ? 'Loading...' : 'Refresh' }}
+            </button>
           </div>
+          <div v-if="axisError" class="axis-error">{{ axisError }}</div>
+          <pre v-else class="axis-output">{{ axisData }}</pre>
         </div>
       </div>
-
-      <!-- Debug Console -->
-      <details class="debug-console" open>
-        <summary>Debug Console (Click to toggle)</summary>
-        <div class="console-controls">
-          <label class="super-response-label">
-            <input 
-              type="checkbox" 
-              v-model="superResponse" 
-              @change="applySuperResponse"
-              :disabled="initializing || !lightingEnabled"
-              class="super-response-checkbox"
-            />
-            Super Response
-          </label>
-        </div>
-        <div class="debug-output">
-          <pre>{{ debugOutput }}</pre>
-        </div>
-        <div class="console-buttons">
-          <button @click="getLightingInfo" class="debug-btn">Get Lighting</button>
-          <button @click="getCustomLightingInfo" class="debug-btn">Get Custom Lighting</button>
-          <button @click="getSpecialLightingInfo" class="debug-btn">Get Special Lighting</button>
-          <button @click="clearDebugOutput" class="clear-btn">Clear Console</button>
-        </div>
-      </details>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed, watch, reactive } from 'vue';
+import { defineComponent, ref, watch } from 'vue';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
-import { useBatchProcessing } from '@/composables/useBatchProcessing';
 import { keyMap } from '@utils/keyMap';
 import debugKeyboardService from '@services/DebugKeyboardService';
 import type { IDefKeyInfo } from '../types/types';
 
 export default defineComponent({
-  name: 'LightingDebug',
+  name: 'Debug',
   setup() {
-    const initializing = ref(false);
-    const lightingEnabled = ref(true);
-    const masterLuminance = ref(4);
-    const masterSpeed = ref(3);
-    const masterSleepDelay = ref(0);
-    const masterDirection = ref(false);
-    const selectedMode = ref(0);
-    const confirmedMode = ref(0); // Tracks last successfully applied mode
-    const staticColor = ref('#0037ff'); // Static mode color (colors[0])
-    const superResponse = ref(false); // Super response mode
-    const debugOutput = ref('Lighting Debug Console\n-------------------\n');
-    const selectedKeys = ref<IDefKeyInfo[]>([]);
+    const { layout, loaded, gridStyle, getKeyStyle, error } = useMappedKeyboard(ref(0));
 
-    const { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, error } = useMappedKeyboard(ref(0));
-    const { processBatches } = useBatchProcessing();
+    const selectedKey = ref<IDefKeyInfo | null>(null);
+    const axisData = ref<string>('');
+    const axisError = ref<string>('');
+    const loading = ref(false);
 
-    const log = (message: string) => {
-      const timestamp = new Date().toLocaleTimeString();
-      debugOutput.value += `[${timestamp}] ${message}\n`;
+    const selectedKeyLabel = ref('');
+
+    const isSelected = (keyInfo: IDefKeyInfo): boolean => {
+      if (!selectedKey.value) return false;
+      const selectedValue = selectedKey.value.physicalKeyValue || selectedKey.value.keyValue;
+      const keyValue = keyInfo.physicalKeyValue || keyInfo.keyValue;
+      return selectedValue === keyValue;
     };
 
-    // Throttle utility: limits function execution to once per delay period
-    const throttle = (func: Function, delay: number) => {
-      let lastCall = 0;
-      return (...args: any[]) => {
-        const now = Date.now();
-        if (now - lastCall >= delay) {
-          lastCall = now;
-          func(...args);
-        }
-      };
-    };
-
-    // Custom RGB color storage (key -> {R, G, B})
-    const customColors = reactive<Record<number, { R: number; G: number; B: number }>>({});
-
-    // RGB/Hex conversion utilities
-    const rgbToHex = (r: number, g: number, b: number): string => {
-      const toHex = (n: number) => {
-        const hex = n.toString(16).padStart(2, '0');
-        return hex;
-      };
-      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-    };
-
-    const hexToRgb = (hex: string): { R: number; G: number; B: number } => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result
-        ? {
-            R: parseInt(result[1], 16),
-            G: parseInt(result[2], 16),
-            B: parseInt(result[3], 16),
-          }
-        : { R: 255, G: 255, B: 255 }; // Default to white
-    };
-
-    // Computed color picker value based on mode and selection
-    const displayedColor = computed(() => {
-      // Static mode: use staticColor ref
-      if (selectedMode.value === 0) {
-        return staticColor.value;
-      }
-
-      // Custom mode (21): determine color based on selection
-      if (selectedMode.value === 21) {
-        // No keys selected: white
-        if (selectedKeys.value.length === 0) {
-          return '#ffffff';
-        }
-
-        // Single key: return its custom color
-        if (selectedKeys.value.length === 1) {
-          const keyValue = selectedKeys.value[0].physicalKeyValue || selectedKeys.value[0].keyValue;
-          const rgb = customColors[keyValue];
-          return rgb ? rgbToHex(rgb.R, rgb.G, rgb.B) : '#ffffff';
-        }
-
-        // Multiple keys: find majority color or use first key's color
-        const colorCounts = new Map<string, number>();
-        const keyColors: string[] = [];
-
-        selectedKeys.value.forEach(key => {
-          const keyValue = key.physicalKeyValue || key.keyValue;
-          const rgb = customColors[keyValue];
-          const hex = rgb ? rgbToHex(rgb.R, rgb.G, rgb.B) : '#ffffff';
-          keyColors.push(hex);
-          colorCounts.set(hex, (colorCounts.get(hex) || 0) + 1);
-        });
-
-        // Find majority
-        let maxCount = 0;
-        let majorityColor = keyColors[0];
-        colorCounts.forEach((count, color) => {
-          if (count > maxCount) {
-            maxCount = count;
-            majorityColor = color;
-          }
-        });
-
-        return majorityColor;
-      }
-
-      // Default fallback
-      return staticColor.value;
-    });
-
-    // Watcher: sync staticColor with displayedColor when selection changes in Custom mode
-    watch(
-      () => [selectedKeys.value.length, selectedMode.value],
-      () => {
-        if (selectedMode.value === 21) {
-          staticColor.value = displayedColor.value;
-        }
-      },
-      { deep: true }
-    );
-
-    // Enhanced getKeyStyle that applies custom colors in Custom mode
-    const getKeyStyleWithCustomColor = (rIdx: number, cIdx: number) => {
-      const baseStyle = getKeyStyle(rIdx, cIdx);
+    const selectKey = async (keyInfo: IDefKeyInfo) => {
+      const keyValue = keyInfo.physicalKeyValue || keyInfo.keyValue;
+      const currentValue = selectedKey.value?.physicalKeyValue || selectedKey.value?.keyValue;
       
-      // Apply custom background color in Custom mode (21)
-      if (selectedMode.value === 21 && layout.value[rIdx] && layout.value[rIdx][cIdx]) {
-        const keyInfo = layout.value[rIdx][cIdx];
-        const keyValue = keyInfo.physicalKeyValue || keyInfo.keyValue;
-        const rgb = customColors[keyValue];
-        
-        if (rgb) {
-          const bgColor = rgbToHex(rgb.R, rgb.G, rgb.B);
-          return {
-            ...baseStyle,
-            background: bgColor,
-            backgroundImage: 'none',
-          };
-        }
-      }
-      
-      return baseStyle;
-    };
-
-    // Key selection functions
-    const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
-      const physicalKeyValue = key.physicalKeyValue || key.keyValue;
-      const existingIndex = selectedKeys.value.findIndex(k => (k.physicalKeyValue || k.keyValue) === physicalKeyValue);
-      if (existingIndex > -1) {
-        selectedKeys.value.splice(existingIndex, 1);
-      } else {
-        selectedKeys.value.push(key);
-      }
-    };
-
-    const selectAll = () => {
-      const totalKeys = layout.value.flat().length;
-      if (selectedKeys.value.length === totalKeys) {
-        selectedKeys.value = [];
-      } else {
-        selectedKeys.value = layout.value.flat();
-      }
-    };
-
-    const selectWASD = () => {
-      const wasdLabels = ['W', 'A', 'S', 'D'];
-      const wasdKeys = layout.value
-        .flat()
-        .filter(keyInfo => {
-          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
-          return wasdLabels.includes(label.toUpperCase());
-        });
-      const physicalWASD = wasdKeys.map(key => key.physicalKeyValue || key.keyValue);
-      const currentlySelectedWASD = selectedKeys.value.filter(k => physicalWASD.includes(k.physicalKeyValue || k.keyValue));
-      if (currentlySelectedWASD.length === wasdKeys.length) {
-        selectedKeys.value = selectedKeys.value.filter(k => !physicalWASD.includes(k.physicalKeyValue || k.keyValue));
-      } else {
-        selectedKeys.value = [...selectedKeys.value, ...wasdKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-      }
-    };
-
-    const selectLetters = () => {
-      const letterRegex = /^[A-Z]$/;
-      const letterKeys = layout.value
-        .flat()
-        .filter(keyInfo => {
-          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
-          return letterRegex.test(label.toUpperCase());
-        });
-      const physicalLetters = letterKeys.map(key => key.physicalKeyValue || key.keyValue);
-      const currentlySelectedLetters = selectedKeys.value.filter(k => physicalLetters.includes(k.physicalKeyValue || k.keyValue));
-      if (currentlySelectedLetters.length === letterKeys.length) {
-        selectedKeys.value = selectedKeys.value.filter(k => !physicalLetters.includes(k.physicalKeyValue || k.keyValue));
-      } else {
-        selectedKeys.value = [...selectedKeys.value, ...letterKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-      }
-    };
-
-    const selectNumbers = () => {
-      const numberLabels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-      const numberKeys = layout.value
-        .flat()
-        .filter(keyInfo => {
-          const label = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
-          return numberLabels.includes(label);
-        });
-      const physicalNumbers = numberKeys.map(key => key.physicalKeyValue || key.keyValue);
-      const currentlySelectedNumbers = selectedKeys.value.filter(k => physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
-      if (currentlySelectedNumbers.length === numberKeys.length) {
-        selectedKeys.value = selectedKeys.value.filter(k => !physicalNumbers.includes(k.physicalKeyValue || k.keyValue));
-      } else {
-        selectedKeys.value = [...selectedKeys.value, ...numberKeys.filter(key => !selectedKeys.value.some(s => (s.physicalKeyValue || s.keyValue) === (key.physicalKeyValue || key.keyValue)))];
-      }
-    };
-
-    const selectNone = () => {
-      selectedKeys.value = [];
-    };
-
-    // Lighting control functions
-    const toggleLighting = async () => {
-      // Prevent interaction during initialization
-      if (initializing.value) {
+      if (currentValue === keyValue) {
+        selectedKey.value = null;
+        axisData.value = '';
+        axisError.value = '';
         return;
       }
 
-      try {
-        if (lightingEnabled.value) {
-          try {
-            await debugKeyboardService.getLighting();
-          } catch (syncError) {
-          }
-
-          await debugKeyboardService.closedLighting();
-          lightingEnabled.value = false;
-        } else {
-          const currentState = await debugKeyboardService.getLighting();
-
-          if (!currentState) {
-            throw new Error('getLighting() returned no data');
-          }
-
-          // Filter to only required setLighting() parameters (remove 'open' and 'dynamicColorId')
-          const { open, dynamicColorId, ...filteredParams } = currentState;
-
-          await debugKeyboardService.setLighting(filteredParams);
-          lightingEnabled.value = true;
-        }
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-      }
+      selectedKey.value = keyInfo;
+      selectedKeyLabel.value = keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}`;
+      await fetchAxisData(keyValue);
     };
 
-    const applyMasterLuminance = async () => {
-      try {
-        const currentState = await debugKeyboardService.getLighting();
-
-        if (!currentState) {
-          throw new Error('getLighting() returned no data');
-        }
-
-        const { open, dynamicColorId, ...filteredParams } = currentState;
-        filteredParams.luminance = masterLuminance.value;
-
-        await debugKeyboardService.setLighting(filteredParams);
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-      }
-    };
-
-    const applyMasterSpeed = async () => {
-      try {
-        const currentState = await debugKeyboardService.getLighting();
-
-        if (!currentState) {
-          throw new Error('getLighting() returned no data');
-        }
-
-        const { open, dynamicColorId, ...filteredParams } = currentState;
-        filteredParams.speed = masterSpeed.value;
-
-        await debugKeyboardService.setLighting(filteredParams);
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-      }
-    };
-
-    const applyMasterSleepDelay = async () => {
-      try {
-        const currentState = await debugKeyboardService.getLighting();
-
-        if (!currentState) {
-          throw new Error('getLighting() returned no data');
-        }
-
-        const { open, dynamicColorId, ...filteredParams } = currentState;
-        filteredParams.sleepDelay = masterSleepDelay.value;
-
-        await debugKeyboardService.setLighting(filteredParams);
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-      }
-    };
-
-    const applyMasterDirection = async () => {
-      try {
-        const currentState = await debugKeyboardService.getLighting();
-
-        if (!currentState) {
-          throw new Error('getLighting() returned no data');
-        }
-
-        const { open, dynamicColorId, ...filteredParams } = currentState;
-        filteredParams.direction = masterDirection.value;
-
-        await debugKeyboardService.setLighting(filteredParams);
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-      }
-    };
-
-    const applySuperResponse = async () => {
-      try {
-        const currentState = await debugKeyboardService.getLighting();
-
-        if (!currentState) {
-          throw new Error('getLighting() returned no data');
-        }
-
-        const { open, dynamicColorId, ...filteredParams } = currentState;
-        filteredParams.superResponse = superResponse.value;
-
-        await debugKeyboardService.setLighting(filteredParams);
-        log(`Super Response ${superResponse.value ? 'enabled' : 'disabled'}`);
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-      }
-    };
-
-    const applyStaticColor = async () => {
-      try {
-        const currentState = await debugKeyboardService.getLighting();
-
-        if (!currentState) {
-          throw new Error('getLighting() returned no data');
-        }
-
-        const { open, dynamicColorId, ...filteredParams } = currentState;
-        
-        // Clone colors array to avoid mutating shared state
-        if (!filteredParams.colors || filteredParams.colors.length === 0) {
-          filteredParams.colors = [staticColor.value];
-        } else {
-          filteredParams.colors = [...filteredParams.colors];
-          filteredParams.colors[0] = staticColor.value;
-        }
-
-        // Ensure Static mode is active
-        filteredParams.mode = 0;
-        filteredParams.type = 'static';
-
-        await debugKeyboardService.setLighting(filteredParams);
-        log(`Static color updated to ${staticColor.value}`);
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-      }
-    };
-
-    // Throttled version for real-time color updates while dragging
-    const applyStaticColorThrottled = throttle(applyStaticColor, 100);
-
-    const applyCustomColor = async (saveToFlash: boolean = true) => {
-      try {
-        // If no keys selected, nothing to update
-        if (selectedKeys.value.length === 0) {
-          return;
-        }
-
-        const rgb = hexToRgb(staticColor.value);
-
-        // Extract key IDs with fallback from physicalKeyValue to keyValue
-        const keyIds = selectedKeys.value.map(key => key.physicalKeyValue || key.keyValue);
-
-        // Update all selected keys using batch processing
-        await processBatches(
-          keyIds,
-          async (keyValue: number) => {
-            // Call SDK setCustomLighting with object parameter
-            await debugKeyboardService.setCustomLighting({ 
-              key: keyValue, 
-              r: rgb.R, 
-              g: rgb.G, 
-              b: rgb.B 
-            });
-            
-            // Update local state
-            customColors[keyValue] = { R: rgb.R, G: rgb.G, B: rgb.B };
-          },
-          80 // Batch size
-        );
-
-        // Persist to flash memory if requested (final commit)
-        if (saveToFlash) {
-          await debugKeyboardService.saveCustomLighting();
-          log(`Custom color saved for ${selectedKeys.value.length} key(s) to ${staticColor.value}`);
-        } else {
-          log(`Custom color previewed for ${selectedKeys.value.length} key(s) to ${staticColor.value}`);
-        }
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-      }
-    };
-
-    // Throttled version for real-time custom color updates (no save to reduce flash writes)
-    const applyCustomColorThrottled = throttle(() => applyCustomColor(false), 100);
-
-    // Helper function to load all custom colors from keyboard
-    const loadCustomColorsFromKeyboard = async () => {
-      if (layout.value.length === 0) {
-        return;
-      }
+    const fetchAxisData = async (keyValue: number) => {
+      loading.value = true;
+      axisError.value = '';
+      axisData.value = '';
 
       try {
-        const allKeys = layout.value.flat();
-        let loadedCount = 0;
-
-        for (const key of allKeys) {
-          try {
-            const keyValue = key.physicalKeyValue || key.keyValue;
-            const customLighting = await debugKeyboardService.getCustomLighting(keyValue);
-            if (customLighting && customLighting.R !== undefined) {
-              customColors[keyValue] = {
-                R: customLighting.R,
-                G: customLighting.G,
-                B: customLighting.B,
-              };
-              loadedCount++;
-            }
-          } catch (error) {
-            // Skip keys that fail to fetch
-          }
-        }
-        
-        log(`Custom RGB colors loaded: ${loadedCount} keys`);
-      } catch (error) {
-        log(`ERROR loading custom colors: ${(error as Error).message}`);
-      }
-    };
-
-    const applyModeSelection = async () => {
-      // Save the state BEFORE Vue updated selectedMode (confirmedMode is the last known good state)
-      const previousConfirmedMode = confirmedMode.value;
-      const attemptedMode = selectedMode.value; // This is the new value Vue already set
-
-      try {
-        if (attemptedMode < 0 || attemptedMode > 21) {
-          throw new Error(`Invalid mode selection: ${attemptedMode} is outside supported range (0-21)`);
-        }
-
-        const currentState = await debugKeyboardService.getLighting();
-
-        if (!currentState) {
-          throw new Error('getLighting() returned no data');
-        }
-
-        const { open, dynamicColorId, ...filteredParams } = currentState;
-
-        // Update mode with the numeric value (SDK expects number, not string)
-        filteredParams.mode = attemptedMode;
-
-        // Update type based on mode: Static (0) = 'static', Effects (1-20) = 'dynamic', Custom (21) = 'custom'
-        if (attemptedMode === 0) {
-          filteredParams.type = 'static';
-          // Sync color picker to actual static color when switching to Static mode
-          if (currentState.colors && currentState.colors.length > 0) {
-            staticColor.value = currentState.colors[0];
-          }
-        } else if (attemptedMode === 21) {
-          filteredParams.type = 'custom';
-        } else {
-          filteredParams.type = 'dynamic';
-        }
-
-        await debugKeyboardService.setLighting(filteredParams);
-
-        // Update confirmed mode AFTER successful SDK call
-        confirmedMode.value = attemptedMode;
-
-        // If switching to Custom mode, load all custom colors from keyboard
-        if (attemptedMode === 21) {
-          await loadCustomColorsFromKeyboard();
-        }
-      } catch (error) {
-        // Rollback dropdown to last confirmed state
-        selectedMode.value = previousConfirmedMode;
-        log(`ERROR: ${(error as Error).message}`);
-      }
-    };
-
-    const clearDebugOutput = () => {
-      debugOutput.value = 'Lighting Debug Console\n-------------------\n';
-    };
-
-    const getLightingInfo = async () => {
-      try {
-        log('Fetching lighting info...');
-        const lightingData = await debugKeyboardService.getLighting();
-        log('Lighting Info:\n' + JSON.stringify(lightingData, null, 2));
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-      }
-    };
-
-    const getCustomLightingInfo = async () => {
-      try {
-        if (selectedKeys.value.length === 0) {
-          log('ERROR: Please select at least one key on the virtual keyboard first');
-          return;
-        }
-
-        log(`Fetching custom lighting for ${selectedKeys.value.length} selected key(s)...`);
-        
-        for (const key of selectedKeys.value) {
-          const physicalKeyValue = key.physicalKeyValue || key.keyValue;
-          const keyLabel = key.remappedLabel || keyMap[key.keyValue] || `Key ${key.keyValue}`;
-          
-          try {
-            const customLighting = await debugKeyboardService.getCustomLighting(physicalKeyValue);
-            log(`Custom Lighting for ${keyLabel} (key ${physicalKeyValue}):\n` + JSON.stringify(customLighting, null, 2));
-          } catch (error) {
-            log(`ERROR for ${keyLabel}: ${(error as Error).message}`);
-          }
-        }
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-      }
-    };
-
-    const getSpecialLightingInfo = async () => {
-      try {
-        log('Fetching special lighting info...');
-        const specialLightingData = await debugKeyboardService.getSpecialLighting();
-        log('Special Lighting Info:\n' + JSON.stringify(specialLightingData, null, 2));
-      } catch (error) {
-        log(`ERROR: ${(error as Error).message}`);
-      }
-    };
-
-    const initLightingFromDevice = async () => {
-      try {
-        initializing.value = true;
-
-        const currentState = await debugKeyboardService.getLighting();
-
-        if (currentState) {
-          lightingEnabled.value = currentState.open ?? true;
-          masterLuminance.value = currentState.luminance ?? 4;
-          masterSpeed.value = currentState.speed ?? 3;
-          masterSleepDelay.value = currentState.sleepDelay ?? 0;
-          masterDirection.value = currentState.direction ?? false;
-          superResponse.value = currentState.superResponse ?? false;
-
-          // Initialize static color from colors[0]
-          if (currentState.colors && currentState.colors.length > 0) {
-            staticColor.value = currentState.colors[0];
-          }
-
-          // SDK returns mode as a number - use it directly
-          if (currentState.mode !== undefined && currentState.mode !== null) {
-            const modeNum = currentState.mode;
-
-            if (modeNum >= 0 && modeNum <= 21) {
-              selectedMode.value = modeNum;
-              confirmedMode.value = modeNum;
-
-              // If Custom mode (21), fetch custom lighting for all keys
-              if (modeNum === 21 && layout.value.length > 0) {
-                const allKeys = layout.value.flat();
-                for (const key of allKeys) {
-                  try {
-                    const keyValue = key.physicalKeyValue || key.keyValue;
-                    const customLighting = await debugKeyboardService.getCustomLighting(keyValue);
-                    if (customLighting && customLighting.R !== undefined) {
-                      customColors[keyValue] = {
-                        R: customLighting.R,
-                        G: customLighting.G,
-                        B: customLighting.B,
-                      };
-                    }
-                  } catch (error) {
-                    // Skip keys that fail to fetch
-                  }
-                }
-                log('Custom RGB colors loaded from keyboard');
-              }
-            } else {
-              selectedMode.value = 0;
-              confirmedMode.value = 0;
-            }
-          } else {
-            selectedMode.value = 0;
-            confirmedMode.value = 0;
-          }
-        }
-      } catch (error) {
-        // Silent failure - initialization errors are non-critical
+        const result = await debugKeyboardService.getAxis(keyValue);
+        axisData.value = JSON.stringify(result, null, 2);
+      } catch (err) {
+        axisError.value = (err as Error).message;
       } finally {
-        initializing.value = false;
+        loading.value = false;
       }
     };
 
-    onMounted(async () => {
-      log('Debug page mounted, attempting connection...');
-      await fetchLayerLayout();
-
-      try {
-        await debugKeyboardService.autoConnect();
-        log('Debug service connected successfully');
-
-        // Sync UI with keyboard state after connection
-        await initLightingFromDevice();
-      } catch (error) {
-        log(`Auto-connect failed: ${(error as Error).message}`);
-        try {
-          await debugKeyboardService.requestDevice();
-          log('Debug service connected via user prompt');
-
-          await initLightingFromDevice();
-        } catch (promptError) {
-          log(`Connection failed: ${(promptError as Error).message}`);
-          initializing.value = false;
-        }
-      }
-    });
+    const refreshAxis = async () => {
+      if (!selectedKey.value) return;
+      const keyValue = selectedKey.value.physicalKeyValue || selectedKey.value.keyValue;
+      await fetchAxisData(keyValue);
+    };
 
     return {
-      initializing,
-      lightingEnabled,
-      masterLuminance,
-      masterSpeed,
-      masterSleepDelay,
-      masterDirection,
-      superResponse,
-      selectedMode,
-      staticColor,
-      debugOutput,
-      selectedKeys,
       layout,
       loaded,
       gridStyle,
       getKeyStyle,
-      getKeyStyleWithCustomColor,
-      keyMap,
       error,
+      keyMap,
+      selectedKey,
+      selectedKeyLabel,
+      axisData,
+      axisError,
+      loading,
+      isSelected,
       selectKey,
-      selectAll,
-      selectWASD,
-      selectLetters,
-      selectNumbers,
-      selectNone,
-      toggleLighting,
-      applyMasterLuminance,
-      applyMasterSpeed,
-      applyMasterSleepDelay,
-      applyMasterDirection,
-      applySuperResponse,
-      applyStaticColor,
-      applyStaticColorThrottled,
-      applyCustomColor,
-      applyCustomColorThrottled,
-      applyModeSelection,
-      clearDebugOutput,
-      getLightingInfo,
-      getCustomLightingInfo,
-      getSpecialLightingInfo,
+      refreshAxis
     };
-  },
+  }
 });
 </script>
 
 <style lang="scss" scoped>
-@use 'sass:color';
-@use '@styles/variables' as v;
-
-.lighting-debug-page {
-  padding: 20px;
-  color: v.$text-color;
-
-  .title {
-    color: v.$primary-color;
-    margin-bottom: 20px;
-    font-size: 1.5rem;
-    font-weight: 600;
-    font-family: v.$font-style;
-  }
+.debug-page {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.lighting-container {
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.debug-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-}
-
-.no-layout {
-  text-align: center;
-  color: v.$text-color;
-  font-size: 1rem;
-  font-family: v.$font-style;
-  padding: 20px;
+  gap: 1.5rem;
 }
 
 .key-grid {
-  display: block !important;
-  position: relative;
-  width: fit-content;
-  margin: 0 auto;
-  min-height: 300px;
-  max-height: 500px;
-  flex-shrink: 0;
-  visibility: visible !important;
-  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1rem;
+  overflow-x: auto;
 }
 
 .key-row {
-  display: contents;
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .key-btn {
-  position: absolute;
-  padding: 4px;
-  border: v.$border-style;
-  border-radius: v.$border-radius;
-  background: linear-gradient(to bottom, v.$background-dark 70%, color.adjust(v.$background-dark, $lightness: 10%) 100%);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
-  color: v.$text-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border: 2px solid transparent;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-  user-select: none;
-  text-align: center;
-  font-family: v.$font-style;
-  visibility: visible !important;
-  z-index: 2;
-
-  .key-label {
-    font-size: 1rem;
-    font-weight: 300;
-  }
-
-  &.lighting-key-selected {
-    border-color: v.$accent-color;
-    box-shadow: 0 0 8px rgba(v.$accent-color, 0.5);
-    background: linear-gradient(to bottom, color.adjust(v.$accent-color, $lightness: -20%) 70%, color.adjust(v.$accent-color, $lightness: -10%) 100%);
-  }
+  transition: all 0.15s ease;
+  min-height: 40px;
 
   &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 -2px 4px rgba(255, 255, 255, 0.2);
+    background: var(--bg-hover);
+    border-color: var(--accent-color);
   }
-}
 
-.bottom-section {
-  display: flex;
-  flex: 1;
-  flex-shrink: 0;
-  gap: 10px;
-  position: relative;
-  margin-right: auto;
-  margin-left: auto;
-  margin-top: -50px;
-  justify-content: center;
-}
+  &.key-selected {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
 
-.selection-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  .select-btn {
-    padding: 8px 8px;
-    background-color: color.adjust(v.$background-dark, $lightness: -100%);
-    color: v.$accent-color;
-    border: v.$border-style;
-    border-radius: v.$border-radius;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 200px;
-    transition: background-color 0.2s ease;
-    width: 120px;
-    text-align: center;
-    font-family: v.$font-style;
-
-    &:hover {
-      background-color: color.adjust(v.$background-dark, $lightness: 10%);
+    .key-label {
+      color: #fff;
     }
   }
 }
 
-.parent {
-  display: flex;
-  justify-content: center;
+.key-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  padding: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.settings-panel {
-  width: 1425px;
-  padding: 10px;
-  border: 1px solid rgba(v.$text-color, 0.2);
-  border-radius: v.$border-radius;
-  background-color: color.adjust(v.$background-dark, $lightness: -100%);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.no-layout {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-secondary);
 }
 
-.settings-section {
-  flex-shrink: 0;
-  border: 1px solid rgba(v.$text-color, 0.2);
-  border-radius: v.$border-radius;
-  padding: 10px 15px;
-  background: rgba(v.$background-dark, 0.3);
+.axis-panel {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1.5rem;
 
-  .header-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 16px;
-    font-family: v.$font-style;
-
-    h3 {
-      color: v.$primary-color;
-      width: auto;
-      margin: 0;
-      margin-bottom: -5px;
-      margin-right: 10px;
-      font-size: 1.5rem;
-      font-weight: 400;
-    }
-
-    .show-btn {
-      padding: 3px 8px;
-      background-color: color.adjust(v.$background-dark, $lightness: -100%);
-      color: v.$accent-color;
-      border: v.$border-style;
-      border-radius: v.$border-radius;
-      cursor: pointer;
-      font-size: 0.7rem;
-      font-weight: 500;
-      transition: background-color 0.2s ease;
-      align-self: left;
-      margin-bottom: -10px;
-
-      &:hover {
-        background-color: color.adjust(v.$accent-color, $lightness: -20%);
-        color: white;
-      }
-
-      &:disabled {
-        pointer-events: none;
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-    }
-  }
-}
-
-.settings-row {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  margin-bottom: 10px;
-
-  .input-group {
-    margin-bottom: 0;
-  }
-}
-
-.settings-row-three {
-  .input-group {
-    flex: 1;
-    min-width: 0;
-    width: auto;
-  }
-}
-
-.input-group {
-  display: flex;
-  align-items: center;
-  gap: 0px;
-  margin-bottom: 20px;
-  padding: 10px;
-  width: 400px;
-  height: 30px;
-  border: v.$border-style;
-  border-radius: v.$border-radius;
-  background-color: rgba(v.$background-dark, 0.5);
-  font-family: v.$font-style;
-
-  .label {
-    min-width: 150px;
-    text-align: left;
-    color: v.$text-color;
-    font-size: 0.95rem;
-    font-weight: 300;
-  }
-
-  .mode-select {
-    width: 300px;
-    padding: 8px 12px;
-    background: rgba(v.$background-dark, 0.8);
-    border: 1px solid rgba(v.$text-color, 0.3);
-    border-radius: v.$border-radius;
-    color: v.$text-color;
-    font-size: 0.9rem;
-    font-family: v.$font-style;
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  .color-picker-wrapper {
-    display: flex;
-    align-items: center;
-    margin-left: 15px;
-    position: relative;
-  }
-
-  .color-display {
-    width: 40px;
-    height: 40px;
-    border: 2px solid rgba(v.$text-color, 0.3);
-    border-radius: v.$border-radius;
-    cursor: pointer;
-    display: block;
-    transition: border-color 0.2s ease;
-
-    &:hover {
-      border-color: v.$accent-color;
-    }
-  }
-
-  .color-input {
-    position: absolute;
-    opacity: 0;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-
-    &:disabled {
-      cursor: not-allowed;
-    }
-  }
-
-  .direction-checkbox {
-    margin-right: 10px;
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: v.$accent-color;
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-}
-
-.debug-console {
-  margin-top: 20px;
-  border: 1px solid rgba(v.$text-color, 0.2);
-  border-radius: v.$border-radius;
-  background-color: rgba(v.$background-dark, 0.5);
-
-  summary {
-    padding: 12px 15px;
-    cursor: pointer;
+  h3 {
+    font-size: 1.1rem;
     font-weight: 600;
-    font-family: v.$font-style;
-    color: v.$accent-color;
-    user-select: none;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+}
 
-    &:hover {
-      background: rgba(v.$accent-color, 0.1);
-    }
+.no-selection {
+  color: var(--text-secondary);
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+.axis-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.selected-key-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.key-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.key-value {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.refresh-btn {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  background: var(--accent-color);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
   }
 
-  .console-controls {
-    padding: 15px 15px 0 15px;
-    margin-bottom: 10px;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
+}
 
-  .super-response-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.95rem;
-    color: v.$text-color;
-    cursor: pointer;
-    user-select: none;
-  }
+.axis-output {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 1rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+  margin: 0;
+}
 
-  .super-response-checkbox {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: v.$accent-color;
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  .debug-output {
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(v.$text-color, 0.2);
-    border-radius: v.$border-radius;
-    padding: 15px;
-    margin: 0 15px 15px 15px;
-    max-height: 300px;
-    overflow-y: auto;
-
-    pre {
-      margin: 0;
-      font-family: 'Courier New', monospace;
-      font-size: 0.85rem;
-      color: v.$text-color;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-  }
-
-  .console-buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin: 0 15px 15px 15px;
-  }
-
-  .debug-btn {
-    padding: 8px 16px;
-    background: v.$accent-color;
-    color: white;
-    border: none;
-    border-radius: v.$border-radius;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-family: v.$font-style;
-    transition: background 0.2s ease;
-
-    &:hover {
-      background: color.adjust(v.$accent-color, $lightness: -10%);
-    }
-  }
-
-  .clear-btn {
-    padding: 8px 16px;
-    background: #6b7280;
-    color: white;
-    border: none;
-    border-radius: v.$border-radius;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-family: v.$font-style;
-
-    &:hover {
-      background: color.adjust(#6b7280, $lightness: 10%);
-    }
-  }
+.axis-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  color: #ef4444;
+  font-size: 0.9rem;
 }
 </style>

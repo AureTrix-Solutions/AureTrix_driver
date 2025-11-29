@@ -1,4 +1,4 @@
-import { ref, computed, Ref } from 'vue';
+import { ref, computed, Ref, watch } from 'vue';
 import KeyboardService from '@services/KeyboardService';
 import { getLayoutConfig } from '@utils/layoutConfigs';
 import type { IDefKeyInfo } from '../types/types';
@@ -11,6 +11,7 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
   const loaded = ref(false);
   const baseLayout = ref<IDefKeyInfo[][] | null>(null);
   const error = ref<string | null>(null);
+  const hasFetchedOnce = ref(false);
 
   // Grid computation
   const gridStyle = computed(() => {
@@ -171,5 +172,19 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
     error.value = 'Failed to load keyboard layout after multiple attempts';
   }
 
-  return { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout, baseLayout, error, batchSetKey };
+  watch(
+    () => connectionStore.isConnected,
+    async (isConnected, wasConnected) => {
+      if (isConnected && !wasConnected && hasFetchedOnce.value && !loaded.value) {
+        await fetchLayerLayout();
+      }
+    }
+  );
+
+  const wrappedFetchLayerLayout = async () => {
+    hasFetchedOnce.value = true;
+    await fetchLayerLayout();
+  };
+
+  return { layout, loaded, gridStyle, getKeyStyle, fetchLayerLayout: wrappedFetchLayerLayout, baseLayout, error, batchSetKey };
 }

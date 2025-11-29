@@ -8,7 +8,8 @@ interface HIDConnectionEvent extends Event {
 }
 
 class KeyboardService {
-  private keyboard: XDKeyboard;
+  private keyboard: XDKeyboard | null = null;
+  private hidListenersRegistered: boolean = false;
   private connectedDevice: Device | null = null;
   private isAutoConnecting: boolean = false;
   private autoConnectPromise: Promise<Device | null> | null = null;
@@ -26,16 +27,23 @@ class KeyboardService {
   private isPostReconnectionSuppression: boolean = false;
 
   constructor() {
-    this.keyboard = new XDKeyboard({
-      usage: 1,
-      usagePage: 65440,
-    });
-    if ('hid' in navigator) {
-      navigator.hid.addEventListener('connect', this.handleConnect);
-      navigator.hid.addEventListener('disconnect', this.handleDisconnect);
-    }
     this.cleanupLegacyStorage();
     this.deferredReconnect();
+  }
+
+  private ensureKeyboard(): XDKeyboard {
+    if (!this.keyboard) {
+      this.keyboard = new XDKeyboard({
+        usage: 1,
+        usagePage: 65440,
+      });
+    }
+    if (!this.hidListenersRegistered && 'hid' in navigator) {
+      navigator.hid.addEventListener('connect', this.handleConnect);
+      navigator.hid.addEventListener('disconnect', this.handleDisconnect);
+      this.hidListenersRegistered = true;
+    }
+    return this.keyboard;
   }
 
   private deferredReconnect(): void {

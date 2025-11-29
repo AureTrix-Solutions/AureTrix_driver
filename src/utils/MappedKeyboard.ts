@@ -75,7 +75,6 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
   // Fetch layout for current layer
   async function fetchLayerLayout() {
     if (!connectionStore.isConnected) {
-      error.value = 'No keyboard connected';
       layout.value = [];
       loaded.value = false;
       return;
@@ -175,7 +174,7 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
   watch(
     () => connectionStore.isConnected,
     async (isConnected, wasConnected) => {
-      if (isConnected && !wasConnected && hasFetchedOnce.value && !loaded.value) {
+      if (isConnected && !wasConnected) {
         await fetchLayerLayout();
       }
     }

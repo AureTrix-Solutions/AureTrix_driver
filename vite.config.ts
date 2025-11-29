@@ -2,6 +2,8 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 
+const isReplit = !!process.env.REPL_SLUG || !!process.env.REPLIT_DEV_DOMAIN;
+
 export default defineConfig({
   plugins: [vue()],
   resolve: {
@@ -33,11 +35,13 @@ export default defineConfig({
     port: 5000,
     strictPort: true,
     allowedHosts: true,
-    hmr: {
-      protocol: 'wss',
-      host: undefined,
-      clientPort: 443,
-    },
+    hmr: isReplit
+      ? {
+          protocol: 'wss',
+          host: undefined,
+          clientPort: 443,
+        }
+      : true,
   },
   preview: {
     host: '0.0.0.0',

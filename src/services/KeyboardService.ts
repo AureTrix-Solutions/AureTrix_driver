@@ -34,7 +34,17 @@ class KeyboardService {
       navigator.hid.addEventListener('disconnect', this.handleDisconnect);
     }
     this.cleanupLegacyStorage();
-    this.reconnectIfPaired();
+    this.deferredReconnect();
+  }
+
+  private deferredReconnect(): void {
+    if (document.readyState === 'complete') {
+      setTimeout(() => this.reconnectIfPaired(), 100);
+    } else {
+      window.addEventListener('load', () => {
+        setTimeout(() => this.reconnectIfPaired(), 100);
+      }, { once: true });
+    }
   }
 
   private cleanupLegacyStorage(): void {

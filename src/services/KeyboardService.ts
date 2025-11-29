@@ -27,6 +27,11 @@ class KeyboardService {
   private isPostReconnectionSuppression: boolean = false;
 
   constructor() {
+    if ('hid' in navigator) {
+      navigator.hid.addEventListener('connect', this.handleConnect);
+      navigator.hid.addEventListener('disconnect', this.handleDisconnect);
+      this.hidListenersRegistered = true;
+    }
     this.cleanupLegacyStorage();
     this.deferredReconnect();
   }
@@ -37,11 +42,6 @@ class KeyboardService {
         usage: 1,
         usagePage: 65440,
       });
-    }
-    if (!this.hidListenersRegistered && 'hid' in navigator) {
-      navigator.hid.addEventListener('connect', this.handleConnect);
-      navigator.hid.addEventListener('disconnect', this.handleDisconnect);
-      this.hidListenersRegistered = true;
     }
     return this.keyboard;
   }
@@ -109,7 +109,7 @@ class KeyboardService {
 
   async getDevices(): Promise<Device[]> {
     try {
-      const devices = await this.keyboard.getDevices();
+      const devices = await this.ensureKeyboard().getDevices();
       return devices;
     } catch (error) {
       console.error('Failed to get devices:', error);
@@ -222,7 +222,7 @@ class KeyboardService {
 
   private async init(deviceId: string): Promise<Device> {
     try {
-      const result = await this.keyboard.init(deviceId);
+      const result = await this.ensureKeyboard().init(deviceId);
       return result;
     } catch (error) {
       console.error('Failed to initialize device:', error);
@@ -236,7 +236,7 @@ class KeyboardService {
     
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
-        const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_ROES' });
+        const result = await this.ensureKeyboard().getApi({ type: 'ORDER_TYPE_ROES' });
         
         if (!(result instanceof Error) && typeof result === 'number') {
           return true;
@@ -414,7 +414,7 @@ class KeyboardService {
       const maxAttempts = 3;
       while (attempts < maxAttempts) {
         try {
-          const baseInfo = await this.keyboard.getBaseInfo();
+          const baseInfo = await this.ensureKeyboard().getBaseInfo();
           if (baseInfo instanceof Error) throw baseInfo;
           return baseInfo;
         } catch (error) {
@@ -443,7 +443,7 @@ class KeyboardService {
       }
       while (attempt < maxRetries) {
         try {
-          const layout = await this.keyboard.defKey();
+          const layout = await this.ensureKeyboard().defKey();
           if (layout instanceof Error) return layout;
           return layout;
         } catch (error) {
@@ -472,7 +472,7 @@ class KeyboardService {
       }
       while (attempt < maxRetries) {
         try {
-          const layoutInfo = await this.keyboard.getLayoutKeyInfo(params);
+          const layoutInfo = await this.ensureKeyboard().getLayoutKeyInfo(params);
           if (layoutInfo instanceof Error) return layoutInfo;
           return layoutInfo;
         } catch (error) {
@@ -494,7 +494,7 @@ class KeyboardService {
 
   async setKey(keyConfigs: { key: number; layout: number; value: number }[]): Promise<void | Error> {
     try {
-      await this.keyboard.setKey(keyConfigs);
+      await this.ensureKeyboard().setKey(keyConfigs);
       return;
     } catch (error) {
       console.error('Failed to set key:', error);
@@ -507,7 +507,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getMacro(key);
+      const result = await this.ensureKeyboard().getMacro(key);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -521,7 +521,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      await this.keyboard.setMacro(param, macros);
+      await this.ensureKeyboard().setMacro(param, macros);
       await new Promise(resolve => setTimeout(resolve, 1000));
       return;
     } catch (error) {
@@ -535,7 +535,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getGlobalTouchTravel();
+      const result = await this.ensureKeyboard().getGlobalTouchTravel();
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -549,7 +549,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setDB(param);
+      const result = await this.ensureKeyboard().setDB(param);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -563,7 +563,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getPerformanceMode(key);
+      const result = await this.ensureKeyboard().getPerformanceMode(key);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -577,7 +577,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setPerformanceMode(key, mode, advancedKeyMode);
+      const result = await this.ensureKeyboard().setPerformanceMode(key, mode, advancedKeyMode);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -591,7 +591,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getDbTravel(key, dbLayout);
+      const result = await this.ensureKeyboard().getDbTravel(key, dbLayout);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -605,7 +605,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setDbTravel(key, value, dbLayout);
+      const result = await this.ensureKeyboard().setDbTravel(key, value, dbLayout);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -619,7 +619,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getRtTravel(key);
+      const result = await this.ensureKeyboard().getRtTravel(key);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -633,7 +633,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setRtPressTravel(key, value);
+      const result = await this.ensureKeyboard().setRtPressTravel(key, value);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -647,7 +647,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setRtReleaseTravel(key, value);
+      const result = await this.ensureKeyboard().setRtReleaseTravel(key, value);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -661,7 +661,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getDpDr(key);
+      const result = await this.ensureKeyboard().getDpDr(key);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -675,7 +675,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setDp(key, value);
+      const result = await this.ensureKeyboard().setDp(key, value);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -689,7 +689,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setDr(key, value);
+      const result = await this.ensureKeyboard().setDr(key, value);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -703,7 +703,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getAxis(key);
+      const result = await this.ensureKeyboard().getAxis(key);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -717,7 +717,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setAxis(key, value);
+      const result = await this.ensureKeyboard().setAxis(key, value);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -731,7 +731,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getSingleTravel(key, decimal);
+      const result = await this.ensureKeyboard().getSingleTravel(key, decimal);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -745,7 +745,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setSingleTravel(key, value, decimal);
+      const result = await this.ensureKeyboard().setSingleTravel(key, value, decimal);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -759,7 +759,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getDksTravel(key, dksLayout);
+      const result = await this.ensureKeyboard().getDksTravel(key, dksLayout);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -773,7 +773,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setDksTravel(key, value, dksLayout);
+      const result = await this.ensureKeyboard().setDksTravel(key, value, dksLayout);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -787,7 +787,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.calibrationStart();
+      const result = await this.ensureKeyboard().calibrationStart();
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -801,7 +801,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.calibrationEnd();
+      const result = await this.ensureKeyboard().calibrationEnd();
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -815,7 +815,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getRm6X21Calibration();
+      const result = await this.ensureKeyboard().getRm6X21Calibration();
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -829,7 +829,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getAxisList();
+      const result = await this.ensureKeyboard().getAxisList();
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -843,7 +843,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getRm6X21Travel();
+      const result = await this.ensureKeyboard().getRm6X21Travel();
       if (result instanceof Error) return result;
       const travels = result.travels || [];
       const flatTravels = travels.flat();
@@ -860,7 +860,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getLighting();
+      const result = await this.ensureKeyboard().getLighting();
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -874,7 +874,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getLogoLighting();
+      const result = await this.ensureKeyboard().getLogoLighting();
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -888,7 +888,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getSpecialLighting();
+      const result = await this.ensureKeyboard().getSpecialLighting();
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -902,7 +902,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setLighting(lightModeConfig);
+      const result = await this.ensureKeyboard().setLighting(lightModeConfig);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -916,7 +916,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setLogoLighting(lightModeConfig);
+      const result = await this.ensureKeyboard().setLogoLighting(lightModeConfig);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -930,7 +930,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setSpecialLighting(lightModeConfig);
+      const result = await this.ensureKeyboard().setSpecialLighting(lightModeConfig);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -944,7 +944,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.closedLighting();
+      const result = await this.ensureKeyboard().closedLighting();
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -958,7 +958,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getCustomLighting(key);
+      const result = await this.ensureKeyboard().getCustomLighting(key);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -972,7 +972,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.setCustomLighting(param);
+      const result = await this.ensureKeyboard().setCustomLighting(param);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -986,7 +986,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.saveCustomLighting();
+      const result = await this.ensureKeyboard().saveCustomLighting();
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -1004,7 +1004,7 @@ class KeyboardService {
         return new Error('Profile ID must be between 1 and 4');
       }
       const configIndex = profileId - 1;
-      const result = await this.keyboard.switchConfig(configIndex);
+      const result = await this.ensureKeyboard().switchConfig(configIndex);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -1018,7 +1018,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getApi(param);
+      const result = await this.ensureKeyboard().getApi(param);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -1032,7 +1032,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_CONFIG' });
+      const result = await this.ensureKeyboard().getApi({ type: 'ORDER_TYPE_CONFIG' });
       if (result instanceof Error) return result;
       // SDK returns configID as 0-3, we use 1-4 for profile IDs
       const profileId = (result.configID ?? 0) + 1;
@@ -1048,7 +1048,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getDks(key, type);
+      const result = await this.ensureKeyboard().getDks(key, type);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -1062,7 +1062,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getMpt(key);
+      const result = await this.ensureKeyboard().getMpt(key);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -1076,7 +1076,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getSocd(key, version);
+      const result = await this.ensureKeyboard().getSocd(key, version);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -1090,7 +1090,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getMT(key);
+      const result = await this.ensureKeyboard().getMT(key);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -1104,7 +1104,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getTGL(key);
+      const result = await this.ensureKeyboard().getTGL(key);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -1118,7 +1118,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.getEND(key);
+      const result = await this.ensureKeyboard().getEND(key);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -1136,7 +1136,7 @@ class KeyboardService {
       const maxAttempts = 5;
       while (attempts < maxAttempts) {
         try {
-          const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_ROES' });
+          const result = await this.ensureKeyboard().getApi({ type: 'ORDER_TYPE_ROES' });
           if (result instanceof Error) throw result;
           if (typeof result === 'number') {
             return result;
@@ -1175,7 +1175,7 @@ class KeyboardService {
       this.pollingRateOperationToken = Date.now();
       this.suppressSDKReconnectError();
       this.isPollingRateChanging = true;
-      const result = await this.keyboard.setRateOfReturn(value);
+      const result = await this.ensureKeyboard().setRateOfReturn(value);
       if (result instanceof Error) {
         this.isPollingRateChanging = false;
         this.restoreConsoleError();
@@ -1255,7 +1255,7 @@ class KeyboardService {
       const maxAttempts = 5;
       while (attempts < maxAttempts) {
         try {
-          const result = await this.keyboard.getApi({ type: 'ORDER_TYPE_QUERY_WIN_MODEL' });
+          const result = await this.ensureKeyboard().getApi({ type: 'ORDER_TYPE_QUERY_WIN_MODEL' });
           if (result instanceof Error) throw result;
           if (!result || typeof result.currentSystem !== 'string') {
             throw new Error('Invalid system mode response from device');
@@ -1286,7 +1286,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.switchSystemMode(mode);
+      const result = await this.ensureKeyboard().switchSystemMode(mode);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {
@@ -1309,7 +1309,7 @@ class KeyboardService {
       this.factoryResetOperationToken = Date.now();
       this.suppressSDKReconnectError();
       this.isFactoryResetting = true;
-      const result = await this.keyboard.factoryDataReset();
+      const result = await this.ensureKeyboard().factoryDataReset();
       if (result instanceof Error) {
         this.isFactoryResetting = false;
         this.restoreConsoleError();
@@ -1384,7 +1384,7 @@ class KeyboardService {
     if (!this.connectedDevice) {
       throw new Error('No device connected');
     }
-    this.keyboard.exportConfig(data, filename);
+    this.ensureKeyboard().exportConfig(data, filename);
   }
 
   async importConfig(file: File): Promise<any | Error> {
@@ -1392,7 +1392,7 @@ class KeyboardService {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      const result = await this.keyboard.importConfig(file);
+      const result = await this.ensureKeyboard().importConfig(file);
       if (result instanceof Error) return result;
       return result;
     } catch (error) {

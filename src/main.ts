@@ -17,8 +17,13 @@ app.use(pinia);
 app.use(router);
 app.provide('KeyboardService', KeyboardService);
 
+// Set initial connection status - KeyboardService handles auto-reconnection
+// internally via deferredReconnect() which triggers onAutoConnectSuccess()
 const connectionStore = useConnectionStore();
-connectionStore.autoConnect();
+const hasPairedDevice = localStorage.getItem('pairedStableId');
+if (hasPairedDevice) {
+  connectionStore.$patch({ status: 'Checking for paired devices...' });
+}
 
 // Preload custom layouts cache before mounting
 loadCustomLayouts().then(() => {

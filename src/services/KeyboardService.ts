@@ -138,6 +138,9 @@ class KeyboardService {
   }
 
   async autoConnect(): Promise<Device | null> {
+    if (this.connectedDevice) {
+      return this.connectedDevice;
+    }
     if (this.autoConnectPromise) {
       return this.autoConnectPromise;
     }
@@ -309,6 +312,11 @@ class KeyboardService {
   }
 
   private handleConnect = async (event: HIDConnectionEvent): Promise<void> => {
+    // Skip if already connected or connecting - prevents duplicate baseInfo fetches
+    if (this.connectedDevice || this.isAutoConnecting || this.autoConnectPromise) {
+      return;
+    }
+    
     const pollingRateToken = this.pollingRateOperationToken;
     const factoryResetToken = this.factoryResetOperationToken;
     

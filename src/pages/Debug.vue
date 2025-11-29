@@ -43,7 +43,7 @@
 import { defineComponent, ref, onMounted } from 'vue';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
 import { keyMap } from '@utils/keyMap';
-import debugKeyboardService from '@services/DebugKeyboardService';
+import KeyboardService from '@services/KeyboardService';
 import type { IDefKeyInfo } from '../types/types';
 
 export default defineComponent({
@@ -87,8 +87,12 @@ export default defineComponent({
       axisData.value = '';
 
       try {
-        const result = await debugKeyboardService.getAxis(keyValue);
-        axisData.value = JSON.stringify(result, null, 2);
+        const result = await KeyboardService.getAxis(keyValue);
+        if (result instanceof Error) {
+          axisError.value = result.message;
+        } else {
+          axisData.value = JSON.stringify(result, null, 2);
+        }
       } catch (err) {
         axisError.value = (err as Error).message;
       } finally {

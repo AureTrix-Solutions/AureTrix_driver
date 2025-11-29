@@ -185,15 +185,24 @@ Comprehensive documentation is available in the `docs/` directory:
 
 ## Contributing
 
-Contributions are welcome! To contribute:
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on:
 
+- Development setup and prerequisites
+- Code standards and conventions
+- How to submit keyboard layouts
+- Pull request process
+
+Quick start:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m "Add your feature"`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a pull request with a clear description
+3. Make your changes following our [code standards](CONTRIBUTING.md#code-standards)
+4. Submit a pull request
 
-Please ensure your code follows the project's TypeScript standards and includes appropriate error handling.
+Please also review our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
+
+## Security
+
+For information about the security model and how to report vulnerabilities, see our [Security Policy](SECURITY.md).
 
 ## License
 

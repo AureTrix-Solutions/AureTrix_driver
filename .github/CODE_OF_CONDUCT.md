@@ -79,4 +79,4 @@ This code does not replace the terms of service or acceptable use policies that 
 
 ## License and Acknowledgment
 
-This text is shared under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/) license. This code is based on the [TODO Group](https://todogroup.org/) template, which was developed from a study of many codes used in the open source community.
+This text is shared under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/) license. This code is based on the [TODO Group](https://todogroup.org/) template, which was developed from a study of many codes used in the open source community..

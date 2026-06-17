@@ -60,7 +60,7 @@ We do not list all forms of harassment, nor imply some forms of harassment are n
 
 If you experience or witness misconduct, or have any other concerns about the conduct of members of this project, please report it by contacting the project maintainers directly via their GitHub profile. For sensitive matters, please do not use public issues.
 
-Alternatively, you may open an issue on the [GitHub repository](https://github.com/blasthappy82/AureTrix_Driver/issues) for general conduct concerns, though be aware these are publicly visible.
+Alternatively, you may open an issue on the [GitHub repository](https://github.com/AureTrix-Solutions/AureTrix_Driver/issues) for general conduct concerns, though be aware these are publicly visible.
 
 Your report should include:
 

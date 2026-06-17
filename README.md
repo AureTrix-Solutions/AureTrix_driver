@@ -4,7 +4,7 @@ A modern, web-based configuration tool for hall effect keyboards compatible with
 
 The application runs entirely in the browser and communicates with compatible keyboards via the WebHID API, eliminating the need for native drivers or installations.
 
-**GitHub Repository:** [https://github.com/BlastHappy82/AureTrix_driver](https://github.com/BlastHappy82/AureTrix_driver.git)
+**GitHub Repository:** [https://github.com/AureTrix-Solutions/AureTrix_driver](https://github.com/AureTrix-Solutions/AureTrix_driver.git)
 
 ## Features
 
@@ -43,7 +43,7 @@ The application runs entirely in the browser and communicates with compatible ke
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/BlastHappy82/AureTrix_driver.git
+   git clone https://github.com/AureTrix-Solutions/AureTrix_driver.git
    cd AureTrix_driver
    ```
 

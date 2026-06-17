@@ -36,7 +36,7 @@ This project follows a [Code of Conduct](https://github.com/BlastHappy82/AureTri
    ```
 3. Add the upstream remote:
    ```bash
-   git remote add upstream https://github.com/BlastHappy82/AureTrix_driver.git
+   git remote add upstream https://github.com/AureTrix-Solutions/AureTrix_driver.git
    ```
 
 ## Development Setup

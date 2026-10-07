@@ -49,14 +49,14 @@ not the SDK).
 | §1 Connection & lifecycle | Partial | `.d.ts`, compiled bundle | — | Types/signatures verbatim; singleton `DeviceBase` behaviour and `init` null-vs-Device divergence not hardware-tested |
 | §2 Key mapping | Partial | `protocol-keyboard/src` | — | Return shapes *(inferred)* from decoders; `setKey`/`deleteKey` key-id semantics `[unverified]` |
 | §3 Device info & system | Partial | hardware + `.d.ts` | — | Rate-index→Hz table app-verified on hardware; `switchConfig` and `setTopDeadSwitch` ranges `[unverified]` |
-| §4 Calibration & travel matrix | Partial | `protocol-keyboard/src` | — | `getRm6X21*` return shapes *(inferred)*; the `{calibrations, travels}` shape is an app convention `[unverified against the SDK]` |
-| §5.1 Global travel / dead band | Partial | `protocol-keyboard/src` | — | `IDB` shape *(inferred)*; all three mm ranges `[unverified]` |
-| §5.2 Per-key touch mode | Verified | src + bundle, macro corroboration | 1 | `Layout_Mode = (touchMode << 4) \| advancedKeyMode` ✅; `advancedKeyMode` id table verified |
-| §5.3 Single travel | Partial | `protocol-keyboard/src` | — | Encoder/decoder confirmed; mm range `[unverified]` |
-| §5.4 Rapid trigger | Partial | `protocol-keyboard/src` | — | Encoder/decoder confirmed; mm ranges and `decimalPlace` interaction `[unverified]` |
-| §5.5 DP / DR | Partial | `protocol-keyboard/src` | — | Encoder/decoder confirmed; ranges `[unverified]` |
-| §5.6 DKS / DB travel (per-layout) | Partial | src + bundle | 1 | Default `dksLayout = 'Layout_DB1'` ✅ and the `DksLayoutType` naming trap confirmed; `value` mm ranges still `[unverified]` |
-| §5.7 Axis | Partial | `protocol-keyboard/src` | — | Axis slots confirmed; per-axis semantics `[unverified]` |
+| §4 Calibration & travel matrix | Verified | src + bundle | 3 | ✅ `getRm6X21Travel` → `{status, travels}` and `getRm6X21Calibration` → `{travels, calibrations}` both confirmed in the bundle controller (façade-only aggregators; src has only `getRm6X21data`); decoder 0x03 → raw-byte chunks, 0x02/0x06 → 3×21 mm (÷1000) ✅; `RM6X21Pack` shape ✅ |
+| §5.1 Global travel / dead band | Verified | src + bundle | 3 | ✅ `IDB` decodes u16 LE ÷1000 → mm (recdata.ts); `setDB` scales ×1000 at the façade, open-src `cmdDB` expects raw µm ✅; mm ranges still device-reported via PRECISION_STROKE |
+| §5.2 Per-key touch mode | Verified | src + bundle, macro corroboration | 1, 3 | `Layout_Mode = (touchMode << 4) \| advancedKeyMode` ✅; `advancedKeyMode` id table verified; batch 3: `getLayoutModel` decode confirmed (high nibble → `touchMode` string via `KeyTouchMode`, low nibble → `advancedKeyMode` raw; unknown defaults to `"global"`) ✅ and `setPerformanceMode` returns the read-back object ✅ |
+| §5.3 Single travel | Verified | src + bundle | 3 | ✅ `getSingleTravel` returns a **string** (`.toFixed(decimal)`, u16 LE ÷1000, recdata.ts:380); `setSingleTravel` writes ×1000 via `cmdLayout` `Layout_DB0` and round-trips → fixed-decimal string, `decimal` defaults 2 in the bundle; mm range still `[unverified]` (device-reported via PRECISION_STROKE) |
+| §5.4 Rapid trigger | Verified | src + bundle | 3 | ✅ `getRtTravel` returns `{pressTravel, releaseTravel}` (two `cmdLayout` reads, `getRtTravelRecdata` ÷1000 mm); `setRtPressTravel` → `{pressTravel}`, `setRtReleaseTravel` → `{releaseTravel}`; write = `value*1000` on `Layout_RTP/RTR` ✅; mm ranges still `[unverified]` |
+| §5.5 DP / DR | Verified | src + bundle | 3 | ✅ `getDpDr` returns **two values** as `{pressDead, releaseDead}` (two `cmdLayout` reads, `getDpDrRecdata` ÷1000 mm) — not a single number; `setDp`/`setDr` write ×1000 and echo back a single number ✅; ranges still `[unverified]` |
+| §5.6 DKS / DB travel (per-layout) | Verified | src + bundle | 1, 3 | Batch 3: naming-trap note rewritten to match §6.1 — `getDksTravel` correctly reads DKS travel depths from `Layout_DB1`–3, and `getDksTravel` ≡ `getDbTravel` (byte-identical bundle impls) ✅; returns/echo shapes confirmed (`getDksTravelRecdata` ÷1000 mm); `value` mm ranges still `[unverified]` |
+| §5.7 Axis | Verified | src + bundle | 3 | ✅ `getAxis`/`setAxis` return `{axis: number}` — raw integer id, no ÷1000; `getAxisList` → `{hasAxisSetting: true, axisList: number[]}`, up to 8 BE u16 ids, `0xFFFF` sentinel, never returns `false` (recdata.ts:133); per-axis semantics still `[unverified]` |
 | §6.0 `v` firmware-version gate | Verified | src + bundle | 1 | ✅ Which setters actually forward `v` traced through the compiled call chain; gate table confirmed |
 | §6.1 DKS | Verified | src + bundle | 2 | ✅ `Layout_DKS1–4` are **key codes** (unscaled 16-bit), depths live in `Layout_DB1–3` (mm) — terminology unified; `getDks` default `'Layout_DKS1'` ✅ from the bundle; `getDksAll` → `{dks1..dks4}` ✅ (façade-only, 4 sequential reads); `setAdvancedKeys` is the **SDK's** `ExportController.importConfig` path, not app code ✅; array lengths caller-determined ✅. Remaining *(inferred)*: whether the firmware actually enforces the 4/4/3 slot convention |
 | §6.2 TRPS | Verified | src + bundle | 2 | ✅ `getTrps(key, type)` has **no default** for `type` — omitting it yields `KeyLayout[undefined]` and a garbage read (silent, not a throw); `getTrpsAll` → `{trps1..trps4}` ✅ from the bundle (façade-only, 4 sequential reads); `{trps}` is a raw unscaled integer ✅. Remaining `[unverified]`: what TRPS values mean semantically and their valid range |
@@ -638,10 +638,13 @@ getPerformanceMode: (key: number) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number` — physical key id. |
-| **Returns** | `Promise<any>` — *(inferred from `KeyController.getLayoutModel(data): { touchMode: string; advancedKeyMode: number }`)* |
+| **Returns** | `Promise<{ touchMode: string; advancedKeyMode: number } \| Error>` — **✅ verified** in the bundle's `getLayoutModel`: `touchMode` = the **high** nibble (`value >> 4 & 15`) mapped through `KeyTouchMode` (0→`"global"`, 1→`"single"`, 2→`"rt"`, anything else defaults to `"global"`); `advancedKeyMode` = the **low** nibble (`value & 15`), a raw number. On failure resolves to the caught `Error`. |
 | **Description** | Reads which trigger mode a key is in and its advanced-key mode. |
 
-Reads the `KeyLayout.Mode` (8) slot. `touchMode` is one of `'global' | 'single' | 'rt'`.
+Reads the `KeyLayout.Mode` (8) slot. `touchMode` is one of `'global' | 'single' | 'rt'`
+(`KeyTouchMode` enum, `protocol-keyboard/src/constants/param.ts:75` ✅ verified). The nibble
+packing matches the write side: `setPerformanceMode(key, touchMode, advancedKeyMode)` packs
+`KeyTouchMode[touchMode] << 4 | advancedKeyMode`.
 
 #### `setPerformanceMode`
 
@@ -651,8 +654,8 @@ setPerformanceMode: (key: number, mode: TouchModeType, advancedKeyMode: number) 
 
 | | |
 |---|---|
-| **Params** | `key: number`. `mode: 'global' \| 'single' \| 'rt'`. `advancedKeyMode: number` — id of the enabled advanced feature. **Values verified** — see table below. |
-| **Returns** | `Promise<any>` |
+| **Params** | `key: number`. `mode: 'global' \| 'single' \| 'rt'`. `advancedKeyMode: number` — id of the enabled advanced feature. **Values verified** — see table below. **✅ verified** packing (bundle): `KeyTouchMode[mode] << 4 \| advancedKeyMode` written via `cmdLayout` on `Layout_Mode` (8). |
+| **Returns** | `Promise<{ touchMode: string; advancedKeyMode: number } \| Error>` — **✅ verified**: returns the same `getLayoutModel` decode as `getPerformanceMode` (round-tripped read-back of the written slot). |
 | **Description** | Sets a key's trigger mode and advanced-key mode. |
 
 `KeyTouchMode` numeric mapping: `global = 0`, `single = 1`, `rt = 2`.
@@ -832,12 +835,20 @@ getDksTravel: (key: number, dksLayout?: DksLayoutType) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number`. `dksLayout?: 'Layout_DB1' \| 'Layout_DB2' \| 'Layout_DB3'` — defaults to `Layout_DB1` **✅ verified** (the `.d.ts` elides the default, but the compiled implementation in `sdk-keyboard/dist/esm/index.js` is `async getDksTravel(e, t = "Layout_DB1")`). Note the layout union is `Layout_DB1`–`DB3` (`KeyLayout` enum `0x05`–`0x07`), **not** `DksType` `9`–`12`. |
-| **Returns** | `Promise<any>` — decoder `getDksTravel(data): number` |
+| **Returns** | `Promise<number>` — **✅ verified** (`getDksTravelRecdata`, `recdata.ts`): u16 LE ÷ 1000 via `preciseCalculate` → mm at 3 d.p. On failure resolves to the caught `Error`. |
 | **Description** | Reads the travel threshold stored in one DKS/DB layout slot. |
 
-> **Naming trap.** The parameter is typed `DksLayoutType`, which is the **DB** union
-> (`Layout_DB1`–`Layout_DB3`, enum 5–7) — *not* `DksType` (`Layout_DKS1`–`Layout_DKS4`, 9–12).
-> The name is misleading; the type is what counts.
+> **Naming, settled — see §6.1.** `getDksTravel` is **not** a misnomer and **not** a trap: it
+> correctly reads the DKS **travel depths**, which the firmware stores in `Layout_DB1`–`DB3`
+> (enum 5–7, mm). The DKS **key codes** live in `Layout_DKS1`–`DKS4` (9–12) and are read with
+> `getDks`. Two things to keep straight:
+>
+> 1. The parameter is typed `DksLayoutType`, which despite the name is the **DB** union
+>    (`Layout_DB1`–`Layout_DB3`) — *not* `DksType` (9–12). The type is what counts.
+> 2. **`getDksTravel` and `getDbTravel` are aliases** — ✅ verified byte-identical in the bundle
+>    (both: `cmdLayout(true, {key, layout: KeyLayout[dbLayout ?? 'Layout_DB1']})`, same decoder).
+>    Likewise `setDksTravel` ≡ `setDbTravel` (`cmdLayout(false, {…, value: value*1000})`). Pick
+>    either; there is no separate "DB dead band" vs "DKS travel" storage.
 
 #### `setDksTravel`
 
@@ -847,8 +858,8 @@ setDksTravel: (key: number, value: number, dksLayout?: DksLayoutType) => Promise
 
 | | |
 |---|---|
-| **Params** | `key: number`. `value: number` — mm, **range [unverified]**. `dksLayout?: DksLayoutType`. |
-| **Returns** | `Promise<any>` |
+| **Params** | `key: number`. `value: number` — mm, **range [unverified]**. `dksLayout?: DksLayoutType` (defaults `Layout_DB1` ✅ verified). Written as `value*1000` (µm) via `cmdLayout` ✅ verified. |
+| **Returns** | `Promise<any>` — **✅ verified**: a single `number` (written value echoed back through `getDksTravelRecdata`, mm at 3 d.p.). |
 | **Description** | Writes the travel threshold for one DKS/DB layout slot. |
 
 #### `getDbTravel`
@@ -859,9 +870,9 @@ getDbTravel: (key: number, dbLayout?: DksLayoutType) => Promise<any>
 
 | | |
 |---|---|
-| **Params** | `key: number`. `dbLayout?: 'Layout_DB1' \| 'Layout_DB2' \| 'Layout_DB3'`. |
-| **Returns** | `Promise<any>` |
-| **Description** | Reads the dead-band travel for a DB layout slot. |
+| **Params** | `key: number`. `dbLayout?: 'Layout_DB1' \| 'Layout_DB2' \| 'Layout_DB3'` (defaults `Layout_DB1` ✅ verified). |
+| **Returns** | `Promise<number>` — **✅ verified**: alias of `getDksTravel` (byte-identical bundle impl, `getDksTravelRecdata` decoder, mm at 3 d.p.). |
+| **Description** | Reads the travel stored in a DB layout slot. |
 
 #### `setDbTravel`
 
@@ -871,9 +882,9 @@ setDbTravel: (key: number, value: number, dbLayout?: DksLayoutType) => Promise<a
 
 | | |
 |---|---|
-| **Params** | `key: number`. `value: number` — mm, **range [unverified]**. `dbLayout?: DksLayoutType`. |
-| **Returns** | `Promise<any>` |
-| **Description** | Writes the dead-band travel for a DB layout slot. |
+| **Params** | `key: number`. `value: number` — mm, **range [unverified]**. `dbLayout?: DksLayoutType` (defaults `Layout_DB1` ✅ verified). Written as `value*1000` (µm) via `cmdLayout` ✅ verified. |
+| **Returns** | `Promise<any>` — **✅ verified**: a single `number` (written value echoed back through `getDksTravelRecdata`, mm at 3 d.p.). |
+| **Description** | Writes the travel for a DB layout slot. |
 
 `getDbTravel`/`setDbTravel` and `getDksTravel`/`setDksTravel` share the same layout union and
 overlap heavily; both are wrapped by this app, which defaults `dbLayout` to `'Layout_DB1'`.
@@ -889,7 +900,7 @@ getAxisList: () => Promise<any>
 | | |
 |---|---|
 | **Params** | none |
-| **Returns** | `Promise<any>` — *(inferred)* `{ hasAxisSetting: boolean; axisList: number[] }` |
+| **Returns** | `Promise<any>` — `{ hasAxisSetting: true, axisList: number[] }`. **✅ verified** (`getApi`'s `ORDER_TYPE_AXOSOME` branch, `recdata.ts:133`): reads up to **8 big-endian u16 ids** from the response, stops at the first `0xFFFF` sentinel. `hasAxisSetting` is always literally `true` when this branch runs — a device without axis support simply fails/doesn't take this path; it does **not** return `hasAxisSetting: false`. On failure resolves to the caught `Error`. |
 | **Description** | Reports whether the device supports analog axis output and which axis ids exist. |
 
 **Verified from the minified bundle:**
@@ -905,7 +916,7 @@ getAxis: (key: number) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number` |
-| **Returns** | `Promise<{ axis: number }>` *(from `PerformanceController.getAxis(data): { axis: number }`)* |
+| **Returns** | `Promise<{ axis: number }>` — **✅ verified** (`getAxisRecdata`, `recdata.ts:397`): reads `Layout_AXIS` via `cmdLayout`, returns `{ axis: (data[4] << 8) \| data[3] }`. The value is a **raw integer axis id** — no ÷1000 scaling. On failure resolves to the caught `Error`. |
 | **Description** | Reads which gamepad axis a key is bound to. |
 
 Reads `KeyLayout.AXIS` (25).
@@ -918,8 +929,8 @@ setAxis: (key: number, value: number) => Promise<any>
 
 | | |
 |---|---|
-| **Params** | `key: number`. `value: number` — axis id. **Range [unverified]**: must be a member of `axisList` from `getAxisList()`. |
-| **Returns** | `Promise<any>` |
+| **Params** | `key: number`. `value: number` — axis id. **Range [unverified]**: must be a member of `axisList` from `getAxisList()`. **✅ verified** at the facade: written **raw** (no ×1000 scaling, unlike travel values) via `cmdLayout` on `Layout_AXIS`. |
+| **Returns** | `Promise<any>` — **✅ verified**: `{ axis: number }`, the written value echoed back through `getAxisRecdata`. On failure resolves to the caught `Error`. |
 | **Description** | Binds a key to a gamepad axis for analog output. |
 
 Related `OrderType`s: `CURRENT_AXOSOME` (117), `AXOSOME` (118).

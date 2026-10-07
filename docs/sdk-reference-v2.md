@@ -37,6 +37,69 @@ src/services/KeyboardService.ts (app)
 
 ---
 
+## Verification status
+
+Statuses: **Verified** (cross-checked against `protocol-keyboard/src` and/or the compiled bundle, or
+tested empirically), **Partial** (some claims verified, others still `[unverified]` or *(inferred)*),
+**Unverified** (nothing in the section has been confirmed), **App-layer** (verified against `src/`,
+not the SDK).
+
+| Section | Status | Verified against | Batch | Notes |
+|---|---|---|---|---|
+| §1 Connection & lifecycle | Partial | `.d.ts`, compiled bundle | — | Types/signatures verbatim; singleton `DeviceBase` behaviour and `init` null-vs-Device divergence not hardware-tested |
+| §2 Key mapping | Partial | `protocol-keyboard/src` | — | Return shapes *(inferred)* from decoders; `setKey`/`deleteKey` key-id semantics `[unverified]` |
+| §3 Device info & system | Partial | hardware + `.d.ts` | — | Rate-index→Hz table app-verified on hardware; `switchConfig` and `setTopDeadSwitch` ranges `[unverified]` |
+| §4 Calibration & travel matrix | Partial | `protocol-keyboard/src` | — | `getRm6X21*` return shapes *(inferred)*; the `{calibrations, travels}` shape is an app convention `[unverified against the SDK]` |
+| §5.1 Global travel / dead band | Partial | `protocol-keyboard/src` | — | `IDB` shape *(inferred)*; all three mm ranges `[unverified]` |
+| §5.2 Per-key touch mode | Verified | src + bundle, macro corroboration | 1 | `Layout_Mode = (touchMode << 4) \| advancedKeyMode` ✅; `advancedKeyMode` id table verified |
+| §5.3 Single travel | Partial | `protocol-keyboard/src` | — | Encoder/decoder confirmed; mm range `[unverified]` |
+| §5.4 Rapid trigger | Partial | `protocol-keyboard/src` | — | Encoder/decoder confirmed; mm ranges and `decimalPlace` interaction `[unverified]` |
+| §5.5 DP / DR | Partial | `protocol-keyboard/src` | — | Encoder/decoder confirmed; ranges `[unverified]` |
+| §5.6 DKS / DB travel (per-layout) | Partial | src + bundle | 1 | Default `dksLayout = 'Layout_DB1'` ✅ and the `DksLayoutType` naming trap confirmed; `value` mm ranges still `[unverified]` |
+| §5.7 Axis | Partial | `protocol-keyboard/src` | — | Axis slots confirmed; per-axis semantics `[unverified]` |
+| §6.0 `v` firmware-version gate | Verified | src + bundle | 1 | ✅ Which setters actually forward `v` traced through the compiled call chain; gate table confirmed |
+| §6.1 DKS | Partial | `protocol-keyboard/src` | 1 | Packers/decoders verified from readable src; array *lengths* caller-determined ✅ but the `4/4/3` example shape *(inferred)*; `getDksAll` façade-only, shape *(inferred)* |
+| §6.2 TRPS | Partial | `protocol-keyboard/src` | — | `getTrps` decoder confirmed; `getTrpsAll` shape *(inferred)* (façade-only, no src method) |
+| §6.3 MT / TGL mode probe | Partial | `protocol-keyboard/src` | — | ⚠️ `getMtorTgl` returns a **delay**, not an MT/TGL discriminator (§13.3) — the section body's "call this before `getMT`/`getTGL`" advice is wrong. How MT vs TGL is actually distinguished is still open |
+| §6.4 MPT | Partial | `protocol-keyboard/src` | — | Packer confirmed (no `v` gating); mm ranges `[unverified]` |
+| §6.5 MT | Partial | `protocol-keyboard/src` | — | Packer confirmed; delay units/range `[unverified]` |
+| §6.6 TGL | Partial | `protocol-keyboard/src` | — | Packer confirmed (delay/10); range `[unverified]` |
+| §6.7 END | Partial | src + bundle | — | Version-gated packer confirmed; per-branch semantics `[unverified]` |
+| §6.8 SOCD | Partial | src + bundle | — | Version-gated packer confirmed; option value meanings `[unverified]` |
+| §6.9 RS | Partial | `protocol-keyboard/src` | — | Packer confirmed; mode values `[unverified]` |
+| §7 Macros | Partial | compiled bundle | — | Write path "verified from the compiled implementation"; `MacroDataPack` fields `[unverified]`, `getMacro` return shape elided in the `.d.ts` |
+| §8 Lighting | Partial | `protocol-keyboard/src` | — | Config shape and version gate confirmed; the `>= 1.0.9` `dynamicColorId` path is unreachable through the façade, so never exercised |
+| §9 Export/import & firmware (intro) | Partial | `.d.ts` | — | Signatures verbatim only |
+| §9.1 `KeyboardConfig` | Partial | `.d.ts` | — | Field list from declarations; which fields round-trip through hardware `[unverified]` |
+| §9.2 `ConfigValidator` | Verified | empirical import test | — | ✅ Confirmed unreachable — see §13.4 |
+| §9.3 Firmware update | Partial | `.d.ts`, bundle | — | Flow traced; `config?` delays `[unverified: no defaults declared]`; never run on hardware |
+| §10.1 What each package exports | Verified | `package.json` + disk | — | ✅ `exports` maps and on-disk file presence checked |
+| §10.2 `constantsParam` | Verified | `constants/param.ts` | 1 | ✅ Enum values read from source |
+| §10.3 `constants/byte.d.ts` | Verified | disk + `exports` map | 1 | ✅ Confirmed NOT exported; contents documented for reference only |
+| §10.4 `types/interface.d.ts` | Partial | `.d.ts` | — | Interface names/fields verbatim; byte-level meaning of several fields `[unverified]` |
+| §10.5 `protocol-keyboard` utils | Partial | disk | — | Confirmed NOT exported; util semantics partly *(inferred)* |
+| §10.6 `sdk-keyboard` internal helpers | Partial | `.d.ts`, bundle | — | Signatures verbatim; `blSignature`/CRC details not exercised |
+| §10.7 `hid` types & enums | Partial | `.d.ts` | — | `EVENT` string values verified; transport-level event leakage `[unverified]` |
+| §11.1 `DeviceBase` | Partial | `.d.ts` | — | Members verbatim; `isUpgrading` guard behaviour *(inferred)* from name |
+| §11.2 `WebHIDService` | Partial | `.d.ts` | — | Members verbatim; send/receive timing not measured |
+| §11.3 `UsbDetect` | Partial | `.d.ts`, disk | — | `generateStableId` private ✅; stable-id format `[unverified]` |
+| §11.4 Controller layer | Partial | `.d.ts` | — | Members not on `XDKeyboard` enumerated; behaviour not tested |
+| §12.1 Wrapped methods (54) | App-layer | `src/services/KeyboardService.ts` | — | Call-site list, verified against `src/`, not the SDK |
+| §12.2 Unwrapped methods (21) | App-layer | `src/services/KeyboardService.ts` | — | Absence of call sites confirmed by search |
+| §12.3 Wrapper → SDK mapping | App-layer | `src/services/KeyboardService.ts` (line-cited) | — | Every row verified against `src/`; the off-by-one traps are app-boundary facts, not SDK facts |
+| §13.1 `VersionString` dangling type | Verified | recursive grep, all three packages | 1 | ✅ Confirmed no declaration exists anywhere; root cause traced to broken `types` entries |
+| §13.2 No runtime range validation | Verified | bundle search | — | ✅ Searched for guards; none found |
+| §13.3 Shapes elided by the `.d.ts` | Partial | `.d.ts` vs src | 1 | Register confirmed ✅ and the **listed shapes were verified in Batch 1**. Still unverified: `sdkMap` id meanings, the SOCD `V1`/`V2` duplication, out-of-range `advancedKeyMode` values |
+| §13.4 Packaging defects | Verified | empirical Node import tests | — | ✅ Each claim tested by attempting the import and reading the error code |
+| §13.5 Gaps closed after first pass | Verified | disk + bundle greps | — | ✅ `hidv2.js` absence and path-import failure both confirmed |
+| §13.6 Type-vs-runtime gap, generally | Partial | — | — | Interpretation built on §13.4/§13.5 evidence, not independently testable |
+| §13.7 How `src/` imports these types | Verified | `src/` (three sites cited) | — | ✅ Import sites and their failure modes confirmed |
+| §14 The 21 unwrapped SDK methods | Partial | `.d.ts` | — | Signatures verbatim; the "what adding them would unlock" commentary is untested |
+
+Each verification batch must update its rows here.
+
+---
+
 ## 1. Connection & lifecycle
 
 Constructor:

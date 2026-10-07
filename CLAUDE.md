@@ -46,6 +46,7 @@ Hardware calls for many keys must go through `useBatchProcessing().processBatche
 - `usagePage: 65440` (0xFFA0) selects the SparkLink command interface on the chosen device; it is not a device filter.
 - KeyboardService wrappers return `Error` instances instead of throwing; callers check `instanceof Error`.
 - Don't explore node_modules/@sparklinkplayjoy unless the reference is missing something; `protocol-keyboard/src` is readable TypeScript source.
+- Before relying on a section of docs/sdk-reference-v2.md, check its row in the Verification status table. If it's Partial or Unverified, confirm against protocol-keyboard/src or the bundle first.
 
 ### Key model
 

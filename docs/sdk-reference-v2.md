@@ -58,15 +58,15 @@ not the SDK).
 | §5.6 DKS / DB travel (per-layout) | Partial | src + bundle | 1 | Default `dksLayout = 'Layout_DB1'` ✅ and the `DksLayoutType` naming trap confirmed; `value` mm ranges still `[unverified]` |
 | §5.7 Axis | Partial | `protocol-keyboard/src` | — | Axis slots confirmed; per-axis semantics `[unverified]` |
 | §6.0 `v` firmware-version gate | Verified | src + bundle | 1 | ✅ Which setters actually forward `v` traced through the compiled call chain; gate table confirmed |
-| §6.1 DKS | Partial | `protocol-keyboard/src` | 1 | Packers/decoders verified from readable src; array *lengths* caller-determined ✅ but the `4/4/3` example shape *(inferred)*; `getDksAll` façade-only, shape *(inferred)* |
-| §6.2 TRPS | Partial | `protocol-keyboard/src` | — | `getTrps` decoder confirmed; `getTrpsAll` shape *(inferred)* (façade-only, no src method) |
-| §6.3 MT / TGL mode probe | Partial | `protocol-keyboard/src` | — | ⚠️ `getMtorTgl` returns a **delay**, not an MT/TGL discriminator (§13.3) — the section body's "call this before `getMT`/`getTGL`" advice is wrong. How MT vs TGL is actually distinguished is still open |
-| §6.4 MPT | Partial | `protocol-keyboard/src` | — | Packer confirmed (no `v` gating); mm ranges `[unverified]` |
-| §6.5 MT | Partial | `protocol-keyboard/src` | — | Packer confirmed; delay units/range `[unverified]` |
-| §6.6 TGL | Partial | `protocol-keyboard/src` | — | Packer confirmed (delay/10); range `[unverified]` |
-| §6.7 END | Partial | src + bundle | — | Version-gated packer confirmed; per-branch semantics `[unverified]` |
-| §6.8 SOCD | Partial | src + bundle | — | Version-gated packer confirmed; option value meanings `[unverified]` |
-| §6.9 RS | Partial | `protocol-keyboard/src` | — | Packer confirmed; mode values `[unverified]` |
+| §6.1 DKS | Verified | src + bundle | 2 | ✅ `Layout_DKS1–4` are **key codes** (unscaled 16-bit), depths live in `Layout_DB1–3` (mm) — terminology unified; `getDks` default `'Layout_DKS1'` ✅ from the bundle; `getDksAll` → `{dks1..dks4}` ✅ (façade-only, 4 sequential reads); `setAdvancedKeys` is the **SDK's** `ExportController.importConfig` path, not app code ✅; array lengths caller-determined ✅. Remaining *(inferred)*: whether the firmware actually enforces the 4/4/3 slot convention |
+| §6.2 TRPS | Verified | src + bundle | 2 | ✅ `getTrps(key, type)` has **no default** for `type` — omitting it yields `KeyLayout[undefined]` and a garbage read (silent, not a throw); `getTrpsAll` → `{trps1..trps4}` ✅ from the bundle (façade-only, 4 sequential reads); `{trps}` is a raw unscaled integer ✅. Remaining `[unverified]`: what TRPS values mean semantically and their valid range |
+| §6.3 MT / TGL delay probe | Verified | src + bundle | 2 | ⚠️ **Corrected:** `getMtorTgl` reads `Layout_MTDelay` (19) and returns `raw * 10` — a **delay in ms**, *not* an MT/TGL discriminator; the old "call this before `getMT`/`getTGL`" advice is gone. MT vs TGL is distinguished by `advancedKeyMode` **3 vs 4** from `getPerformanceMode` (§5.2) / `advancedKeysSdkMap` ✅; wire unit 10 ms ✅ (×10 decode mirrors TGL's /10 encode). Remaining *(unverified)*: the delay's valid range |
+| §6.4 MPT | Verified | src + bundle | 2 | ✅ `dks[]` = key codes (unscaled hi/lo), `dbs[]` = **mm** (×1000 write / ÷1000 read) — both old `[unverified]` comments were wrong; `MPTDataPack` takes **no `v`**, so no gate; read is hardcoded **3 dks + 3 dbs** while writes loop `.length` → read/write length asymmetry ✅; `setMpt` returns the decoded read-back, not an ack ✅. Remaining `[unverified]`: mm ranges, and whether the three depths are literally "dead bands" *(inferred)* |
+| §6.5 MT | Verified | src + bundle | 2 | ⚠️ **Layers disagree:** protocol-keyboard's decoder is identity (`return data`), but sdk-keyboard's controller returns **`{dks1..dks4}`** from four `Layout_DKS*` reads — bundle wins ✅. `getMT` **never returns the delay** (use `getMtorTgl`) ✅; `dks` = unscaled 16-bit codes ✅; `delay` is **one raw byte**, no scaling → unit still *(unverified)*; the `v` gate is dead twice over (façade drops it, and `cmdMT` doesn't forward it to `MTDataPack`) ✅ |
+| §6.6 TGL | Verified | src + bundle | 2 | ✅ `dks` is **one** key code (not an array), 16-bit hi/lo; `delay` is **ms** with a **10 ms wire unit** (`/10` write, `*10` read) → hard ceiling **2550 ms** and non-multiples of 10 are truncated; `setTGL` returns the decoded read-back ✅; both layers agree here (unlike MT); `v` gate dead (`cmdTGL` doesn't forward it) ✅. Remaining `[unverified]`: firmware-enforced minimum |
+| §6.7 END | Verified | src + bundle | 2 | ✅ **`delay` is silently dropped unless `v >= 1.0.7`** — and the façade defaults `v` to `"1.0.5"`, so a bare `setEND({key, dks, delay})` writes no delay; three payload branches tabulated; `dks` unscaled 16-bit ✅; the decoder has **no `v` gate**, so on older firmware the decoded `delay` is meaningless ✅; read requests ignore `v` (`cmdEND` packs `{key, dks:0, delay:0}`) ✅; `setEND`/`setSocd`/`getSocd` are the **only** three façade methods exposing `v` (§6.0 corrected). Remaining *(unverified)*: `delay`'s **unit** — no scaling anywhere, so ms is unconfirmed |
+| §6.8 SOCD | Verified | src + bundle | 2 | ✅ `v` selects the generation: `< 1.0.5` → V1 `[key, dks1, mode1, dks1, key, mode2]`; `'1.0.5'`/`'1.0.6'` → V2 shape (`delay` omitted); `>= 1.0.7` → V3 (+16-bit `delay`); read requests are just `[key]`. ⚠️ **Read/write mismatch:** at default `v = '1.0.5'` you write `{pos1,pos2,key1,key2,type,mode}` but read back `{pos,key,type,mode}` — `pos2`/`key2` discarded, `pos1`/`key1` renamed; **no V1 decode branch**, so V1 is write-only ✅. `setSocd`'s comma-operator version compare is a **no-op** plus a stray `console.log("111111", …)` ✅. Remaining `[unverified]`: `pos`/`type`/`mode` enumerations (no `SOCDPolicy` exported), `delay` unit |
+| §6.9 RS | Verified | src + bundle | 2 | ✅ `RSModePack` → `[key, dks, dks, key]` (**one value duplicated**, `key` repeated as a terminator *(inferred)*); `getRsRecdata` → `{dks1, dks2}` reading **single bytes** at offsets 1–2 — so the 1-write/2-read asymmetry is a packer/decoder shape difference with byte-level correspondence, and **the two slots cannot be set independently**. RS is **byte-wide (0–255)** with no scaling, unlike every other advanced key ✅; **no `v` gate anywhere** ✅; `Layout_RS = 0x20` exists but is never used (RS bypasses `cmdLayout`) ✅; leftover `console.log` in both `cmdRS` and `getRsRecdata` ✅. Remaining `[unverified]`: what the byte means and whether the firmware treats offsets 1/2 as genuinely independent slots |
 | §7 Macros | Partial | compiled bundle | — | Write path "verified from the compiled implementation"; `MacroDataPack` fields `[unverified]`, `getMacro` return shape elided in the `.d.ts` |
 | §8 Lighting | Partial | `protocol-keyboard/src` | — | Config shape and version gate confirmed; the `>= 1.0.9` `dynamicColorId` path is unreachable through the façade, so never exercised |
 | §9 Export/import & firmware (intro) | Partial | `.d.ts` | — | Signatures verbatim only |
@@ -1600,7 +1600,8 @@ test appends the two `delay` bytes. Passing a V3 object with `v = '1.0.5'` there
 `delay`**, exactly like `setEND`'s default (see §6.7).
 
 **Read/write shape asymmetry — ✅ verified.** `getSocdRecdata(data, v = '1.0.5')`
-(`utils/recdata.ts:449`) computes `key1 = (data[4]<<8)|data[3]` and `key2 = (data[6]<<8)|data[5]`
+(`utils/recdata.ts:449`, under the comment `// v3版本` = *"v3 version"* — note the comment labels only
+the *new* branch, and sits on a decoder that has no V1 branch at all) computes `key1 = (data[4]<<8)|data[3]` and `key2 = (data[6]<<8)|data[5]`
 unconditionally, then:
 
 ```ts
@@ -1656,17 +1657,79 @@ setRS: (param: IRSMode) => Promise<any>
 ```
 
 ```ts
-interface IRSMode { key: number; dks: number }
+interface IRSMode {
+  key: number;   // physical key id
+  dks: number;   // ONE value — written twice on the wire; single byte, so 0–255 (✅ verified)
+}
 ```
 
 | | `getRS` | `setRS` |
 |---|---|---|
-| **Params** | `key: number` | `param: IRSMode` |
-| **Returns** | `Promise<{ dks1: number; dks2: number }>` *(from `getRsData`)* | `Promise<any>` |
+| **Params** | `key: number` — the controller wraps it as `{ key, dks: 0 }` before packing | `param: IRSMode` |
+| **Returns** | `Promise<{ dks1: number; dks2: number }>` — two **single-byte** integers | `Promise<{ dks1: number; dks2: number }>` — decoded with the *same* `getRsRecdata`, so a successful write returns the stored pair, not an ack |
 | **Description** | Reads a key's RS config. | Writes a key's RS config. |
 
-Note the asymmetry: you write **one** `dks`, you read back **two** (`dks1`, `dks2`).
-Command byte `KB2_CMD_RS = 45`; `KeyLayout.RS = 32`; packed by `RSModePack`.
+**Write shape — ✅ verified.** `RSModePack(param)` (`utils/pack.ts:252`) is the shortest packer in
+§6 and has **no `v` parameter at all**:
+
+```ts
+const { key, dks } = param;
+return [key, dks, dks, key];        // then cmdRS prepends the rw bit → [rw, key, dks, dks, key]
+```
+
+Two things stand out: the single `dks` is **duplicated** into positions 1 and 2, and `key` appears
+**both first and last** (positions 0 and 3). Nothing in the source explains the trailing `key`; it is
+almost certainly a terminator/checksum-ish field the firmware expects *(inferred)*.
+
+**Read shape — ✅ verified.** `getRsRecdata(data)` (`utils/recdata.ts:461`):
+
+```ts
+console.log('data', data);
+const dks1 = data[1];      // ONE byte each — no (data[n+1] << 8) hi/lo assembly
+const dks2 = data[2];
+return { dks1, dks2 };
+```
+
+**Explaining the one-write/two-read asymmetry.** Read and write are not actually mismatched in what
+they touch — they line up byte-for-byte:
+
+| Wire offset (after the `rw` byte) | Written by `RSModePack` | Read by `getRsRecdata` |
+|---|---|---|
+| 0 | `key` | — (ignored; command/status on a response) |
+| 1 | `dks` | → `dks1` |
+| 2 | `dks` (same value) | → `dks2` |
+| 3 | `key` | — (ignored) |
+
+So a write puts the **same value in the two slots that a read reports separately**, and a
+`setRS` followed by `getRS` returns `{ dks1: dks, dks2: dks }`. The `1 → 2` count change is a
+**packer/decoder shape difference, not lost data**: this SDK exposes two RS slots on the read side but
+only one setter input on the write side, so **you cannot set `dks1` and `dks2` independently** — there
+is no `IRSMode` field for the second one. Whether the firmware treats offsets 1 and 2 as two genuinely
+independent slots (making RS a two-value feature this SDK under-exposes) or as one value mirrored for
+protocol reasons is ***(inferred)*** — nothing in `protocol-keyboard/src` or the bundle settles it, and
+no `setRS` variant takes two values.
+
+**RS is byte-wide, not word-wide — ✅ verified.** Unlike every other advanced key in §6 (DKS codes,
+MPT `dks`, MT `dks`, TGL `dks`, END `dks`/`delay`, SOCD `key1`/`key2`/`delay`), RS values are
+**single bytes** on both sides: no `computeHighLowByte` in the packer, no `<< 8` in the decoder.
+That caps RS at **0–255** with no scaling applied — no `/1000` (so *not* a millimetre depth) and no
+`/10` or `*10` (so *not* a TGL-style delay). The unit/meaning of that byte is therefore ***(unverified)***;
+the source names nothing beyond `dks`.
+
+**No version gate anywhere — ✅ verified.** `RSModePack` takes no `v`; `cmdRS(isrw, param)` takes no
+`v`; `XDKeyboard.setRS = e => this.higherKeyController.setRS(e)` and `getRS(e)` likewise. RS behaves
+identically on every firmware version, so unlike END (§6.7) and SOCD (§6.8) there is no `v` to pass.
+
+**Also note:** `Layout_RS = 0x20` (32) exists in the `KeyLayout` enum, but the RS command path never
+uses it —
+`cmdRS` packs `RSModePack(param)` directly rather than going through `cmdLayout`, so **no layout byte
+is sent**. RS is a standalone command (`KB2_CMD_RS = 45`), not a `Layout_*` slot read. Contrast with
+DKS/TRPS (§6.1–§6.2), which are `cmdLayout` slot reads.
+
+**Console noise.** Both `cmdRS` (`console.log('rs', rs)`) and `getRsRecdata`
+(`console.log('data', data)`) contain leftover debug logging, so **every RS call prints two lines**.
+`KeyboardService` suppresses `console.error` around reconnects but not `console.log`; if RS calls ever
+get wrapped, expect this output.
 
 > **Neither `getRS` nor `setRS` is wrapped by this app.**
 
@@ -2831,7 +2894,7 @@ Do not target it.
 | `LightingController` | `getLighting(v?)`, `setLighting(cfg, v?)`, `getCustomLighting(key?)` | `v?: VersionString` version gate dropped by the façade; `key` optional here, required on the façade. |
 | `KeyController` | `updateKey(params: Keys): Promise<Keys>` | The façade renames it to `setKey`. |
 | `PerformanceController` | `getRm6X21Travel03/021/022/061/062`, `getRm6X21Calibration` | Five matrix variants unreachable from `XDKeyboard`, which only exposes `getRm6X21Travel`. |
-| `HigherKeyController` | `setMPT/setMT/setTGL(param, v?)`, `setMacro(param, macros, touchMode, v?)` | Version gates dropped by the façade. Capitalisation differs (`setMPT` vs `setMpt`, `setDKS` vs `setDks`). |
+| `HigherKeyController` | `setMPT/setMT/setTGL(param, v?)`, `setMacro(param, macros, touchMode, v?)` | Version gates dropped by the façade. **Not true for END/SOCD** — `setEND`, `setSocd` and `getSocd` *do* forward `v` end-to-end (§6.0, §6.7, §6.8); and for MT/TGL the `cmd*` builders drop `v` again before packing, so their gate is dead at both layers. Capitalisation differs (`setMPT` vs `setMpt`, `setDKS` vs `setDks`). |
 | `SystemController` | `init(): Promise<string>`, `resetUpgradeStatus(): void`, `updateDrive(binU8Data, cb?, config?)` | `updateDrive` takes `Uint8Array` + optional callback incl. `updateStatus?: string`; façade's `updateBin` takes `ArrayBuffer` + required callback without `updateStatus`. Also `static instance` and fields `sn`, `KeyboardRunMode`, `addr`, `device`, `baseInfo`. |
 | `ExportController` | `exportEncryptedJSON(data: KeyboardConfig, filename: string)`, `importEncryptedJSON(file: File)`, public field `success: boolean` | Constructed with `(keyBoard: XDKeyboard)`, not `DeviceBase`. `filename` is **required** here, optional on the façade. |
 
@@ -3525,17 +3588,20 @@ overwriting it with a default-shaped config, or nuke everything with `factoryDat
 | # | Signature | Returns | One-line description |
 |---|---|---|---|
 | 8 | `setDks(param: IDKSMode)` | `Promise<any>` | Write all four DKS actuation points + TRPS points + dead bands for a key in one call. |
-| 9 | `getDksAll(key: number)` | `Promise<any>` | Read all four DKS depths in one round trip. |
-| 10 | `getTrps(key: number, type: TrpsLayoutType)` | `Promise<{ trps: number }>` | Read one TRPS value (`Layout_TRPS1`–`Layout_TRPS4`). |
-| 11 | `getTrpsAll(key: number)` | `Promise<any>` | Read all four TRPS values in one round trip. |
+| 9 | `getDksAll(key: number)` | `Promise<{ dks1: number; dks2: number; dks3: number; dks4: number }>` | Read all four DKS **key codes** — internally 4 sequential round trips (§6.1). |
+| 10 | `getTrps(key: number, type: TrpsLayoutType)` | `Promise<{ trps: number }>` | Read one TRPS value (`Layout_TRPS1`–`Layout_TRPS4`); `type` is **required** — no default (§6.2). |
+| 11 | `getTrpsAll(key: number)` | `Promise<{ trps1: number; trps2: number; trps3: number; trps4: number }>` | Read all four TRPS values — internally 4 sequential round trips (§6.2). |
 
 **`setDks` is the single biggest gap.** The app reads DKS state (`getDks` is wrapped) but has
 **no way to write it** — and there is no `setTrps` at any layer, so TRPS is writable *only*
 through `setDks`'s `IDKSMode.trps` array (§6.1). The DKS page can therefore display but not
 persist TRPS.
 
-`getDksAll`/`getTrpsAll` are the batched alternatives; using them instead of four `getDks`
-calls would cut round trips 4:1 against the serial queue (§11.1).
+⚠️ **`getDksAll`/`getTrpsAll` are *not* batched — corrected in Batch 2.** They are convenience
+aggregates that issue **four sequential `cmdLayout` round-trips** each, then return
+`{dks1..dks4}` / `{trps1..trps4}` (§6.1, §6.2). Using them saves *caller* code but **zero** round
+trips against the serial queue (§11.1); there is no bulk-read command for these slots. Any plan that
+assumed a 4:1 saving here is wrong.
 
 ### 14.6 MT / TGL / END / SOCD / MPT — 6
 
@@ -3544,21 +3610,30 @@ render existing config but cannot save changes through these methods.
 
 | # | Signature | Returns | One-line description |
 |---|---|---|---|
-| 12 | `getMtorTgl(key: number)` | `Promise<number>` | Tell whether a key's mod-tap slot holds MT or TGL — call before `getMT`/`getTGL`. |
+| 12 | `getMtorTgl(key: number)` | `Promise<number>` | Read the shared MT/TGL **delay in ms** (`Layout_MTDelay`, raw ×10). **Not** a mode discriminator — see §6.3. |
 | 13 | `setMT(param: IMTMode)` | `Promise<any>` | Write a key's mod-tap config (`{key, dks[], delay}`). |
 | 14 | `setTGL(param: ITGLMode)` | `Promise<any>` | Write a key's toggle config (`{key, dks?, delay?}`). |
 | 15 | `setEND(param: IEndMode, v?: string)` | `Promise<any>` | Write a key's END config; `v` is the firmware version gate. |
 | 16 | `setSocd(param: ISOCDMode \| ISOCDModeV2 \| ISOCDModeV3, v?: string)` | `Promise<any>` | Write a key's SOCD config for the payload generation matching `v`. |
 | 17 | `setMpt(param: IMPTMode)` | `Promise<any>` | Write a key's MPT config (`{key, dks?, dbs?}`). |
 
-`getMtorTgl` being unwrapped compounds the setter gap: even the wrapped `getMT`/`getTGL`
-readers cannot be used correctly, because you need `getMtorTgl` to know **which** decoder
-applies to a given key (§6.3), and its numeric return value has no declared mapping (§13.3).
+`getMtorTgl` being unwrapped is a **smaller** gap than earlier drafts claimed. It does not gate the
+use of `getMT`/`getTGL` — MT vs TGL is read from `advancedKeyMode` (3 vs 4) via `getPerformanceMode`
+(§5.2), which *is* wrapped. What it does cost: `getMT` never returns a delay (§6.5), so the app has
+**no way to read the MT/TGL delay** until `getMtorTgl` is wrapped. (`getTglRecdata` does return
+`delay` for TGL, so TGL is unaffected.)
 
-`setEND` is the **only** setter here that exposes the `v?` version gate on the façade;
-`setMT`/`setTGL`/`setMpt` accept it at the controller layer but drop it (§11.4). `setSocd`
-additionally has the discriminated-union read problem: `getSocdData` returns one of two shapes
-with no discriminant field, so you must branch on `pos1` vs `pos` (§6.8).
+`setEND` and `setSocd` are the **only** setters here that expose the `v?` version gate on the façade
+(`getSocd` exposes it too) — see the corrected note in §6.7 and the gate table in §6.0.
+`setMT`/`setTGL`/`setMpt` accept `v` at the controller layer but drop it at the façade, and for MT/TGL
+the command builders drop it again before packing (§11.4), so their gate is unreachable twice over.
+`setMpt` has no gate at all (`MPTDataPack` takes no `v`). The `v` gate matters in practice only for
+END and SOCD, where it decides whether `delay` is written at all (§6.7, §6.8).
+
+`setSocd` additionally has the discriminated-union read problem: `getSocdData` returns one of two
+shapes with no discriminant field, so you must branch on `pos1` vs `pos` — and at the façade's default
+`v = '1.0.5'` the read returns the *narrow* `{pos, key, type, mode}` shape while the write sent the
+wide one, so half the config is unreadable (§6.8).
 
 ### 14.7 RS — 2
 
@@ -3606,7 +3681,7 @@ Three traps if these are ever wired up (§9.3):
 | **Medium** | `on`/`off`/`reconnection` bypassed (§14.1) | App maintains a hand-rolled reconnect state machine the SDK already provides. |
 | **Medium** | `resetUpgradeStatus` unexposed (§14.8) | Failed firmware flash can wedge reconnect handling with no public recovery path. |
 | **Low** | `getSaturation`/`setLightingSaturation`, `setTopDeadSwitch` unwrapped (§14.2–14.3) | Settings already round-trip through `exportConfig` but have no UI. |
-| **Low** | `getDksAll`/`getTrpsAll` unwrapped (§14.5) | 4:1 round-trip reduction available against a serial command queue. |
+| **Low** | `getDksAll`/`getTrpsAll` unwrapped (§14.5) | Convenience only — they are **4 sequential round trips each**, not batched, so there is **no** round-trip saving against the serial queue (§6.1, §6.2). |
 
 ---
 

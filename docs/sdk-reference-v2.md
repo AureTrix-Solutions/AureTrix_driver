@@ -68,7 +68,7 @@ not the SDK).
 | §6.8 SOCD | Verified | src + bundle | 2 | ✅ `v` selects the generation: `< 1.0.5` → V1 `[key, dks1, mode1, dks1, key, mode2]`; `'1.0.5'`/`'1.0.6'` → V2 shape (`delay` omitted); `>= 1.0.7` → V3 (+16-bit `delay`); read requests are just `[key]`. ⚠️ **Read/write mismatch:** at default `v = '1.0.5'` you write `{pos1,pos2,key1,key2,type,mode}` but read back `{pos,key,type,mode}` — `pos2`/`key2` discarded, `pos1`/`key1` renamed; **no V1 decode branch**, so V1 is write-only ✅. `setSocd`'s comma-operator version compare is a **no-op** plus a stray `console.log("111111", …)` ✅. Remaining `[unverified]`: `pos`/`type`/`mode` enumerations (no `SOCDPolicy` exported), `delay` unit |
 | §6.9 RS | Verified | src + bundle | 2 | ✅ `RSModePack` → `[key, dks, dks, key]` (**one value duplicated**, `key` repeated as a terminator *(inferred)*); `getRsRecdata` → `{dks1, dks2}` reading **single bytes** at offsets 1–2 — so the 1-write/2-read asymmetry is a packer/decoder shape difference with byte-level correspondence, and **the two slots cannot be set independently**. RS is **byte-wide (0–255)** with no scaling, unlike every other advanced key ✅; **no `v` gate anywhere** ✅; `Layout_RS = 0x20` exists but is never used (RS bypasses `cmdLayout`) ✅; leftover `console.log` in both `cmdRS` and `getRsRecdata` ✅. Remaining `[unverified]`: what the byte means and whether the firmware treats offsets 1/2 as genuinely independent slots |
 | §7 Macros | Verified | `protocol-keyboard/src` + bundle | 4 | ✅ `MacroDataPack` per-action wire = `[keyCodeLE16, status<<24\|delay&0xffffff]` (delay is u24, top 4 bits = press/release prefix 1/8; src comment says "低12位" but mask is 24-bit); ✅ `MacroModePack` slot metadata = `[key, indexLE16, macroLen, mode, numLE16, delayLE24]`; ✅ `getMacro` returns full `{key,id,len,mode,num,delay}` decode (see §13.3); `MacroType.status` numeric-consumption confirmed consistent with §13.3 |
-| §8 Lighting | Partial | `protocol-keyboard/src` + bundle | 4 | Config shape and version gate confirmed; ✅ batch 4: `PRGBDatapack`/`SRGBDatapack` wire layout — speed/mode/luminance/sleepDelay/staticColor are raw bytes (0–255 wire range, no SDK clamp); ✅ `getPRGBRecdata` derives `type` from mode (0=static, 1–20=dynamic, >20=custom — the SDK's only mode-id documentation); ✅ `getSingleRGBRecdata` returns uppercase `{key,R,G,B}`; ✅ `setLightingSaturation` = `QUERY_LIGHT_FIX_RGB` 3-byte triplet `[0x44,…param,0xff,0xff]`; the `>= 1.0.9` `dynamicColorId` path remains unreachable through the façade (§8.5 unverified) |
+| §8 Lighting | Verified | `protocol-keyboard/src` + facade bundle | 4, 4c | Config shape and version gate confirmed; ✅ batch 4: `PRGBDatapack`/`SRGBDatapack` wire layout — speed/mode/luminance/sleepDelay/staticColor are raw bytes (0–255 wire range, no SDK clamp); ✅ `getPRGBRecdata` derives `type` from mode (0=static, 1–20=dynamic, >20=custom); ✅ `getSingleRGBRecdata` returns uppercase `{key,R,G,B}`. ✅ batch 4c: logo verified (`cmdLogoRGB` shares the main-RGB packer; `setLogoLighting` force-zeroes `staticColor` for `type:'dynamic'` and `mode` otherwise; `getLogoLighting` decodes with full `getPRGB` decoder + caches on `logoLight`); custom verified (`setCustomLighting` sends immediately per key, returns decoded `{key,R,G,B}`; `saveCustomLighting` = `{key:254,r:254,g:254,b:254}` sentinel; batch `RGBDataPack`/`cmdKRGB` unreachable from facade); `>= 1.0.9` `dynamicColorId` gate **present in the shipped bundle but unreachable via facade** (controller default `'1.0.7'`); ⚠️ on-disk `pack.ts` predates the gate — bundle wins, divergence documented in §8. Remaining `[unverified]`: hardware behaviour of logo/custom effects |
 | §9 Export/import & firmware (intro) | Verified | sdk-keyboard bundle | 4b | ✅ batch 4b: `exportConfig` default filename `"keyboard_config.json"`, AES encrypt/decrypt with hard-coded key + Blob download / sync throw; `importConfig` full flow traced (read → parse → decrypt → flat → validate → `setImportData`), rejects on read/parse/validate, `setMacro` not awaited |
 | §9.1 `KeyboardConfig` | Partial | `.d.ts` | — | Field list from declarations; which fields round-trip through hardware `[unverified]` |
 | §9.2 `ConfigValidator` | Verified | empirical import test | — | ✅ Confirmed unreachable — see §13.4 |
@@ -77,9 +77,9 @@ not the SDK).
 | §10.2 `constantsParam` | Verified | `constants/param.ts` | 1 | ✅ Enum values read from source |
 | §10.3 `constants/byte.d.ts` | Verified | disk + `exports` map | 1 | ✅ Confirmed NOT exported; contents documented for reference only |
 | §10.4 `types/interface.d.ts` | Verified | `protocol-keyboard/src/types/interface.ts` | 4b | ✅ batch 4b: all 23 interfaces + field names/types/optionality compared 1:1 against src (ISOCDModeV2/V3 fields all `number` per §13.3); source comments (ranges, mode values) captured in §10.4. Byte-level meaning of individual fields still hardware-dependent |
-| §10.5 `protocol-keyboard` utils | Partial | disk | — | Confirmed NOT exported; util semantics partly *(inferred)* |
+| §10.5 `protocol-keyboard` utils | Verified | `protocol-keyboard/src/utils/index.ts`, `constants/byte.ts`, controllers; send/receive path from bundles | 4c | ✅ Confirmed NOT exported. Full wire framing documented from readable source: 64-byte packets `[0x5C, len, cmd, crc, …payload, 0x00…]`, `len` = payload-only (callers pass `data.length`); "CRC" is an additive checksum seeded `0x35 + 0x5C + len + cmd + lastPayloadByte` gated on `0 < len ≤ 252`, and `computeCheckSum` is its receive mirror; `computeProtocolSlice` puts the 4-byte header only in packet 0; byte helpers (`computeHighLowByte` = LE, `bitReadWrite`, `getLightBitmap`, `compareVersions`) read from source. Send/receive path traced through both minified bundles (`DeviceBase.sendData` FIFO queue → `WebHIDService` → `InputReportManager`, report ID 0, 3 retries, timeout resolves `null`, `slice(4)` header strip except usagePage 0xFFB0, multi-response `DataView[]` unstripped + `flatMap`-then-`slice(4)` reassembly) |
 | §10.6 `sdk-keyboard` internal helpers | Partial | `.d.ts`, bundle | 4b | Signatures verbatim; ✅ batch 4b: `sdkMap` values read from bundle (128 getCmd, 163 getKey, 171 defKey, 152 getSpecialSingleRGB, 153 getLogoRGB) + input-report dispatch (byte[2] → handler, `data.slice(4)`) documented; `blSignature`/CRC details not exercised |
-| §10.7 `hid` types & enums | Verified | `.d.ts` + sdk bundle | 4b | `EVENT` string values verified; ✅ batch 4b: transport-event leakage through `XDKeyboard.on(name \| string)` confirmed in bundle — `DeviceBase.on` accepts any string, forwards `usbChange`/`deviceStatus`/`deviceInfo`/`error` and emits decoded reports under decimal keys |
+| §10.7 `hid` types & enums | Verified | `.d.ts` + both bundles (hid traced fully) | 4b, 4c | `EVENT` string values verified; ✅ batch 4b: transport-event leakage through `XDKeyboard.on(name \| string)` confirmed. ✅ batch 4c: full event plumbing documented from both bundles — hid layer publishes `deviceStatus`/`deviceInfo`/`inputReport`/`error` (error never published — dead); `DeviceBase` re-tags `deviceInfo`, re-keys `inputReport` by byte[2] via `sdkMap` and re-emits on the decoded camelCase channel; plug/unplug arrives as `usbChange` from `UsbDetect`, not `deviceInfo`; `on`/`off` reverse-map names to numeric keys; facade `off(name)` always removes all handlers; `reconnection` resolves true/undefined (not void), `isReconnecting`-guarded; `GETDEVICEINFO`/`INPUTREPORT` enum values vestigial (never emitted). Bundle-only vs typed split documented |
 | §11.1 `DeviceBase` | Partial | `.d.ts` + sdk bundle | 4b | ✅ batch 4b: command-queue drain loop verified (serialised flush, `slice(4)` header strip except usagePage 0xFFB0, multi-response queue re-kicks single queue); `destroy()` only stops USB monitoring — does **not** clear queues (earlier claim corrected); input-report dispatch byte[2]→`sdkMap`. `isUpgrading` guard still *(inferred)* from name |
 | §11.2 `WebHIDService` | Partial | `.d.ts` + bundles | 4b | ✅ batch 4b: `devices()` requestDevice-fallback, `initAndConnectDevice` null paths, `reconnection` 100 ms close/re-tag/reopen sequence, `sendReportAndWaitResponse` signature verified; ⚠️ single-queue timeout/sendTime arg swap documented. Send/receive timing not measured on hardware |
 | §11.3 `UsbDetect` | Partial | `.d.ts`, disk | — | `generateStableId` private ✅; stable-id format `[unverified]` |
@@ -94,7 +94,7 @@ not the SDK).
 | §13.5 Gaps closed after first pass | Verified | disk + bundle greps | — | ✅ `hidv2.js` absence and path-import failure both confirmed |
 | §13.6 Type-vs-runtime gap, generally | Partial | — | — | Interpretation built on §13.4/§13.5 evidence, not independently testable |
 | §13.7 How `src/` imports these types | Verified | `src/` (three sites cited) | — | ✅ Import sites and their failure modes confirmed |
-| §14 The 21 unwrapped SDK methods | Partial | `.d.ts` | — | Signatures verbatim; the "what adding them would unlock" commentary is untested |
+| §14 The 21 unwrapped SDK methods | Verified | `.d.ts` + facade/controller bundle traces | 4c | ✅ All 21 signatures re-verified verbatim against `index.d.ts` (incl. `updateBin` config shape, `toBoot`, `reconnection`). Implementations traced in the bundle for all functional groups: on/off/reconnection (§14.1), `setTopDeadSwitch` = ORDER_TYPE envelope write, `getSaturation` = `QUERY_LIGHT_FIX_RGB` read on InfoController, `setLightingSaturation` = `[68, …param, 0xff, 0xff]` payload (§14.2–14.3), `deleteKey` = single touch-mode-slot write `value = KeyTouchMode[mode] << 4` (§14.4), DKS/TRPS reads + `setDks` decode-reply pattern (§14.5), common "setters return the decoded read-back" pattern for all seven setters (§14.6), RS read packs `{key, dks: 0}` and set decodes reply (§14.7), `updateBin` rethrows + runtime ArrayBuffer check + fresh controller instance + `updateStatus` strings passed at runtime though absent from the type, `updateDrive` flow re-confirmed (§14.8). Remaining `[unverified]`: hardware behaviour of any of these (never exercised) |
 
 Each verification batch must update its rows here.
 
@@ -2036,10 +2036,20 @@ setLogoLighting: (lightModeConfig: ILoGoLightMode) => Promise<any>
 | | `getLogoLighting` | `setLogoLighting` |
 |---|---|---|
 | **Params** | none | `lightModeConfig: ILoGoLightMode` — **includes `open`** |
-| **Returns** | `Promise<any>` | `Promise<any>` |
+| **Returns** | `Promise<any>` — **✅ verified** (facade bundle): decodes the reply with the **same `getPRGB` decoder as `getLighting`** (full `ILightMode` incl. derived `type` and `dynamicColorId = data[43]`), and caches it on the controller's `logoLight` field before returning. | `Promise<any>` — resolves to the raw `sendData` result; on throw, returns the `Error`. |
 | **Description** | Reads the logo LED config. | Writes the logo LED config. |
 
 Command byte `KB2_CMD_LOGORGB = 25`; packed by `cmdLogoRGB(isrw, param: ILightMode)`.
+
+**✅ Verified from source + facade bundle** (batch 4c):
+- Wire format is identical to main RGB — `cmdLogoRGB` calls the same private `RGB()` packer as
+  `cmdPRGB`, only the command byte differs (25 vs 24). `PRGBDatapack` builds the payload.
+- **`setLogoLighting` has `type`-dependent mutation** (facade bundle): it destructures the config
+  and **if `type === 'dynamic'` forces `staticColor = 0`, else forces `mode = 0`**. So passing
+  `type: 'static'` (or omitting it) **zeroes the effect mode on the wire**, and `type: 'dynamic'`
+  zeroes the static color. The mutated object is cached as `logoLight` and sent including `open`.
+- `getLogoLighting` sends `cmdLogoRGB(true, this.light)` — the read flag with the *cached*
+  config object as a payload template (the controller keeps `light`/`logoLight` state fields).
 
 ### `getCustomLighting` / `setCustomLighting` / `saveCustomLighting`
 
@@ -2052,13 +2062,24 @@ saveCustomLighting: () => Promise<any>
 | Method | Params | Returns | Description |
 |---|---|---|---|
 | `getCustomLighting` | `key: number` — **required on `XDKeyboard`**, optional (`key?: number`) on the controller | **✅ verified** — `getSingleRGBRecdata` (recdata.ts:309) returns `{ key: data[1], R: data[2], G: data[3], B: data[4] }`. ⚠️ Field names are **uppercase `R`/`G`/`B`**, not the lowercase `r`/`g`/`b` of `IKRGBDesc` — don't feed the result straight back into `setCustomLighting`. | Reads one key's custom RGB colour. |
-| `setCustomLighting` | `param: IKRGBDesc` (`{key, r?, g?, b?}`; **✅ verified** — `SingleRGBDataPack` (pack.ts:130) pushes each channel as a raw byte when present (or `0`), so `r`/`g`/`b` are 0–255 on the wire; omitted channels are simply not sent) | `Promise<any>` | Stages a per-key colour. |
-| `saveCustomLighting` | none | `Promise<any>` | Commits all staged per-key colours to flash. |
+| `setCustomLighting` | `param: IKRGBDesc` (`{key, r?, g?, b?}`; **✅ verified** — `SingleRGBDataPack` (pack.ts:130) pushes `[key]` then each channel as a raw byte **only when present** (`r || r === 0`), so `r`/`g`/`b` are 0–255 on the wire; an omitted channel is simply absent, shifting later bytes — always pass all three) | `Promise<any>` — **✅ verified** (facade bundle): sends immediately (`cmdSingleRGB(false, param)`, cmd byte `KB2_CMD_KRGB = 42`, payload `[rw, key, r?, g?, b?]`) and returns the **decoded reply** via `getSingleRGB` (`{key, R, G, B}` uppercase); on throw returns the `Error`. | Writes one key's custom colour immediately. |
+| `saveCustomLighting` | none | `Promise<any>` — resolves `undefined` on success (facade bundle: awaits `sendData`, no return); returns the `Error` on throw. | **✅ verified**: sends the sentinel write `cmdSingleRGB(false, {key: 254, r: 254, g: 254, b: 254})` — key 254 with all channels 254 tells the firmware to commit. |
 
-**`setCustomLighting` is a two-phase write**: stage N keys, then call `saveCustomLighting()`
-once. Forgetting the save loses the colours. Packed by
-`SingleRGBDataPack(param: IKRGBDesc)` and `RGBDataPack(descs: KRGBDescs)`; command byte
-`KB2_CMD_KRGB = 42`.
+**`setCustomLighting` is a two-phase write**: N individual per-key KRGB writes, then one
+`saveCustomLighting()` sentinel (key 254). Forgetting the save loses the colours. The batch
+packer `RGBDataPack(descs: KRGBDescs)` (pack.ts:140 — `[key,r,g,b]×N`, source comment flags
+the protocol as `TODO: 有点问题`) is used by controller-level `cmdKRGB`, which pads to a fixed
+59-byte payload with `0xff`, but **no facade method exposes `cmdKRGB`** — the public path is
+always per-key. All use command byte `KB2_CMD_KRGB = 42`.
+
+**⚠️ Source/bundle divergence on `PRGBDatapack`** (batch 4c): the on-disk
+`protocol-keyboard/src/utils/pack.ts` takes `(lightDesc)` only and has **no `dynamicColorId`
+and no version parameter** — it is older than what the `sdk-keyboard` bundle inlines. The
+bundle's packer is `(lightDesc, version = '1.0.7')`, destructures `dynamicColorId`, and
+appends it when the version gate passes; the bundle's `getPRGB` decoder always reads
+`dynamicColorId = data[43]`. **The bundle wins** — the §6.0/§10.4 notes about the
+`>= 1.0.9` gate being unreachable through the facade (controller default `'1.0.7'`, version
+arg dropped) stand, but the gate genuinely exists in the shipped code, not just in types.
 
 ### `getSpecialLighting` / `setSpecialLighting`
 
@@ -2663,7 +2684,88 @@ interface IWriteParam { addr: number; size: number; codes: number[] }
 
 ### 10.5 `protocol-keyboard` utils — **NOT exported**
 
-`utils/index.d.ts`:
+**✅ Verified against readable source** (batch 4c): `protocol-keyboard/src/utils/index.ts`,
+`src/constants/byte.ts`, and call sites in `src/controller/*.ts`.
+
+#### Wire format — output packet
+
+Every command is built with `createProtocol(len, cmd, data)` (single packet) or
+`createProtocolSlice(len, cmd, data)` (multi-packet), producing **fixed 64-byte** buffers
+(`computeProtocol(head, data, len = 64)`, zero-filled):
+
+```
+byte:   0      1      2      3      4 … 4+len-1        … 63
+value:  0x5C   len    cmd    crc    data[0…len-1]      0x00 padding
+        Head   payload-len  cmd     checksum
+```
+
+- `Head` = `0x5C` (`constants/byte.ts`; `MaxPack = 0x0E` also lives there).
+- `len` = **payload byte count only** — callers compute `const len = data.length` (e.g.
+  `InfoController.cmd`: `data = CMDPack(param)`), so the 4-byte header is *not* included.
+- `cmd` = command byte (the `0x80`/`0xA3`/… family mapped in §10.6's `sdkMap` table).
+- `crc` = `computeCRC(len, cmd, data)` — **not a CRC at all**; it is an additive checksum
+  seeded with `0x35`:
+  `crc = 0x35 + 0x5C + len + cmd + data[data.length - 1]`
+  i.e. header fields plus the **last payload byte only**. The last-byte term applies only
+  when `0 < len ≤ 252` (`63 * 4`); for `len = 0`, `crc = 0x35 + 0x5C + cmd`. The sum is
+  not masked to 8 bits in source — the `Uint8Array` assignment in `computeProtocol` wraps it.
+- `computeCheckSum(pack)` is the receive-side mirror: same seed and terms, reading
+  `pack[0]`(Head) + `pack[1]`(len) + `pack[2]`(cmd) + `pack[len + 3]` (last payload byte),
+  under the same `0 < len ≤ 252` condition.
+
+Multi-packet: `computeProtocolSlice` concatenates `[...head, ...data]` and chunks it into
+`ceil((4 + data.length) / 64)` × 64-byte packets. The 4-byte header appears **only in the
+first packet**; later packets are raw payload continuation, zero-padded.
+
+#### Send path (`DeviceBase.sendData` → hid bundle) — **✅ verified from bundles** (no TS source;
+`sdk-keyboard/dist/esm/index.js` + `hid/dist/esm/index.js`, minified but fully traced)
+
+```
+controller packs protocol (createProtocol*, 64-byte packets)
+  → DeviceBase.sendData(data, timeout?)            [sdk-keyboard bundle]
+    → per-device FIFO command queue (globalCommandQueue[deviceBase.id])
+    → flushQueue() serializes: one command at a time
+      → WebHIDService.sendReportAndWaitResponse(data, sendTime, timeout=1000)
+        → InputReportManager.sendAndWait(data, {expectedResponses=1, timeout, sendTime})
+          → device.sendReport(0, bytes)            ← report ID 0 ALWAYS
+          → await inputreport events
+```
+
+- **`DeviceBase.sendData(data, timeout?)`**: pushes `{res, rej, args, timeout, sendTime: Date.now()}`
+  onto the queue; if neither queue is flushing it calls `flushQueue()` immediately, otherwise the
+  running flush loop picks it up (full serialization — concurrent SDK calls queue, they don't interleave).
+  `args` may also be a bare `async () => …` function (inline work executed in queue order).
+- **`flushQueue()`**: for each entry calls `sendReportAndWaitResponse(args, timeout, sendTime)` and
+  resolves with `new Uint8Array(response.buffer)` — **`.slice(4)` strips the first 4 bytes**
+  (the mirrored `0x5C len cmd crc` reply header) so callers get raw payload, **unless**
+  `hidService.deviceUsagePage === 65456` (0xFFB0), where nothing is stripped. On `Read timeout`
+  the entry is shifted out and rejected; other errors propagate. In `finally`, if the *multiple*
+  queue has pending work it cross-kicks `flushQueueMultiple()` (and vice versa).
+- **`DeviceBase.sendDataAndWaitMultiple(data, expectedResponses, timeout?)`**: identical queueing,
+  but flushes through `sendReportAndWaitMultipleResponses(data, expectedResponses, sendTime, timeout)`
+  and resolves with **`DataView[]` (one per input report), headers NOT stripped** — callers reassemble.
+  Canonical reassembly (`getRm6X21Travel03`): 
+  `Uint8Array.from(responses.flatMap(r => [...new Uint8Array(r.buffer)])).slice(4)` —
+  concat every 64-byte reply into one byte stream, then drop the 4-byte header of the first packet.
+- **`InputReportManager`** (hid bundle): `MAX_RETRIES = 3`. `attemptSend` resends the whole command
+  if zero responses arrived; throws `发送/接收数据失败，已重试 3 次: …` after the last retry.
+  `waitForResponses(n, sendTime, timeout)` fires `n` concurrent `waitForResponse` promises against a
+  shared deadline and filters out `null`s. `waitForResponse` discards stale queued reports
+  (`time < sendTime`), resolves from the queue, or waits for the next `inputreport`; **on timeout it
+  resolves `null` (logs `waitForResponse-timeout`), it never throws** — timeout surfaces as a
+  shorter-than-expected `DataView[]` (or, for single-response calls, a retry/throw from `attemptSend`).
+  Every inbound `inputreport` is also published on the `inputReport` event channel (feeds §10.7).
+
+#### Byte helpers
+
+- `lowByte(v) = v & 0xFF`, `highByte(v) = (v >> 8) & 0xFF`, `highByte16/24` likewise at >>16/>>24.
+- `computeHighLowByte(v) = [lowByte(v), highByte(v)]` — **little-endian** 16-bit split, as used in payloads.
+- `bitReadWrite(value = true)`: `true → 0x00` (read), `false → 0x01` (write).
+- `getSomeBits(num = 1, bit = 0x00)` → `Array(num).fill(bit)`.
+- `getLightBitmap(lightSwitch, reverseEffect, superResponse)` → bit0 switch, bit1 reverse-effect, bit4 super-response.
+- `compareVersions(v1, v2)` → `'greater' | 'less' | 'equal'`; splits on `.`, zero-pads, compares numerically.
+
+Original declaration listing (`utils/index.d.ts`), matching the source above:
 
 ```ts
 bitReadWrite(value?: boolean): number
@@ -2768,6 +2870,10 @@ relationship between response byte and request command byte is not visible in th
 
 ### 10.7 `hid` types & enums
 
+**✅ Verified against the compiled bundles** (batch 4c): `hid/dist/esm/index.js` (12 KB, fully
+traced) + `hid/dist/esm/src/*.d.ts` and `sdk-keyboard/dist/esm/index.js`. Enum values below
+match the bundle exactly.
+
 `types/enum.d.ts`:
 
 ```ts
@@ -2793,8 +2899,66 @@ enum EVENT {
 enum LogLevel { DEBUG = '调试', INFO = '信息', WARN = '警告', ERROR = '错误' }
 ```
 
-Note the **mixed casing convention**: the first five members are SCREAMING values, the last four
-are camelCase strings. Compare against the enum *value*, not the member name.
+Note the **mixed casing convention**: `GETDEVICEINFO` and `INPUTREPORT` have SCREAMING-case
+values; the other six are camelCase strings. Compare against the enum *value*, not the member name.
+
+#### What actually fires — event plumbing (verified from both bundles)
+
+Two layers emit events; the channel names are **not** the `EVENT` enum for either:
+
+**hid layer (`WebHIDService`, static `Events` map):** `deviceStatus`, `deviceInfo`,
+`inputReport`, `error`.
+- `deviceStatus` — published by `updateDeviceStatus()` with `{status}`; fires around
+  `requestDevice()` (`WAITING` → `ACTIVE`/`INACTIVE`).
+- `deviceInfo` — published alongside `deviceStatus` with `{status, device, deviceList}`.
+  These two are the **connect-status** channels: they fire on device request/tagging, not
+  on every USB plug/unplug.
+- `inputReport` — every raw HID `inputreport`, as `{data: DataView, reportId, time}`.
+  Published by `InputReportManager.handleInputReport` *before* the response queue resolves
+  (so listeners see reports consumed by pending `sendData` calls too).
+- `error` — wired but the hid bundle never publishes it (no `publish(Events.ERROR…)` call);
+  `InputReportManager.Events.ERROR` exists but is likewise never emitted. Effectively dead.
+
+**sdk layer (`DeviceBase`):** forwards the four hid channels under the same names, with two
+transforms (from `setupEventListeners` in the sdk bundle):
+- `deviceInfo` payloads are re-tagged: `device` becomes `{data, id, usage, usagePage,
+  vendorId, productId, productName}` (defaults `-1`/`''` for missing fields).
+- `inputReport` is re-keyed: `DeviceBase` reads `data.buffer` as bytes and uses
+  **`byte[2]` as the channel key** (`r = t[2].toString()`), looks it up in the internal
+  `sdkMap` (the `0x80`/`0xA3`-style cmd→name table), decodes `t.slice(4)` with the mapped
+  decoder, and emits **on the decoded-name channel** (e.g. `'lightingBase'`,
+  `'switchConfig'`, … — the camelCase `EVENT` values). So app code subscribes to
+  `EVENT.LIGHTINGBASE` etc. and receives the *decoded payload*, while the raw
+  `'inputReport'`-named channel from hid is consumed internally, not forwarded by name.
+- **`usbChange`**: comes from `UsbDetect` (bundle class `R`, exported as `UsbDetect`).
+  `DeviceBase`'s constructor calls `UsbDetect.bindToDeviceBase(this)` + `startMonitoring()`,
+  which registers `navigator.hid` `connect`/`disconnect` listeners. On either, it checks the
+  device's collections against the configured `usage`/`usagePage`; if matched it awaits
+  `DeviceBase.reconnection(...)` (unless `isUpgrading`) and emits `usbChange` with
+  `{device, type: 'connect'|'disconnect'|'isUpgrading_connect'|'isUpgrading_disconnect',
+  reconnect?, updateFail?}`. `DeviceBase.destroy()` calls `UsbDetect.stopMonitoring()`.
+  **Plug/unplug events arrive as `usbChange`, not `deviceInfo`.**
+
+**`on`/`off` name translation** (DeviceBase): `on(eventName, handler)` maps the given name
+through the reverse `sdkMap` lookup (`Object.entries(sdkMap).find(([,v]) => v === eventName)`);
+if found, it subscribes under the **numeric key** (byte[2] value), else under the name itself.
+`off(eventName, handler?)` does the same mapping; omitting `handler` removes all handlers for
+that channel. Handlers must be functions or `on` throws. Note `XDKeyboard.off = (e) =>
+deviceBase.off(e)` — the facade's `off` takes only the event name (drops the handler arg), so
+facade-level `off` always removes *all* handlers for the channel.
+
+**`reconnection(device, id, isUpgrading?)`** (DeviceBase → `WebHIDService.reconnection`):
+guarded by `isReconnecting` (concurrent calls log a warning and return `undefined`); closes
+the device, waits 100 ms, re-tags the device object with the stored id under
+`hidDevices[id]`, reopens if needed, rebuilds the `InputReportManager` + listener, returns
+`true` on success / `undefined` on failure (catch logs `Reconnection failed:`).
+
+Bundle-only vs typed: the `EVENT`/`DEVICE`/`REQUESTDEVICESTATUS`/`LogLevel` enums and all
+`types.d.ts` interfaces are in the shipped `.d.ts` files (typed). The channel-name mapping
+(`sdkMap`), the `deviceInfo` re-tagging, `inputReport` re-keying by `byte[2]`, and the
+`usbChange` emission are **bundle-only implementation details** — no `.d.ts` describes them.
+`EVENT.GETDEVICEINFO`/`EVENT.INPUTREPORT` (SCREAMING values) appear nowhere in either bundle's
+emit paths; treat them as vestigial.
 
 `types/types.d.ts`:
 
@@ -3729,8 +3893,11 @@ constructor — at the cost of leaving that latent mismatch invisible.
 
 ## 14. The 21 unwrapped SDK methods
 
-These have **no call site in `src/services/KeyboardService.ts`**. Signatures are verbatim from
-`sdk-keyboard/dist/esm/index.d.ts`. Grouped by what adding them would unlock.
+These have **no call site in `src/services/KeyboardService.ts`**. Signatures re-verified verbatim
+against `sdk-keyboard/dist/esm/index.d.ts` (batch 4c). **Correction:** the facade declares
+`Promise<any>` for most getters here — where a concrete return shape is shown, it was verified at
+the *controller/recdata* layer (§6.x), not from the facade's types. Grouped by what adding them
+would unlock.
 
 ### 14.1 Event / reconnection API — 3
 
@@ -3741,9 +3908,9 @@ suppression. That is the reason `UsbDetect.generateStableId` being private (§11
 
 | # | Signature | Returns | One-line description |
 |---|---|---|---|
-| 1 | `on(eventName: EVENT \| string, handler: EventHandler)` | `void` | Subscribe to SDK events (input reports, USB change, config switch, touch/voice flow). |
-| 2 | `off(eventName: EVENT \| string)` | `void` | Remove **all** handlers for an event — cannot target one listener (see §1). |
-| 3 | `reconnection(device: HIDDevice, id: string)` | `Promise<void>` | Re-attach to a device that dropped and reappeared, without a full re-`init`. |
+| 1 | `on(eventName: EVENT \| string, handler: EventHandler)` | `void` | Subscribe to SDK events. **✅ verified** (§10.7): real channels are `usbChange`, the decoded `EVENT` camelCase values (re-keyed by reply byte[2] via `sdkMap`), plus hid-level `deviceStatus`/`deviceInfo`/`inputReport` (re-tagged). Throws if `handler` is not a function. No "voice" channel exists. |
+| 2 | `off(eventName: EVENT \| string)` | `void` | Remove **all** handlers for an event — cannot target one listener (see §1). **✅ verified**: same `sdkMap` reverse lookup as `on`; the facade drops `DeviceBase.off`'s optional `handler` argument (§10.7). |
+| 3 | `reconnection(device: HIDDevice, id: string)` | `Promise<void>` | Re-attach to a device that dropped and reappeared, without a full re-`init`. **✅ verified**: delegates to `DeviceBase.reconnection`, which actually resolves `true`/`undefined` (the `Promise<void>` type is a lie) and is serialized by an `isReconnecting` guard — concurrent calls no-op with a console warning (§10.7). |
 
 Adopting these would let the app drop its hand-rolled reconnect state machine — but
 `reconnection`'s `isUpgrading` guard (§11.1) and the transport-level vs `EVENT`-level string
@@ -3754,6 +3921,11 @@ collision (§11.2) would both need handling.
 | # | Signature | Returns | One-line description |
 |---|---|---|---|
 | 4 | `setTopDeadSwitch(value: number)` | `Promise<boolean>` | Set the global top dead-band (travel ignored at the top of the stroke). |
+
+**✅ Verified** (bundle): facade sends `InfoController.cmd({type: 'ORDER_TYPE_TOP_DEAD_SWITCH',
+hArgs: [value]})` and returns the reply decoded via `getCmd` — i.e. the generic ORDER_TYPE
+envelope (same controller as `factoryDataReset`), not a dedicated layout slot. On throw it
+returns the `Error` (so the real type is `Promise<boolean | Error>`).
 
 `OrderType.TOP_DEAD_SWITCH` (52). Persisted as `KeyboardConfig.system.topDeadBandSwitch`, so it
 survives `exportConfig`/`importConfig` — meaning the app **already round-trips a setting it has
@@ -3766,8 +3938,15 @@ no UI to change**.
 | 5 | `getSaturation()` | `Promise<any>` | Read colour saturation. |
 | 6 | `setLightingSaturation(param: number[])` | `Promise<any>` | Write colour saturation. |
 
-`param` is an untyped `number[]`; neither length nor range is declared anywhere (§8).
-`getSaturation` lives on `InfoController`, not `LightingController`.
+**✅ Verified** (bundle):
+- `getSaturation` is `InfoController.cmd({type: 'QUERY_LIGHT_FIX_RGB'})` + `getCmd(reply)` —
+  confirmed on **InfoController, not LightingController** (it rides the generic query envelope).
+- `setLightingSaturation` is `LightingController.cmdRGBSaturation(false, param)`; the packer
+  builds payload `[68, ...param, 0xff, 0xff]` — leading byte **68** is a fixed sub-command, the
+  `number[]` is copied through **verbatim as raw payload bytes**, and two `0xff` bytes pad the
+  tail. So `param`'s length is whatever the firmware's saturation record is; the SDK imposes no
+  length/range check. Neither is documented in types (§8).
+
 Also persisted in `KeyboardConfig.light.*` and thus already round-tripped blind.
 
 ### 14.4 Key mapping — 1
@@ -3776,6 +3955,11 @@ Also persisted in `KeyboardConfig.light.*` and thus already round-tripped blind.
 |---|---|---|---|
 | 7 | `deleteKey(key: number, mode: TouchModeType)` | `Promise<any>` | Clear a key's advanced/trigger config for `'global' \| 'single' \| 'rt'`, restoring defaults. |
 
+**✅ Verified** (bundle): a **single** `cmdLayout(false, {key, layout: 8, value})` write where
+`value = KeyTouchMode[mode] << 4` — i.e. it overwrites the key's touch-mode slot (layout 8) with
+the mode nibble shifted into the high half; there is no per-config iteration. `KeyTouchMode` is
+the string→number map from `constants`. Returns the raw `sendData` result, or the `Error`.
+
 This is the **only reset path for a single key**. Without it the app can only clear a key by
 overwriting it with a default-shaped config, or nuke everything with `factoryDataReset`.
 
@@ -3783,10 +3967,10 @@ overwriting it with a default-shaped config, or nuke everything with `factoryDat
 
 | # | Signature | Returns | One-line description |
 |---|---|---|---|
-| 8 | `setDks(param: IDKSMode)` | `Promise<any>` | Write all four DKS actuation points + TRPS points + dead bands for a key in one call. |
-| 9 | `getDksAll(key: number)` | `Promise<{ dks1: number; dks2: number; dks3: number; dks4: number }>` | Read all four DKS **key codes** — internally 4 sequential round trips (§6.1). |
-| 10 | `getTrps(key: number, type: TrpsLayoutType)` | `Promise<{ trps: number }>` | Read one TRPS value (`Layout_TRPS1`–`Layout_TRPS4`); `type` is **required** — no default (§6.2). |
-| 11 | `getTrpsAll(key: number)` | `Promise<{ trps1: number; trps2: number; trps3: number; trps4: number }>` | Read all four TRPS values — internally 4 sequential round trips (§6.2). |
+| 8 | `setDks(param: IDKSMode)` | `Promise<any>` | Write all four DKS actuation points + TRPS points + dead bands for a key in one call. **✅ verified**: facade `setDks = (e) => higherKeyController.setDKS(e)` → `cmdDKS(false, param)`; returns the **decoded** reply (`getDks(reply)`). |
+| 9 | `getDksAll(key: number)` | `Promise<{ dks1: number; dks2: number; dks3: number; dks4: number }>` | Read all four DKS **key codes** — **✅ verified**: 4 sequential `cmdLayout(true, {key, layout: Layout_DKS1..4})` round trips, each decoded with `getDks`, assembled into `{dks1..dks4}` (§6.1). |
+| 10 | `getTrps(key: number, type: TrpsLayoutType)` | `Promise<{ trps: number }>` | Read one TRPS value (`Layout_TRPS1`–`Layout_TRPS4`); **✅ verified**: single `cmdLayout(true, {key, layout: KeyLayout[type]})` → `getTrps(reply)`. `type` is **required** — no default, the bundle indexes `KeyLayout[type]` directly (§6.2). |
+| 11 | `getTrpsAll(key: number)` | `Promise<{ trps1: number; trps2: number; trps3: number; trps4: number }>` | Read all four TRPS values — **✅ verified**: 4 sequential round trips (`Layout_TRPS1..4`), each decoded with `getTrps`, assembled into `{trps1..trps4}` (§6.2). |
 
 **`setDks` is the single biggest gap.** The app reads DKS state (`getDks` is wrapped) but has
 **no way to write it** — and there is no `setTrps` at any layer, so TRPS is writable *only*
@@ -3806,12 +3990,17 @@ render existing config but cannot save changes through these methods.
 
 | # | Signature | Returns | One-line description |
 |---|---|---|---|
-| 12 | `getMtorTgl(key: number)` | `Promise<number>` | Read the shared MT/TGL **delay in ms** (`Layout_MTDelay`, raw ×10). **Not** a mode discriminator — see §6.3. |
-| 13 | `setMT(param: IMTMode)` | `Promise<any>` | Write a key's mod-tap config (`{key, dks[], delay}`). |
-| 14 | `setTGL(param: ITGLMode)` | `Promise<any>` | Write a key's toggle config (`{key, dks?, delay?}`). |
-| 15 | `setEND(param: IEndMode, v?: string)` | `Promise<any>` | Write a key's END config; `v` is the firmware version gate. |
-| 16 | `setSocd(param: ISOCDMode \| ISOCDModeV2 \| ISOCDModeV3, v?: string)` | `Promise<any>` | Write a key's SOCD config for the payload generation matching `v`. |
-| 17 | `setMpt(param: IMPTMode)` | `Promise<any>` | Write a key's MPT config (`{key, dks?, dbs?}`). |
+| 12 | `getMtorTgl(key: number)` | `Promise<number>` | Read the shared MT/TGL **delay in ms** (`Layout_MTDelay`, raw ×10). **✅ verified**: a single `cmdLayout(true, {key, layout: Layout_MTDelay})` read, decoded by `getMtorTgl`. **Not** a mode discriminator — see §6.3. |
+| 13 | `setMT(param: IMTMode)` | `Promise<any>` | Write a key's mod-tap config (`{key, dks[], delay}`). **✅ verified**: reply is decoded and the **decoded shape is returned** (`getMtRecdata(reply)`), not the raw send result. |
+| 14 | `setTGL(param: ITGLMode)` | `Promise<any>` | Write a key's toggle config (`{key, dks?, delay?}`). **✅ verified**: returns the decoded reply (`getTglData`). |
+| 15 | `setEND(param: IEndMode, v?: string)` | `Promise<any>` | Write a key's END config; `v` is the firmware version gate. **✅ verified**: `v` is forwarded to `cmdEND`; returns the decoded reply (`getEndData`). |
+| 16 | `setSocd(param: ISOCDMode \| ISOCDModeV2 \| ISOCDModeV3, v?: string)` | `Promise<any>` | Write a key's SOCD config for the payload generation matching `v`. **✅ verified**: returns the decoded reply **via `getSocdData(reply, v)`** — the read-back shape matches the `v` you wrote with. Bundle oddity: it computes a `compareVersions(v, '1.0.5')` result and **discards it** (comma operator), and logs `console.log("111111", param)`. |
+| 17 | `setMpt(param: IMPTMode)` | `Promise<any>` | Write a key's MPT config (`{key, dks?, dbs?}`). **✅ verified**: returns the decoded reply (`getMptData`); controller defaults `v = '1.0.5'` (dropped at the facade) and logs `console.log("data", packed)`. |
+
+**Common setter pattern (✅ verified, bundle)**: every setter in §14.5–14.7 (`setDks`, `setMT`,
+`setTGL`, `setEND`, `setSocd`, `setMPT`, `setRS`) **sends then decodes and returns the reply** with
+its matching recdata decoder — you get the same object shape the corresponding getter returns, so a
+write doubles as a read-back. All catch and return the `Error`.
 
 `getMtorTgl` being unwrapped is a **smaller** gap than earlier drafts claimed. It does not gate the
 use of `getMT`/`getTGL` — MT vs TGL is read from `advancedKeyMode` (3 vs 4) via `getPerformanceMode`
@@ -3835,8 +4024,8 @@ wide one, so half the config is unreadable (§6.8).
 
 | # | Signature | Returns | One-line description |
 |---|---|---|---|
-| 18 | `getRS(key: number)` | `Promise<{ dks1: number; dks2: number }>` | Read a key's RS config. |
-| 19 | `setRS(param: IRSMode)` | `Promise<any>` | Write a key's RS config (`{key, dks}`). |
+| 18 | `getRS(key: number)` | `Promise<{ dks1: number; dks2: number }>` | Read a key's RS config. **✅ verified**: `cmdRS(true, {key, dks: 0})` → `getRsData(reply)`. Note the read packs a **`dks: 0` placeholder** even though only `key` is used for a read. |
+| 19 | `setRS(param: IRSMode)` | `Promise<any>` | Write a key's RS config (`{key, dks}`). **✅ verified**: `cmdRS(false, param)` → returns the **decoded** reply (`getRsData`), not the raw send result. |
 
 The **only feature with both halves missing**. Asymmetric payload: write one `dks`, read back
 two (`dks1`, `dks2`) — §6.9.
@@ -3856,13 +4045,35 @@ updateBin(
 ): Promise<{ success: boolean }>
 ```
 
-Three traps if these are ever wired up (§9.3):
-1. `bin` must be an `ArrayBuffer`, **not** a `Uint8Array` — the controller takes the latter.
-2. `cb` is **required** on the façade but optional on `updateDrive`.
-3. The façade's callback type **drops `updateStatus?: string`**, so no phase label is available.
+**✅ Verified** (bundle + `index.d.ts`, batch 4c):
+- Facade defaults are `config = {toBootDelay: 4000, writeDelay: 30, toAppDelay: 4000}` (ms).
+- Facade **runtime-checks** `bin instanceof ArrayBuffer` and throws
+  `"Provided file is not an ArrayBuffer"` otherwise — then converts to `Uint8Array` and calls
+  `SystemController.updateDrive(u8, cb, config)` on a **fresh controller instance per call**
+  (state lives in statics, so that is safe).
+- Unlike almost every other facade method, `updateBin`/`toBoot` **rethrow** (`throw new
+  Error(e.message)`) rather than returning the `Error` — callers need try/catch, and the
+  original error type/stack is flattened.
+- `updateDrive` flow (bundle): `setUpgrading(true)` → `cb({current:0,total,updateStatus:'beforeToBoot'})`
+  → `toBoot()` → `'afterToBoot'` → wait `toBootDelay` → `'afterToBootDelay'` →
+  `setUpgradingAfterBoot(true)` → `init()`; if `init` returns `'toBootFirst'` it re-enumerates
+  devices (`getDevices()[0]`), re-inits, and re-reads base info → 30 ms wait → **throws
+  `"The keyboard is not in upgrade mode"` if `KeyboardRunMode === 0`** → zero-pads the bin to a
+  512-byte multiple → sign/erase/write/CRC phases using `BLControls` (`BL_SIGN`, `BL_ERASE`,
+  `BL_WRITE`, `BL_TOBOOT`, `BL_REBOOT`).
+- `cb` is invoked with **optional chaining** (`t?.(…)`), so it is genuinely optional on the
+  controller; only the facade *type* marks it required.
+- The `updateStatus` phase strings (`beforeToBoot`, `afterToBoot`, `beforeToBootDelay`,
+  `afterToBootDelay`, …) **are** passed at runtime; the facade's callback type just omits the
+  field. A cast/looser local type recovers them.
+
+Four traps if these are ever wired up (§9.3):
+1. `bin` must be an `ArrayBuffer`, **not** a `Uint8Array` — the facade throws; the controller takes the latter.
+2. `cb` is **required** on the façade type but optional at runtime (`t?.()`).
+3. The façade's callback type **drops `updateStatus?: string`**, though it is passed at runtime.
 4. `SystemController.resetUpgradeStatus()` — the only thing that clears the static
-   `isUpgrading*` flags after a failed flash — is **not exposed on `XDKeyboard`**. A failed
-   update can therefore leave reconnect handling permanently suppressed.
+   `isUpgrading*` flags after a failed flash — is **not exposed on `XDKeyboard`** (absent from
+   `index.d.ts`). A failed update can therefore leave reconnect handling permanently suppressed.
 
 ---
 

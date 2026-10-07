@@ -46,9 +46,9 @@ not the SDK).
 
 | Section | Status | Verified against | Batch | Notes |
 |---|---|---|---|---|
-| §1 Connection & lifecycle | Partial | `.d.ts`, compiled bundle | — | Types/signatures verbatim; singleton `DeviceBase` behaviour and `init` null-vs-Device divergence not hardware-tested |
+| §1 Connection & lifecycle | Verified | bundles (sdk-keyboard + hid) | 4b | ✅ batch 4b: `getDevices` may prompt (empty-list → `requestDevice` fallback); `init` returns `Device \| null` and never rejects (null on missing id/device/data or open failure — no handshake, no `baseInfo`); `on`/`off` normalization + handler storage; `reconnection` flow (close → 100 ms → re-tag → reopen, `isReconnecting` guard, errors logged not thrown, queues reset). Not hardware-tested but fully bundle-verified |
 | §2 Key mapping | Verified | `protocol-keyboard/src` + bundle | 4 | ✅ `setKey` returns filtered array via `getFnLayoutKeyRecdata` (not raw echo); `IKey` wire = 4 bytes `[key, layout, valueLE16]` no validation; `getLayoutKeyInfo` drops `key===0`/`layout===0xff`/`value===0xffff` entries; `deleteKey` writes `Layout_Mode` with `advancedKeyMode=0` only (doesn't clear DKS/TRPS/DB slots) |
-| §3 Device info & system | Verified | hardware + `protocol-keyboard/src` + bundle | 4 | Rate-index→Hz table app-verified on hardware; ✅ `getBaseInfo` shape from `getCmdSyncRecdata` (appVersion is a string; firewareSpaceSize/versionString mutually exclusive); ✅ `getApi` full return-union table incl. OrderType bytes (`currentSystem` is a string, not number); ✅ `switchConfig` range 0–3 from param.ts enum comment (`hasFourConfig` hard-coded true); ✅ `setTopDeadSwitch` = raw byte, boolean decode → on/off switch |
+| §3 Device info & system | Verified | hardware + `protocol-keyboard/src` + bundle | 4, 4b | Rate-index→Hz table app-verified on hardware; ✅ `getBaseInfo` shape from `getCmdSyncRecdata` (appVersion is a string; firewareSpaceSize/versionString mutually exclusive); ✅ `getApi` full return-union table incl. OrderType bytes (`currentSystem` is a string, not number); ✅ `switchConfig` range 0–3 from param.ts enum comment (`hasFourConfig` hard-coded true); ✅ `setTopDeadSwitch` = raw byte, boolean decode → on/off switch. Batch 4b: ✅ `AXOSOME`/`CURRENT_AXOSOME` rows reworded — 轴体 (axis-body/switch-module) semantics from param.ts comments, gamepad framing removed (id-to-meaning still `[unverified]`, see §5.7) |
 | §4 Calibration & travel matrix | Verified | src + bundle | 3 | ✅ `getRm6X21Travel` → `{status, travels}` and `getRm6X21Calibration` → `{travels, calibrations}` both confirmed in the bundle controller (façade-only aggregators; src has only `getRm6X21data`); decoder 0x03 → raw-byte chunks, 0x02/0x06 → 3×21 mm (÷1000) ✅; `RM6X21Pack` shape ✅ |
 | §5.1 Global travel / dead band | Verified | src + bundle | 3 | ✅ `IDB` decodes u16 LE ÷1000 → mm (recdata.ts); `setDB` scales ×1000 at the façade, open-src `cmdDB` expects raw µm ✅; mm ranges still device-reported via PRECISION_STROKE |
 | §5.2 Per-key touch mode | Verified | src + bundle, macro corroboration | 1, 3 | `Layout_Mode = (touchMode << 4) \| advancedKeyMode` ✅; `advancedKeyMode` id table verified; batch 3: `getLayoutModel` decode confirmed (high nibble → `touchMode` string via `KeyTouchMode`, low nibble → `advancedKeyMode` raw; unknown defaults to `"global"`) ✅ and `setPerformanceMode` returns the read-back object ✅ |
@@ -56,7 +56,7 @@ not the SDK).
 | §5.4 Rapid trigger | Verified | src + bundle | 3 | ✅ `getRtTravel` returns `{pressTravel, releaseTravel}` (two `cmdLayout` reads, `getRtTravelRecdata` ÷1000 mm); `setRtPressTravel` → `{pressTravel}`, `setRtReleaseTravel` → `{releaseTravel}`; write = `value*1000` on `Layout_RTP/RTR` ✅; mm ranges still `[unverified]` |
 | §5.5 DP / DR | Verified | src + bundle | 3 | ✅ `getDpDr` returns **two values** as `{pressDead, releaseDead}` (two `cmdLayout` reads, `getDpDrRecdata` ÷1000 mm) — not a single number; `setDp`/`setDr` write ×1000 and echo back a single number ✅; ranges still `[unverified]` |
 | §5.6 DKS / DB travel (per-layout) | Verified | src + bundle | 1, 3 | Batch 3: naming-trap note rewritten to match §6.1 — `getDksTravel` correctly reads DKS travel depths from `Layout_DB1`–3, and `getDksTravel` ≡ `getDbTravel` (byte-identical bundle impls) ✅; returns/echo shapes confirmed (`getDksTravelRecdata` ÷1000 mm); `value` mm ranges still `[unverified]` |
-| §5.7 Axis | Verified | src + bundle | 3 | ✅ `getAxis`/`setAxis` return `{axis: number}` — raw integer id, no ÷1000; `getAxisList` → `{hasAxisSetting: true, axisList: number[]}`, up to 8 BE u16 ids, `0xFFFF` sentinel, never returns `false` (recdata.ts:133); per-axis semantics still `[unverified]` |
+| §5.7 Axis | Verified | src + bundle + `src/` (app) | 3, 4b | ✅ `getAxis`/`setAxis` return `{axis: number}` — raw integer id, no ÷1000; `getAxisList` → `{hasAxisSetting: true, axisList: number[]}`, up to 8 BE u16 ids, `0xFFFF` sentinel, never returns `false` (recdata.ts:133). Batch 4b: ✅ "axis semantics" investigation — 轴体 = physical switch module per param.ts/performance.ts Chinese comments; zero `gamepad`/`joystick`/`analog` hits in src or any bundle; app renders no id labels (Debug page = raw JSON only). Id-to-meaning remains `[unverified]`; gamepad framing removed as unsupported |
 | §6.0 `v` firmware-version gate | Verified | src + bundle | 1 | ✅ Which setters actually forward `v` traced through the compiled call chain; gate table confirmed |
 | §6.1 DKS | Verified | src + bundle | 2 | ✅ `Layout_DKS1–4` are **key codes** (unscaled 16-bit), depths live in `Layout_DB1–3` (mm) — terminology unified; `getDks` default `'Layout_DKS1'` ✅ from the bundle; `getDksAll` → `{dks1..dks4}` ✅ (façade-only, 4 sequential reads); `setAdvancedKeys` is the **SDK's** `ExportController.importConfig` path, not app code ✅; array lengths caller-determined ✅. Remaining *(inferred)*: whether the firmware actually enforces the 4/4/3 slot convention |
 | §6.2 TRPS | Verified | src + bundle | 2 | ✅ `getTrps(key, type)` has **no default** for `type` — omitting it yields `KeyLayout[undefined]` and a garbage read (silent, not a throw); `getTrpsAll` → `{trps1..trps4}` ✅ from the bundle (façade-only, 4 sequential reads); `{trps}` is a raw unscaled integer ✅. Remaining `[unverified]`: what TRPS values mean semantically and their valid range |
@@ -69,19 +69,19 @@ not the SDK).
 | §6.9 RS | Verified | src + bundle | 2 | ✅ `RSModePack` → `[key, dks, dks, key]` (**one value duplicated**, `key` repeated as a terminator *(inferred)*); `getRsRecdata` → `{dks1, dks2}` reading **single bytes** at offsets 1–2 — so the 1-write/2-read asymmetry is a packer/decoder shape difference with byte-level correspondence, and **the two slots cannot be set independently**. RS is **byte-wide (0–255)** with no scaling, unlike every other advanced key ✅; **no `v` gate anywhere** ✅; `Layout_RS = 0x20` exists but is never used (RS bypasses `cmdLayout`) ✅; leftover `console.log` in both `cmdRS` and `getRsRecdata` ✅. Remaining `[unverified]`: what the byte means and whether the firmware treats offsets 1/2 as genuinely independent slots |
 | §7 Macros | Verified | `protocol-keyboard/src` + bundle | 4 | ✅ `MacroDataPack` per-action wire = `[keyCodeLE16, status<<24\|delay&0xffffff]` (delay is u24, top 4 bits = press/release prefix 1/8; src comment says "低12位" but mask is 24-bit); ✅ `MacroModePack` slot metadata = `[key, indexLE16, macroLen, mode, numLE16, delayLE24]`; ✅ `getMacro` returns full `{key,id,len,mode,num,delay}` decode (see §13.3); `MacroType.status` numeric-consumption confirmed consistent with §13.3 |
 | §8 Lighting | Partial | `protocol-keyboard/src` + bundle | 4 | Config shape and version gate confirmed; ✅ batch 4: `PRGBDatapack`/`SRGBDatapack` wire layout — speed/mode/luminance/sleepDelay/staticColor are raw bytes (0–255 wire range, no SDK clamp); ✅ `getPRGBRecdata` derives `type` from mode (0=static, 1–20=dynamic, >20=custom — the SDK's only mode-id documentation); ✅ `getSingleRGBRecdata` returns uppercase `{key,R,G,B}`; ✅ `setLightingSaturation` = `QUERY_LIGHT_FIX_RGB` 3-byte triplet `[0x44,…param,0xff,0xff]`; the `>= 1.0.9` `dynamicColorId` path remains unreachable through the façade (§8.5 unverified) |
-| §9 Export/import & firmware (intro) | Partial | `.d.ts` | — | Signatures verbatim only |
+| §9 Export/import & firmware (intro) | Verified | sdk-keyboard bundle | 4b | ✅ batch 4b: `exportConfig` default filename `"keyboard_config.json"`, AES encrypt/decrypt with hard-coded key + Blob download / sync throw; `importConfig` full flow traced (read → parse → decrypt → flat → validate → `setImportData`), rejects on read/parse/validate, `setMacro` not awaited |
 | §9.1 `KeyboardConfig` | Partial | `.d.ts` | — | Field list from declarations; which fields round-trip through hardware `[unverified]` |
 | §9.2 `ConfigValidator` | Verified | empirical import test | — | ✅ Confirmed unreachable — see §13.4 |
-| §9.3 Firmware update | Partial | `.d.ts`, bundle | — | Flow traced; `config?` delays `[unverified: no defaults declared]`; never run on hardware |
+| §9.3 Firmware update | Partial | sdk-keyboard bundle | 4b | ✅ batch 4b: `config` defaults `{ toBootDelay: 4000, writeDelay: 30, toAppDelay: 4000 }` read from bundle; full `updateDrive` flow traced (toBoot → re-init → run-mode check → 0xFF-pad to 512-multiple → sign/erase/write/CRC); bootloader bytes `KB2_BL_*` 0x08–0x0E confirmed in `constants/byte.ts`. Still Partial: never run on hardware |
 | §10.1 What each package exports | Verified | `package.json` + disk | — | ✅ `exports` maps and on-disk file presence checked |
 | §10.2 `constantsParam` | Verified | `constants/param.ts` | 1 | ✅ Enum values read from source |
 | §10.3 `constants/byte.d.ts` | Verified | disk + `exports` map | 1 | ✅ Confirmed NOT exported; contents documented for reference only |
-| §10.4 `types/interface.d.ts` | Partial | `.d.ts` | — | Interface names/fields verbatim; byte-level meaning of several fields `[unverified]` |
+| §10.4 `types/interface.d.ts` | Verified | `protocol-keyboard/src/types/interface.ts` | 4b | ✅ batch 4b: all 23 interfaces + field names/types/optionality compared 1:1 against src (ISOCDModeV2/V3 fields all `number` per §13.3); source comments (ranges, mode values) captured in §10.4. Byte-level meaning of individual fields still hardware-dependent |
 | §10.5 `protocol-keyboard` utils | Partial | disk | — | Confirmed NOT exported; util semantics partly *(inferred)* |
-| §10.6 `sdk-keyboard` internal helpers | Partial | `.d.ts`, bundle | — | Signatures verbatim; `blSignature`/CRC details not exercised |
-| §10.7 `hid` types & enums | Partial | `.d.ts` | — | `EVENT` string values verified; transport-level event leakage `[unverified]` |
-| §11.1 `DeviceBase` | Partial | `.d.ts` | — | Members verbatim; `isUpgrading` guard behaviour *(inferred)* from name |
-| §11.2 `WebHIDService` | Partial | `.d.ts` | — | Members verbatim; send/receive timing not measured |
+| §10.6 `sdk-keyboard` internal helpers | Partial | `.d.ts`, bundle | 4b | Signatures verbatim; ✅ batch 4b: `sdkMap` values read from bundle (128 getCmd, 163 getKey, 171 defKey, 152 getSpecialSingleRGB, 153 getLogoRGB) + input-report dispatch (byte[2] → handler, `data.slice(4)`) documented; `blSignature`/CRC details not exercised |
+| §10.7 `hid` types & enums | Verified | `.d.ts` + sdk bundle | 4b | `EVENT` string values verified; ✅ batch 4b: transport-event leakage through `XDKeyboard.on(name \| string)` confirmed in bundle — `DeviceBase.on` accepts any string, forwards `usbChange`/`deviceStatus`/`deviceInfo`/`error` and emits decoded reports under decimal keys |
+| §11.1 `DeviceBase` | Partial | `.d.ts` + sdk bundle | 4b | ✅ batch 4b: command-queue drain loop verified (serialised flush, `slice(4)` header strip except usagePage 0xFFB0, multi-response queue re-kicks single queue); `destroy()` only stops USB monitoring — does **not** clear queues (earlier claim corrected); input-report dispatch byte[2]→`sdkMap`. `isUpgrading` guard still *(inferred)* from name |
+| §11.2 `WebHIDService` | Partial | `.d.ts` + bundles | 4b | ✅ batch 4b: `devices()` requestDevice-fallback, `initAndConnectDevice` null paths, `reconnection` 100 ms close/re-tag/reopen sequence, `sendReportAndWaitResponse` signature verified; ⚠️ single-queue timeout/sendTime arg swap documented. Send/receive timing not measured on hardware |
 | §11.3 `UsbDetect` | Partial | `.d.ts`, disk | — | `generateStableId` private ✅; stable-id format `[unverified]` |
 | §11.4 Controller layer | Partial | `.d.ts` | — | Members not on `XDKeyboard` enumerated; behaviour not tested |
 | §12.1 Wrapped methods (54) | App-layer | `src/services/KeyboardService.ts` | — | Call-site list, verified against `src/`, not the SDK |
@@ -89,8 +89,8 @@ not the SDK).
 | §12.3 Wrapper → SDK mapping | App-layer | `src/services/KeyboardService.ts` (line-cited) | — | Every row verified against `src/`; the off-by-one traps are app-boundary facts, not SDK facts |
 | §13.1 `VersionString` dangling type | Verified | recursive grep, all three packages | 1 | ✅ Confirmed no declaration exists anywhere; root cause traced to broken `types` entries |
 | §13.2 No runtime range validation | Verified | bundle search | — | ✅ Searched for guards; none found |
-| §13.3 Shapes elided by the `.d.ts` | Partial | `.d.ts` vs src | 1 | Register confirmed ✅ and the **listed shapes were verified in Batch 1**. Still unverified: `sdkMap` id meanings, the SOCD `V1`/`V2` duplication, out-of-range `advancedKeyMode` values |
-| §13.4 Packaging defects | Verified | empirical Node import tests | — | ✅ Each claim tested by attempting the import and reading the error code |
+| §13.3 Shapes elided by the `.d.ts` | Partial | `.d.ts` vs src | 1, 4b | Register confirmed ✅ and the **listed shapes were verified in Batch 1**. Batch 4b: ✅ `sdkMap` dispatch mechanism resolved (input-report byte[2] → handler → re-emit; see §10.6). Still unverified: the SOCD `V1`/`V2` duplication, out-of-range `advancedKeyMode` values, why response bytes differ from `Protocol` command bytes |
+| §13.4 Packaging defects | Verified | empirical Node import tests | 4b | ✅ Each claim tested by attempting the import and reading the error code. Batch 4b: ✅ corrected the `byte.d.ts` bullet — `param.ts` uses the same `Layout_` prefix and is the exported file, so `byte.d.ts` is not the source of the exported string unions |
 | §13.5 Gaps closed after first pass | Verified | disk + bundle greps | — | ✅ `hidv2.js` absence and path-import failure both confirmed |
 | §13.6 Type-vs-runtime gap, generally | Partial | — | — | Interpretation built on §13.4/§13.5 evidence, not independently testable |
 | §13.7 How `src/` imports these types | Verified | `src/` (three sites cited) | — | ✅ Import sites and their failure modes confirmed |
@@ -145,16 +145,16 @@ getDevices: () => Promise<Device[]>
 | | |
 |---|---|
 | **Params** | none |
-| **Returns** | `Promise<Device[]>` — every already-granted HID device matching `DeviceInit`. Does **not** prompt. |
-| **Description** | Enumerates previously-permitted devices without a user gesture. |
+| **Returns** | `Promise<Device[]>` — devices from `navigator.hid.getDevices()` filtered by the `usage`/`usagePage` lists in `DeviceInit`. **May prompt** (bundle-verified): if the filtered list is empty, the hid package's `devices()` falls back to `requestDevice()` → `navigator.hid.requestDevice({ filters: configs })`, which opens the browser chooser. |
+| **Description** | Enumerates previously-permitted devices; falls back to the grant-prompt flow when nothing matches. ✅ verified in bundles (`DeviceBase.getDevices` → `WebHIDService.devices()`). |
 
-`Device`:
+`Device` (as built by `tagDevice` in the hid bundle):
 
 ```ts
 type Device = DeviceInfo & {
-  id: string;
+  id: string;                                    // device's own id, or a generated one
   productName: string;
-  data?: HIDDevice;                              // present once opened
+  data?: HIDDevice;                              // raw device, assigned at tagging time (before open)
   collections: ReadonlyArray<HIDCollectionInfo>;
 }
 ```
@@ -168,11 +168,10 @@ init: (id: string) => Promise<Device>
 | | |
 |---|---|
 | **Params** | `id: string` — the stable device id from `getDevices()` / a connect event. |
-| **Returns** | `Promise<Device>`. The underlying `DeviceBase.init` is typed `Promise<Device \| null>`; the `XDKeyboard` surface narrows it to `Device` **(type-level only — `null` is possible at runtime)** *[unverified]*. |
-| **Description** | Opens the device, runs the handshake (`SystemController.init()` → SN, run mode, address) and starts the command queue. |
+| **Returns** | `Promise<Device \| null>` — ✅ verified in bundles. The `XDKeyboard` facade forwards straight to `DeviceBase.init(id)`, which stores the id and calls `WebHIDService.initAndConnectDevice(id)`. That resolves `null` (never rejects) when: the id is falsy, no tagged device exists for that id, the tagged entry has no raw `data`, or `device.open()` fails (open failure is caught and logged, returning `null`). |
+| **Description** | Opens the already-known device and attaches the input-report listener. It does **not** run any handshake/SN/run-mode read and does **not** populate `baseInfo` — those come from separate calls (`getBaseInfo` etc.). |
 
-Throws / rejects if the device cannot be opened. This is the only path that populates the
-internal `baseInfo` used by later calls.
+Does **not** throw or reject on failure — callers must null-check the result.
 
 ### `on`
 
@@ -184,7 +183,7 @@ on: (eventName: EVENT | string, handler: EventHandler) => void
 |---|---|
 | **Params** | `eventName: EVENT \| string` — see the `EVENT` enum in §10.7. `handler: EventHandler` = `(...args: (object \| string \| number)[]) => void`. |
 | **Returns** | `void` |
-| **Description** | Subscribes to SDK events (input reports, USB change, config switch, touch flow). |
+| **Description** | Subscribes to SDK events. ✅ verified in bundles: throws `Error("Handler must be a function")` for a non-function handler; the event name is normalized (enum value → key) and handlers accumulate per event in a `Map`. |
 
 > **Not wrapped by this app.** `KeyboardService` registers raw
 > `navigator.hid.addEventListener('connect' \| 'disconnect', …)` instead and never calls
@@ -200,10 +199,12 @@ off: (eventName: EVENT | string) => void
 |---|---|
 | **Params** | `eventName: EVENT \| string` |
 | **Returns** | `void` |
-| **Description** | Removes **all** handlers for that event. |
+| **Description** | Removes **all** handlers for that event (name normalized through the `sdkMap` value→key lookup, same as `on`). ✅ bundle-verified. |
 
-Note the asymmetry: `DeviceBase.off(eventName, handler?)` accepts an optional single handler,
-but `XDKeyboard.off` drops the second parameter, so you cannot unsubscribe one listener only.
+Note the asymmetry: `DeviceBase.off(eventName, handler?)` accepts an optional single handler
+(bundle-verified: with a handler it splices just that listener out of the array and deletes the
+entry when empty; without one it deletes all), but `XDKeyboard.off` drops the second parameter,
+so at the facade you cannot unsubscribe one listener only.
 
 ### `reconnection`
 
@@ -215,10 +216,11 @@ reconnection: (device: HIDDevice, id: string) => Promise<void>
 |---|---|
 | **Params** | `device: HIDDevice` — the raw WebHID device from the `connect` event. `id: string` — its stable id. |
 | **Returns** | `Promise<void>` |
-| **Description** | Re-attaches the SDK to a device that dropped and reappeared, re-running the handshake without a full re-`init`. |
+| **Description** | Re-attaches the SDK to a device that dropped and reappeared. ✅ verified in bundles: `DeviceBase.reconnection(device, id, isUpgrading)` → `WebHIDService.reconnection` closes the device, waits 100 ms, re-tags the device under `id` in the `hidDevices` map, then reopens it (skipping `open()` if already opened) and re-attaches the input-report listener. No handshake/SN read is re-run. Guarded by an `isReconnecting` flag (concurrent calls warn and no-op); errors are caught and logged, not thrown. `DeviceBase.reconnection` then resets both command queues (`isFlushing = false`). |
 
-`DeviceBase.reconnection` additionally takes `isUpgrading?: boolean` to suppress reconnect
-churn during a firmware flash; that flag is **not** exposed on `XDKeyboard`.
+The third parameter `isUpgrading?: boolean` exists on `DeviceBase.reconnection` (when true, the
+passed device replaces the service's current device first) but is **not** exposed on `XDKeyboard`,
+which forwards only `(device, id)`.
 
 ---
 
@@ -380,8 +382,8 @@ The reply shape is selected by `data[1]` (the `OrderType` byte echoed back):
 | `PRECISION_STROKE` | 0x25 | `{ precision, decimalPlace, minTouchTravel, maxTouchTravel, VID, PID }` — µm values ÷1000 → mm; **`VID`/`PID` are always `0`** (declared but never assigned in src) |
 | `ROES` | 0x50 | `number` — polling-rate index (see `setRateOfReturn` below) |
 | `CONFIG` | 0x70 | `{ configID: number, hasFourConfig: true }` — `hasFourConfig` is hard-coded `true` |
-| `AXOSOME` | 0x76 | `{ hasAxisSetting: true, axisList: number[] }` — up to 8 ids, each u16 **big-endian**, list stops at the `0xffff` terminator |
-| `CURRENT_AXOSOME` | 0x75 | `number` — current axis id, u16 LE |
+| `AXOSOME` | 0x76 | `{ hasAxisSetting: true, axisList: number[] }` — up to 8 ids, each u16 **big-endian**, list stops at the `0xffff` terminator. The param.ts enum comment translates as *"query the axis-body (轴体) IDs the keyboard supports"* — 轴体 is the physical magnetic-switch module of a hall keyboard, **not** a gamepad axis (see §5.7 for the full evidence) |
+| `CURRENT_AXOSOME` | 0x75 | `number` — current axis id, u16 LE. Enum comment: *"the keyboard's current axis body (轴体), s_arg = [uint16,uint]"* |
 | `SET_WIN_MODEL` | 0x30 | `0` on success (`data[2] === 1`), otherwise `null` |
 | `SET_MAC_MODEL` | 0x31 | `1` on success, otherwise `null` |
 | `QUERY_WIN_MODEL` | 0x21 | `{ currentSystem: '' \| 'win' \| 'mac', hasWinMode: boolean }` |
@@ -920,7 +922,7 @@ getAxisList: () => Promise<any>
 |---|---|
 | **Params** | none |
 | **Returns** | `Promise<any>` — `{ hasAxisSetting: true, axisList: number[] }`. **✅ verified** (`getApi`'s `ORDER_TYPE_AXOSOME` branch, `recdata.ts:133`): reads up to **8 big-endian u16 ids** from the response, stops at the first `0xFFFF` sentinel. `hasAxisSetting` is always literally `true` when this branch runs — a device without axis support simply fails/doesn't take this path; it does **not** return `hasAxisSetting: false`. On failure resolves to the caught `Error`. |
-| **Description** | Reports whether the device supports analog axis output and which axis ids exist. |
+| **Description** | Reports which **axis-body (轴体) ids** the keyboard supports. See the semantics note below. |
 
 **Verified from the minified bundle:**
 `getAxisList = () => this.infoController.getApi({ type: "ORDER_TYPE_AXOSOME" })`.
@@ -936,7 +938,7 @@ getAxis: (key: number) => Promise<any>
 |---|---|
 | **Params** | `key: number` |
 | **Returns** | `Promise<{ axis: number }>` — **✅ verified** (`getAxisRecdata`, `recdata.ts:397`): reads `Layout_AXIS` via `cmdLayout`, returns `{ axis: (data[4] << 8) \| data[3] }`. The value is a **raw integer axis id** — no ÷1000 scaling. On failure resolves to the caught `Error`. |
-| **Description** | Reads which gamepad axis a key is bound to. |
+| **Description** | Reads the axis-body id stored on a key's `Layout_AXIS` slot. See the semantics note below. |
 
 Reads `KeyLayout.AXIS` (25).
 
@@ -950,9 +952,38 @@ setAxis: (key: number, value: number) => Promise<any>
 |---|---|
 | **Params** | `key: number`. `value: number` — axis id. **Range [unverified]**: must be a member of `axisList` from `getAxisList()`. **✅ verified** at the facade: written **raw** (no ×1000 scaling, unlike travel values) via `cmdLayout` on `Layout_AXIS`. |
 | **Returns** | `Promise<any>` — **✅ verified**: `{ axis: number }`, the written value echoed back through `getAxisRecdata`. On failure resolves to the caught `Error`. |
-| **Description** | Binds a key to a gamepad axis for analog output. |
+| **Description** | Writes an axis-body id onto a key's `Layout_AXIS` slot. See the semantics note below. |
 
 Related `OrderType`s: `CURRENT_AXOSOME` (117), `AXOSOME` (118).
+
+#### Axis semantics — what the ids mean **[id-to-meaning still unverified]**
+
+Earlier revisions of this doc framed these methods as "analog gamepad axis / controller
+emulation". That was an inference from the English naming (`AXOSOME` reads like "axis some",
+`getAxis` like a gamepad axis). Re-investigation (batch 4b) finds **no evidence for the gamepad
+framing**, and evidence against it:
+
+- **SDK comments say 轴体 (zhóutǐ, "axis body")**, the Chinese term for the *physical magnetic
+  switch module* of a hall-effect keyboard (the part you swap between linear/hall variants).
+  `param.ts:40-41`: `ORDER_TYPE_CURRENT_AXOSOME = 0x75, // 当前键盘的轴体，s_arg = [uint16,uint]`
+  ("the keyboard's current axis body") and `ORDER_TYPE_AXOSOME = 0x76, // 查询键盘支持的轴体ID`
+  ("query the axis-body IDs the keyboard supports"). `param.ts:71`:
+  `Layout_AXIS = 0x19, // 轴体切换层` ("axis-body switch layer"). The controller doc-comment for
+  `getAxis` (`performance.ts`) is `@desc 获取轴体` ("get axis body").
+- **No gamepad/analog HID mapping exists anywhere.** The strings `gamepad`, `joystick`, and
+  `analog` appear zero times in `protocol-keyboard/src` and in all three compiled bundles.
+  Nothing maps axis ids to named axes (LX/LY/RX/RY/triggers) or to any HID gamepad usage page.
+- **The app does not interpret the ids either.** `src/pages/Debug.vue` dumps `getAxis` /
+  `getAxisList` results as raw JSON only ("Axis Data" panel, `axisData: JSON.stringify(...)`);
+  there are no labels, dropdowns, or named-axis lists anywhere in `src/`. `LayoutCreator.vue`
+  merely persists `hasAxisSetting` as a boolean layout flag (`hasAxisList`); no page renders
+  individual ids. `KeyboardService.setAxis`/`getAxisList` are thin passthroughs.
+
+So: the ids are u16 opaque identifiers for switch-module types the keyboard supports; `AXOSOME`
+lists the supported ones (≤8, `0xFFFF`-terminated), `CURRENT_AXOSOME` reports the active one, and
+`Layout_AXIS` stores a per-key id. **What each numeric id corresponds to (which physical axis
+type / calibration curve) is not settled by any source — [unverified].** Do not present these as
+gamepad axes in UI copy without hardware confirmation.
 
 ---
 
@@ -2091,8 +2122,8 @@ exportConfig: (data: any, filename?: string) => void
 
 | | |
 |---|---|
-| **Params** | `data: any` — a `KeyboardConfig` object (§9.1). `filename?: string` — download name; SDK picks a default when omitted **[unverified]**. |
-| **Returns** | `void` — **synchronous signature**, but it delegates to `ExportController.exportEncryptedJSON(data, filename): Promise<void>`, so the returned promise is swallowed. Errors are unobservable at this layer. |
+| **Params** | `data: any` — a `KeyboardConfig` object (§9.1). `filename?: string` — download name. **Default ✅ verified (bundle): `"keyboard_config.json"`** — `exportConfig=(e,t="keyboard_config.json")=>…`. |
+| **Returns** | `void` — **synchronous signature**, and ✅ bundle-verified the delegate is sync too: `ExportController.exportEncryptedJSON(data, filename)` (the d.ts's `Promise<void>` is stale). Encryption/download failures surface as **synchronous throws** from the facade (`导出文件失败: …`), so wrap the call in try/catch — see §9.2. |
 | **Description** | Serialises and downloads the full keyboard config as **encrypted** JSON. |
 
 ### `importConfig`
@@ -2104,17 +2135,36 @@ importConfig: (file: File) => Promise<ImportResult>
 | | |
 |---|---|
 | **Params** | `file: File` — the browser `File` from an `<input type="file">`. |
-| **Returns** | `Promise<ImportResult>` = `{ success: boolean; error?: string }` |
+| **Returns** | `Promise<ImportResult>` = `{ success: boolean; error?: string }` — **but it can also reject** (bundle-verified): read/parse/validate failures reject with `Error` (Chinese messages: `读取文件失败` "file read failed", `解析文件失败: …` "parse failed", `配置验证失败` "config validation failed"). Only write-stage failures resolve `{ success: false, error }`. Callers must handle both. |
 | **Description** | Decrypts, validates and writes a config file to the device. |
 
 The **only** `XDKeyboard` method with a properly typed result rather than `any`.
 
-`ExportController.importEncryptedJSON(file: File): Promise<ImportResult>` runs, in order
-(from the private method names): `encryptData` → `validateKeyboardConfig` (via
-`ConfigValidator`) → `setImportData` → `setLighting` / `setMainLighting` / `setLogoLighting`
-→ `setKeyboards` → `setPerformance` → `setAdvancedKeys` → `setCustomKeys` → `setCustomLight`
-→ `setSystem` → `setMacro`. It tracks a public `success: boolean` field and holds an
-`advancedKeysSdkMap`.
+**Flow ✅ verified in the sdk-keyboard bundle** (`ExportController.importEncryptedJSON`):
+
+1. `FileReader.readAsText(file)`.
+2. `JSON.parse` the text; expect `{ data: <ciphertext> }`.
+3. **AES-decrypt** with CryptoJS (`CryptoJS.AES.decrypt(s.data, key)` → UTF-8 string) using a
+   hard-coded key `"fDPy6vvnpPsYm2T0g1bh"`; `JSON.parse` the plaintext into a `KeyboardConfig`.
+4. If `keyboards` is an array of arrays, `.flat()` it.
+5. Validate via `ConfigValidator.validateConfig` (`validateKeyboardConfig`); invalid → reject
+   `Error("配置验证失败")` (the validator's own error is only `console.error`d).
+6. `setImportData(config)` — resolves `{ success: true }`, or catches and resolves
+   `{ success: false, error }`. Actual write order: **`setKeyboards` → `setLighting` (main,
+   then logo) → `setSystem` → `setMacro`**. Note `setMacro` is fired **without `await`** —
+   `{ success: true }` can resolve before macros are written.
+   - `setKeyboards` iterates every key entry; per key it runs `setPerformance`,
+     `setCustomLight`, `setCustomKeys`, `setAdvancedKeys`, each with its own `.catch` so one
+     failure doesn't abort the rest (results collected via `Promise.allSettled` and logged).
+   - `setLighting` maps the serialised form to wire form (`staticColors`→`colors`,
+     `sleepTime`→`sleepDelay`, `dynamic`→`mode`, `superResponse: true` — §9.1 note).
+7. `ExportController` also tracks a public `success: boolean` field and holds an
+   `advancedKeysSdkMap`.
+
+`exportConfig` symmetric side (`exportEncryptedJSON`, bundle-verified): AES-**encrypts** the
+config with the same hard-coded key, wraps as `{ data: … }`, and triggers a Blob download via a
+transient `<a download>` element. Throws synchronously (`导出文件失败: …`) on failure — so at the
+`XDKeyboard` facade (which returns `void`) errors surface as sync throws, not swallowed promises.
 
 ### 9.1 `KeyboardConfig` — the export/import payload
 
@@ -2274,8 +2324,8 @@ updateBin: (
 
 | | |
 |---|---|
-| **Params** | `bin: ArrayBuffer` — firmware image; must be an `ArrayBuffer`, **not** a `Uint8Array` (the controller takes `Uint8Array`, `XDKeyboard` converts). `cb` — progress callback, `current`/`total` in bytes. `config?` — three delays in ms **[unverified: no defaults declared]**. |
-| **Returns** | `Promise<{ success: boolean }>` |
+| **Params** | `bin: ArrayBuffer` — firmware image; must be an `ArrayBuffer`, **not** a `Uint8Array` (the controller takes `Uint8Array`, `XDKeyboard` converts). `cb` — progress callback, `current`/`total` in bytes. `config?` — three delays in ms. **Defaults ✅ verified (bundle):** `{ toBootDelay: 4000, writeDelay: 30, toAppDelay: 4000 }`. |
+| **Returns** | `Promise<{ success: boolean }>` — but **rejects** (throws) on bad input: a non-`ArrayBuffer` `bin` throws `Error("Provided file is not an ArrayBuffer")`, and any controller error is re-thrown as `Error(e.message)` (bundle-verified). |
 | **Description** | Full firmware flash: to boot → sign → erase → write in 512-byte pages → CRC → back to app. |
 
 The controller signature is richer than the public one:
@@ -2292,6 +2342,14 @@ SystemController.updateDrive(
 - The controller's callback also receives `updateStatus?: string` — a human-readable phase
   label. **`XDKeyboard.updateBin` narrows the callback type and drops `updateStatus`**, so you
   cannot see the phase through the public API.
+- Controller flow ✅ verified in the bundle: sets `UsbDetect.setUpgrading(true)` → emits
+  `beforeToBoot`/`afterToBoot`/`beforeToBootDelay`/`afterToBootDelay` statuses around
+  `toBoot()` + the `toBootDelay` wait → re-`init()`s (if the device re-enumerates as
+  `"toBootFirst"`, it re-inits the first device from `getDevices()`) → checks
+  `KeyboardRunMode !== 0` and throws `"The keyboard is not in upgrade mode"` otherwise →
+  **pads the image to a multiple of 512 bytes with `0xFF`** → `updateStart` (sign unlock →
+  erase → write → CRC → to app, with small 10–100 ms inter-command waits). Signature failures
+  throw `烧录异常：解锁erase签名失败` / `…write签名失败`.
 
 Also on `SystemController` but **not exposed on `XDKeyboard`**:
 
@@ -2322,8 +2380,10 @@ getCrc(data): number
 interface IWriteParam { addr: number; size: number; codes: number[] }
 ```
 
-Bootloader command bytes: `KB2_BL_SIGN = 8`, `KB2_BL_ERASE = 9`, `KB2_BL_REBOOT = 10`,
-`KB2_BL_TOAPP = 11`, `KB2_BL_WRITE = 12`, `KB2_BL_READ = 13`, `KB2_BL_RCRC = 14`.
+Bootloader command bytes (✅ verified, `constants/byte.ts:25-31`): `KB2_BL_SIGN = 0x08` (签名),
+`KB2_BL_ERASE = 0x09` (擦除), `KB2_BL_REBOOT = 0x0A` (重启), `KB2_BL_TOAPP = 0x0B` (跳转到app),
+`KB2_BL_WRITE = 0x0C` (写指令), `KB2_BL_READ = 0x0D` (读指令), `KB2_BL_RCRC = 0x0E` (获取校验).
+The `BLControls` enum above is a separate, unrelated set of values (`0x00`–`0x06`).
 
 > **Neither `updateBin` nor `toBoot` is wrapped by this app.**
 
@@ -2545,7 +2605,11 @@ only `param.d.ts` is importable, so in practice every `Layout_*` you can actuall
 
 ### 10.4 `types/interface.d.ts` — protocol interfaces
 
-All exported from the package root.
+All exported from the package root. **✅ verified field-by-field against
+`protocol-keyboard/src/types/interface.ts`** — everything below matches (names, types,
+optionality). Source comments worth keeping: `IDB.globalTouchTravel` is ranged `0x01 ~ 0xFA0`
+(1–4000); `ILightMode.mode` is `0` off, `1-20` effects, `21` custom; `IKRGBDesc.key` assumes
+a length-7 colour array follows.
 
 ```ts
 interface IDefKeyInfo { keyValue: number; location: { row: number; col: number } }
@@ -2588,8 +2652,8 @@ interface IMTMode   { key: number; dks: number[]; delay: number }
 interface ITGLMode  { key: number; dks?: number; delay?: number }
 interface IEndMode  { key: number; dks?: number; delay?: number }
 interface ISOCDMode { key?: number; dks1?: number; mode1?: number; mode2?: number }
-interface ISOCDModeV2 { pos1; pos2; key1; key2; type; mode }        // field types unannotated
-interface ISOCDModeV3 { pos1; pos2; key1; key2; type; mode; delay } // field types unannotated
+interface ISOCDModeV2 { pos1: number; pos2: number; key1: number; key2: number; type: number; mode: number }
+interface ISOCDModeV3 { pos1: number; pos2: number; key1: number; key2: number; type: number; mode: number; delay: number }
 interface IRSMode   { key: number; dks: number }
 interface IMacroMode { key: number; index: number; len: number; mode: number; num: number; delay: number }
 interface IRM6X21Mode { matrix6x21: number; datatype: number }
@@ -2677,10 +2741,30 @@ declare const inputReportRecData: (eventName: string, data: Uint8Array) => any;
 declare const sdkMap: { '128': string; '163': string; '171': string; '152': string; '153': string };
 ```
 
-`sdkMap` keys are decimal command bytes as strings: `128`, `163`, `171`, `152`, `153` — these
-do **not** correspond to any `Protocol` value in §10.3, so they are input-report event ids
-rather than command bytes **[unverified]**. The shipped `.d.ts` types every value as bare
-`string` and does not reveal them.
+`sdkMap` keys are decimal command bytes as strings. **Values ✅ verified (bundle, confirmed in
+§13.3):**
+
+| key (dec) | hex | value |
+|---|---|---|
+| `128` | 0x80 | `"getCmd"` |
+| `163` | 0xA3 | `"getKey"` |
+| `171` | 0xAB | `"defKey"` |
+| `152` | 0x98 | `"getSpecialSingleRGB"` |
+| `153` | 0x99 | `"getLogoRGB"` |
+
+These are **incoming response-byte ids used to route input reports to recdata handlers**.
+Bundle-verified dispatch (`DeviceBase`'s `inputReport` listener): `const key =
+new Uint8Array(data.buffer)[2].toString()` — the **byte at offset 2** of every input report, as
+a decimal string — is looked up in `sdkMap`; the matching handler decodes the payload:
+`{ getCmd: e => infoProtocol.getCmd(e), getKey: e => keyProtocol.getDefKey(e), defKey: e =>
+keyProtocol.getDefKey(e), getSpecialSingleRGB: e => lightingProtocol.getSpecialSingleRGB(e),
+getLogoRGB: e => lightingProtocol.getPRGB(e) }`, each called with `data.slice(4)`. The decoded
+result is then re-emitted as a `DeviceBase` event **named with the same decimal string**
+(`emit("128", decoded)`, …), and `DeviceBase.on` maps a subscription name through `sdkMap`
+value→key, so `kb.on('getCmd', h)` registers under `"128"` and receives the decoded value.
+They do **not** match any `Protocol` enum value in §10.3 (those are 0–49 and 255); the
+relationship between response byte and request command byte is not visible in the sources
+**[unverified]**. The shipped `.d.ts` types every value as bare `string` and does not reveal them.
 
 ### 10.7 `hid` types & enums
 
@@ -2848,11 +2932,20 @@ Note `src/types/type.d.ts` declares a **second, poorer** `CommandQueueEntry` wit
 `sendTime`/`timeout`/`expectedResponses`. The `device/index.d.ts` version is the one actually
 used.
 
-Consequences for app code:
-- Calls are **serialised**, never concurrent. Firing 100 per-key writes queues 100 round trips.
+Consequences for app code (✅ verified against the sdk-keyboard bundle):
+- Calls are **serialised**, never concurrent. `flushQueue()` loops the queue one entry at a
+  time: function args are awaited directly; byte-array args go through
+  `hidService.sendReportAndWaitResponse(args, timeout, sendTime)`. On success the response is
+  `new Uint8Array(buf)` when `deviceUsagePage === 65456` (0xFFB0), otherwise
+  `new Uint8Array(buf).slice(4)` — i.e. the usual 0xFFA0 interface strips a 4-byte header
+  before the recdata decoders ever see it.
+- The multi-response queue's `finally` block also re-kicks `flushQueue()` if the single queue
+  still has entries — the two queues interleave at drain time.
 - A rejected/timed-out entry blocks nothing but produces an unhandled rejection unless awaited.
-- `destroy()` exists and clears the queue — it is **not** exposed on `XDKeyboard`, so the app
-  has no supported way to tear down a connection.
+- `destroy()` exists but — contrary to an earlier note — it **does not clear the command
+  queue**: the bundle shows it only calls `UsbDetect.stopMonitoring()` (sets the monitoring
+  flag false). It is **not** exposed on `XDKeyboard`, so the app has no supported way to tear
+  down a connection.
 - `requestDevice()` is **not** exposed on `XDKeyboard` either. This repo calls
   `navigator.hid.requestDevice({ filters: [] })` directly instead, which is why it must manage
   `pairedStableId` itself.
@@ -2912,12 +3005,27 @@ class WebHIDService extends EventEmitter {
 `WebHIDService.Events` (`'deviceStatus'`, `'deviceInfo'`, `'inputReport'`, `'error'`) are
 **transport-level** and are *not* the same strings as the `EVENT` enum in §10.7
 (`'GETDEVICEINFO'`, `'INPUTREPORT'`, `'usbChange'`, …). `XDKeyboard.on` takes `EVENT | string`;
-`WebHIDService.on` takes `keyof EventData`. The `| string` on `XDKeyboard.on` is what lets
-transport events leak through untyped **[unverified]**.
+`WebHIDService.on` takes `keyof EventData`. ✅ verified in the sdk bundle: the `| string`
+escape hatch is real — `DeviceBase.on(name, handler)` stores handlers under *any* string key
+(normalized through `sdkMap` value→key lookup), and `DeviceBase` re-emits the transport events
+`'usbChange'`, `'deviceStatus'`, `'deviceInfo'`, `'error'` (forwarded from `WebHIDService`) plus
+the decimal `sdkMap` keys (`'128'`…`'153'`) for decoded input reports. So
+`kb.on('usbChange', h)` and `kb.on('getCmd', h)` both work untyped at the `XDKeyboard` facade.
 
 Also note `WebHIDService.reconnection` returns `Promise<boolean>` while
 `DeviceBase.reconnection` and `XDKeyboard.reconnection` both return `Promise<void>` — the
 success flag is discarded on the way up.
+
+⚠️ **Bundle-observed arg swap (single queue only).** In `DeviceBase.flushQueue`, the single
+queue calls `sendReportAndWaitResponse(args, n, s)` where `n` is the entry's `timeout` and `s`
+is its `sendTime` — but the hid signature is `(data, sendTime, timeout = 1000)`, so timeout and
+sendTime arrive transposed: the wait timeout becomes the `Date.now()` enqueue timestamp
+(effectively no timeout), and the caller's timeout value lands in `sendTime`. The
+multiple-response path (`sendReportAndWaitMultipleResponses(args, sendTime, timeout,
+expectedResponses)`) passes them in the **correct** order. Practical impact looks small —
+`sendTime` only gates stale-response filtering in `waitForResponse` — but it means
+**per-call timeouts on single-response commands are not enforced at the transport layer**
+(the queue entry's timeout is still used for the `flushQueue` retry bookkeeping).
 
 `requestDevice(): Promise<HIDDevice | null | Error>` resolves an `Error` **as a value** rather
 than rejecting. Callers must test `instanceof Error`, not just truthiness.
@@ -3288,8 +3396,10 @@ Further defects:
   path that does not exist: the package root contains only `dist/` and `package.json`, no
   `src/`.)
 - `constants/byte.d.ts` declares a **conflicting duplicate** `KeyLayout` and `KeyTouchMode`
-  (§10.3). Not exported, so it cannot collide at the type level — but it is the source of the
-  `Layout_DKS1`-style string unions the SDK does export.
+  (§10.3). Not exported, so it cannot collide at the type level — and it is *not* the source of
+  the `Layout_DKS1`-style string unions the SDK exports: `constants/param.ts` uses the same
+  `Layout_`-prefixed spelling (§10.3), and param.ts is the file the package actually exports
+  (`export * as constantsParam from './src/constants/param'`).
 - `sdk-keyboard/src/types/type.d.ts` declares a **second, poorer** `CommandQueueEntry` that
   omits `sendTime`, `timeout` and `expectedResponses` (§11.1).
 

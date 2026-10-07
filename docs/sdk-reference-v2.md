@@ -976,6 +976,14 @@ assuming 16-bit hi/lo pairs.
 Four independent actuation points per key, so one physical press can emit up to four different
 key codes at four different depths.
 
+> **Terminology settled (item 3).** Three places in this section previously disagreed about what a
+> `Layout_DKS1`–`DKS4` value *is* ("key codes at depths" in the intro, "actuation **points**" in the
+> slot table, "actuation **depth**" under `getDks`). The source settles it: those slots hold **raw,
+> unscaled 16-bit integers that are *not* travel values**, and the travel depths live elsewhere — in
+> `Layout_DB1`–`DB3`, in mm (÷1000 on the wire). So "actuation depth" is **wrong** for `getDks`;
+> "point"/"code" is right. Every mention below now says **key code**, with the depth-vs-code split
+> called out explicitly. See the evidence note under the slot table.
+
 > **Evidence source.** Unlike `sdk-keyboard`, the `protocol-keyboard` package ships **readable
 > TypeScript source** at `node_modules/@sparklinkplayjoy/protocol-keyboard/src/` — notably
 > `utils/recdata.ts` (decoders), `utils/pack.ts` (packers), `utils/decimal.ts` (`preciseCalculate`,
@@ -990,9 +998,21 @@ own unit and its own reader. The enum values are verified from `constants/param.
 
 | Slot group | Enum values | Holds | Read with | Decoder (verified) | Returns |
 |---|---|---|---|---|---|
-| `Layout_DKS1`–`Layout_DKS4` | `0x09`–`0x0C` (9–12) | The four actuation **points** — raw integers off the wire, *not* divided by anything | `getDks` / `getDksAll` | `getDksRecdata(data)` → `{ dks: (data[4]<<8) \| data[3] }` | raw `number` |
+| `Layout_DKS1`–`Layout_DKS4` | `0x09`–`0x0C` (9–12) | The four **key codes** — raw 16-bit integers off the wire, *not* divided by anything; **not** depths | `getDks` / `getDksAll` | `getDksRecdata(data)` → `{ dks: (data[4]<<8) \| data[3] }` | raw `number` |
 | `Layout_TRPS1`–`Layout_TRPS4` | `0x0D`–`0x10` (13–16) | The four TRPS values — raw integers | `getTrps` / `getTrpsAll` | `getTrpsRecdata(data)` → `{ trps: (data[4]<<8) \| data[3] }` | raw `number` |
 | `Layout_DB1`–`Layout_DB3` | `0x05`–`0x07` (5–7) | **Travel depths in mm** | `getDksTravel` / `getDbTravel` | `getDksTravelRecdata(data)` → `preciseCalculate('divide', (data[4]<<8) \| data[3], 1000)` | **`number`** in mm, 3 d.p. |
+
+> **Evidence for "key codes, not depths" — ✅ verified.** Neither the decoder nor the packer applies
+> any scale to the `Layout_DKS*` values:
+> `getDksRecdata(data)` returns `{ dks: (data[4]<<8) | data[3] }` — a bare 16-bit little-endian
+> integer, with no `/1000` and no `preciseCalculate` call, unlike `getDksTravelRecdata` directly
+> above it (`preciseCalculate('divide', value, 1000)` → mm).
+> On the write side, `DKSDataPack(param, v='1.0.5')` (`utils/pack.ts:153`) emits
+> `[key, ...computeHighLowByte(dks[i]), ...trps, ...computeHighLowByte(dbs[i])]` for `v === '1.0.5'`
+> (and `[key, ...dks, ...trps, ...dbbits]` otherwise): the `dks` entries are split into hi/lo bytes
+> **verbatim**, while only `dbs` goes through the mm→raw scaling path. A value that were a travel
+> depth in mm would need the `/1000` decode and the `*1000` encode; the DKS slots have neither, so
+> they carry key codes, and the depths live exclusively in `Layout_DB1`–`DB3`.
 
 On the DB row's return type specifically: `preciseCalculate` is declared `=> number` and ends with
 `return Number(result.toFixed(precision))` where `precision` defaults to `3` (`utils/decimal.ts`,

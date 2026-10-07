@@ -909,7 +909,7 @@ the controller layer types it `VersionString`, which **has no declaration anywhe
 packages** — see §13.1. Gating uses `compareVersions(v, 'x.y.z')` and treats `'greater'`/`'equal'`
 as "new enough".
 
-**There are two layers, and they disagree.** App code (including `advancedKeysSdkMap`) calls the
+**There are two layers, and they disagree.** App code calls the
 public `XDKeyboard` **facade**; the facade delegates to `HigherKeyController` / `LightingController`,
 which call the `cmd*` builders, which call the packers. `v` must survive **every** hop to reach a
 packer — and in most cases it does not.
@@ -1027,10 +1027,13 @@ also places `Layout_MacroAddr` (`0x11`), `Layout_MacroSize` (`0x12`), `Layout_MT
 `Layout_RTP/RTR/DP/DR/KR` (`0x14`–`0x18`), `Layout_AXIS` (`0x19`) and `Layout_RS` (`0x20`) in the
 same enum, so the DKS slots are not the whole address space.
 
-**Array lengths remain *(unverified)*** — `IDKSMode` declares `dks`, `trps` and `dbs` as bare
-`number[]` in `types/interface.ts` with no length constraint, and `DKSDataPack` loops over
-`dbs.length` / `dks.length` rather than a constant. The `4 / 4 / 3` shape below is inferred from the
-slot groups, not declared.
+**Array lengths are caller-determined — ✅ verified** (this reconciles an earlier *(unverified)*
+marker here): `IDKSMode` declares `dks`, `trps` and `dbs` as bare `number[]` in
+`types/interface.ts` with no length constraint, and `DKSDataPack` loops over `dks.length` /
+`trps.length` / `dbs.length` rather than a constant. The `4 / 4 / 3` shape described below is a
+**convention that mirrors the slot groups** (`Layout_DKS1–4`, `Layout_TRPS1–4`, `Layout_DB1–3`) —
+it is what the firmware slots can hold, not a length the packer or the type enforces. See the
+verified note under `setDks`.
 
 #### `setDks`
 
@@ -1059,21 +1062,25 @@ no `KeyLayout` slot directly — see §5.2). Global enable/disable: `OrderType.O
 `CLOSE_DKS` (6) via `getApi`.
 
 > **Array lengths are caller-determined, not fixed — ✅ verified.** `DKSDataPack` loops
-> `dks.length` / `trps.length` / `dbs.length`; nothing constrains them to 4 / 4 / 3. In this app's
-> own import path, `setAdvancedKeys` builds the DKS payload as
+> `dks.length` / `trps.length` / `dbs.length`; nothing constrains them to 4 / 4 / 3. In the **SDK's**
+> own import path — `ExportController.importConfig` calls `setAdvancedKeys` (this is SDK code, not
+> this app's) — the DKS payload is built as
 > `dks = getValues(cfg.dks)`, `trps = getValues(cfg.trps)` (`getValues` = `Object.entries(x).map(e => e[1])`,
 > i.e. flatten an object's values into an array — so the caller's `dks`/`trps` are keyed objects, and
 > their length is however many entries they carry), and
 > **`dbs = [1000 * cfg.db, 1000 * cfg.db2]` — exactly 2 values** (from the `db` and `db2` fields,
-> scaled ×1000 to the firmware's integer units). So a `setDks` write populates `Layout_DB1` and
-> `Layout_DB2` but **not** `Layout_DB3`, even though `getDksTravel`/`getDbTravel` can read all three
-> DB slots (§5.6). Reading `Layout_DB3` after such a write returns whatever the firmware last held
-> there, not a value this app wrote.
+> scaled ×1000 to the firmware's integer units). So an import via `setAdvancedKeys` populates
+> `Layout_DB1` and `Layout_DB2` but **not** `Layout_DB3`, even though `getDksTravel`/`getDbTravel`
+> can read all three DB slots (§5.6). Reading `Layout_DB3` after such an import returns whatever the
+> firmware last held there, not a value the import wrote.
 
 > **Naming inconsistency (verbatim from the SDK).** `XDKeyboard` exposes `setDks` (lowercase
 > `ks`), but `HigherKeyController`'s method is `setDKS`. Both spellings exist.
 
-> **Wrapped by this app** via `setAdvancedKeys` (`advancedType === 'dks'`), not called directly.
+> **Not wrapped by this app.** The app never calls `setDks`. `setAdvancedKeys`
+> (`advancedType === 'dks'`) is the **SDK's** import path (`ExportController.importConfig` inside
+> `sdk-keyboard`), not app code. The app only touches DKS data via `getDks` (read) and
+> `getDksTravel`/`setDksTravel` (per-slot DB travel, §5.6).
 
 #### Write/read asymmetry (reconciles §5.2, §5.6 and the slot table)
 
@@ -1347,7 +1354,6 @@ interface IRSMode { key: number; dks: number }
 
 Note the asymmetry: you write **one** `dks`, you read back **two** (`dks1`, `dks2`).
 Command byte `KB2_CMD_RS = 45`; `KeyLayout.RS = 32`; packed by `RSModePack`.
-`OrderType.ROES = 80`.
 
 > **Neither `getRS` nor `setRS` is wrapped by this app.**
 

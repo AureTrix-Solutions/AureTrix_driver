@@ -1249,20 +1249,63 @@ setMpt: (param: IMPTMode) => Promise<any>
 ```ts
 interface IMPTMode {
   key: number;
-  dks?: number[];    // [unverified] actuation depths
-  dbs?: number[];    // [unverified] dead bands
+  dks?: number[];    // key codes — raw 16-bit integers, written unscaled (✅ verified)
+  dbs?: number[];    // depths in **mm** — written ×1000 to integer wire units, read ÷1000 (✅ verified)
 }
 ```
 
 | | `getMpt` | `setMpt` |
 |---|---|---|
 | **Params** | `key: number` | `param: IMPTMode` |
-| **Returns** | `Promise<{ dks: number[]; dbs: number[] }>` *(from `getMptData`)* | `Promise<any>` |
+| **Returns** | `Promise<{ dks: number[]; dbs: number[] }>` — **always exactly 3 + 3 entries** (✅ verified, see below) | `Promise<{ dks: number[]; dbs: number[] }>` — the controller decodes the device's read-back with the *same* `getMptRecdata`, so a successful write returns the newly-stored config, not an ack |
 | **Description** | Reads a key's MPT config. | Writes a key's MPT config. |
 
+**Field semantics — ✅ verified from the packer/decoder.** `MPTDataPack(param)` (`utils/pack.ts:170`,
+under the `// 高级键` = *"advanced keys"* header) is version-independent — it takes **no `v`**
+parameter at all, so there is no gate to worry about:
+
+```ts
+for (let i = 0; i < dks.length; i++) dksbits.push(...computeHighLowByte(dks[i]));                    // unscaled
+for (let i = 0; i < dbs.length; i++) dbbits.push(...computeHighLowByte(preciseCalculate('multiply', dbs[i], 1000)));
+return [key, ...dksbits, ...dbbits];
+```
+
+- **`dks[]` = key codes**, each split into hi/lo bytes **verbatim** — no scaling, so they are plain
+  16-bit code values (the same convention as `IDKSMode.dks` in §6.1).
+- **`dbs[]` = depths in millimetres** on the app side, multiplied by 1000 to integer wire units and
+  then split hi/lo. The decoder reverses exactly this:
+  `preciseCalculate('divide', dbN, 1000)` → mm. The previous `// [unverified] actuation depths` and
+  `// [unverified] dead bands` comments in this file were both wrong — `dks` is not a depth and `dbs`
+  is not a unitless "band"; the ×1000/÷1000 pair is what makes `dbs` a millimetre quantity. (The
+  `db` naming matches the `Layout_DB*` depth slots of §6.1; whether MPT's three depths are
+  semantically "dead bands" or plain actuation depths is *(inferred)* — the source only fixes the
+  scale, not the meaning.)
+
+**Wire layout — ✅ verified.**
+
+Write payload (one byte per element of the array shown): `[key, dks1_hi, dks1_lo, …, dbs1_hi, dbs1_lo, …]`
+
+Read decode, `getMptRecdata(data)` (`utils/recdata.ts:417`) — **hardcoded to three of each**:
+
+```ts
+const dks1 = (data[3] << 8) | data[2];   const dks2 = (data[5] << 8) | data[4];   const dks3 = (data[7] << 8) | data[6];
+const db1  = (data[9] << 8) | data[8];   const db2  = (data[11] << 8) | data[10]; const db3  = (data[13] << 8) | data[12];
+return { dks: [dks1, dks2, dks3], dbs: [db1/1000, db2/1000, db3/1000] };  // via preciseCalculate
+```
+
+so `data[0]` is the command/status byte, `data[1]` the key, bytes 2–7 the three key codes and bytes
+8–13 the three depths. `dbs` comes back in **mm** (float, 3 decimals), `dks` as raw integers.
+
+**Read/write length asymmetry — ✅ verified.** The packer loops `dks.length` / `dbs.length`, so a
+write may carry any number of entries; the decoder ignores length entirely and always returns
+`3 + 3`. Writing 2 entries still reads back 3 slots — the third returns whatever the firmware last
+held there. There is no `getMptAll`, no per-slot `type` parameter and no `Layout_MPT*` enum: MPT
+uses its own command (`cmdMPT`) rather than the `cmdLayout` slot mechanism DKS/TRPS use.
+
 Command byte `KB2_CMD_MPT = 39`; packed by `MPTDataPack`. Internally
-`HigherKeyController.setMPT(param, v?: string)` accepts the version gate, but
-**`XDKeyboard.setMpt` does not expose `v`**.
+`HigherKeyController.setMPT(param, v = '1.0.5')` *declares* the version gate (and the bundle even
+leaves a stray `console.log("data", r)` in it), but **`XDKeyboard.setMpt` does not expose `v`** and
+`MPTDataPack` never receives one — so the gate is inert for MPT.
 
 > **`setMpt` is not wrapped by this app** (`getMpt` is). Note the capitalisation split again:
 > `XDKeyboard.getMpt`/`setMpt` vs controller `getMPT`/`setMPT`.
@@ -1277,20 +1320,70 @@ setMT: (param: IMTMode) => Promise<any>
 ```ts
 interface IMTMode {
   key: number;
-  dks: number[];    // required — [unverified] the tap/hold key codes or depths
-  delay: number;    // hold threshold, ms [unverified]
+  dks: number[];    // key codes (16-bit, hi/lo split, unscaled) — ✅ verified
+  delay: number;    // hold threshold, written as ONE raw byte — units still *(unverified)*
 }
 ```
 
 | | `getMT` | `setMT` |
 |---|---|---|
 | **Params** | `key: number` | `param: IMTMode` |
-| **Returns** | `Promise<any>` — the controller decoder is `getMtRecdata(data): Uint8Array`, so MT reads come back as **raw bytes**, not a parsed object *[inferred]* | `Promise<any>` |
-| **Description** | Reads a key's mod-tap config. | Writes a key's mod-tap config. |
+| **Returns** | `Promise<{ dks1: number; dks2: number; dks3: number; dks4: number }>` — **✅ verified in the bundle**, and **the delay is not returned** | `Promise<Uint8Array>` — **raw bytes**, not a parsed object (see below) |
+| **Description** | Reads a key's four mod-tap key codes. | Writes a key's mod-tap config. |
+
+**The two layers disagree here — ✅ verified.** `protocol-keyboard`'s `HigherKeyController.getMtRecdata`
+delegates to `getMTRecdata(data)`, which is an **identity function** (`return data`) — so at that layer
+an MT read yields the untouched `Uint8Array`. `sdk-keyboard` ships its **own** `HigherKeyController`
+with a different `getMT` that never uses that decoder:
+
+```js
+async getMT(key) {                                   // Layout_DKS1..DKS4
+  const cmd1 = cmdLayout(true, { key, layout: Layout_DKS1 });   // …and cmd2/cmd3/cmd4 for DKS2..4
+  const r1 = await this.deviceBase.sendData(cmd1);              // sequential, not parallel
+  const r2 = await this.deviceBase.sendData(cmd2);
+  const r3 = await this.deviceBase.sendData(cmd3);
+  const r4 = await this.deviceBase.sendData(cmd4);
+  const [s, u, l, h] = [getDks(r1), getDks(r2), getDks(r3), getDks(r4)];  // getDksRecdata → { dks }
+  return { dks1: s.dks, dks2: u.dks, dks3: l.dks, dks4: h.dks };
+}
+```
+
+Since the façade (`XDKeyboard.getMT = e => this.higherKeyController.getMT(e)`) delegates to
+`sdk-keyboard`'s controller, **the app sees the parsed `{dks1…dks4}` object**, and the bundle wins.
+
+Two consequences worth internalising:
+
+1. **MT's four key codes live in `Layout_DKS1`–`DKS4` (enum 9–12)** — the *same slots* DKS uses
+   (§6.1). MT is not a separate storage region; it is a different interpretation of the DKS slots
+   selected by `advancedKeyMode === 3`. Reads are therefore **four sequential HID round-trips**
+   (awaited one after another, not `Promise.all`), identical in cost to `getDksAll`.
+2. **`getMT` never reads the delay.** The delay lives in `Layout_MTDelay` (enum 19) and is reachable
+   only via **`getMtorTgl`** (§6.3), which returns it in ms (`raw * 10`). So a full MT state requires
+   two calls: `getMT(key)` + `getMtorTgl(key)`. This is exactly why `getMtorTgl` exists as a separate
+   probe, and it confirms §6.3's correction — it is a *delay* reader, not a mode discriminator.
+
+**Write shape — ✅ verified.** `MTDataPack(param, v = '1.0.5')` (`utils/pack.ts:183`):
+
+```ts
+if (v === '1.0.5') { dks.forEach(d => dbbits.push(...computeHighLowByte(d))); return [key, ...dbbits, delay]; }
+return [key, ...dks, delay];   // single-byte dks path — unreachable, see below
+```
+
+- `dks` entries are 16-bit key codes split hi/lo, **unscaled** (same convention as `DKSDataPack`).
+- `delay` is appended as **one raw byte** — no `/10` (unlike TGL), no `*1000` (unlike MPT/DB), so its
+  unit is whatever the firmware assumes for a 0–255 counter. **Unit remains *(unverified)***; nothing
+  in the source names it, and there is no matching decode to invert (the read side is the identity
+  function at the protocol layer and ignores delay entirely at the sdk layer). Do not assume ms.
+
+**The `v` gate is dead for MT — ✅ verified, at both layers.** `XDKeyboard.setMT = e => …setMT(e)`
+passes only `param`, so the controller's `setMT(param, v = '1.0.5')` default applies; but even that
+default is discarded one level down — `cmdMT(isrw, param)` calls **`MTDataPack(param)` with no `v`
+argument**, so the packer's own `v = '1.0.5'` default is what runs. Passing a version string to
+`setMT` would change nothing. (`cmdMT` also never zeroes the payload on a read, unlike `cmdTGL` and
+`cmdEND` which pass `{ key, dks: 0, delay: 0 }` — moot in practice because the read path goes through
+`cmdLayout`, not `cmdMT`.)
 
 Command byte `KB2_CMD_MT = 36`; packed by `MTDataPack(param, v?)`.
-`HigherKeyController.setMT(param, v?: string)` takes the version gate; **`XDKeyboard.setMT`
-does not expose it**. Reads `KeyLayout.MTDelay` (19).
 
 > **`setMT` is not wrapped by this app** (`getMT` is).
 
@@ -1304,19 +1397,54 @@ setTGL: (param: ITGLMode) => Promise<any>
 ```ts
 interface ITGLMode {
   key: number;
-  dks?: number;     // optional
-  delay?: number;   // optional, ms [unverified]
+  dks?: number;     // ONE key code (singular — not an array like DKS/MPT), 16-bit hi/lo, unscaled
+  delay?: number;   // ms on the app side; written as delay/10, read back as raw*10 → wire unit 10 ms
 }
 ```
 
 | | `getTGL` | `setTGL` |
 |---|---|---|
 | **Params** | `key: number` | `param: ITGLMode` |
-| **Returns** | `Promise<{ dks: number; delay: number }>` *(from `getTglData`)* | `Promise<any>` |
+| **Returns** | `Promise<{ dks: number; delay: number }>` — `delay` in **ms** (✅ verified) | `Promise<{ dks: number; delay: number }>` — the write is decoded with the *same* `getTglRecdata`, so a successful `setTGL` returns the stored config, not an ack |
 | **Description** | Reads a key's toggle config. | Writes a key's toggle config. |
 
+**Field semantics and units — ✅ verified.** `TGLDataPack(param, v = '1.0.5')` (`utils/pack.ts:196`):
+
+```ts
+if (v === '1.0.5') return [key, ...computeHighLowByte(dks), delay / 10];
+return [key, dks, delay / 10];      // single-byte dks path — unreachable via the façade
+```
+
+`getTglRecdata(data)` (`utils/recdata.ts:436`):
+
+```ts
+const dks = (data[3] << 8) | data[2];   // 16-bit little-endian
+const delay = data[4];                   // ONE byte
+return { dks, delay: delay * 10 };
+```
+
+- **`dks` is a single key code**, not an array. The `1.0.5` branch splits it into two bytes at
+  offsets 2–3, which is exactly what the decoder reassembles from `data[3]<<8 | data[2]`. Bytes 0–1
+  are the command/status and key.
+- **`delay` is milliseconds on the app side.** The packer divides by 10 before writing and the decoder
+  multiplies by 10 after reading, so the **wire unit is 10 ms** and the single byte caps the value at
+  `255 * 10 = 2550 ms`. That resolves the previous `ms [unverified]` marker: ms is right, with the
+  2550 ms ceiling and 10 ms granularity as the practical constraints (a `delay` that is not a multiple
+  of 10 is truncated by the division).
+- Because `delay` occupies **one byte**, the two `v` branches differ only in how `dks` is encoded
+  (hi/lo split vs raw byte). The façade drops `v` (§6.0), so only the `1.0.5` shape is ever produced
+  in this app.
+
+**`v` is dead for TGL too — ✅ verified.** `XDKeyboard.setTGL = e => …setTGL(e)` forwards only
+`param`; the controller's `setTGL(param, v = '1.0.5')` default then reaches
+`cmdTGL(isrw, param)` → `TGLDataPack(param)` — again with **no `v` passed through** — so the packer's
+own `'1.0.5'` default applies. Same pattern as `cmdMT`.
+
+Note `cmdTGL(true, …)` packs `{ key, dks: 0, delay: 0 }` for reads, so the read request never carries
+stale values. Both layers use `cmdTGL`/`getTglData` identically here — **no façade/controller
+disagreement for TGL**, unlike MT (§6.5).
+
 Command byte `KB2_CMD_TGL = 37`; packed by `TGLDataPack(param, v?)`.
-`HigherKeyController.setTGL(param, v?: string)`; **`XDKeyboard.setTGL` omits `v`**.
 
 > **`setTGL` is not wrapped by this app** (`getTGL` is).
 
@@ -1330,8 +1458,8 @@ setEND: (param: IEndMode, v?: string) => Promise<any>
 ```ts
 interface IEndMode {
   key: number;
-  dks?: number;
-  delay?: number;    // [unverified] ms
+  dks?: number;      // ONE key code, 16-bit hi/lo, unscaled (✅ verified)
+  delay?: number;    // 16-bit raw — NO scaling anywhere; unit *(unverified)*. Dropped unless v >= 1.0.7
 }
 
 // also declared in protocol-keyboard, but not used by setEND:
@@ -1340,12 +1468,74 @@ interface IEnd { keys: number; dks: number }
 
 | | `getEND` | `setEND` |
 |---|---|---|
-| **Params** | `key: number` | `param: IEndMode`, `v?: string` (firmware version gate) |
-| **Returns** | `Promise<{ dks: number; delay: number }>` *(from `getEndData`)* | `Promise<any>` |
+| **Params** | `key: number` — **no `v`** on the façade | `param: IEndMode`, `v?: string` (firmware version gate; façade default `"1.0.5"`) |
+| **Returns** | `Promise<{ dks: number; delay: number }>` — both raw integers | `Promise<{ dks: number; delay: number }>` — the write is decoded with the same `getEndRecdata`, so it returns the stored config rather than an ack |
 | **Description** | Reads a key's END config. | Writes a key's END config. |
 
+**The `v` gate decides whether `delay` is written at all — ✅ verified, and this is the single most
+important fact in this section.** `ENDDataPack(param, v = '1.0.5')` (`utils/pack.ts:208`) has three
+branches, using `compareVersions` with `['greater','equal']` meaning "new enough":
+
+| `v` | Payload | `delay` on the wire? |
+|---|---|---|
+| `>= 1.0.7` | `[key, dks_hi, dks_lo, delay_hi, delay_lo]` | ✅ yes, 16-bit |
+| `1.0.5` or `1.0.6` | `[key, dks_hi, dks_lo]` | ❌ **silently dropped** |
+| `< 1.0.5` | `[key, dks]` (single byte each) | ❌ dropped |
+
+Because the façade's `setEND` defaults `v` to `"1.0.5"`
+(`setEND = (e, t = "1.0.5") => this.higherKeyController.setEND(e, t)` — ✅ verified), **calling
+`setEND({ key, dks, delay })` without an explicit `v` throws `delay` away.** You must pass a `v` of
+`'1.0.7'` or higher to store a delay. This asymmetry is invisible from the type signature alone —
+`delay` is optional in `IEndMode`, so no compile error warns you.
+
+**Read shape — ✅ verified.** `getEndRecdata(data)` (`utils/recdata.ts:442`):
+
+```ts
+const dks   = (data[3] << 8) | data[2];   // 16-bit little-endian
+const delay = (data[5] << 8) | data[4];   // 16-bit little-endian
+return { dks, delay };
+```
+
+The decoder **always** reads `delay` from bytes 4–5 with no version check, so it is symmetric with the
+`>= 1.0.7` write branch only. On firmware older than 1.0.7 — or after a default-`v` write that omitted
+`delay` — bytes 4–5 hold whatever the device returns for absent data, and the decoded `delay` is
+meaningless. Unlike `getSocdRecdata`, there is no `v` parameter here to gate the read.
+
+**Units — *(still unverified)*.** `delay` is written as `computeHighLowByte(delay)` and read back
+verbatim: **no `/10` (TGL), no `*1000` (MPT/DB), no other scaling anywhere in the chain.** The source
+names no unit, so the earlier `ms [unverified]` marker is downgraded to "unit unknown" rather than
+confirmed — a 16-bit raw counter could be ms, but nothing in the code supports that. Note the
+deliberate contrast with TGL, whose delay *is* provably 10 ms-per-unit via its `/10`–`*10` pair.
+Hardware testing is required to settle it.
+
+**The read request ignores `v` — ✅ verified.** `cmdEND(isrw, param, v = '1.0.5')` packs
+`ENDDataPack({ key, dks: 0, delay: 0 })` on the read branch with **no `v` forwarded**, so every read
+request is the fixed `[key, 0, 0]` shape; only the write branch uses `v`. Consequently
+`XDKeyboard.getEND` correctly takes just `key` — there is no version-dependent read to select.
+
 Command byte `KB2_CMD_END = 40`; packed by `ENDDataPack(param, v?)`.
-**This is the only advanced-key setter that *does* expose `v` on `XDKeyboard`.**
+
+> **Correction (item 6): `setEND` is *not* the only advanced-key setter that exposes `v` on
+> `XDKeyboard`.** `setSocd` does too — and so does its reader, `getSocd`. The façade declaration
+> file (`sdk-keyboard/dist/esm/index.d.ts`) is explicit:
+>
+> ```ts
+> setEND:  (param: IEndMode, v?: string) => Promise<any>;
+> getSocd: (key: number, v?: string) => Promise<any>;
+> setSocd: (param: ISOCDMode | ISOCDModeV2 | ISOCDModeV3, v?: string) => Promise<any>;
+> ```
+>
+> Exactly **three** façade methods carry the `v` gate: `setEND`, `setSocd`, `getSocd` (see §6.8 for
+> which `v` selects which SOCD payload generation). All three genuinely forward it — ✅ verified in
+> the bundle: `setEND = (e, t = "1.0.5") => this.higherKeyController.setEND(e, t)`, and likewise for
+> `setSocd` / `getSocd` — and the controller then passes it into `cmdEND` / `cmdSOCD`.
+>
+> Every *other* advanced-key setter — `setDks`, `setMpt`, `setMT`, `setTGL`, `setRS`, `setMacro` —
+> drops `v` at the façade, so its packer always takes the `v = '1.0.5'` default branch. Note the
+> controller layer is inconsistent with itself here: `setMT`, `setTGL` and `setMPT` all declare
+> `(param, v?)`, but the façade's arrow properties don't forward it, so the gate is unreachable for
+> them. And for MT and TGL the gate is dead *twice over* — `cmdMT` / `cmdTGL` don't forward their own
+> `v` into `MTDataPack` / `TGLDataPack` either (§6.5, §6.6).
 
 > **`setEND` is not wrapped by this app** (`getEND` is).
 

@@ -1129,9 +1129,9 @@ getDks: (key: number, type?: DksType) => Promise<any>
 
 | | |
 |---|---|
-| **Params** | `key: number`. `type?: 'Layout_DKS1' \| 'Layout_DKS2' \| 'Layout_DKS3' \| 'Layout_DKS4'` (enum 9–12) — which of the four points to read; omit to read the default **[unverified]**. |
-| **Returns** | `Promise<{ dks: number }>` *(from `HigherKeyController.getDks(data): { dks: number }`)* |
-| **Description** | Reads one DKS actuation depth. |
+| **Params** | `key: number`. `type?: 'Layout_DKS1' \| 'Layout_DKS2' \| 'Layout_DKS3' \| 'Layout_DKS4'` (enum 9–12) — which of the four points to read. **Default is `'Layout_DKS1'` — ✅ verified** in the bundle: both the façade and its controller declare `getDks(e, t = "Layout_DKS1")`, then `cmdLayout(true, { key, layout: KeyLayout[t] })`. (Earlier drafts marked this default `[unverified]`; the minified source settles it.) |
+| **Returns** | `Promise<{ dks: number }>` — the raw 16-bit integer in that slot. On a transport error the controller's `catch` returns the `Error` itself, so check `instanceof Error`. |
+| **Description** | Reads one DKS slot: the **key code** assigned to that actuation point (see the terminology note at the top of §6.1 — *not* a depth in mm; the depths are read with `getDksTravel`/`getDbTravel` from `Layout_DB1`–`DB3`). |
 
 #### `getDksAll`
 
@@ -1142,8 +1142,8 @@ getDksAll: (key: number) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number` |
-| **Returns** | `Promise<any>` — **shape not recoverable from source.** `protocol-keyboard/src` declares **no** `getDksAll` (verified: the class in `controller/higherKey.ts` has `getTrps`, `getDks`, `getMtorTgl`, … but no `*All` method), so this is a **façade-only aggregate** in `sdk-keyboard`. It almost certainly reads `Layout_DKS1`–`DKS4` and returns the four `{ dks }` values, but whether that is a `number[]`, an object keyed by slot, or an array of `{dks}` objects is *(inferred)*. |
-| **Description** | Reads all four DKS actuation points in one round trip. Note these are the raw `Layout_DKS*` integers (§ slot table above), **not** the mm depths in `Layout_DB*`. |
+| **Returns** | `Promise<{ dks1: number; dks2: number; dks3: number; dks4: number }>` — **✅ verified in the bundle.** `protocol-keyboard/src` declares **no** `getDksAll` (verified: the class in `controller/higherKey.ts` has `getTrps`, `getDks`, `getMtorTgl`, … but no `*All` method), so this is a **façade-only aggregate** in `sdk-keyboard`. Its body reads `Layout_DKS1`–`DKS4` with four separate `cmdLayout(true, { key, layout })` sends, decodes each with the `getDks` decoder, and returns `{ dks1, dks2, dks3, dks4 }` — plain `number`s, **not** `{dks}` objects and **not** a `number[]`. On transport error the `catch` returns the `Error` itself. |
+| **Description** | Reads all four DKS key codes. Note these are the raw `Layout_DKS*` integers (§ slot table above), **not** the mm depths in `Layout_DB*`. It is **four sequential HID round-trips**, not a single bulk read. |
 
 > **Not wrapped by this app.**
 
@@ -1161,6 +1161,15 @@ getTrps: (key: number, type: TrpsLayoutType) => Promise<any>
 | **Returns** | `Promise<{ trps: number }>` *(from `HigherKeyController.getTrps(data): { trps: number }`)* |
 | **Description** | Reads one TRPS value for a key. |
 
+> **There is no default for `type` — ✅ verified, and omitting it reads a garbage slot.** Unlike
+> `getDks` (which defaults to `'Layout_DKS1'`), the bundle body is
+> `getTrps(e, t) { const layout = KeyLayout[t]; return sendData(cmdLayout(true, { key: e, layout })) }`
+> with **no parameter default**. Passing `undefined` (or an unquoted slot name) makes `KeyLayout[t]`
+> evaluate to `undefined`, so the outgoing `cmdLayout` payload carries no valid layout byte — the read
+> targets whatever the firmware substitutes for a missing/zero slot field and returns a meaningless
+> number rather than throwing. TypeScript catches this at compile time; plain-JS callers will not get
+> an error, just wrong data. Always pass one of the four `'Layout_TRPSn'` strings.
+
 > **Not wrapped by this app.**
 
 #### `getTrpsAll`
@@ -1172,15 +1181,15 @@ getTrpsAll: (key: number) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number` |
-| **Returns** | `Promise<any>` — **shape not recoverable from source.** Like `getDksAll`, `getTrpsAll` does not exist in `protocol-keyboard/src` at all (verified: no `*All` method on `HigherKeyController`), so it is a façade-only aggregate whose shape is *(inferred)*. |
-| **Description** | Reads all four TRPS values (`Layout_TRPS1`–`TRPS4`, raw integers) in one round trip. |
+| **Returns** | `Promise<{ trps1: number; trps2: number; trps3: number; trps4: number }>` — **✅ verified in the bundle.** Like `getDksAll`, `getTrpsAll` does not exist in `protocol-keyboard/src` (no `*All` method on `HigherKeyController`), so it is a façade-only aggregate. Its body issues four separate `cmdLayout(true, { key, layout: Layout_TRPS1…TRPS4 })` sends, decodes each with the `getTrps` decoder (`{ trps: (data[4]<<8) \| data[3] }`), and returns `{ trps1, trps2, trps3, trps4 }` — plain `number`s. On transport error the `catch` returns the `Error` itself. |
+| **Description** | Reads all four TRPS values (`Layout_TRPS1`–`TRPS4`, raw integers). **Four sequential HID round-trips**, not one bulk read. |
 
 There is **no** `setTrps` on any layer — TRPS values are written as part of `setDks`'s
 `IDKSMode.trps` array.
 
 > **Not wrapped by this app.**
 
-### 6.3 MT / TGL mode probe
+### 6.3 MT / TGL delay probe
 
 #### `getMtorTgl`
 
@@ -1191,10 +1200,42 @@ getMtorTgl: (key: number) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number` |
-| **Returns** | `Promise<number>` *(from `HigherKeyController.getMtorTgl(data): number`)* — discriminator telling you whether the slot holds MT or TGL. |
-| **Description** | Determines whether a key's mod-tap slot is configured as MT or TGL. |
+| **Returns** | `Promise<number>` — the key's **MT/TGL delay in milliseconds**. Decoder `getMtorTglRecdata(data)` returns `((data[4]<<8) \| data[3]) * 10`, i.e. a raw 16-bit little-endian value scaled **×10**. On transport error the `catch` returns the `Error` itself. |
+| **Description** | Reads the shared MT/TGL delay slot for one key. |
 
-Call this before `getMT`/`getTGL` to know which decoder applies.
+> **Correction (item 5): this is *not* an MT-vs-TGL discriminator.** Earlier revisions of this doc
+> claimed `getMtorTgl` "determines whether a key's mod-tap slot is configured as MT or TGL" and
+> advised calling it before `getMT`/`getTGL` "to know which decoder applies". The source says
+> otherwise — ✅ verified:
+>
+> - The bundle body is
+>   `getMtorTgl(e) { const t = KeyLayout.Layout_MTDelay; … cmdLayout(true, { key: e, layout: t }) }`.
+>   It reads the **`Layout_MTDelay` slot (enum value 19)** — a *delay* slot, not `Layout_Mode` (8).
+>   Nothing about the read distinguishes a mode.
+> - The decoder multiplies by 10 (`value * 10`), exactly mirroring `getTglRecdata`
+>   (`{ dks, delay: delay * 10 }`) and `TGLDataPack`'s `delay / 10` write. The wire unit is **10 ms**;
+>   the ×10 converts it back to milliseconds. A mode discriminator would return a small enum, not a
+>   scaled 16-bit number.
+> - "MtorTgl" parses as **"MT-or-TGL" delay** — the two modes share one delay slot, so one reader
+>   serves both. It tells you *how long*, never *which mode*.
+>
+> **How MT vs TGL is actually distinguished:** from the key's **`advancedKeyMode` nibble**, not from
+> `getMtorTgl`. `getLayoutModelRecdata` (recdata.ts:356) unpacks a 16-bit layout-model value as
+> `touchValue = (value & 0xff) >> 4` and `advancedKeyValue = value & 0x0f`, returning
+> `{ touchMode, advancedKeyMode }`. Through the façade that is **`getPerformanceMode(key)`** (§5.2).
+> The nibble is the index into the SDK's `advancedKeysSdkMap`, where **`3` = MT and `4` = TGL**
+> (full map: `1` DKS, `2` MPT, `3` MT, `4` TGL, `5` END, `6` Macro, `8` SOCD, `9` RS). The same
+> nibble is written by `setPerformanceMode(key, touchMode, advancedKeyMode)` (§5.2) — that is what
+> selects MT or TGL for a key, and `setMT`/`setTGL` then fill in that mode's parameters.
+>
+> The source itself flags this area as unfinished: `recdata.ts:376` carries
+> `// TODO:高级键模式有宏、socd、rs、tgl、end、dks、mpt、mt` — *"TODO: the advanced-key modes are
+> macro, socd, rs, tgl, end, dks, mpt, mt"* — and the `// 高级键` header at `pack.ts:150` means
+> *"advanced keys"*.
+
+Practical order of operations: call `getPerformanceMode(key)` to learn the mode (3 = MT → use
+`getMT`; 4 = TGL → use `getTGL`), and use `getMtorTgl` only when you want the delay without
+parsing either mode's full payload.
 
 > **Not wrapped by this app.**
 

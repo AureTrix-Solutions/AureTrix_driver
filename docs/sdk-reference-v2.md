@@ -37,12 +37,47 @@ src/services/KeyboardService.ts (app)
 
 ---
 
+## Hardware verification checklist
+
+Every `[unverified]` / *(unverified)* marker in this doc that **can only be settled on a physical
+keyboard** — i.e. firmware behaviour, device-reported ranges, or real-world effect of a wire value —
+is indexed here as a test-on-device task. These are *not* documentation gaps: the source and bundle
+have been exhausted for each one. The markers stay in the body text; this table is the tracking
+index. Non-hardware unverified items (e.g. packaging defects in §13.4) are not listed here.
+
+| Item | Section | What to test | How to test |
+|---|---|---|---|
+| mm travel ranges (global, single, RT press/release, DP/DR, DKS/DB) | §5 intro, §5.1, §5.3–§5.6, §13.2 | The real min/max for each mm value, and firmware behaviour at/outside the limits | Read `getApi({ type: 'PRECISION_STROKE' })` → `minTouchTravel`/`maxTouchTravel`/`decimalPlace` on the device; write the extremes via the matching setter, read back, and confirm actuation depth physically |
+| `decimal` param valid range for `getSingleTravel` | §5.3 | Whether `decimal` is bounded by the device's `decimalPlace` | Compare `decimalPlace` from PRECISION_STROKE against `getSingleTravel(key, decimal)` output for decimal values 0–5 |
+| Axis ids — meaning and valid range | §5.7 | What each id from `getAxisList()` physically binds a key to, and whether non-list ids are rejected | For each id: `setAxis(key, id)`, then open `joy.cpl` / a gamepad tester, press the key, and note which axis deflects; also try an id outside the list and read back |
+| Lighting mode ids → visual effects | §8 | Which effect each raw `mode` byte (0–255) produces; whether firmware clamps `luminance`/`speed`/`sleepDelay`/`staticColor` | `setLighting({ ...cfg, mode: id })` sweeping ids and observing the keyboard; write out-of-range byte values and `getLighting()` to see what survives |
+| SOCD `pos1`/`pos2`, `type`, `mode` enum meanings | §6.8 | What each byte value does when two keys are pressed simultaneously | `setSocd` with each candidate value on a key pair, press both keys together, and observe the output (neutral / first-wins / last-wins etc.); `getSocd` to confirm what was stored |
+| SOCD & END `delay` unit | §6.7, §6.8 | Unit of the raw unscaled 16-bit `delay` (ms? 10 ms? something else) and its effective ceiling | `setEND`/`setSocd` (v ≥ 1.0.7) with known delays, measure the observed timing (high-speed capture or stopwatch), and check clamping at large values |
+| SOCD V1 duplicated packing — intentional or bug | §6.0, §13.3 | Whether `[key, dks1, mode1, dks1, key, mode2]` is meaningful to firmware | Requires a device on firmware < 1.0.5: write V1 shape, exercise the key pair, read back (decode is V3-only, so judge by behaviour) |
+| RS byte meaning & slot independence | §6.9 | What the single 0–255 `dks` byte controls (no scaling ⇒ neither mm nor 10 ms delay), and whether wire offsets 1/2 are two independent firmware slots or one mirrored value | `setRS(key, dks)` across the range and observe key behaviour; `getRS` afterwards — `dks1 !== dks2` ever appearing (after vendor-software writes or firmware defaults) proves independent slots |
+| `setMacro` touchMode reset bug | §7 | Writing a macro rewrites the whole `Layout_Mode` byte as `(u << 4) \| 6`, with `u = 0` unless `touchMode` is `'quick'`/`'single'` — so an omitted third arg should reset a `single`/`rt` key to global | Put a key in single or RT mode (`setPerformanceMode`), call `setMacro` **without** `touchMode` (as `KeyboardService.ts:538` does), then `getPerformanceMode(key)` — expected `{ touchMode: 'global', advancedKeyMode: 6 }` |
+| `KeyboardConfig` round-trip | §9.1 | Which fields actually survive `exportConfig` → `importConfig` through hardware | `exportConfig`, change several settings on the device, `importConfig` the saved blob, then re-export and diff field by field |
+| MT `delay` unit | §6.5 | Unit of the single raw byte (0–255) hold threshold in `IMTMode` | `setMT` with known delays, measure where the tap/hold decision flips; compare with `getMtorTgl`'s `raw * 10` ms reading of the same slot |
+| TGL `delay` firmware minimum | §6.6 | Minimum delay firmware accepts below the proven 2550 ms ceiling / 10 ms granularity | Binary-search small delays via `setTGL`, checking `getTGL` read-back and toggle behaviour |
+| `getMtorTgl` delay valid range | §6.3 | Range of the MT/TGL delay the firmware accepts/returns | Write boundary values, read back with `getMtorTgl` |
+| TRPS value semantics & range | §6.2 | What `trps1`–`trps4` mean physically and their valid values | Write candidate values via the TRPS path, exercise the key, read back with `getTrpsAll` |
+| MPT `dbs` semantics & mm range | §6.4 | Whether the three depths are literally dead bands, and their valid mm range | `setMpt` with boundary `dbs` values, read back, and observe actuation behaviour |
+| `IMacroMode` field semantics | §7 | `index` slot range, `mode` playback enum, `num` repeat behaviour, `delay` unit | Write macros varying one field at a time and observe playback (loop? repeat count? timing); `getMacro` to confirm stored values |
+| Out-of-range `advancedKeyMode` | §5.2, §13.3 | Firmware behaviour for values with no `advancedKeysSdkMap` entry (7, 10–15) — no SDK guard exists | `setPerformanceMode` with an out-of-range value, `getPerformanceMode` read-back, observe the key; keep `factoryDataReset` in reach in case the key wedges |
+| Input-report response ids | §10.6, §13.3 | Relationship between response byte[2] (`128`/`163`/`171`/`152`/`153`) and the `Protocol` request command bytes | Subscribe via `kb.on(...)` / the Debug page while issuing commands, and log the raw byte[2] of each input report |
+
+---
+
 ## Verification status
 
 Statuses: **Verified** (cross-checked against `protocol-keyboard/src` and/or the compiled bundle, or
 tested empirically), **Partial** (some claims verified, others still `[unverified]` or *(inferred)*),
 **Unverified** (nothing in the section has been confirmed), **App-layer** (verified against `src/`,
 not the SDK).
+
+> Notes mentioning `[unverified]` hardware behaviour (mm ranges, delay units, enum semantics, …)
+> are **test-on-device tasks, not missing documentation** — see the
+> [Hardware verification checklist](#hardware-verification-checklist) above for what to test and how.
 
 | Section | Status | Verified against | Batch | Notes |
 |---|---|---|---|---|

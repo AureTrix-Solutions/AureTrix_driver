@@ -40,6 +40,13 @@ Vue pages (src/pages/*)
 
 Hardware calls for many keys must go through `useBatchProcessing().processBatches` (src/composables): batches of 80 keys with 100ms delay between batches. Firing per-key SDK calls for a whole keyboard will overload the device — follow this pattern for any new bulk operation.
 
+### Hardware rules
+
+- Device selection is intentionally unfiltered (`navigator.hid.requestDevice({ filters: [] })`) so any SparkLink keyboard works. Never add device filters or hard-code vendor/product IDs.
+- `usagePage: 65440` (0xFFA0) selects the SparkLink command interface on the chosen device; it is not a device filter.
+- KeyboardService wrappers return `Error` instances instead of throwing; callers check `instanceof Error`.
+- Don't explore node_modules/@sparklinkplayjoy unless the reference is missing something; `protocol-keyboard/src` is readable TypeScript source.
+
 ### Key model
 
 `IDefKeyInfo` (src/types/types.ts) distinguishes `physicalKeyValue` (hardware key ID used for all SDK calls) from `keyValue` (current remapped/display value). Layouts are `IDefKeyInfo[][]` (rows of keys). `useMappedKeyboard(layerIndex)` (src/utils/MappedKeyboard.ts) is the shared composable that fetches the base layout + a remapping layer from hardware and computes absolute pixel positioning (`gridStyle`) for rendering.
@@ -64,7 +71,7 @@ Vite + TS aliases: `@` → src, plus `@components`, `@pages`, `@services`, `@sty
 
 ### Docs
 
-`docs/pages/*.md` documents each feature page; `docs/SDK_REFERENCE.md` documents the SparkLink SDK surface. Consult these before changing page behavior or SDK call patterns.
+`docs/pages/*.md` documents each feature page. `docs/sdk-reference-v2.md` is the verified SDK reference; read only the sections relevant to the task. `docs/SDK_REFERENCE.md` is superseded; don't use it. `docs/plans/roadmap.md` tracks what's next.
 
 ## Conventions (from CONTRIBUTING.md)
 
@@ -72,3 +79,4 @@ Vite + TS aliases: `@` → src, plus `@components`, `@pages`, `@services`, `@sty
 - Use Pinia stores for shared state; no direct DOM manipulation for state changes.
 - Commit style: `Add: ...`, `Fix: ...`, `Update: ...`, `Remove: ...`.
 - New keyboard layout contributions go in `src/utils/sharedLayout.ts` with precise mm-level measurements (1u = 19.05mm).
+- When a feature is complete, update this file with any new conventions (1-3 lines).

@@ -555,11 +555,63 @@ setPerformanceMode: (key: number, mode: TouchModeType, advancedKeyMode: number) 
 
 | | |
 |---|---|
-| **Params** | `key: number`. `mode: 'global' \| 'single' \| 'rt'`. `advancedKeyMode: number` — bitmask/id of the enabled advanced feature (DKS, MT, TGL, …). **Range [unverified]**: no enum is exported for it; the app derives it from the `advancedKeys` config it writes. |
+| **Params** | `key: number`. `mode: 'global' \| 'single' \| 'rt'`. `advancedKeyMode: number` — id of the enabled advanced feature. **Values verified** — see table below. |
 | **Returns** | `Promise<any>` |
 | **Description** | Sets a key's trigger mode and advanced-key mode. |
 
 `KeyTouchMode` numeric mapping: `global = 0`, `single = 1`, `rt = 2`.
+
+#### Layout_Mode encoding — **✅ verified**
+
+The byte written to the `Layout_Mode` (8) slot is:
+
+```
+Layout_Mode byte = (touchMode << 4) | advancedKeyMode
+```
+
+Evidence, all cross-checked between `protocol-keyboard/src` and the compiled
+`sdk-keyboard/dist/esm/index.js`:
+
+- **Encoder**: `setPerformanceMode` compiles to `Qs[t] << 4 | r`, where `Qs` is the
+  `KeyTouchMode` enum object (`global`→0, `single`→1, `rt`→2), `t` is the mode string and
+  `r` is `advancedKeyMode`. So high nibble = touch mode, low nibble = advanced-key type.
+- **Decoder**: `getPerformanceMode` reads `KeyLayout.Mode` and splits the byte back into
+  `{ touchMode, advancedKeyMode }` via the same nibble boundaries.
+- **Macro corroboration**: `setMacro` writes `(u << 4) | 6` to the `Layout_Mode` slot (§7),
+  where `6` is the Macro advanced-key type below — the same encoding from a different call site.
+
+#### advancedKeyMode values — **✅ verified**
+
+From the compiled `advancedKeysSdkMap` in `sdk-keyboard/dist/esm/index.js`, which maps the number
+to a setter method. Values 0 and 7 have **no entry** in the map:
+
+| advancedKeyMode | Feature | Setter | Command byte (§10.3) | `KeyLayout` slot used |
+|---|---|---|---|---|
+| 0 | *(none / plain key)* | — | — | — |
+| 1 | DKS | `setDks` | `KB2_CMD_DKS` = 0x26 | none for write; reads use `Layout_DKS1`–`DKS4` (9–12) |
+| 2 | MPT | `setMpt` | `KB2_CMD_MPT` = 0x27 | none |
+| 3 | MT | `setMT` | `KB2_CMD_MT` = 0x24 | none for write; `getMT` reads `Layout_DKS1`–`DKS4` |
+| 4 | TGL | `setTGL` | `KB2_CMD_TGL` = 0x25 | none |
+| 5 | END | `setEND` | `KB2_CMD_END` = 0x28 | none |
+| 6 | Macro | `setMacro` | `KB2_CMD_MACRO` = 0x20, `KB2_CMD_MACRO_MODE` = 0x21 | `Layout_MacroAddr` (17), `Layout_MacroSize` (18) |
+| 7 | *(unused — no map entry)* | — | — | — |
+| 8 | SOCD | `setSocd` | `KB2_CMD_SOCD` = 0x2c | none |
+| 9 | RS | `setRS` | `KB2_CMD_RS` = 0x2d | none — `Layout_RS` (32) exists in the enum but the SDK never reads or writes it |
+
+There is no `Layout_MPT`, `Layout_TGL`, `Layout_END` or `Layout_SOCD` member in `KeyLayout`
+(§10.2). **Writes and reads are not symmetric**: every advanced-key setter sends its own dedicated
+`cmd*` command byte and lets the firmware hold the data, so no setter writes a `KeyLayout` slot.
+The slot-based `cmdLayout` reads exist only for DKS-family values — `getDksAll`/`getMT` read
+`Layout_DKS1`–`DKS4`, `getTrps`/`getTrpsAll` read `Layout_TRPS1`–`TRPS4` (13–16), and
+`getMtorTgl` reads `Layout_MTDelay` (19). So `advancedKeyMode` is a *mode id*, never a slot index.
+
+The low nibble gives 4 bits (0–15), so 8 and 9 fit; nothing above 15 is representable.
+`getPerformanceMode` returns this same number, so a key in DKS mode reads back
+`advancedKeyMode === 1`.
+
+> **Unverified**: whether firmware accepts arbitrary/undefined values (e.g. 7, 10–15) or
+> silently ignores them. No validation guards exist (§13.2), so an out-of-map value would be
+> written to the wire as-is.
 
 ### 5.3 Single (absolute actuation) travel
 
@@ -780,14 +832,66 @@ Related `OrderType`s: `CURRENT_AXOSOME` (117), `AXOSOME` (118).
 
 ## 6. Advanced keys
 
-Every advanced feature is stored in its own `KeyLayout` slot on the key, and the feature is
-activated by setting the key's `advancedKeyMode` via `setPerformanceMode`. Command bytes come
-from the non-exported `Protocol` enum (§10.3).
+Each advanced feature is **activated** by setting the key's `advancedKeyMode` nibble in the
+`Layout_Mode` slot via `setPerformanceMode` (§5.2), and its data is written with the feature's own
+dedicated command byte from the non-exported `Protocol` enum (§10.3). Contrary to an earlier
+reading of this section, the features do **not** each have their own `KeyLayout` slot — only the
+DKS-family reads and macro address/size use slots (§5.2).
+
+### 6.0 The `v` firmware-version gate — **✅ verified**
 
 The `v?: string` parameter on several setters is a **firmware-version gate**: the packer emits a
-different byte layout for newer firmware. Its type is `string` on the SDK surface; the
-controller layer types it `VersionString`, which **has no declaration anywhere in the three
-packages** — see §13.1.
+different byte layout for newer firmware. Its type is `string` on the SDK surface; the controller
+layer types it `VersionString`, which **has no declaration anywhere in the three packages** — see
+§13.1. Gating uses `compareVersions(v, 'x.y.z')` and treats `'greater'`/`'equal'` as "new enough".
+
+**Critically, most setters accept `v` and then never pass it down.** The compiled call chain drops
+the argument, so the packer falls back to its own `v = '1.0.5'` default. Passing a real firmware
+version to those methods has **no effect on the bytes sent**.
+
+| SDK method | `v` default | Forwarded? | Effective payload |
+|---|---|---|---|
+| `setDks(e)` | *(no `v` param)* | — | Always the 1.0.5 layout: `[key, ...hi/lo(dks), ...trps, ...hi/lo(dbs)]` |
+| `setMPT(e, v)` | `'1.0.5'` | ❌ **no** — `cmdMPT(!1, e)` | `MPTDataPack` has no `v` at all: `[key, ...hi/lo(dks), ...hi/lo(dbs*1000)]` |
+| `setMT(e, v)` | `'1.0.5'` | ❌ **no** — `cmdMT(!1, e)` | Packer default 1.0.5 → `[key, ...hi/lo(dks), delay]` |
+| `setTGL(e, v)` | `'1.0.5'` | ❌ **no** — `cmdTGL(!1, e)` | Packer default 1.0.5 → `[key, ...hi/lo(dks), delay/10]` |
+| `setMacro(e, list, mode, v)` | `'1.0.5'` | ❌ **no** — `cmdMacro`/`modeMacro` never receive it | Macro packs have no version gating whatsoever |
+| `setEND(e, v)` | `'1.0.5'` | ✅ **yes** — `cmdEND(!1, e, v)` | See gate table below |
+| `setSocd(e, v)` / `getSocd(key, v)` | `'1.0.5'` | ✅ **yes** — `cmdSOCD(read, e, v)` | See gate table below |
+| `getLighting(v)` / `setLighting(cfg, v)` | `'1.0.7'` | ✅ **yes** — `cmdPRGB(isrw, param, v)` | See gate table below |
+
+**Real gates** (only reachable through the three rows marked ✅):
+
+| Packer | Condition | Bytes emitted |
+|---|---|---|
+| `ENDDataPack` | `v >= 1.0.7` | `[key, ...hi/lo(dks), ...hi/lo(delay)]` |
+| | `1.0.5 <= v < 1.0.7` | `[key, ...hi/lo(dks)]` |
+| | `v < 1.0.5` | `[key, dks]` |
+| `SOCDPack` (write) | `v >= 1.0.7` | V3 + delay: `[pos1, pos2, ...hi/lo(key1), ...hi/lo(key2), type, mode, ...hi/lo(delay)]` |
+| | `v` is `'1.0.5'` or `'1.0.6'` | V3: `[pos1, pos2, ...hi/lo(key1), ...hi/lo(key2), type, mode]` |
+| | otherwise | V1: `[key, dks1, mode1, dks1, key, mode2]` |
+| `getSocdData` (decode) | `v >= 1.0.7` | `{ pos1, pos2, key1, key2, type, mode, delay }` |
+| | else | `{ pos, key, type, mode }` |
+| `RGBDataPack` (lighting) | `v >= 1.0.9` | base bytes **plus** a trailing `dynamicColorId` byte |
+| | else | base bytes only |
+
+Two `SOCDPack` details worth noting: the `'1.0.5'`/`'1.0.6'` branch is an **exact string match**
+(not a range compare), so e.g. `'1.0.51'` would fall through to the legacy V1 shape; and the V1
+branch returns `[key, dks1, mode1, dks1, key, mode2]` — `dks1` and `key` each appear twice, and
+`mode1`/`mode2` sit in asymmetric positions. Whether that duplication is intentional or a packing
+bug is [unverified]; the source carries no comment either way.
+
+`RSModePack` and `MPTDataPack` have **no** `v` parameter in the protocol source, and `cmdRS` never
+takes one — RS is version-independent, always `[key, dks, dks, key]`.
+
+> **Source/bundle divergence:** `protocol-keyboard/src/controller/lighting.ts` declares
+> `cmdPRGB(isrw, param?)` with **no** `v` parameter, but the shipped `sdk-keyboard` bundle compiles
+> it as `cmdPRGB(e, t, r = '1.0.7')` and threads `v` into `RGBDataPack`. The readable source is
+> therefore *behind* the bundle for lighting. Trust the bundle for the 1.0.9 gate.
+
+**Practical rule:** only pass `v` to `setEND`, `setSocd`/`getSocd`, and `getLighting`/`setLighting`.
+For DKS, MPT, MT, TGL and macro, the wire format is fixed at the 1.0.5 layout no matter what you
+pass — so decode returned data assuming 16-bit hi/lo pairs.
 
 ### 6.1 DKS (Dynamic Keystroke)
 
@@ -865,19 +969,52 @@ setDks: (param: IDKSMode) => Promise<any>
 ```ts
 interface IDKSMode {
   key: number;        // physical key id
-  dks: number[];      // 4 actuation depths, mm  [unverified: length 4, KeyLayout.DKS1–DKS4]
-  trps: number[];     // 4 TRPS values           [unverified: length 4, KeyLayout.TRPS1–TRPS4]
-  dbs: number[];      // dead bands              [unverified: length 3, Layout_DB1–DB3]
+  dks: number[];      // actuation points → firmware Layout_DKS1–DKS4; length is caller-set
+  trps: number[];     // TRPS values      → firmware Layout_TRPS1–TRPS4; length is caller-set
+  dbs: number[];      // dead bands (mm)  → firmware Layout_DB1–DB3; length is caller-set
 }
 ```
 
-Packed by `DKSDataPack(param: IDKSMode, v?: string)`. Command byte `KB2_CMD_DKS = 38`.
-Global enable/disable: `OrderType.OPEN_DKS` (5) / `CLOSE_DKS` (6) via `getApi`.
+Packed by `DKSDataPack(param: IDKSMode, v?: string)` and sent as **one** `KB2_CMD_DKS = 38`
+command; the firmware splits the arrays into the three slot groups internally (so `setDks` writes
+no `KeyLayout` slot directly — see §5.2). Global enable/disable: `OrderType.OPEN_DKS` (5) /
+`CLOSE_DKS` (6) via `getApi`.
+
+> **Array lengths are caller-determined, not fixed — ✅ verified.** `DKSDataPack` loops
+> `dks.length` / `trps.length` / `dbs.length`; nothing constrains them to 4 / 4 / 3. In this app's
+> own import path, `setAdvancedKeys` builds the DKS payload as
+> `dks = getValues(cfg.dks)`, `trps = getValues(cfg.trps)` (`getValues` = `Object.entries(x).map(e => e[1])`,
+> i.e. flatten an object's values into an array — so the caller's `dks`/`trps` are keyed objects, and
+> their length is however many entries they carry), and
+> **`dbs = [1000 * cfg.db, 1000 * cfg.db2]` — exactly 2 values** (from the `db` and `db2` fields,
+> scaled ×1000 to the firmware's integer units). So a `setDks` write populates `Layout_DB1` and
+> `Layout_DB2` but **not** `Layout_DB3`, even though `getDksTravel`/`getDbTravel` can read all three
+> DB slots (§5.6). Reading `Layout_DB3` after such a write returns whatever the firmware last held
+> there, not a value this app wrote.
 
 > **Naming inconsistency (verbatim from the SDK).** `XDKeyboard` exposes `setDks` (lowercase
 > `ks`), but `HigherKeyController`'s method is `setDKS`. Both spellings exist.
 
-> **Not wrapped by this app.**
+> **Wrapped by this app** via `setAdvancedKeys` (`advancedType === 'dks'`), not called directly.
+
+#### Write/read asymmetry (reconciles §5.2, §5.6 and the slot table)
+
+DKS is the one feature whose **write** and **read** paths use different mechanisms, which is the
+root of the §5.6 "naming trap":
+
+| Direction | Method | Wire mechanism | Slots touched |
+|---|---|---|---|
+| **Write (all)** | `setDks(IDKSMode)` | one `KB2_CMD_DKS` command carrying `dks[]`+`trps[]`+`dbs[]` | firmware fans out to `Layout_DKS*`, `Layout_TRPS*`, `Layout_DB*` |
+| **Read DKS points** | `getDks` / `getDksAll` | `cmdLayout(true, Layout_DKS1…DKS4)` per slot | `Layout_DKS1`–`DKS4` (9–12) |
+| **Read TRPS** | `getTrps` / `getTrpsAll` | `cmdLayout(true, Layout_TRPS1…TRPS4)` per slot | `Layout_TRPS1`–`TRPS4` (13–16) |
+| **Read DB travel** | `getDksTravel` / `getDbTravel` | `cmdLayout(true, Layout_DBn)`, one slot | `Layout_DB1`–`DB3` (5–7), default `Layout_DB1` |
+
+`getDksTravel` and `getDbTravel` are **byte-identical** in the bundle — both do
+`cmdLayout(true, { key, layout: KeyLayout[dbLayout ?? 'Layout_DB1'] })` and decode with the same
+`getDksTravel` decoder (`((data[4]<<8)|data[3]) / 1000` → mm). They are aliases, not different
+readers. The DKS *actuation points* (`getDks`, raw integers) and the DKS *travel depths*
+(`getDksTravel`, mm from the DB slots) are genuinely different data in different slots — hence the
+§5.6 note that `getDksTravel` is the correct DB reader and **not** a misnomer for `getDks`.
 
 #### `getDks`
 
@@ -1763,28 +1900,33 @@ clamping any travel value in the UI.
 
 #### `KeyLayout` — per-key storage slots
 
+Every member is `Layout_`-prefixed in the source. Values below are decimal (source is hex; the
+declaration order in `param.ts` puts `Layout_Mode = 0x08` before `Layout_DB0 = 0x04`).
+
 | Member | Value | | Member | Value |
 |---|---|---|---|---|
-| `Fn0` | 0 | | `DKS1` | 9 |
-| `Fn1` | 1 | | `DKS2` | 10 |
-| `Fn2` | 2 | | `DKS3` | 11 |
-| `Fn3` | 3 | | `DKS4` | 12 |
-| `DB0` | 4 | | `TRPS1` | 13 |
-| `DB1` | 5 | | `TRPS2` | 14 |
-| `DB2` | 6 | | `TRPS3` | 15 |
-| `DB3` | 7 | | `TRPS4` | 16 |
-| `Mode` | 8 | | `MacroAddr` | 17 |
-| | | | `MacroSize` | 18 |
-| | | | `MTDelay` | 19 |
-| | | | `RTP` | 20 |
-| | | | `RTR` | 21 |
-| | | | `DP` | 22 |
-| | | | `DR` | 23 |
-| | | | `KR` | 24 |
-| | | | `AXIS` | 25 |
-| | | | `RS` | 32 |
+| `Layout_Fn0` | 0 | | `Layout_DKS1` | 9 |
+| `Layout_Fn1` | 1 | | `Layout_DKS2` | 10 |
+| `Layout_Fn2` | 2 | | `Layout_DKS3` | 11 |
+| `Layout_Fn3` | 3 | | `Layout_DKS4` | 12 |
+| `Layout_DB0` | 4 | | `Layout_TRPS1` | 13 |
+| `Layout_DB1` | 5 | | `Layout_TRPS2` | 14 |
+| `Layout_DB2` | 6 | | `Layout_TRPS3` | 15 |
+| `Layout_DB3` | 7 | | `Layout_TRPS4` | 16 |
+| `Layout_Mode` | 8 | | `Layout_MacroAddr` | 17 |
+| | | | `Layout_MacroSize` | 18 |
+| | | | `Layout_MTDelay` | 19 |
+| | | | `Layout_RTP` | 20 |
+| | | | `Layout_RTR` | 21 |
+| | | | `Layout_DP` | 22 |
+| | | | `Layout_DR` | 23 |
+| | | | `Layout_KR` | 24 |
+| | | | `Layout_AXIS` | 25 |
+| | | | `Layout_RS` | 32 |
 
-Gap at 26–31; `RS` jumps to 32.
+Gap at 26–31; `Layout_RS` jumps to 32. Source comments: `Layout_DP` = 单键死区按下 (single-key
+dead-zone press), `Layout_DR` = 单键死区抬起 (release), `Layout_KR` = 单键释放 (single-key
+release), `Layout_AXIS` = 轴体切换层 (axis switch layer).
 
 #### `KeyTouchMode`
 
@@ -1834,12 +1976,24 @@ declare const MaxPack: number;
 | | | | `KB2_BL_RCRC` | 14 |
 | | | | `KB2_CMD_FAIL` | 255 |
 
-⚠️ **This file declares a *second*, conflicting `KeyLayout`** whose numbering diverges from
-§10.2 (it ends at `Layout_RTR = 21` and uses `Layout_`-prefixed members — the same spelling the
-SDK's `DksType`/`TrpsLayoutType`/`DksLayoutType` string unions use). It also declares a second
-`KeyTouchMode { GlobalMode = 0, SingleMode = 1, QuickMode = 2 }` and a second `BLControls`.
-**Only the `param.d.ts` versions are public.** When you see a `Layout_*` string in a signature,
-it is the byte-layer enum's member name; when you see a bare number, it is `constantsParam`'s.
+⚠️ **This file declares a *second*, conflicting `KeyLayout` and `KeyTouchMode`.** Correcting an
+earlier note: **both** enums — this one and the public `param.d.ts` one in §10.2 — use the same
+`Layout_`-prefixed member spelling. The prefix is *not* a distinguishing feature. They diverge two
+ways:
+
+1. **Range.** `byte.ts`'s `KeyLayout` stops at `Layout_RTR = 0x15` (21). It has **no**
+   `Layout_DP`, `Layout_DR`, `Layout_KR`, `Layout_AXIS` or `Layout_RS`. `param.d.ts` (§10.2) adds
+   those five (22–25, 32). Everything up to `Layout_RTR` has identical values in both.
+2. **`KeyTouchMode` member names.** `byte.ts` uses `{ GlobalMode = 0, SingleMode = 1, QuickMode = 2 }`;
+   `param.d.ts` (§10.2) uses `{ global = 0, single = 1, rt = 2 }`. **Same numbers, different
+   spellings.** The public `TouchModeType` string union is `'global' | 'single' | 'rt'`, so it
+   follows `param.d.ts`.
+
+There is also a second `BLControls` here. **Only the `param.d.ts` versions are public** (§10.1);
+this byte-layer file is not reachable at all. Because both `KeyLayout` enums share the
+`Layout_*` spelling, you **cannot** tell which one a `Layout_FOO` string came from by its prefix —
+only `param.d.ts` is importable, so in practice every `Layout_*` you can actually reference is the
+§10.2 one. The byte-layer copy matters only as documentation of the wire protocol.
 
 ### 10.4 `types/interface.d.ts` — protocol interfaces
 
@@ -2428,21 +2582,35 @@ Everything below is either **not present in the shipped declarations** or **infe
 in this document should be treated as authoritative for these entries without checking against
 hardware.
 
-### 13.1 `VersionString` has no declaration anywhere
+### 13.1 `VersionString` is a dangling type — **✅ verified**
 
-`VersionString` is imported into `sdk-keyboard/src/types/type.d.ts` from
+`VersionString` is imported into `sdk-keyboard/dist/{esm,cjs}/src/types/type.d.ts` from
 `@sparklinkplayjoy/protocol-keyboard`, re-exported from there, and used as `v?: VersionString`
-on `LightingController.getLighting` / `setLighting`. A grep for `VersionString` across
-**all `.d.ts` files in all three packages** returns only import lines, re-export lines and usage
-lines — **there is no `declare type` / `type` declaration**.
+on `LightingController.getLighting` / `setLighting`. A recursive grep for `VersionString` over
+the **entire `protocol-keyboard` package — `src/`, `dist/esm/` and `dist/cjs/` — returns zero
+hits**. The only matches anywhere in `node_modules/@sparklinkplayjoy/` are in `sdk-keyboard`:
+two import lines, two re-export lines, and four usage lines (the `getLighting`/`setLighting`
+signatures in both `esm` and `cjs` `lighting.d.ts`). **There is no `type VersionString` or
+`declare type VersionString` declaration anywhere.** It is not merely missing from the shipped
+`.d.ts` — it was never written in the readable TypeScript source either.
 
-Root cause: `protocol-keyboard/package.json` declares `"types": "./dist/esm/index.d.ts"`, but
-**that file does not exist on disk**. Only `dist/esm/types/index.d.ts` exists, and it does not
-export `VersionString`. So the type resolves to `any` (or errors) depending on how the bundler
-resolves the broken entry point.
+Root cause, verified on disk (`protocol-keyboard@1.0.6`):
 
-Practical impact: `XDKeyboard` does not expose `v` on any lighting method, so the app never has
-to name the type. It only matters if you reach into the controller layer.
+- `package.json` declares `"types": "./dist/esm/index.d.ts"` — **that file does not exist**.
+  `dist/esm/` contains only `index.js` and a `types/` directory.
+- The `exports` map declares only `import` and `require` conditions pointing at `.js` files, with
+  **no `types` condition at all**. So there is no fallback resolution path either.
+- `dist/esm/types/index.d.ts` does exist, but is not the declared entry point and does not export
+  `VersionString`.
+
+Net effect: any TypeScript program that imports `VersionString` transitively through
+`sdk-keyboard`'s controller layer gets an unresolved type. Because `XDKeyboard`'s own surface
+exposes `v` as `string` (§6.0), this never bites app code — only code that reaches into
+`LightingController` directly.
+
+**Practical consequence for this document:** treat `v` as `string`. The only values with observed
+behaviour are the exact literals `'1.0.5'`, `'1.0.6'`, `'1.0.7'` and `'1.0.9'` (§6.0); there is
+no union type in the source to enumerate.
 
 ### 13.2 No runtime value-range validation exists
 

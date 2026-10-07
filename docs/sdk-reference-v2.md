@@ -47,8 +47,8 @@ not the SDK).
 | Section | Status | Verified against | Batch | Notes |
 |---|---|---|---|---|
 | §1 Connection & lifecycle | Partial | `.d.ts`, compiled bundle | — | Types/signatures verbatim; singleton `DeviceBase` behaviour and `init` null-vs-Device divergence not hardware-tested |
-| §2 Key mapping | Partial | `protocol-keyboard/src` | — | Return shapes *(inferred)* from decoders; `setKey`/`deleteKey` key-id semantics `[unverified]` |
-| §3 Device info & system | Partial | hardware + `.d.ts` | — | Rate-index→Hz table app-verified on hardware; `switchConfig` and `setTopDeadSwitch` ranges `[unverified]` |
+| §2 Key mapping | Verified | `protocol-keyboard/src` + bundle | 4 | ✅ `setKey` returns filtered array via `getFnLayoutKeyRecdata` (not raw echo); `IKey` wire = 4 bytes `[key, layout, valueLE16]` no validation; `getLayoutKeyInfo` drops `key===0`/`layout===0xff`/`value===0xffff` entries; `deleteKey` writes `Layout_Mode` with `advancedKeyMode=0` only (doesn't clear DKS/TRPS/DB slots) |
+| §3 Device info & system | Verified | hardware + `protocol-keyboard/src` + bundle | 4 | Rate-index→Hz table app-verified on hardware; ✅ `getBaseInfo` shape from `getCmdSyncRecdata` (appVersion is a string; firewareSpaceSize/versionString mutually exclusive); ✅ `getApi` full return-union table incl. OrderType bytes (`currentSystem` is a string, not number); ✅ `switchConfig` range 0–3 from param.ts enum comment (`hasFourConfig` hard-coded true); ✅ `setTopDeadSwitch` = raw byte, boolean decode → on/off switch |
 | §4 Calibration & travel matrix | Verified | src + bundle | 3 | ✅ `getRm6X21Travel` → `{status, travels}` and `getRm6X21Calibration` → `{travels, calibrations}` both confirmed in the bundle controller (façade-only aggregators; src has only `getRm6X21data`); decoder 0x03 → raw-byte chunks, 0x02/0x06 → 3×21 mm (÷1000) ✅; `RM6X21Pack` shape ✅ |
 | §5.1 Global travel / dead band | Verified | src + bundle | 3 | ✅ `IDB` decodes u16 LE ÷1000 → mm (recdata.ts); `setDB` scales ×1000 at the façade, open-src `cmdDB` expects raw µm ✅; mm ranges still device-reported via PRECISION_STROKE |
 | §5.2 Per-key touch mode | Verified | src + bundle, macro corroboration | 1, 3 | `Layout_Mode = (touchMode << 4) \| advancedKeyMode` ✅; `advancedKeyMode` id table verified; batch 3: `getLayoutModel` decode confirmed (high nibble → `touchMode` string via `KeyTouchMode`, low nibble → `advancedKeyMode` raw; unknown defaults to `"global"`) ✅ and `setPerformanceMode` returns the read-back object ✅ |
@@ -67,8 +67,8 @@ not the SDK).
 | §6.7 END | Verified | src + bundle | 2 | ✅ **`delay` is silently dropped unless `v >= 1.0.7`** — and the façade defaults `v` to `"1.0.5"`, so a bare `setEND({key, dks, delay})` writes no delay; three payload branches tabulated; `dks` unscaled 16-bit ✅; the decoder has **no `v` gate**, so on older firmware the decoded `delay` is meaningless ✅; read requests ignore `v` (`cmdEND` packs `{key, dks:0, delay:0}`) ✅; `setEND`/`setSocd`/`getSocd` are the **only** three façade methods exposing `v` (§6.0 corrected). Remaining *(unverified)*: `delay`'s **unit** — no scaling anywhere, so ms is unconfirmed |
 | §6.8 SOCD | Verified | src + bundle | 2 | ✅ `v` selects the generation: `< 1.0.5` → V1 `[key, dks1, mode1, dks1, key, mode2]`; `'1.0.5'`/`'1.0.6'` → V2 shape (`delay` omitted); `>= 1.0.7` → V3 (+16-bit `delay`); read requests are just `[key]`. ⚠️ **Read/write mismatch:** at default `v = '1.0.5'` you write `{pos1,pos2,key1,key2,type,mode}` but read back `{pos,key,type,mode}` — `pos2`/`key2` discarded, `pos1`/`key1` renamed; **no V1 decode branch**, so V1 is write-only ✅. `setSocd`'s comma-operator version compare is a **no-op** plus a stray `console.log("111111", …)` ✅. Remaining `[unverified]`: `pos`/`type`/`mode` enumerations (no `SOCDPolicy` exported), `delay` unit |
 | §6.9 RS | Verified | src + bundle | 2 | ✅ `RSModePack` → `[key, dks, dks, key]` (**one value duplicated**, `key` repeated as a terminator *(inferred)*); `getRsRecdata` → `{dks1, dks2}` reading **single bytes** at offsets 1–2 — so the 1-write/2-read asymmetry is a packer/decoder shape difference with byte-level correspondence, and **the two slots cannot be set independently**. RS is **byte-wide (0–255)** with no scaling, unlike every other advanced key ✅; **no `v` gate anywhere** ✅; `Layout_RS = 0x20` exists but is never used (RS bypasses `cmdLayout`) ✅; leftover `console.log` in both `cmdRS` and `getRsRecdata` ✅. Remaining `[unverified]`: what the byte means and whether the firmware treats offsets 1/2 as genuinely independent slots |
-| §7 Macros | Partial | compiled bundle | — | Write path "verified from the compiled implementation"; `MacroDataPack` fields `[unverified]`, `getMacro` return shape elided in the `.d.ts` |
-| §8 Lighting | Partial | `protocol-keyboard/src` | — | Config shape and version gate confirmed; the `>= 1.0.9` `dynamicColorId` path is unreachable through the façade, so never exercised |
+| §7 Macros | Verified | `protocol-keyboard/src` + bundle | 4 | ✅ `MacroDataPack` per-action wire = `[keyCodeLE16, status<<24\|delay&0xffffff]` (delay is u24, top 4 bits = press/release prefix 1/8; src comment says "低12位" but mask is 24-bit); ✅ `MacroModePack` slot metadata = `[key, indexLE16, macroLen, mode, numLE16, delayLE24]`; ✅ `getMacro` returns full `{key,id,len,mode,num,delay}` decode (see §13.3); `MacroType.status` numeric-consumption confirmed consistent with §13.3 |
+| §8 Lighting | Partial | `protocol-keyboard/src` + bundle | 4 | Config shape and version gate confirmed; ✅ batch 4: `PRGBDatapack`/`SRGBDatapack` wire layout — speed/mode/luminance/sleepDelay/staticColor are raw bytes (0–255 wire range, no SDK clamp); ✅ `getPRGBRecdata` derives `type` from mode (0=static, 1–20=dynamic, >20=custom — the SDK's only mode-id documentation); ✅ `getSingleRGBRecdata` returns uppercase `{key,R,G,B}`; ✅ `setLightingSaturation` = `QUERY_LIGHT_FIX_RGB` 3-byte triplet `[0x44,…param,0xff,0xff]`; the `>= 1.0.9` `dynamicColorId` path remains unreachable through the façade (§8.5 unverified) |
 | §9 Export/import & firmware (intro) | Partial | `.d.ts` | — | Signatures verbatim only |
 | §9.1 `KeyboardConfig` | Partial | `.d.ts` | — | Field list from declarations; which fields round-trip through hardware `[unverified]` |
 | §9.2 `ConfigValidator` | Verified | empirical import test | — | ✅ Confirmed unreachable — see §13.4 |
@@ -259,7 +259,7 @@ getLayoutKeyInfo: (params: Keys) => Promise<any>
 | | |
 |---|---|
 | **Params** | `params: Keys` — the slots to read. |
-| **Returns** | `Promise<Keys>` *(inferred from `KeyController.getFnLayoutKeyRecdata`)* — the same array with `value` filled in. |
+| **Returns** | `Promise<Keys>` **✅ verified** — a **filtered** array decoded by `getFnLayoutKeyRecdata` (recdata.ts:294; same in bundle): entries are walked at a 4-byte stride, `key = data[i+1]`, `layout = data[i+2]`, `value = data[i+4]<<8 \| data[i+3]` (u16 LE), and an entry is **dropped** when `layout === 0xff`, `value === 0xffff`, or `key === 0`. So the reply can contain **fewer entries than you asked for** — match results back by `key`, don't index positionally. |
 | **Description** | Batch-reads the current value of the requested key/layout slots. |
 
 ```ts
@@ -267,11 +267,13 @@ interface IKey { key: number; layout: number; value?: number }
 type Keys = IKey[];
 ```
 
-| Field | Range |
-|---|---|
-| `key` | physical `keyValue` from `defKey()` — device-specific **[unverified]** |
-| `layout` | `KeyLayout` enum value, `0`–`32` (§10.2) |
-| `value` | out-param on read; in-param on write |
+**Wire packing — ✅ verified** (`KeyDataPack`/`KeyLayoutDataPack`, pack.ts:59 & :71; identical in bundle). Each `IKey` is serialised as exactly **4 bytes**: `[key, layout, value & 0xff, (value >> 8) & 0xff]`. `value` is a **u16 little-endian**; a falsy `value` (`0`/`undefined`) writes `0x00 0x00`.
+
+| Field | Width | Range / meaning |
+|---|---|---|
+| `key` | u8 | physical `keyValue` from `defKey()` — device-specific; pushed raw with **no clamp/validation** in src |
+| `layout` | u8 | `KeyLayout` enum value, `0x00`–`0x20` (§10.2) |
+| `value` | u16 LE | out-param on read; in-param on write. The mapped/trigger code for that slot. **No validation** — the SDK neither clamps nor range-checks it, so an out-of-range code is forwarded verbatim to firmware. |
 
 ### `setKey`
 
@@ -282,11 +284,11 @@ setKey: (params: Keys) => Promise<Keys>
 | | |
 |---|---|
 | **Params** | `params: Keys` — slots to write, each with `value` set. |
-| **Returns** | `Promise<Keys>` — echoes the written config back. |
+| **Returns** | `Promise<Keys>` **✅ verified** — *not* a raw echo. The facade routes to `KeyController.updateKey`, which sends the write, throws `Error("No response received")` if the reply buffer is falsy, then decodes the response with the **same** `getFnLayoutKeyRecdata` filter as `getLayoutKeyInfo`. So the returned array can be shorter than the input (dropped `key===0` / `layout===0xff` / `value===0xffff` entries). |
 | **Description** | Batch-writes key remappings. |
 
-Backed by `KeyController.updateKey`, which packs via `KeyDataPack(param: Keys)` /
-`KeyLayoutDataPack(param: IKey)`.
+Backed by `KeyController.updateKey`, which packs via `KeyDataPack(param: Keys)`.
+(`KeyLayoutDataPack(param: IKey)` is the single-key variant used by the layout/mode writes, not by `setKey`.)
 
 > ⚠️ **Batching.** This repo must funnel bulk writes through
 > `useBatchProcessing().processBatches` (80 keys/batch, 100 ms between batches). Passing a
@@ -301,8 +303,8 @@ deleteKey: (key: number, mode: TouchModeType) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number` — physical key id. `mode: TouchModeType` = `'global' \| 'single' \| 'rt'`. |
-| **Returns** | `Promise<any>` |
-| **Description** | Clears a key's advanced/trigger configuration for the given touch mode, restoring default behaviour. |
+| **Returns** | `Promise<any>` — the raw `sendData` result (errors are caught and **returned**, not thrown). |
+| **Description** | **✅ verified from the bundle**: `deleteKey(key, mode)` sends `cmdLayout(false, { key, layout: 8 /* Layout_Mode */, value: KeyTouchMode[mode] << 4 })` — i.e. it writes the key's **mode slot** with `advancedKeyMode = 0` while keeping the touch-mode nibble. It clears *only* the advanced-key mode for that touch mode; per-key DKS/TRPS/DB values in their own layout slots are untouched. Matches the `value = mode<<4 \| advancedKeyMode` encoding in §6.6/§10.2 (`mode<<4` with the low nibble = 0 = normal). |
 
 `TouchModeType` is `keyof typeof constantsParam.KeyTouchMode`, and
 `KeyTouchMode { global = 0, single = 1, rt = 2 }` — so the string maps directly onto the
@@ -323,24 +325,29 @@ getBaseInfo: () => Promise<any>
 | | |
 |---|---|
 | **Params** | none |
-| **Returns** | `Promise<any>` — the sync record. Shape *(inferred from `InfoController.getCmdSync`)*: |
+| **Returns** | `Promise<any>` — the sync record. Shape **✅ verified** (`getCmdSyncRecdata`, recdata.ts:21; identical in the sdk-keyboard bundle): |
 | **Description** | Reads the device identity block established at handshake. |
 
 ```ts
 {
-  BoardID: number;
-  KeyboardLayout: number;
-  KeyType: number;
-  CustomerID: number;
-  ProductionId: number;
-  KeyboardRunMode: number;
-  KeyboardSN: string;
-  firewareSpaceSize: number;      // sic — "fireware" is the SDK's own spelling
-  appVersion: number;
-  appBuildDate: string;
-  versionString: string;
+  BoardID: number;              // u32 LE, bytes 1–5
+  KeyboardLayout: number;       // single byte (data[4])
+  KeyType: number;              // single byte (data[3])
+  CustomerID: number;           // always 0 — never assigned ("暂时留空" in src)
+  ProductionId: number;         // always 0 — never assigned
+  KeyboardRunMode: number;      // single byte (data[7])
+  KeyboardSN: string;           // utf-8, bytes 9–25 (16 bytes)
+  firewareSpaceSize: number;    // sic — hardVersion * 256, ONLY when hardVersion >= 1000
+  appVersion: string;           // decoded text, NOT a number — bytes 26–36 ("Boot…" → 26–37)
+  appBuildDate: string;         // decoded text, bytes 43–54
+  versionString: string;        // "Vx.y.z" from hardVersion, ONLY when hardVersion < 1000
 }
 ```
+
+`hardVersion` is the u16 LE at bytes 5–6. **`firewareSpaceSize` and `versionString` are mutually
+exclusive**: firmware reports either a small version number (< 1000 → formatted into
+`versionString`) or a storage size (≥ 1000 → ×256 into `firewareSpaceSize`); the other stays at
+its `0`/`''` default.
 
 ### `getApi`
 
@@ -363,17 +370,29 @@ interface ICmd {
 }
 ```
 
-Return union *(from `InfoController.getCmd`, verbatim)*:
+Return union **✅ verified** (`getCmdRecdata`, recdata.ts:81; identical in the compiled bundle).
+The reply shape is selected by `data[1]` (the `OrderType` byte echoed back):
 
-```ts
-string | number | boolean
-| { precision: number; decimalPlace: number; minTouchTravel: number; maxTouchTravel: number; VID: number; PID: number }
-| { currentSystem: number; hasWinMode: boolean }
-| { currentSystem: number; hasMacMode: boolean }
-| { r: number; g: number; b: number }
-| { configID: number; hasFourConfig: boolean }
-| { hasAxisSetting: boolean; axisList: number[] }
-```
+| `type` (OrderType) | Byte | Returns |
+|---|---|---|
+| `KEYBOARD_NAME` | 0x26 | `string` — utf-8 of bytes 2–34, NUL bytes filtered out |
+| `PROTOCOL_VERSION` | 0x01 | `string` — `"v1.v2.v3"` assembled from nibbles |
+| `PRECISION_STROKE` | 0x25 | `{ precision, decimalPlace, minTouchTravel, maxTouchTravel, VID, PID }` — µm values ÷1000 → mm; **`VID`/`PID` are always `0`** (declared but never assigned in src) |
+| `ROES` | 0x50 | `number` — polling-rate index (see `setRateOfReturn` below) |
+| `CONFIG` | 0x70 | `{ configID: number, hasFourConfig: true }` — `hasFourConfig` is hard-coded `true` |
+| `AXOSOME` | 0x76 | `{ hasAxisSetting: true, axisList: number[] }` — up to 8 ids, each u16 **big-endian**, list stops at the `0xffff` terminator |
+| `CURRENT_AXOSOME` | 0x75 | `number` — current axis id, u16 LE |
+| `SET_WIN_MODEL` | 0x30 | `0` on success (`data[2] === 1`), otherwise `null` |
+| `SET_MAC_MODEL` | 0x31 | `1` on success, otherwise `null` |
+| `QUERY_WIN_MODEL` | 0x21 | `{ currentSystem: '' \| 'win' \| 'mac', hasWinMode: boolean }` |
+| `QUERY_MAC_MODEL` | 0x22 | `{ currentSystem: 'mac' \| 'win', hasMacMode: boolean }` |
+| `TOP_DEAD_SWITCH` | 0x34 | `boolean` — `data[2] !== 0` |
+| `QUERY_LIGHT_FIX_RGB` | 0x44 | `{ r, g, b }` — raw bytes 2–4 |
+| anything else | — | `null` |
+
+> ⚠️ `currentSystem` is a **string** (`'win'`/`'mac'`/`''`), not a number — the earlier
+> `.d.ts`-derived union that said `number` was wrong. Query decoders treat `data[2]` as
+> `1` = that system, `0` = the other system, `0xff` = unsupported (`has*Mode: false`).
 
 Verified from the minified bundle: `getAxisList = () => this.infoController.getApi({ type: "ORDER_TYPE_AXOSOME" })`
 — i.e. `getAxisList` is just `getApi` with a fixed command type. (`ORDER_TYPE_AXOSOME` is the
@@ -424,7 +443,7 @@ switchConfig: (config: number) => Promise<any>
 
 | | |
 |---|---|
-| **Params** | `config: number` — profile index. **Range [unverified]**: `0`–`3`; `getApi({type:'CONFIG'})` returns `{ configID, hasFourConfig }`, and `hasFourConfig` is the authoritative flag for whether 4 profiles exist. |
+| **Params** | `config: number` — profile index. **Range ✅ verified `0`–`3`**: the `OrderType.CONFIG` (0x70) enum comment in param.ts:39 declares `h_arg/s_arg = 0[配置1], 1[配置2], 2[配置3], 3[配置4]` (any other arg = query). `getApi({type:'CONFIG'})` returns `{ configID, hasFourConfig }`; note `hasFourConfig` is hard-coded `true` in the decoder, so it is *not* authoritative — trust `configID` for the active slot. |
 | **Returns** | `Promise<any>` |
 | **Description** | Switches the active on-board hardware profile. |
 
@@ -453,11 +472,11 @@ setTopDeadSwitch: (value: number) => Promise<boolean>
 
 | | |
 |---|---|
-| **Params** | `value: number` — top dead-band switch setting. **Range [unverified]**: persisted as `KeyboardConfig.system.topDeadBandSwitch` (a `number`). |
-| **Returns** | `Promise<boolean>` — success flag. |
-| **Description** | Enables/sets the global top dead-band (the travel ignored at the top of the stroke). |
+| **Params** | `value: number` — sent **verbatim as one hArgs byte** (`cmd({type:'ORDER_TYPE_TOP_DEAD_SWITCH', hArgs:[value]})` in the bundle); the SDK neither validates nor clamps it. Protocol-verified as a single raw byte (0–255); the *semantic* range is device-defined. Persisted counterpart: `KeyboardConfig.system.topDeadBandSwitch`. |
+| **Returns** | `Promise<boolean>` — **✅ verified**: the reply goes through the same `getCmd`/`getCmdRecdata` decoder as the getter, whose `TOP_DEAD_SWITCH` branch is `return data[2] !== 0`. So this is a success/state flag, not an echo of `value`. |
+| **Description** | Enables/sets the global top dead-band (the travel ignored at the top of the stroke). Given the boolean decode on both read and write, it behaves as an **on/off switch**, not a mm distance. |
 
-Backed by `OrderType.TOP_DEAD_SWITCH` (52).
+Backed by `OrderType.TOP_DEAD_SWITCH` (52 = 0x34).
 
 > **Not wrapped by this app.**
 
@@ -1837,21 +1856,26 @@ so `touchMode` is `undefined` → `u = 0` in practice.
 ```ts
 interface IMacroMode {
   key: number;      // physical key id
-  index: number;    // macro slot index [unverified]
-  len: number;      // number of steps
-  mode: number;     // playback mode [unverified]
-  num: number;      // repeat count [unverified]
-  delay: number;    // ms [unverified]
+  index: number;    // macro slot index — wire width ✅ u16 LE (MacroModePack: `[key, indexLE16, …]`); semantic range [unverified]
+  len: number;      // number of steps — ✅ single byte on wire
+  mode: number;     // playback mode — ✅ single byte on wire; enum of values [unverified]
+  num: number;      // repeat count — wire width ✅ u16 LE; semantics [unverified]
+  delay: number;    // wire width ✅ u24 LE (3 bytes via computeHighLowByte ×3); unit/semantics [unverified]
 }
+// Wire shape ✅ verified against MacroModePack (pack.ts:297) and getModeMacro decode (§13.3).
 
 type MacroType = {
-  keyCode: number;        // HID usage code to emit
-  timeDifference: number; // delay before this step, ms
-  status: string;         // 'down' | 'up' [unverified — SDK types it as bare string]
+  keyCode: number;        // HID usage code to emit (packed as u16, see MacroDataPack below)
+  timeDifference: number; // delay for this step (packed into the low 24 bits of a u32 — values > 0xffffff truncate)
+  status: string;         // ⚠️ typed `string` but consumed NUMERICALLY — see §13.3 (MacroType.status row):
+                          //    the packer tests `keyStatus[i] === 0` → prefix 8 (release), non-zero → prefix 1 (press).
+                          //    A string would never === 0, so every string collapses to "press".
+                          //    This app converts explicitly: ExportService writes `status: m.status === 'press' ? 1 : 0`.
 };
 ```
 
-The packer signature reveals the on-wire encoding:
+The packer signature reveals the on-wire encoding — **✅ verified in protocol-keyboard/src**
+(`higherKey.ts:220/:236`, `pack.ts:257/:297`; bundle identical):
 
 ```ts
 cmdMacro(isrw: boolean, offset: number, count: number,
@@ -1862,8 +1886,17 @@ MacroDataPack(offset, count, keyValues: Uint16Array, keyStatus: number[], delays
 MacroModePack(key, index, macroLen, mode, num, delay): number[]
 ```
 
-So: key codes are **16-bit**, delays are **32-bit**, and the sequence is written at an
-`offset` in `count`-sized chunks. Command bytes `KB2_CMD_MACRO = 32`, `KB2_CMD_MACRO_MODE = 33`;
+**Per-action wire format** (`MacroDataPack`): payload = `[offsetLE16, count]`, then for each action
+`[keyCodeLE16, status<<24 | (delay & 0xffffff)]` split as 4 LE bytes — i.e. **key codes are u16 LE**
+and each **delay is a u32 whose top 4 bits hold the press/release status** (`prefix 1` = press,
+`prefix 8` = release; `status === 0` selects 8) and whose low 24 bits hold the delay
+(`delays[i] & 0x00ffffff` — the src comment says "低12位" but the mask is 24 bits).
+
+**Slot-metadata wire format** (`MacroModePack`, pack.ts:297): `[key, indexLE16, macroLen, mode,
+numLE16, delayLE24]` — each u16 via `computeHighLowByte` = `[low, high]`; `delay` is 3 bytes:
+`computeHighLowByte(delay)` + `highByte16(delay)` (bits 16–23), i.e. u24 LE.
+
+Command bytes `KB2_CMD_MACRO = 32`, `KB2_CMD_MACRO_MODE = 33`;
 layouts `MacroAddr` (17), `MacroSize` (18), `MTDelay` (19).
 `OrderType.ERASE_MACROSTORAGE` (16) wipes macro storage.
 
@@ -1879,8 +1912,8 @@ getMacro: (key: number) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number` |
-| **Returns** | `Promise<any>` — decoder `getModeMacro(data): { key, id, len, mode, … }` *(the shipped `.d.ts` elides the remaining fields with `…`; the full shape is not recoverable from types)* **[unverified]** |
-| **Description** | Reads the macro config bound to a key. |
+| **Returns** | `Promise<any>` — **✅ verified** (per §13.3): the reply is decoded by `getModeMacro`/`getMacroRecdata` into 7 fields, all little-endian except the single bytes: `{ key: data[1], id: data[3]<<8\|data[2], len: data[4], mode: data[5], num: data[7]<<8\|data[6], delay: data[10]<<16\|data[9]<<8\|data[8] }`. |
+| **Description** | Reads the macro-slot metadata bound to a key (`id` = slot index, `len` = step count, `mode`/`num`/`delay` = the fields written by `MacroModePack`). This call returns the slot **metadata only**, not the action sequence — the sequence lives in macro storage (written by `setMacro` from offset 256). |
 
 ---
 
@@ -1890,16 +1923,17 @@ getMacro: (key: number) => Promise<any>
 
 ```ts
 interface ILightMode {
-  open: boolean;          // master on/off
-  direction: boolean;     // animation direction
-  superResponse: boolean; // react to keypresses
-  speed: number;          // animation speed [unverified range]
-  colors: string[];       // hex colour strings
-  mode: number;           // effect id [unverified range]
-  luminance: number;      // brightness [unverified range]
-  sleepDelay: number;     // idle timeout [unverified]
-  staticColor: number;    // index into colors[]
-  type?: LightModeType;   // 'static' | 'custom' | 'dynamic'
+  open: boolean;          // master on/off — folded into the lightBitmap bitfield
+  direction: boolean;     // animation direction — bitmap bit
+  superResponse: boolean; // react to keypresses — bitmap bit
+  speed: number;          // animation speed — ✅ raw byte on wire, 0–255 (no clamp in src)
+  colors: string[];       // hex strings parsed with substring(1,3)/(3,5)/(5,7) — i.e. "#RRGGBB"
+                          //   (leading '#' assumed); each colour → [b,g,r,0xff] on wire
+  mode: number;           // effect id — ✅ raw byte on wire, 0–255 (no clamp in src)
+  luminance: number;      // brightness — ✅ raw byte on wire, 0–255 (no clamp in src)
+  sleepDelay: number;     // idle timeout — ✅ raw byte on wire, 0–255 (no clamp in src)
+  staticColor: number;    // index into colors[] — ✅ raw byte on wire
+  type?: LightModeType;   // 'static' | 'custom' | 'dynamic' — TS-side only, never packed
 }
 
 type LightModeType     = 'static' | 'custom'  | 'dynamic';
@@ -1907,6 +1941,14 @@ type LightLogoModeType = 'static' |            'dynamic';   // no 'custom' for t
 
 // ILoGoLightMode has the same fields as ILightMode, typed with LightLogoModeType.
 ```
+
+**✅ verified wire packing** (`PRGBDatapack` pack.ts:93 / `SRGBDatapack` pack.ts:112; bundle
+identical): payload = `[4×0xff, per-colour b,g,r,0xff…, 4×0xff (+4 more for PRGB), lightBitmap,
+luminance, mode, speed, sleepDelay, staticColor]`. The last five fields are each **one raw byte**
+with no SDK-side clamping, so their wire range is **0–255** (whether firmware clamps further is
+device-defined). `lightBitmap` folds `open`/`direction`/`superResponse` via `getLightBitmap`.
+**Lighting mode ids: the SDK defines no mode-id enum anywhere in src** — `mode` is passed through
+raw, so valid effect ids are device/firmware-specific.
 
 The public setters take the **`open`-less** variants:
 
@@ -1927,7 +1969,7 @@ interface IRGBDesc {
   superResponse: number; lightLuminance: number; lightMode: number;
   lightSpeed: number; lightSleepDelay: number; color: number;
 }
-interface IKRGBDesc { key: number; r?: number; g?: number; b?: number }  // r/g/b 0–255 [unverified]
+interface IKRGBDesc { key: number; r?: number; g?: number; b?: number }  // r/g/b 0–255 ✅ (SingleRGBDataPack raw bytes; getSingleRGBRecdata decodes uppercase R/G/B)
 type KRGBDescs = IKRGBDesc[];
 ```
 
@@ -1941,7 +1983,7 @@ setLighting: (lightModeConfig: LightModeConfigs) => Promise<any>
 | | `getLighting` | `setLighting` |
 |---|---|---|
 | **Params** | none | `lightModeConfig: LightModeConfigs` — all fields required (`open` omitted) |
-| **Returns** | `Promise<any>` — decoder `getPRGB(data): ILightMode` *(so it returns the **full** `ILightMode`, including `open`)* | `Promise<any>` |
+| **Returns** | `Promise<any>` — **✅ verified**: decoder `getPRGBRecdata` (recdata.ts:200, via `LightingController.getPRGB`) returns the **full `ILightMode`** incl. `open`, plus a **derived `type`** field: `mode===0 → 'static'`, `mode 1–20 → 'dynamic'`, `mode>20 → 'custom'` (matching the src comment `mode: 0 关闭, 1-20表示效果, 21 自定义` — **the SDK's own mode-id documentation**). Decodes exactly **7 colours** (4-byte `[B,G,R,0xff]` stride from offset 5 → `"#RRGGBB"`), then `data[37]`=bitmap (bit0 `open`, bit1 `direction`, bit4 `superResponse`), `[38]`=luminance, `[39]`=mode, `[40]`=speed, `[41]`=sleepDelay, `[42]`=staticColor. | `Promise<any>` |
 | **Description** | Reads main RGB lighting config. | Writes main RGB lighting config. |
 
 Command byte `KB2_CMD_PRGB = 24`.
@@ -1978,8 +2020,8 @@ saveCustomLighting: () => Promise<any>
 
 | Method | Params | Returns | Description |
 |---|---|---|---|
-| `getCustomLighting` | `key: number` — **required on `XDKeyboard`**, optional (`key?: number`) on the controller | `Promise<IKRGBDesc>` *(from `getSingleRGB`)* | Reads one key's custom RGB colour. |
-| `setCustomLighting` | `param: IKRGBDesc` (`{key, r?, g?, b?}`; `r/g/b` 0–255 **[unverified]**) | `Promise<any>` | Stages a per-key colour. |
+| `getCustomLighting` | `key: number` — **required on `XDKeyboard`**, optional (`key?: number`) on the controller | **✅ verified** — `getSingleRGBRecdata` (recdata.ts:309) returns `{ key: data[1], R: data[2], G: data[3], B: data[4] }`. ⚠️ Field names are **uppercase `R`/`G`/`B`**, not the lowercase `r`/`g`/`b` of `IKRGBDesc` — don't feed the result straight back into `setCustomLighting`. | Reads one key's custom RGB colour. |
+| `setCustomLighting` | `param: IKRGBDesc` (`{key, r?, g?, b?}`; **✅ verified** — `SingleRGBDataPack` (pack.ts:130) pushes each channel as a raw byte when present (or `0`), so `r`/`g`/`b` are 0–255 on the wire; omitted channels are simply not sent) | `Promise<any>` | Stages a per-key colour. |
 | `saveCustomLighting` | none | `Promise<any>` | Commits all staged per-key colours to flash. |
 
 **`setCustomLighting` is a two-phase write**: stage N keys, then call `saveCustomLighting()`
@@ -2013,12 +2055,12 @@ setLightingSaturation: (param: number[]) => Promise<any>
 
 | | `getSaturation` | `setLightingSaturation` |
 |---|---|---|
-| **Params** | none | `param: number[]` — saturation values. **Range [unverified]**: likely 0–100 or 0–255 per channel/zone; array length not declared. |
-| **Returns** | `Promise<any>` | `Promise<any>` |
-| **Description** | Reads colour saturation. | Writes colour saturation. |
+| **Params** | none | `param: number[]` — **✅ verified: this is the "fixed RGB" (`QUERY_LIGHT_FIX_RGB`, OrderType 0x44) triplet, not a generic per-zone saturation array.** The wire packet is `[0x44, ...param, 0xff, 0xff]` (`saturationDataPack` pack.ts:395 → `cmdRGBSaturation`), so `param` is written **verbatim as bytes** with no length check or clamp. Because the getter decodes exactly `data[2..4]` as `{r,g,b}` (§ getApi `QUERY_LIGHT_FIX_RGB` row), the meaningful **length is 3** and each value is a raw **0–255** byte. Passing more/fewer than 3 still gets forwarded — the SDK won't stop you. |
+| **Returns** | `Promise<any>` — **✅ verified**: routes through `getCmdRecdata`'s `QUERY_LIGHT_FIX_RGB` (0x44) branch → `{ r, g, b }` (raw bytes 2–4). | `Promise<any>` — the raw `sendData` result (errors caught and returned). |
+| **Description** | Reads the fixed-RGB correction triplet. | Writes it. (The `Saturation` name is the SDK's own label for the fixed-RGB channel.) |
 
-Packed by `cmdRGBSaturation(isrw, param: number[])`. `getSaturation` lives on
-`InfoController`, not `LightingController` — an organisational quirk of the SDK.
+`getSaturation` lives on `InfoController`, not `LightingController` — an organisational quirk of
+the SDK. `setLightingSaturation` → `LightingController.cmdRGBSaturation`.
 
 > **Neither `getSaturation` nor `setLightingSaturation` is wrapped by this app.**
 

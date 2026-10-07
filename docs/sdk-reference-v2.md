@@ -841,26 +841,34 @@ DKS-family reads and macro address/size use slots (§5.2).
 ### 6.0 The `v` firmware-version gate — **✅ verified**
 
 The `v?: string` parameter on several setters is a **firmware-version gate**: the packer emits a
-different byte layout for newer firmware. Its type is `string` on the SDK surface; the controller
-layer types it `VersionString`, which **has no declaration anywhere in the three packages** — see
-§13.1. Gating uses `compareVersions(v, 'x.y.z')` and treats `'greater'`/`'equal'` as "new enough".
+different byte layout for newer firmware. Where it appears on the façade it is typed plain `string`;
+the controller layer types it `VersionString`, which **has no declaration anywhere in the three
+packages** — see §13.1. Gating uses `compareVersions(v, 'x.y.z')` and treats `'greater'`/`'equal'`
+as "new enough".
 
-**Critically, most setters accept `v` and then never pass it down.** The compiled call chain drops
-the argument, so the packer falls back to its own `v = '1.0.5'` default. Passing a real firmware
-version to those methods has **no effect on the bytes sent**.
+**There are two layers, and they disagree.** App code (including `advancedKeysSdkMap`) calls the
+public `XDKeyboard` **facade**; the facade delegates to `HigherKeyController` / `LightingController`,
+which call the `cmd*` builders, which call the packers. `v` must survive **every** hop to reach a
+packer — and in most cases it does not.
 
-| SDK method | `v` default | Forwarded? | Effective payload |
+| Facade method (what app code calls) | Controller method | Does `v` reach the packer? | Effective payload |
 |---|---|---|---|
-| `setDks(e)` | *(no `v` param)* | — | Always the 1.0.5 layout: `[key, ...hi/lo(dks), ...trps, ...hi/lo(dbs)]` |
-| `setMPT(e, v)` | `'1.0.5'` | ❌ **no** — `cmdMPT(!1, e)` | `MPTDataPack` has no `v` at all: `[key, ...hi/lo(dks), ...hi/lo(dbs*1000)]` |
-| `setMT(e, v)` | `'1.0.5'` | ❌ **no** — `cmdMT(!1, e)` | Packer default 1.0.5 → `[key, ...hi/lo(dks), delay]` |
-| `setTGL(e, v)` | `'1.0.5'` | ❌ **no** — `cmdTGL(!1, e)` | Packer default 1.0.5 → `[key, ...hi/lo(dks), delay/10]` |
-| `setMacro(e, list, mode, v)` | `'1.0.5'` | ❌ **no** — `cmdMacro`/`modeMacro` never receive it | Macro packs have no version gating whatsoever |
-| `setEND(e, v)` | `'1.0.5'` | ✅ **yes** — `cmdEND(!1, e, v)` | See gate table below |
-| `setSocd(e, v)` / `getSocd(key, v)` | `'1.0.5'` | ✅ **yes** — `cmdSOCD(read, e, v)` | See gate table below |
-| `getLighting(v)` / `setLighting(cfg, v)` | `'1.0.7'` | ✅ **yes** — `cmdPRGB(isrw, param, v)` | See gate table below |
+| `setDks(e)` | `setDKS(e)` | **n/a** — neither layer takes `v` | Always the 1.0.5 layout: `[key, ...hi/lo(dks), ...trps, ...hi/lo(dbs)]` |
+| `setMpt(e)` | `setMPT(e, v = '1.0.5')` → `cmdMPT(!1, e)` | ❌ **no** — dropped at *both* hops; `MPTDataPack` has no `v` param at all | `[key, ...hi/lo(dks), ...hi/lo(dbs*1000)]` |
+| `setMT(e)` | `setMT(e, v = '1.0.5')` → `cmdMT(!1, e)` | ❌ **no** — dropped at both hops | Packer default 1.0.5 → `[key, ...hi/lo(dks), delay]` |
+| `setTGL(e)` | `setTGL(e, v = '1.0.5')` → `cmdTGL(!1, e)` | ❌ **no** — dropped at both hops | Packer default 1.0.5 → `[key, ...hi/lo(dks), delay/10]` |
+| `setMacro(param, macros, touchMode)` | `setMacro(e, t, r, v = '1.0.5')` | ❌ **no** — facade passes only 3 args; `cmdMacro`/`modeMacro` never receive `v` | Macro packs have no version gating whatsoever |
+| `setRS(e)` | `setRS(e)` | **n/a** — neither layer takes `v` | Always `[key, dks, dks, key]` |
+| `setEND(e, v = '1.0.5')` | `setEND(e, v = '1.0.5')` → `cmdEND(!1, e, v)` | ✅ **yes** | See gate table below |
+| `setSocd(e, v = '1.0.5')` | `setSocd(e, v = '1.0.5')` → `cmdSOCD(!1, r, v)` | ✅ **yes** | See gate table below |
+| `getSocd(key, v = '1.0.5')` | `getSocd(e, v = '1.0.5')` → `cmdSOCD(!0, e, v)` | ✅ **yes** (decode side) | See gate table below |
+| `getLighting()` | `getLighting(v = '1.0.7')` → `cmdPRGB(...)` | ❌ **no** — facade takes zero args | Always `'1.0.7'` |
+| `setLighting(cfg)` | `setLighting(e, v = '1.0.7')` → `cmdPRGB(e, t, r = '1.0.7')` | ❌ **no** — facade passes only `cfg` | Always `'1.0.7'` |
 
-**Real gates** (only reachable through the three rows marked ✅):
+Note the facade's inconsistent casing: `setDks`, `setMpt`, but `setMT`, `setTGL`, `setEND`,
+`setSocd`, `setRS`. The controller layer uses `setDKS`/`setMPT`/`getMPT`. Bind to the facade names.
+
+**Real gates** — only the three ✅ rows above can actually reach them from app code:
 
 | Packer | Condition | Bytes emitted |
 |---|---|---|
@@ -872,8 +880,8 @@ version to those methods has **no effect on the bytes sent**.
 | | otherwise | V1: `[key, dks1, mode1, dks1, key, mode2]` |
 | `getSocdData` (decode) | `v >= 1.0.7` | `{ pos1, pos2, key1, key2, type, mode, delay }` |
 | | else | `{ pos, key, type, mode }` |
-| `RGBDataPack` (lighting) | `v >= 1.0.9` | base bytes **plus** a trailing `dynamicColorId` byte |
-| | else | base bytes only |
+| `RGBDataPack` (lighting) | `v >= 1.0.9` | base bytes **plus** a trailing `dynamicColorId` byte — ⚠️ **unreachable** from the public API (see below) |
+| | else | base bytes only — what actually happens, always |
 
 Two `SOCDPack` details worth noting: the `'1.0.5'`/`'1.0.6'` branch is an **exact string match**
 (not a range compare), so e.g. `'1.0.51'` would fall through to the legacy V1 shape; and the V1
@@ -887,11 +895,18 @@ takes one — RS is version-independent, always `[key, dks, dks, key]`.
 > **Source/bundle divergence:** `protocol-keyboard/src/controller/lighting.ts` declares
 > `cmdPRGB(isrw, param?)` with **no** `v` parameter, but the shipped `sdk-keyboard` bundle compiles
 > it as `cmdPRGB(e, t, r = '1.0.7')` and threads `v` into `RGBDataPack`. The readable source is
-> therefore *behind* the bundle for lighting. Trust the bundle for the 1.0.9 gate.
+> therefore *behind* the bundle for lighting. Trust the bundle for the 1.0.9 gate — but note it is
+> **moot in practice**, because the facade above it never supplies `v`.
 
-**Practical rule:** only pass `v` to `setEND`, `setSocd`/`getSocd`, and `getLighting`/`setLighting`.
-For DKS, MPT, MT, TGL and macro, the wire format is fixed at the 1.0.5 layout no matter what you
-pass — so decode returned data assuming 16-bit hi/lo pairs.
+> **The 1.0.9 lighting gate is dead code through the public API.** `getLighting=()=>this.lightingController.getLighting()`
+> and `setLighting=e=>this.lightingController.setLighting(e)` pass no version argument, so the
+> controller default `'1.0.7'` always wins and `dynamicColorId` is never appended. To exercise it you
+> would have to reach past `XDKeyboard` into `lightingController` directly.
+
+**Practical rule:** from app code, `v` is settable on exactly three methods — `setEND`, `setSocd`,
+and `getSocd`. Everything else (DKS, MPT, MT, TGL, RS, macro, lighting) is pinned to its packer
+default (`'1.0.5'`, or `'1.0.7'` for lighting) no matter what you do, so decode returned data
+assuming 16-bit hi/lo pairs.
 
 ### 6.1 DKS (Dynamic Keystroke)
 
@@ -1444,8 +1459,10 @@ Command byte `KB2_CMD_PRGB = 24`.
 
 > **Version gate not exposed.** `LightingController.getLighting(v?: VersionString)` and
 > `setLighting(cfg, v?: VersionString)` accept a firmware-version argument; **`XDKeyboard`
-> drops it**, so the SDK picks the version itself from the handshake. There is no way to
-> override it through the public API.
+> drops it** — the façade is `getLighting=()=>...getLighting()` / `setLighting=e=>...setLighting(e)`,
+> so the controller default `'1.0.7'` always applies. It is *not* derived from the handshake, and
+> there is no way to override it through the public API. Consequence: the `>= 1.0.9`
+> `dynamicColorId` gate can never fire (§6.0).
 
 ### `getLogoLighting` / `setLogoLighting`
 
@@ -2604,9 +2621,11 @@ Root cause, verified on disk (`protocol-keyboard@1.0.6`):
   `VersionString`.
 
 Net effect: any TypeScript program that imports `VersionString` transitively through
-`sdk-keyboard`'s controller layer gets an unresolved type. Because `XDKeyboard`'s own surface
-exposes `v` as `string` (§6.0), this never bites app code — only code that reaches into
-`LightingController` directly.
+`sdk-keyboard`'s controller layer gets an unresolved type. This never bites app code, because the
+`XDKeyboard` façade only exposes `v` on `setEND` / `setSocd` / `getSocd`, where it is typed plain
+`string` (§6.0) — the two controller methods that *do* use `VersionString`
+(`LightingController.getLighting` / `setLighting`) have no `v` parameter on the façade at all. It
+only affects code that reaches into `LightingController` directly.
 
 **Practical consequence for this document:** treat `v` as `string`. The only values with observed
 behaviour are the exact literals `'1.0.5'`, `'1.0.6'`, `'1.0.7'` and `'1.0.9'` (§6.0); there is
@@ -2628,16 +2647,31 @@ maxTouchTravel, VID, PID }`, and profile count via `getApi({ type: 'CONFIG' })` 
 
 ### 13.3 Shapes elided by the shipped `.d.ts`
 
-| Item | What is missing |
-|---|---|
-| `getModeMacro(data)` | Declared `{ key, id, len, mode, … }` — the `.d.ts` literally contains an ellipsis. Full macro-read shape **not recoverable from types**. |
-| `ISOCDModeV2` / `ISOCDModeV3` | Field **types** are not annotated in `interface.d.ts`; only the field names are known. `number` assumed throughout **[unverified]**. |
-| `sdkMap` values | All five typed as bare `string`; the actual event names are not in the declarations. Keys `128`/`163`/`171`/`152`/`153` match no `Protocol` command byte, so they are presumed input-report event ids **[unverified]**. |
-| `MacroType.status` | Typed `string`, not a union. The `'down' \| 'up'` values are **[unverified]**. |
-| `setMacro`'s `touchMode` | Typed plain `string` on both `XDKeyboard` and `HigherKeyController` — not `TouchModeType`. Accepted values **[unverified]**. |
-| Default `dksLayout` / `dbLayout` | Optional params whose defaults are not visible in the `.d.ts`. `KeyboardService` defaults `dbLayout` to `'Layout_DB1'` as an **app-level** choice. |
-| `getMtorTgl` discriminator | Returns `number`; which value means MT and which means TGL is not declared. |
-| `advancedKeyMode` | No exported enum. The number passed to `setPerformanceMode` is not derivable from types. |
+The shipped `.d.ts` files are terse, but almost every gap is closed by reading either
+`protocol-keyboard/src` (the readable source, which is *richer* than the `.d.ts` for these types)
+or the compiled `sdk-keyboard/dist/esm/index.js` bundle. Second-pass status below — **✅ verified**
+rows were previously listed as unrecoverable.
+
+| Item | `.d.ts` says | Ground truth (source / bundle) | Status |
+|---|---|---|---|
+| `getModeMacro(data)` | `{ key, id, len, mode, … }` — literal ellipsis | Bundle: `{ key: e[1], id: e[3]<<8\|e[2], len: e[4], mode: e[5], num: e[7]<<8\|e[6], delay: e[10]<<16\|e[9]<<8\|e[8] }` — 7 fields, all little-endian multi-byte except `key`/`len`/`mode` | ✅ verified |
+| `ISOCDModeV2` / `ISOCDModeV3` | Field types **are** annotated in `protocol-keyboard/src/types/interface.ts` (L135–151): all `number`; `V3` = `V2` + `delay: number` | Same as source | ✅ verified (the sdk-keyboard `.d.ts` copies it; only names were "assumed" before) |
+| `sdkMap` values | All five typed bare `string`; keys `128`/`163`/`171`/`152`/`153` | Bundle: `{128:"getCmd", 163:"getKey", 171:"defKey", 152:"getSpecialSingleRGB", 153:"getLogoRGB"}` — these are **input-report event ids → handler-name** pairs, not `Protocol` command bytes | ✅ verified (values); id→meaning still **[unverified]** beyond the handler names |
+| `MacroType.status` | Typed `string`, not a union | Packagers do a **numeric** test: `MacroDataPack` / `cmdMacro` use `keyStatus[i] === 0 ? prefix 8 : prefix 1`. So the wire contract is `0` (release) vs non-zero (press), **not** a `'down'\|'up'` string. This app's `ExportService` confirms it: `status: m.status === 'press' ? 1 : 0` | ✅ verified — the `string` type is misleading; a string would never `=== 0` |
+| `setMacro`'s `touchMode` (`r` param) | Plain `string` on both layers — not `TouchModeType` | Bundle: `"quick"===r ? u=2 : "single"===r && (u=1)`, then `y = u<<4 \| 6`. Accepted values are **`'quick'` (2) / `'single'` (1)**, anything else → `0` (global). Note these differ from `TouchModeType` (`global`/`single`/`rt`) | ✅ verified |
+| Default `dksLayout` / `dbLayout` | Optional params, defaults not in `.d.ts` | Bundle: `getDks(e, t="Layout_DKS1")`, `getDksTravel(e, t="Layout_DB1")`, `setDksTravel(e, t, r="Layout_DB1")`. **`getTrps(e, t)` has no default** — passing `undefined` indexes `KeyLayout[undefined]` → `undefined` slot | ✅ verified |
+| `getMtorTgl` discriminator | Returns `number`; MT vs TGL "not declared" | Bundle: returns `10 * (e[4]<<8 \| e[3])` — a **scaled delay** (16-bit LE × 10), *not* a discriminator. Both MT and TGL store a delay in the same slot layout; `getMtorTgl` reads it back regardless of which feature is active | ✅ verified — the row's premise (a MT/TGL selector) was wrong |
+| `advancedKeyMode` | No exported enum | See §5.2 — full 0–9 table verified from `advancedKeysSdkMap` | ✅ verified (moved to §5.2) |
+
+**Remaining genuinely-unverified items** (not derivable from source or bundle):
+
+- The *semantic* meaning of `sdkMap` input-report ids `128`/`163`/`171`/`152`/`153` beyond their
+  handler names — these are firmware-side event ids with no enum in either package. Checked:
+  `recData/map.d.ts` (types them `string`), the bundle (only maps id → handler name).
+- Whether the `SOCDPack` V1-branch byte duplication (`[key, dks1, mode1, dks1, key, mode2]`, §6.0)
+  is intentional or a packing bug — the source carries no comment. Checked: `pack.ts` `SOCDPack`.
+- Firmware behaviour for `advancedKeyMode` values outside `advancedKeysSdkMap` (7, 10–15) — no
+  range guard exists (§5.2).
 
 ### 13.4 Package-level packaging defects
 

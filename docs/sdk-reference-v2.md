@@ -9,7 +9,7 @@ consulted only where the types were silent.
 |---|---|---|---|
 | `@sparklinkplayjoy/sdk-keyboard` | **1.0.20** | `./dist/esm/index.d.ts` | Declared in app `package.json` as `^1.0.14` |
 | `@sparklinkplayjoy/protocol-keyboard` | **1.0.6** | `./dist/esm/index.d.ts` | **Broken**: that file does not exist on disk. Only `dist/esm/types/index.d.ts` is present. |
-| `@sparklinkplayjoy/hid` | **1.0.11** | `./dist/esm//types/enum.d.ts` | Typo in `package.json` (double slash); resolves on Windows/POSIX but only exposes `enum.d.ts`, not `index.d.ts`. |
+| `@sparklinkplayjoy/hid` | **1.0.11** | `./dist/esm//types/enum.d.ts` | **Broken — does not resolve.** Two defects: the double slash (typo) and, decisively, `hid/dist/esm/types/` **does not exist on disk at all** (`dist/esm` contains only `index.js`, `index.d.ts`, `src/`). `main` is `./dist/cjs/index.js`. Because `types` *is* declared, `tsconfig`'s legacy `"moduleResolution": "node"` honours it and **never falls back** to the valid adjacent `dist/esm/index.d.ts`. See §13.7. |
 
 ## Dependency graph
 
@@ -324,11 +324,31 @@ setRateOfReturn: (value: number) => Promise<number>
 
 | | |
 |---|---|
-| **Params** | `value: number` — polling rate. **Range [unverified]**: typical Hall-effect firmware offers 125 / 250 / 500 / 1000 / 2000 / 4000 / 8000 Hz; the SDK does not validate. Note `KeyboardConfig.system.rateOfReturn` is the persisted counterpart. |
-| **Returns** | `Promise<number>` — the rate actually applied. |
-| **Description** | Sets the USB report rate. |
+| **Params** | `value: number` — a **polling-rate index, NOT a rate in Hz.** The SDK does not validate or clamp it; the app validates `0`–`6` itself in `KeyboardService.setPollingRate`. Note `KeyboardConfig.system.rateOfReturn` is the persisted counterpart and holds the same index. |
+| **Returns** | `Promise<number>` — the index actually applied. |
+| **Description** | Sets the USB report rate, addressed by index. |
 
 `InfoController.setRateOfReturn` is typed `Promise<any>`; `XDKeyboard` narrows it to `Promise<number>`.
+
+**Index → Hz mapping** (app-verified on hardware, **not declared by the SDK** anywhere — neither
+the `.d.ts` files nor the minified bundle contains these constants). Taken from
+`POLLING_RATE_OPTIONS` in `src/App.vue`, which is the only source of this table in the codebase:
+
+| Index | Rate |
+|---|---|
+| `0` | 8 kHz |
+| `1` | 4 kHz |
+| `2` | 2 kHz |
+| `3` | 1 kHz |
+| `4` | 500 Hz |
+| `5` | 250 Hz |
+| `6` | 125 Hz |
+
+Index `0` is the *fastest* rate and `6` the slowest — the ordering is descending, so do not do
+arithmetic on the index expecting Hz.
+
+`getApi({ type: 'ORDER_TYPE_ROES' })` returns **the same index**, not Hz. `KeyboardService.getPollingRate`
+is that call, and the value it returns indexes directly into the table above.
 
 > ⚠️ This repo wraps the call in an operation-token + timeout state machine because the device
 > re-enumerates on the bus when the rate changes.
@@ -663,7 +683,7 @@ getDksTravel: (key: number, dksLayout?: DksLayoutType) => Promise<any>
 
 | | |
 |---|---|
-| **Params** | `key: number`. `dksLayout?: 'Layout_DB1' \| 'Layout_DB2' \| 'Layout_DB3'` — defaults to `Layout_DB1` **[unverified: default not visible in the `.d.ts`]**. |
+| **Params** | `key: number`. `dksLayout?: 'Layout_DB1' \| 'Layout_DB2' \| 'Layout_DB3'` — defaults to `Layout_DB1` **✅ verified** (the `.d.ts` elides the default, but the compiled implementation in `sdk-keyboard/dist/esm/index.js` is `async getDksTravel(e, t = "Layout_DB1")`). Note the layout union is `Layout_DB1`–`DB3` (`KeyLayout` enum `0x05`–`0x07`), **not** `DksType` `9`–`12`. |
 | **Returns** | `Promise<any>` — decoder `getDksTravel(data): number` |
 | **Description** | Reads the travel threshold stored in one DKS/DB layout slot. |
 
@@ -774,6 +794,62 @@ packages** — see §13.1.
 Four independent actuation points per key, so one physical press can emit up to four different
 key codes at four different depths.
 
+> **Evidence source.** Unlike `sdk-keyboard`, the `protocol-keyboard` package ships **readable
+> TypeScript source** at `node_modules/@sparklinkplayjoy/protocol-keyboard/src/` — notably
+> `utils/recdata.ts` (decoders), `utils/pack.ts` (packers), `utils/decimal.ts` (`preciseCalculate`,
+> built on decimal.js) and `constants/param.ts` (the `KeyLayout` enum). Everything in this section
+> below was read from those files, not from a minified bundle, and is therefore **verified** unless
+> explicitly marked *(inferred)*.
+
+#### How DKS data is split across hardware slots
+
+One key's DKS configuration lives in **three separate groups of `KeyLayout` slots**, each with its
+own unit and its own reader. The enum values are verified from `constants/param.ts`:
+
+| Slot group | Enum values | Holds | Read with | Decoder (verified) | Returns |
+|---|---|---|---|---|---|
+| `Layout_DKS1`–`Layout_DKS4` | `0x09`–`0x0C` (9–12) | The four actuation **points** — raw integers off the wire, *not* divided by anything | `getDks` / `getDksAll` | `getDksRecdata(data)` → `{ dks: (data[4]<<8) \| data[3] }` | raw `number` |
+| `Layout_TRPS1`–`Layout_TRPS4` | `0x0D`–`0x10` (13–16) | The four TRPS values — raw integers | `getTrps` / `getTrpsAll` | `getTrpsRecdata(data)` → `{ trps: (data[4]<<8) \| data[3] }` | raw `number` |
+| `Layout_DB1`–`Layout_DB3` | `0x05`–`0x07` (5–7) | **Travel depths in mm** | `getDksTravel` / `getDbTravel` | `getDksTravelRecdata(data)` → `preciseCalculate('divide', (data[4]<<8) \| data[3], 1000)` | **`number`** in mm, 3 d.p. |
+
+On the DB row's return type specifically: `preciseCalculate` is declared `=> number` and ends with
+`return Number(result.toFixed(precision))` where `precision` defaults to `3` (`utils/decimal.ts`,
+verified). So `getDksTravel` / `getDbTravel` resolve to a **number**, despite being built on
+decimal.js — the `.toFixed()` inside is converted back before returning. **Contrast this with
+`getSingleTravel`, which genuinely returns a string**: its decoder is
+`getSingleTravelRecdata(data, decimal)` → `((data[4]<<8) | data[3]) / 1000.0` then `.toFixed(decimal)`
+with no `Number()` wrapper. Anything comparing these two must handle one being a string.
+
+Two consequences worth internalising:
+
+1. **`getDksTravel` is the correct reader for the DB slots, not a misnomer.** The DKS *depths* are
+   stored in `Layout_DB1`–`DB3`, and `getDksTravel` reads exactly those. Its Chinese doc comment in
+   `controller/performance.ts` is "获取DKS行程" ("get DKS travel"), which matches. Do **not** treat
+   `getDksTravel` as the wrong method for DKS — it and `getDks` read different slot groups, and you
+   generally need both to reconstruct a key's DKS state.
+2. **Units differ between the groups.** `Layout_DKS*` and `Layout_TRPS*` come back as raw integers
+   (the decoders do no scaling). `Layout_DB*` come back divided by 1000 via `preciseCalculate`, i.e.
+   in millimetres. Writing is the mirror image: `DKSDataPack` runs `dks` and `dbs` through
+   `computeHighLowByte` but spreads `trps` **raw** (see below).
+
+`Layout_DB0` (`0x04`) is a fourth, separate slot that is **not** part of the DKS triple: it is what
+`setSingleTravel` writes, as `value * 1000`. Caveat on the citation: `Layout_DB0` is **declared** in
+both `constants/byte.ts:43` and `constants/param.ts:51` but has **zero other references in
+`protocol-keyboard/src`** — `controller/performance.ts` there exposes only *getters*
+(`getSingleTravel`, `getDksTravel`, `getRtTravel`, `getDpDr`, …), no setters. The `Layout_DB0` writer
+lives in the **compiled `sdk-keyboard` bundle**, where `setSingleTravel(e, t, r = 2)` does
+`cmdLayout(!1, { key: e, layout: Layout_DB0, value: 1e3 * t })` and then **returns the readback**
+`getSingleTravel(data, r)` — so `setSingleTravel` resolves to a **string** (`.toFixed(2)`), not a
+void/ack. That is verified against the bundle, not against protocol src. `KeyLayout`
+also places `Layout_MacroAddr` (`0x11`), `Layout_MacroSize` (`0x12`), `Layout_MTDelay` (`0x13`),
+`Layout_RTP/RTR/DP/DR/KR` (`0x14`–`0x18`), `Layout_AXIS` (`0x19`) and `Layout_RS` (`0x20`) in the
+same enum, so the DKS slots are not the whole address space.
+
+**Array lengths remain *(unverified)*** — `IDKSMode` declares `dks`, `trps` and `dbs` as bare
+`number[]` in `types/interface.ts` with no length constraint, and `DKSDataPack` loops over
+`dbs.length` / `dks.length` rather than a constant. The `4 / 4 / 3` shape below is inferred from the
+slot groups, not declared.
+
 #### `setDks`
 
 ```ts
@@ -824,8 +900,8 @@ getDksAll: (key: number) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number` |
-| **Returns** | `Promise<any>` — *(inferred)* all four DKS values, likely `number[]`. |
-| **Description** | Reads all four DKS actuation depths in one round trip. |
+| **Returns** | `Promise<any>` — **shape not recoverable from source.** `protocol-keyboard/src` declares **no** `getDksAll` (verified: the class in `controller/higherKey.ts` has `getTrps`, `getDks`, `getMtorTgl`, … but no `*All` method), so this is a **façade-only aggregate** in `sdk-keyboard`. It almost certainly reads `Layout_DKS1`–`DKS4` and returns the four `{ dks }` values, but whether that is a `number[]`, an object keyed by slot, or an array of `{dks}` objects is *(inferred)*. |
+| **Description** | Reads all four DKS actuation points in one round trip. Note these are the raw `Layout_DKS*` integers (§ slot table above), **not** the mm depths in `Layout_DB*`. |
 
 > **Not wrapped by this app.**
 
@@ -854,8 +930,8 @@ getTrpsAll: (key: number) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number` |
-| **Returns** | `Promise<any>` — *(inferred)* all four TRPS values. |
-| **Description** | Reads all four TRPS values in one round trip. |
+| **Returns** | `Promise<any>` — **shape not recoverable from source.** Like `getDksAll`, `getTrpsAll` does not exist in `protocol-keyboard/src` at all (verified: no `*All` method on `HigherKeyController`), so it is a façade-only aggregate whose shape is *(inferred)*. |
+| **Description** | Reads all four TRPS values (`Layout_TRPS1`–`TRPS4`, raw integers) in one round trip. |
 
 There is **no** `setTrps` on any layer — TRPS values are written as part of `setDks`'s
 `IDKSMode.trps` array.
@@ -1072,9 +1148,50 @@ setMacro: (param: IMacroMode, macros: MacroType[], touchMode: string) => Promise
 
 | | |
 |---|---|
-| **Params** | `param: IMacroMode` — macro slot metadata. `macros: MacroType[]` — the key sequence. `touchMode: string` — **plain `string`, not `TouchModeType`**; pass `'global' \| 'single' \| 'rt'` *[unverified]*. |
-| **Returns** | `Promise<any>` |
-| **Description** | Writes a macro sequence to a key's macro slot. |
+| **Params** | `param: IMacroMode` — macro slot metadata. `macros: MacroType[]` — the key sequence. `touchMode: string` — **plain `string`, not `TouchModeType`**; see the value table below, which was recovered from the compiled implementation. |
+| **Returns** | `Promise<any>` — the result of the final `modeMacro` write; errors are caught and **returned**, not thrown. |
+| **Description** | Writes a macro sequence to a key's macro slot. Internally batches the sequence and issues several round trips — see below. |
+
+#### How `setMacro` actually writes (verified from the compiled implementation)
+
+The `.d.ts` hides all of this. Read out of `sdk-keyboard/dist/esm/index.js`:
+
+- **Batch size is 9 actions per packet.** Three fixed 9-element buffers are allocated —
+  `new Uint16Array(9)` for key codes, `new Array(9)` for statuses, `new Uint32Array(9)` for delays —
+  zero-filled, then filled from `macros[]`. When the fill index reaches 9, the packet is sent
+  immediately (`cmdMacro(!1, s - i, i, o, a, c)`) and the index resets. A trailing partial packet
+  (`if (i > 0)`) is sent after the loop.
+- **There is no 64-action limit in the SDK.** Nothing caps `macros.length`; a 40-action macro simply
+  becomes 5 packets (9×4 + 4). Any "maximum 64 actions" figure is a **product/UI convention, not an
+  SDK constraint**, and is not enforced here. If this app needs a cap it must impose it itself.
+- **The write offset starts at 256**, not 0: the running counter `s` is initialised to `256` and
+  incremented per action, so the first packet's `offset` argument is `256 - i` … i.e. the macro
+  payload is stored from address 256 onward, with `Layout_MacroAddr` (`0x11`) recording position.
+- **Each packet is awaited sequentially** (`await this.deviceBase.sendData(e)` inside the loop), so a
+  long macro costs one round trip per 9 actions. Budget for that when scripting bulk macro writes —
+  it interacts with the batch-processing rule in `CLAUDE.md`.
+- **After the payload, a mode byte is written separately**: `u = 2` when `touchMode === 'quick'`,
+  `u = 1` when `touchMode === 'single'`, and **`u = 0` for anything else**, then
+  `value = (u << 4) | 6` is sent via `cmdLayout` to layout `8` (`Layout_Mode`, `0x08`). Finally
+  `modeMacro(!1, key, index, len, mode, num, delay)` writes the slot metadata and its result is
+  returned.
+
+**`touchMode` accepted values — note the mismatch with `TouchModeType`.** The type alias is
+`TouchModeType = keyof typeof KeyTouchMode`, and `KeyTouchMode` is
+`{ global = 0x00, single = 0x01, rt = 0x02 }` (verified in `constants/param.ts`), i.e. the union
+`'global' | 'single' | 'rt'`. But `setMacro` only ever compares against **`'quick'`** and
+**`'single'`** — `'quick'` is not a member of `TouchModeType`, and `'global'` / `'rt'` silently fall
+through to `u = 0` (identical to `'global'`). So the declared type and the implementation disagree:
+
+| `touchMode` passed | `u` | Effect |
+|---|---|---|
+| `'quick'` | `2` | Distinct mode byte `(2 << 4) \| 6` — **only reachable via `setMacro`, not via `TouchModeType`** |
+| `'single'` | `1` | Mode byte `(1 << 4) \| 6` |
+| `'global'`, `'rt'`, anything else | `0` | Mode byte `(0 << 4) \| 6` — all collapse to the same value |
+
+Since the parameter is typed as bare `string` on `XDKeyboard`, TypeScript will not catch a wrong
+value. **This app calls `setMacro(param, macros)` with no third argument** (`KeyboardService.ts:538`),
+so `touchMode` is `undefined` → `u = 0` in practice.
 
 ```ts
 interface IMacroMode {
@@ -2258,6 +2375,51 @@ The read side is well covered; the **write side of every advanced-key feature is
 
 Enumerated with signatures and what each would unlock in **§14**.
 
+### 12.3 `KeyboardService` wrapper → SDK mapping
+
+**Why this section exists.** Several public method names on `KeyboardService` **are not SDK
+methods at all** — they are this app's own wrappers, and they rename, re-index or reshape the
+underlying SDK call. The superseded `docs/SDK_REFERENCE.md` documented these wrapper names *as if*
+they were the SDK surface, which is why a reader looking for `getPollingRate` or `getActiveProfile`
+on `XDKeyboard` finds nothing. They are not missing from the SDK; they never existed there.
+
+Every row below was verified against `src/services/KeyboardService.ts` (line numbers cited). None
+of the right-hand column is a guess.
+
+| `KeyboardService` wrapper (app layer) | Underlying SDK call on `XDKeyboard` | Transform the wrapper applies | Verified at |
+|---|---|---|---|
+| `getPollingRate()` | `getApi({ type: 'ORDER_TYPE_ROES' })` | Retries up to **5** times, then requires `typeof result === 'number'`; returns that number. The value is a **rate index 0–6, not Hz** (§3). | `:1144`–`:1174` |
+| `setPollingRate(value)` | `setRateOfReturn(value)` | **App-side validation only**: rejects `value < 0 \|\| value > 6`. The SDK itself does not validate. Then arms `pollingRateOperationToken` and a timeout, because the device re-enumerates on rate change (§3). | `:1175`–`:1262` |
+| `querySystemMode()` | `getApi({ type: 'ORDER_TYPE_QUERY_WIN_MODEL' })` | Retries up to **5** times; validates `result.currentSystem` is a string; narrows it to the union `'win' \| 'mac'`. The SDK returns an untyped object. | `:1263`–`:1297` |
+| `setSystemMode(mode)` | `switchSystemMode(mode)` | Pass-through of `'win' \| 'mac'`; no transform. | `:1298`–`:1310` |
+| `factoryReset()` | `factoryDataReset()` | Arms `factoryResetOperationToken` + timeout, calls `suppressSDKReconnectError()` (temporary `console.error` suppression), and sets `isFactoryResetting = true` around the call, because reset drops and re-enumerates the device. | `:1312`–… |
+| `setGlobalTouchTravel(param)` | `setDB(param)` | Pass-through; the wrapper's declared return type is `{ globalTouchTravel: number; pressDead: number; releaseDead: number } \| Error`, which is the app's reading of what `setDB` yields. | `:561`–`:573` |
+| `getActiveProfile()` | `getApi({ type: 'ORDER_TYPE_CONFIG' })` | **Re-indexes**: reads `result.configID` (device-native **0–3**), applies `(result.configID ?? 0) + 1`, and returns a **profile ID 1–4**. The SDK knows nothing about 1-based profiles. | `:1044`–`:1058` |
+| `switchConfig(profileId)` | `switchConfig(configIndex)` | **Re-indexes in the opposite direction**: validates `1 <= profileId <= 4`, then passes `configIndex = profileId - 1` (**0–3**) to the SDK. Same method name on both layers — easy to confuse. | `:1012`–`:1043` |
+
+**The two off-by-one traps, stated plainly**, because they are the only place a 1-vs-0 mistake will
+silently corrupt state:
+
+- **Profiles are 1–4 at the app boundary and 0–3 at the SDK boundary.** `getActiveProfile` adds 1
+  on the way out; `switchConfig` subtracts 1 on the way in. Both are explicit in source, with the
+  comment `// SDK returns configID as 0-3, we use 1-4 for profile IDs` at `:1051`.
+- **Polling rate is an index 0–6 at *both* boundaries** — no conversion, but the index is *not* Hz
+  and is ordered **descending** (0 = 8 kHz, 6 = 125 Hz). See the table in §3.
+
+**Shared wrapper conventions** (all eight above, and the rest of `KeyboardService`):
+
+1. Every wrapper first checks `if (!this.connectedDevice) return new Error('No device connected')`.
+2. Wrappers **return `Error` instances rather than throwing** — the declared types are
+   `Promise<T | Error>`. Callers must test `result instanceof Error`, not use `try/catch`.
+3. Each wraps its SDK call in `try/catch` that `console.error`s and returns `error as Error`.
+4. The SDK instance is reached via `this.ensureKeyboard()`, never a bare field — this is what makes
+   the auto-reconnect path work.
+
+> **Documentation consequence.** Any SDK reference for this project must keep these two layers
+> separate. `docs/SDK_REFERENCE.md` conflated them; this file documents the **SDK surface** in
+> §1–§11 and this **app layer** here. When a name appears in one column and not the other, that is
+> expected, not an error.
+
 ---
 
 ## 13. Unresolved items & unverified register
@@ -2523,11 +2685,11 @@ lines.
 
 #### 13.7.1 Measured: four candidate fixes for Site 1
 
-Each candidate, plus the baseline, was run as a full `tsc --noEmit` against a copy of the repo
-(`src/` + `tsconfig.json` + a symlinked `node_modules`) outside the working tree, so no source
-file in the repo was modified. Deltas are set-diffs over `(file, line, col, code, message)`
-tuples, not just error counts — a count can fall while type safety is lost (variant A is exactly
-that trap).
+Each candidate, plus the baseline, was run as a full `tsc --noEmit` against a scratch copy of the
+repo (`src/`, `tsconfig.json`, and a copied `node_modules`) outside the working tree, so no source
+file in the repo was modified. That copy has since been deleted; the numbers below are what it
+produced. Deltas are set-diffs over `(file, line, col, code, message)` tuples, not just error
+counts — a count can fall while type safety is lost (variant A is exactly that trap).
 
 | # | Import specifier for `Device` / `DeviceInit` | Errors | Verdict |
 |---|---|---|---|
@@ -2674,13 +2836,43 @@ brackets":
   error.** Object-literal checking reports one problem at a time. Changing the call to
   `new XDKeyboard({ usage: 1, usagePage: [65440] })` in the probe made the *next* error appear:
   `TS2741: Property 'configs' is missing in type '{ usage: number; usagePage: number[]; }' but
-  required in type 'DeviceInit'`. Verified by editing the probe, not inferred. At runtime the
-  constructor does `this.configs = e` (`e` = `undefined` here) and later
-  `navigator.hid.requestDevice({ filters: this.configs })` — so `filters` is `undefined` and the
-  browser presents **all** HID devices rather than filtering to keyboards. Whether that matters
-  depends on the connect flow (the app reads the chosen device's real IDs afterward, consistent
-  with the design constraint against hard-coding them), so this is flagged as a **behavioural
-  note to confirm**, not a defect to fix in the import change.
+  required in type 'DeviceInit'`. Verified by editing the probe, not inferred.
+
+  **This note is now closed — the missing `configs` is harmless, and the reason is worth keeping.**
+  `configs` is only ever consumed by hid's own `requestDevice()`, which does
+  `navigator.hid.requestDevice({ filters: this.configs })` (verified in `hid/dist/esm/index.js`).
+  But **`XDKeyboard` does not expose `requestDevice`** — it is not on the façade at all (§11.1;
+  confirmed by grep over `sdk-keyboard/dist/esm/index.d.ts`). Device picking in this app is done by
+  `KeyboardService.requestDevice()` (`src/services/KeyboardService.ts:120`–`146`), which calls the
+  browser API **directly** with an explicitly empty filter list:
+
+  ```ts
+  const devices = await navigator.hid.requestDevice({ filters: [] });
+  ```
+
+  So hid's `requestDevice` — and therefore `configs` — is **never invoked on this code path**, and
+  the `undefined` `configs` never reaches a `filters` argument. Nothing is silently unfiltered;
+  the filtering step simply does not happen in the SDK at all. `filters: []` at the app level is
+  **intentional**: it lets the user pick *any* HID device so the driver works with any
+  SparkLink-compatible keyboard, consistent with the design constraint against hard-coding
+  vendor/product IDs. (The superseded `docs/SDK_REFERENCE.md` hard-codes `vendorId: 7331` /
+  `productId: 1793` in its pairing example; those identify **one** specific board and must not be
+  read as a requirement.)
+
+  **What `usagePage: 65440` actually does.** `65440` = `0xFFA0`, a vendor-defined usage page. It is
+  **not a device filter** — it selects the **SparkLink command interface (HID collection)** *within*
+  whichever device was chosen. Concretely, hid uses `usage`/`usagePage` in two verified places:
+  `filterHIDDevices` matches a device by testing whether *some* collection satisfies
+  `c.usage === this.usage[t] && c.usagePage === this.usagePage[s]`, and `tagDevice` records
+  `usage: this.usage[0]` plus `usagePage: collections?.[0]?.usagePage || -1`. So the pair identifies
+  the right interface on an already-granted device rather than narrowing the picker. `configs` would
+  have been the picker-level filter; `usage`/`usagePage` are the interface-level selector.
+
+  Net: the two constructor edits variant P forces are (a) wrap `usagePage` as `[65440]` — a genuine
+  type-vs-runtime mismatch, since the compiled constructor normalises a scalar via
+  `Array.isArray(s) ? s : [s]` — and (b) supply or silence the required `configs`, which is a **pure
+  type-formality** with no runtime consequence here. Passing `configs: []` is the minimal honest
+  change; it types correctly and preserves today's behaviour exactly.
 
 The takeaway for the proposal: variant P's 74 is **not** "2 worse than B/D" in any meaningful
 sense — it is B/D's 16 latent errors **plus** the constructor-typing that the dependency's own

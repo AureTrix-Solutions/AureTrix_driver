@@ -518,18 +518,39 @@ getRm6X21Travel: () => Promise<any>
 | | |
 |---|---|
 | **Params** | none |
-| **Returns** | `Promise<number[][]>` *(inferred from `PerformanceController.getRm6X21data(data): number[][]`)* |
-| **Description** | Reads the 6×21 live travel matrix (raw per-sensor travel values). |
+| **Returns** | `Promise<{ status: number[][]; travels: number[][] }>` — **✅ verified** in the bundle's `PerformanceController`: it calls `getRm6X21Travel03()` (→ `status`), then `getRm6X21Travel021()` and `getRm6X21Travel022()` (→ `travels: [...t021, ...t022]`). On failure resolves to the caught `Error`. |
+| **Description** | Reads the 6×21 live travel matrix. |
+
+**✅ verified** mechanics (bundle `PerformanceController` + `getRm6X21Recdata`,
+`protocol-keyboard/src/utils/recdata.ts:490`). Each variant packs
+`RM6X21Pack(matrix6x21, datatype)` (`pack.ts:316` → `[matrix6x21, datatype, ...random 0xFF]`),
+collects **3 response packets** via `sendDataAndWaitMultiple(data, 3)`, strips the first 4 bytes,
+then the decoder branches on the echoed matrix id (`data[1]`):
+
+- `0x03` (variant `Travel03`): returns an array of raw 21-byte chunks — `number[][]` of **raw
+  bytes 0–255**, loop terminated by two consecutive `0xFF`. This is the `status` field; it is
+  *not* in mm.
+- `0x02` / `0x06` (variants `Travel021/022/061/062`): returns a `3 × 21` `number[][]`; each cell
+  is u16 LE ÷ 1000 via `preciseCalculate` → **mm at 3 decimals**. `datatype` (1 vs 2) selects the
+  data set, not the decoding.
+
+So `travels` = 3 rows from `021` + 3 rows from `022` = **6 rows × 21 columns in mm**.
 
 `PerformanceController` exposes narrower variants — **these are not re-exported on `XDKeyboard`**:
 
 ```ts
-getRm6X21Travel03():  Promise<number[][]>
-getRm6X21Travel021(): Promise<number[][]>
-getRm6X21Travel022(): Promise<number[][]>
-getRm6X21Travel061(): Promise<number[][]>
-getRm6X21Travel062(): Promise<number[][]>
+getRm6X21Travel03():  Promise<number[][]>   // raw-byte status chunks (datatype 3)
+getRm6X21Travel021(): Promise<number[][]>   // 3×21 mm travel rows
+getRm6X21Travel022(): Promise<number[][]>   // 3×21 mm travel rows
+getRm6X21Travel061(): Promise<number[][]>   // 3×21 mm calibration rows
+getRm6X21Travel062(): Promise<number[][]>   // 3×21 mm calibration rows
 ```
+
+> **Controller-layer difference.** The five variants and both aggregators
+> (`getRm6X21Travel`, `getRm6X21Calibration`) exist **only in the compiled bundle**. The
+> open-source `protocol-keyboard/src` `PerformanceController` has just the raw decoder wrapper
+> `getRm6X21data(data) → getRm6X21Recdata(data)`; you pack `RM6X21Pack`, do the 3-packet
+> multi-read, slice(4), and aggregate yourself.
 
 Wire format is `IRM6X21Mode { matrix6x21: number; datatype: number }`, packed by `RM6X21Pack`.
 Command byte `Protocol.KB2_CMD_RM6X21 = 18`.
@@ -543,8 +564,11 @@ getRm6X21Calibration: () => Promise<any>
 | | |
 |---|---|
 | **Params** | none |
-| **Returns** | `Promise<any>`. This repo's wrapper narrows it to `Promise<{ calibrations: number[]; travels: number[] } \| Error>` — that shape is an **app-level convention, not an SDK type** *[unverified against the SDK]*. |
+| **Returns** | `Promise<{ travels: number[][]; calibrations: number[][] } \| Error>` — **✅ verified** in the bundle's `PerformanceController.getRm6X21Calibration`: `travels` = `[...Travel021(), ...Travel022()]` (6×21 mm) and `calibrations` = `[...Travel061(), ...Travel062()]` (6×21 mm). This repo's wrapper narrows the fields to `number[]` — **the SDK fields are `number[][]`** (arrays of 21-value rows); flatten or index by row accordingly. |
 | **Description** | Reads the calibration baseline matrix, used to render per-key calibration state. |
+
+> Same controller-layer difference as `getRm6X21Travel`: this aggregator exists only in the
+> bundle; the open-source src exposes no `getRm6X21Calibration`.
 
 ---
 
@@ -569,16 +593,19 @@ getGlobalTouchTravel: () => Promise<any>
 | | |
 |---|---|
 | **Params** | none |
-| **Returns** | `Promise<IDB>` *(inferred from `PerformanceController.getGlobalTouchTravel(data): IDB`)* |
+| **Returns** | `Promise<IDB>` — **✅ verified** (`PerformanceController.getGlobalTouchTravel` → `getGlobalTouchTravelRecdata`, `protocol-keyboard/src/utils/recdata.ts`): each field is a little-endian u16 at bytes 3–8 divided by `1000.0`, i.e. **millimetres with 3-decimal resolution** (device wire unit is µm). |
 | **Description** | Reads the global actuation point and dead band applied to all keys. |
 
 ```ts
 interface IDB {
-  globalTouchTravel: number;   // global actuation depth, mm [unverified: ~0.1–4.0]
-  pressDead: number;           // dead band on press, mm   [unverified]
-  releaseDead: number;         // dead band on release, mm  [unverified]
+  globalTouchTravel: number;   // global actuation depth, mm — decode ÷1000 ✅ verified
+  pressDead: number;           // dead band on press, mm — decode ÷1000 ✅ verified
+  releaseDead: number;         // dead band on release, mm — decode ÷1000 ✅ verified
 }
 ```
+
+Units are settled by the decoder; the *range* is still device-reported — clamp against
+`minTouchTravel`/`maxTouchTravel` from `getApi({type:'PRECISION_STROKE'})`.
 
 #### `setDB`
 
@@ -588,11 +615,17 @@ setDB: (param: IDB) => Promise<any>
 
 | | |
 |---|---|
-| **Params** | `param: IDB` — all three fields required. |
+| **Params** | `param: IDB` — all three fields required, in **mm**. **✅ verified**: the facade's `setDB` multiplies each field by 1000 before packing (`cmdDB(!1,{globalTouchTravel:1e3*t,pressDead:1e3*r,releaseDead:1e3*n})`), so the wire unit is µm and the caller passes mm. |
 | **Returns** | `Promise<any>` |
 | **Description** | Writes global actuation travel plus press/release dead bands. |
 
 Command byte `Protocol.KB2_CMD_DB = 41`.
+
+> **Controller-layer difference.** The ×1000 scaling lives in the bundle's `XDKeyboard.setDB` /
+> controller `setDB`, not in `PerformanceController.cmdDB(isrw, IDB)` — the open-source `cmdDB` in
+> protocol-keyboard/src hands the `IDB` fields straight to `DBDataPack` → `computeHighLowByte`
+> (no scale) and expects raw wire integers (µm). Call `cmdDB` directly and you must pre-multiply
+> by 1000 yourself.
 
 ### 5.2 Per-key touch mode
 
@@ -687,7 +720,7 @@ getSingleTravel: (key: number, decimal?: number) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number`. `decimal?: number` — decimal places used to decode the fixed-point value. **Range [unverified]**: comes from the device's `decimalPlace` field via `PRECISION_STROKE`. |
-| **Returns** | `Promise<any>` — the controller decoder is `getSingleTravel(data, decimal): string`, so the raw value arrives as a **string** *[inferred]*. |
+| **Returns** | `Promise<any>` — actually a **string**. **✅ verified** (`getSingleTravelRecdata`, `protocol-keyboard/src/utils/recdata.ts:380`): `((data[4] << 8) \| data[3]) / 1000` then `.toFixed(decimal)`. Fixed string of `decimal` places, e.g. `"1.500"`. Compare with `===` on strings or `parseFloat` first. |
 | **Description** | Reads a key's absolute actuation depth. |
 
 #### `setSingleTravel`
@@ -698,9 +731,9 @@ setSingleTravel: (key: number, value: number, decimal?: number) => Promise<any>
 
 | | |
 |---|---|
-| **Params** | `key: number`. `value: number` — travel in mm. **Range [unverified]**: `[minTouchTravel, maxTouchTravel]` from `PRECISION_STROKE`. `decimal?: number` — as above. |
-| **Returns** | `Promise<any>` |
-| **Description** | Writes a key's absolute actuation depth. |
+| **Params** | `key: number`. `value: number` — travel in mm. **Range [unverified]**: `[minTouchTravel, maxTouchTravel]` from `PRECISION_STROKE`. `decimal?: number` — decimal places for the returned string (default `2` in the bundle). |
+| **Returns** | `Promise<any>` — on success a **string**: **✅ verified** in the bundle, `setSingleTravel` writes `cmdLayout` (`Layout_DB0`, `value*1000`) and then round-trips through `getSingleTravel(response, decimal)`, so it resolves to the same fixed-decimal string (`"1.50"`) the getter returns. On failure it resolves to the caught `Error` (§13.2). |
+| **Description** | Writes a key's absolute actuation depth. mm → wire µm (×1000), confirmed at the facade. |
 
 Use `preciseCalculate` (§10.5) rather than raw float arithmetic — the device stores fixed-point.
 
@@ -715,10 +748,10 @@ getRtTravel: (key: number) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number` |
-| **Returns** | `Promise<any>` — decoder is `getRtTravel(data): number` *[inferred]* |
+| **Returns** | `Promise<any>` — an **object**, not a number. **✅ verified** in the bundle controller: two `cmdLayout` reads (`Layout_RTP`, `Layout_RTR`) decoded by `getRtTravelRecdata` (`recdata.ts:389`, u16 LE ÷1000 via `preciseCalculate`, so plain `number` mm at 3 d.p.) and returned as `{ pressTravel: number, releaseTravel: number }`. On failure resolves to the caught `Error`. |
 | **Description** | Reads a key's rapid-trigger press/release sensitivity pair. |
 
-Reads `KeyLayout.RTP` (20) and `RTR` (21).
+Reads `KeyLayout.RTP` (20) and `RTR` (21) as two separate commands.
 
 #### `setRtPressTravel`
 
@@ -728,8 +761,8 @@ setRtPressTravel: (key: number, value: number) => Promise<any>
 
 | | |
 |---|---|
-| **Params** | `key: number`. `value: number` — press sensitivity, mm. **Range [unverified]**: device `minTouchTravel`–`maxTouchTravel`. |
-| **Returns** | `Promise<any>` |
+| **Params** | `key: number`. `value: number` — press sensitivity, mm. **Range [unverified]**: device `minTouchTravel`–`maxTouchTravel`. **✅ verified** at the facade: written as `value*1000` (µm) via `cmdLayout` on `Layout_RTP`. |
+| **Returns** | `Promise<any>` — **✅ verified**: an object `{ pressTravel: number }` (the written value echoed back through `getRtTravelRecdata`, mm at 3 d.p.). On failure resolves to the caught `Error`. |
 | **Description** | Sets the downward travel required to re-trigger under rapid trigger. |
 
 #### `setRtReleaseTravel`
@@ -740,8 +773,8 @@ setRtReleaseTravel: (key: number, value: number) => Promise<any>
 
 | | |
 |---|---|
-| **Params** | `key: number`. `value: number` — release sensitivity, mm. **Range [unverified]** as above. |
-| **Returns** | `Promise<any>` |
+| **Params** | `key: number`. `value: number` — release sensitivity, mm. **Range [unverified]** as above. **✅ verified** at the facade: written as `value*1000` (µm) via `cmdLayout` on `Layout_RTR`. |
+| **Returns** | `Promise<any>` — **✅ verified**: an object `{ releaseTravel: number }` (the written value echoed back through `getRtTravelRecdata`, mm at 3 d.p.). On failure resolves to the caught `Error`. |
 | **Description** | Sets the upward travel required to release under rapid trigger. |
 
 There is **no** combined `setRtTravel` — press and release are two separate writes.
@@ -759,10 +792,10 @@ getDpDr: (key: number) => Promise<any>
 | | |
 |---|---|
 | **Params** | `key: number` |
-| **Returns** | `Promise<any>` — decoder `getDpDr(data): number` returns a **single** `number` *[inferred: the two values are likely packed/decoded separately]* |
+| **Returns** | `Promise<any>` — an **object with two values**, not a single number. **✅ verified** in the bundle controller: it issues two `cmdLayout` reads (`Layout_DP`, `Layout_DR`) and returns `{ pressDead: number, releaseDead: number }`. Each decoder `getDpDrRecdata` (`recdata.ts:393`) is u16 LE ÷1000 → mm at 3 d.p. On failure resolves to the caught `Error`. |
 | **Description** | Reads a key's DP (down-point / press) and DR (release) travel values. |
 
-Reads `KeyLayout.DP` (22) and `DR` (23).
+Reads `KeyLayout.DP` (22) and `DR` (23) as two separate commands.
 
 #### `setDp`
 
@@ -772,8 +805,8 @@ setDp: (key: number, value: number) => Promise<any>
 
 | | |
 |---|---|
-| **Params** | `key: number`. `value: number` — mm. **Range [unverified]**. |
-| **Returns** | `Promise<any>` |
+| **Params** | `key: number`. `value: number` — mm. **Range [unverified]**. **✅ verified** at the facade: written as `value*1000` (µm) via `cmdLayout` on `Layout_DP`. |
+| **Returns** | `Promise<any>` — **✅ verified**: a single `number` (written value echoed back through `getDpDrRecdata`, mm). On failure resolves to the caught `Error`. |
 | **Description** | Writes the DP travel value for a key. |
 
 #### `setDr`
@@ -784,8 +817,8 @@ setDr: (key: number, value: number) => Promise<any>
 
 | | |
 |---|---|
-| **Params** | `key: number`. `value: number` — mm. **Range [unverified]**. |
-| **Returns** | `Promise<any>` |
+| **Params** | `key: number`. `value: number` — mm. **Range [unverified]**. **✅ verified** at the facade: written as `value*1000` (µm) via `cmdLayout` on `Layout_DR`. |
+| **Returns** | `Promise<any>` — **✅ verified**: a single `number` (written value echoed back through `getDpDrRecdata`, mm). On failure resolves to the caught `Error`. |
 | **Description** | Writes the DR travel value for a key. |
 
 ### 5.6 DKS / DB travel (per-layout)

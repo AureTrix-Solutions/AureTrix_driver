@@ -1550,39 +1550,101 @@ setSocd: (param: ISOCDMode | ISOCDModeV2 | ISOCDModeV3, v?: string) => Promise<a
 ```
 
 ```ts
-interface ISOCDMode {
-  key?: number;
-  dks1?: number;
-  mode1?: number;
-  mode2?: number;
+interface ISOCDMode {          // V1 — used ONLY when v < 1.0.5
+  key?: number;                // this key's code (written twice, see wire layout)
+  dks1?: number;               // the paired key's code (single byte in the V1 shape)
+  mode1?: number;              // single byte
+  mode2?: number;              // single byte
 }
 
-interface ISOCDModeV2 {   // field types not annotated in the shipped .d.ts [unverified]
+interface ISOCDModeV2 {        // V2 — same wire branch as V3, minus delay
+  pos1: number; pos2: number;  // single bytes: the two key positions
+  key1: number; key2: number;  // 16-bit key codes, hi/lo split
+  type: number; mode: number;  // single bytes
+}
+
+interface ISOCDModeV3 {        // V3 — V2 + a 16-bit delay
   pos1: number; pos2: number;
   key1: number; key2: number;
   type: number; mode: number;
-}
-
-interface ISOCDModeV3 {   // V2 + delay
-  pos1: number; pos2: number;
-  key1: number; key2: number;
-  type: number; mode: number;
-  delay: number;          // [unverified] ms
+  delay: number;               // raw 16-bit, NO scaling → unit *(unverified)*, like IEndMode.delay
 }
 ```
 
 | | `getSocd` | `setSocd` |
 |---|---|---|
-| **Params** | `key: number`, `v?: string` | `param: ISOCDMode \| ISOCDModeV2 \| ISOCDModeV3`, `v?: string` |
-| **Returns** | `Promise<any>` — decoder `getSocdData(data, v?)` returns a **union**: `{ pos1, pos2, key1, key2, type, mode, delay }` **or** `{ pos, key, type, mode }` | `Promise<any>` |
+| **Params** | `key: number`, `v?: string` (default `"1.0.5"`, forwarded to both the packer and the decoder) | `param: ISOCDMode \| ISOCDModeV2 \| ISOCDModeV3`, `v?: string` (default `"1.0.5"`, forwarded) |
+| **Returns** | `Promise<any>` — decoder `getSocdRecdata(data, v)` returns a **union**: `{ pos1, pos2, key1, key2, type, mode, delay }` when `v >= 1.0.7`, otherwise `{ pos, key, type, mode }` | `Promise<…>` — same union; `setSocd` decodes its own write response with `getSocdData(e, t)`, so it returns the stored config, not an ack |
 | **Description** | Reads a key's SOCD config; the shape depends on `v`. | Writes a key's SOCD config for the payload generation matching `v`. |
+
+**Which `v` selects which generation — ✅ verified.** `SOCDPack(param, v = '1.0.5', read = false)`
+(`utils/pack.ts:228`) branches as follows:
+
+| `v` | Write payload | Notes |
+|---|---|---|
+| `read === true` (any `v`) | `[key]` | the read request is just the key number; `v` is ignored on reads |
+| `'1.0.5'`, `'1.0.6'` | `[pos1, pos2, key1_hi, key1_lo, key2_hi, key2_lo, type, mode]` | V2/V3 shape, **`delay` omitted** |
+| `>= 1.0.7` | same as above **+ `[delay_hi, delay_lo]`** | full V3 shape |
+| anything else (`< 1.0.5`, e.g. `'1.0.4'`) | `[key, dks1, mode1, dks1, key, mode2]` | **V1 shape** — reads from `ISOCDMode` |
+
+So the `>= 1.0.7` test is `['greater','equal'].includes(compareVersions(v,'1.0.7'))`, and the
+`1.0.5`/`1.0.6` case is an explicit string-list check. **V1 is reachable only by passing a version
+*below* 1.0.5** — the default `'1.0.5'` never produces it. Note the guard
+`['1.0.5','1.0.6'].includes(v) || isGreaterOrEqual107Tag` means any `v` ≥ 1.0.7 takes the V2/V3 branch,
+while a `v` that `compareVersions` can't order (malformed) falls through to V1.
+
+**The interface you pass does not choose the branch — `v` does.** There is no runtime discrimination
+between `ISOCDModeV2` and `ISOCDModeV3`: both destructure the same
+`{ pos1, pos2, key1, key2, type, mode, delay }` and the only difference is whether the `v >= 1.0.7`
+test appends the two `delay` bytes. Passing a V3 object with `v = '1.0.5'` therefore **silently drops
+`delay`**, exactly like `setEND`'s default (see §6.7).
+
+**Read/write shape asymmetry — ✅ verified.** `getSocdRecdata(data, v = '1.0.5')`
+(`utils/recdata.ts:449`) computes `key1 = (data[4]<<8)|data[3]` and `key2 = (data[6]<<8)|data[5]`
+unconditionally, then:
+
+```ts
+if (v >= 1.0.7) { const delay = (data[10]<<8)|data[9];
+  return { pos1: data[1], pos2: data[2], key1, key2, type: data[7], mode: data[8], delay }; }
+return { pos: data[1], key: key1, type: data[7], mode: data[8] };
+```
+
+Consequences worth knowing:
+
+- **Only at `v >= 1.0.7` does the read shape mirror the write shape.** At `v = '1.0.5'` the device is
+  *written* `{pos1, pos2, key1, key2, type, mode}` but *read back* as
+  `{pos, key, type, mode}` — `pos2` and `key2` are decoded off the wire and then **discarded**, and
+  `pos1`/`key1` are **renamed** to `pos`/`key`. Half the config is invisible to a default-`v` read.
+- **There is no V1 decode branch at all.** Reading after a V1 write still takes the `else` path and
+  yields `{pos, key, type, mode}`, which does not line up with the V1 `[key, dks1, mode1, dks1, key,
+  mode2]` layout. V1 is effectively **write-only** through this SDK.
+- The union has **no discriminant field**, so callers must branch on `'pos1' in result` vs `'pos'`.
+  Simplest safe practice: always pass an explicit `v` matching the firmware and check for `pos1`.
+
+**Field units.** `key1`/`key2` (and V1's `dks1`) are **key codes** — `key1`/`key2` are 16-bit hi/lo
+split and unscaled, so they follow the same convention as `dks` everywhere else in §6. `pos1`/`pos2`,
+`type` and `mode` are **single bytes** whose enumerations are *not* defined anywhere in
+`protocol-keyboard/src` or the bundle (the façade `.d.ts` exports no `SOCDPolicy`/`SOCDType`), so
+their exact meanings remain ***(unverified)***. `delay` is a raw 16-bit value with **no scaling on
+either side** — the same open question as `IEndMode.delay`.
+
+**Two pieces of dead code in the write path — ✅ verified, harmless but confusing.** The bundle's
+`setSocd` contains
+
+```js
+const r = ((compareVersionsInline(t, "1.0.5"), e));   // comma operator → r is just `e`
+console.log("111111", r);
+```
+
+The version comparison result is **thrown away** by the comma operator, so `r === param` and the call
+behaves as if the comparison never happened; the `console.log` is leftover debug output that fires on
+every `setSocd`. Neither affects the payload. (`protocol-keyboard`'s controller exposes only
+`cmdSOCD`/`getSocdData` — the async wrapper with this quirk lives in `sdk-keyboard`'s controller.)
 
 Command byte `KB2_CMD_SOCD = 44`; `OrderType.SOCD = 97`; packed by
 `SOCDPack(param, v?, read?)`. The protocol layer additionally accepts a bare `number` as
-`param` (`ISOCDMode | ISOCDModeV2 | ISOCDModeV3 | number`) — **`XDKeyboard.setSocd` does not**.
-
-Because the return is a discriminated union with no discriminant field, you must branch on the
-presence of `pos1` vs `pos`.
+`param` (`ISOCDMode | ISOCDModeV2 | ISOCDModeV3 | number`) — that overload exists for the
+**read** case (`cmdSOCD(true, key, v)` → `[key]`); **`XDKeyboard.setSocd` does not** accept it.
 
 > **`setSocd` is not wrapped by this app** (`getSocd` is).
 

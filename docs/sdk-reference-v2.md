@@ -2523,10 +2523,11 @@ lines.
 
 #### 13.7.1 Measured: four candidate fixes for Site 1
 
-All four were run as full `tsc --noEmit` against a copy of the repo (`src/` + `tsconfig.json` +
-`node_modules`) outside the working tree, so no source file was modified. Deltas are set-diffs
-over `(file, line, col, code, message)` tuples, not just error counts — a count can fall while
-type safety is lost (variant A is exactly that trap).
+Each candidate, plus the baseline, was run as a full `tsc --noEmit` against a copy of the repo
+(`src/` + `tsconfig.json` + a symlinked `node_modules`) outside the working tree, so no source
+file in the repo was modified. Deltas are set-diffs over `(file, line, col, code, message)`
+tuples, not just error counts — a count can fall while type safety is lost (variant A is exactly
+that trap).
 
 | # | Import specifier for `Device` / `DeviceInit` | Errors | Verdict |
 |---|---|---|---|
@@ -2534,6 +2535,7 @@ type safety is lost (variant A is exactly that trap).
 | A | `from '@sparklinkplayjoy/hid'` (root) | **58** | 4 × `TS2614` → 2 × `TS7016`. Both names become `any`. **Rejected** — lower count, zero safety |
 | B | `from '@sparklinkplayjoy/hid/dist/esm/src/types/types'` | **72** | Types genuinely resolve; unmasks 16 latent errors |
 | D | `from '@sparklinkplayjoy/hid/dist/cjs/src/types/types'` | **72** | Identical to B, byte for byte |
+| P | `from '@sparklinkplayjoy/hid'` (root) **+ `tsconfig` `paths` → `dist/cjs/index.d.ts`** | **74** | Clean root import *and* real types; unmasks B/D's 16 **plus 2 more** — see §13.7.4 |
 
 Two accounting notes. First, B and D are the *same* file — the package ships one bundle plus a
 `.d.ts` tree, so `dist/esm/src/types/types.d.ts` and `dist/cjs/src/types/types.d.ts` are
@@ -2607,17 +2609,18 @@ Four parts, in order of independence:
 1. **Drop `DeviceInit`.** Unused in both files; removing it clears 2 × `TS2614` with no other
    consequence.
 2. **Import `Device` and `HIDDevice` from a specifier that actually resolves.** Two candidates,
-   both verified to type-check:
-   - the deep path `@sparklinkplayjoy/hid/dist/cjs/src/types/types` — works today under
-     `moduleResolution: "node"`, and is the same pattern `ExportService.ts:3` already uses
-     (Site 2). Fragile in the same way: it breaks if the package reorders `dist`, starts
-     emitting per-module JS, or if the project migrates to `node16`/`bundler`. Must stay
-     `import type` — a value import of that path fails at runtime with
-     `ERR_PACKAGE_PATH_NOT_EXPORTED` (§13.4), exactly like Site 2.
+   both now measured:
+   - the deep path `@sparklinkplayjoy/hid/dist/cjs/src/types/types` (variants B/D, **72**) —
+     works today under `moduleResolution: "node"`, and is the same pattern `ExportService.ts:3`
+     already uses (Site 2). It fixes *only the app's own import line*. Fragile in the same way:
+     it breaks if the package reorders `dist`, starts emitting per-module JS, or if the project
+     migrates to `node16`/`bundler`. Must stay `import type` — a value import of that path fails
+     at runtime with `ERR_PACKAGE_PATH_NOT_EXPORTED` (§13.4), exactly like Site 2.
    - a `paths` mapping in `tsconfig.json` pointing `@sparklinkplayjoy/hid` at
-     `node_modules/@sparklinkplayjoy/hid/dist/cjs/index.d.ts`, letting the *clean* root
-     specifier from variant A resolve to real types and sidestepping the broken `types` field.
-     Keeps the import text portable across resolvers. **Untested — measurement pending.**
+     `node_modules/@sparklinkplayjoy/hid/dist/cjs/index.d.ts`, keeping the *clean* root specifier
+     (variant P, **74**). Sidesteps the broken `types` field and keeps the import text portable
+     across resolvers — but it remaps the specifier for the **whole module graph**, not just
+     `src/`, which is why it surfaces 2 more errors than B/D. See §13.7.4.
 3. **Widen only the annotation** at the two literals, per the design constraint above
    (`Partial<Device>` or a local `PairedDevice`). Do not touch the literals' contents.
 4. **Handle `navigator.hid` and `serialNumber` separately.** These are ambient-typing gaps, not
@@ -2626,6 +2629,66 @@ Four parts, in order of independence:
    globally and could collide with hid's own declaration — verify before adopting.
 
 None of this is in the repo. `src/` is unmodified; all measurements came from a scratch copy.
+
+#### 13.7.4 Why the `paths` mapping (variant P) reaches 74, not 72
+
+The deep path in B/D rewrites **one import line in `src/`**. The `paths` mapping instead rebinds
+the bare specifier `@sparklinkplayjoy/hid` **everywhere TypeScript resolves it**, including
+inside the dependency's own `.d.ts` files. That distinction is what produces the two extra
+errors — and it is the whole reason to prefer `paths` despite the higher count.
+
+`sdk-keyboard/dist/esm/index.d.ts:1` opens with
+`import { DeviceInit, EVENT, HIDDevice } from '@sparklinkplayjoy/hid'`, and its façade is
+`constructor(options: DeviceInit)` (`:11`). At **baseline** that root specifier hits hid's
+broken `types` field, so `DeviceInit` resolves to `any` and the constructor is
+`new XDKeyboard(…anything…)`. Both call sites —
+`KeyboardService.ts(43,9)` and `DebugKeyboardService.ts(11,7)`, each
+`new XDKeyboard({ usage: 1, usagePage: 65440 })` — are therefore unchecked.
+
+Under **variant P** the mapping fixes the root specifier *for sdk-keyboard too*, so `DeviceInit`
+becomes the real type (`types.d.ts:10`):
+
+```ts
+export type DeviceInit = {
+    configs: DeviceInfo[];
+    usage: number;
+    usagePage: number[];      // ← array, not scalar
+};
+```
+
+That immediately flags the two calls:
+
+```
+src/services/KeyboardService.ts(43,9):      error TS2322: Type 'number' is not assignable to type 'number[]'.
+src/services/DebugKeyboardService.ts(11,7): error TS2322: Type 'number' is not assignable to type 'number[]'.
+```
+
+Two things worth recording about this specific mismatch, because neither is a simple "add the
+brackets":
+
+- **`usagePage: 65440` vs the declared `number[]`.** The `.d.ts` says array, but the compiled
+  runtime normalises a scalar: `this.usagePage = Array.isArray(s) ? s : [s]` (and likewise for
+  `usage`). So the scalar form **works at runtime**; hid's own type is stricter than its
+  implementation. The honest fix is `[65440]`, which satisfies both.
+- **`configs` is required but never passed — and TypeScript hides that behind the `usagePage`
+  error.** Object-literal checking reports one problem at a time. Changing the call to
+  `new XDKeyboard({ usage: 1, usagePage: [65440] })` in the probe made the *next* error appear:
+  `TS2741: Property 'configs' is missing in type '{ usage: number; usagePage: number[]; }' but
+  required in type 'DeviceInit'`. Verified by editing the probe, not inferred. At runtime the
+  constructor does `this.configs = e` (`e` = `undefined` here) and later
+  `navigator.hid.requestDevice({ filters: this.configs })` — so `filters` is `undefined` and the
+  browser presents **all** HID devices rather than filtering to keyboards. Whether that matters
+  depends on the connect flow (the app reads the chosen device's real IDs afterward, consistent
+  with the design constraint against hard-coding them), so this is flagged as a **behavioural
+  note to confirm**, not a defect to fix in the import change.
+
+The takeaway for the proposal: variant P's 74 is **not** "2 worse than B/D" in any meaningful
+sense — it is B/D's 16 latent errors **plus** the constructor-typing that the dependency's own
+broken `types` field had been masking all along. P is the only variant that makes
+`XDKeyboard`'s constructor honest. If the goal is a clean `tsc`, choose P and budget for the two
+constructor edits (wrap `usagePage` in an array; decide the `configs` question); if the goal is
+the smallest change that clears the four `TS2614`, B/D's deep path does it without touching the
+constructor — at the cost of leaving that latent mismatch invisible.
 
 ---
 

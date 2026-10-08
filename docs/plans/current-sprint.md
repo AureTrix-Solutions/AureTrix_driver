@@ -7,17 +7,19 @@
 ## Checkpoint
 - Branch: `sprint-01-code-fixes`
 - tsc baseline: **60** (docs/tsc-baseline.txt, 2026-10-08) — self-check gate ACTIVE
-- Task 2 (2026-10-08): all 18 edits applied exactly per plan (commits 57305ef tsconfig + c15d44f services). typecheck 60 → **63**: 5 resolved (4× TS2614, 1× TS2304), 8 UNMASKED at KeyboardService.ts:137/194 (6× TS18048 `d.data?`, 2× TS2339 `serialNumber`) — EXPECTED, deferred to Task 4 (§13.7.2/§13.7.3 pt 4) per explicit PO ruling this session; lines left byte-identical. Build ✓. ⚠️ "≤ baseline" criterion arithmetically unreachable without pulling Task 4 forward — gate conflict flagged for Reviewer/PM in review file. Baseline NOT touched (ratchets down only).
+- Task 2 DONE 2026-10-08 (Reviewer PASS + PO hardware PASS; 60→63, 8 errors deferred to Task 4; R1 gate-wording + R2 §13.7.4 → see review + backlog).
 - Cleanup: `.scratch/` holds 4 typecheck capture files (baseline-services.txt, post-services.txt, base-norm.txt, post-norm.txt) — PO may delete. `_to_delete/` empty.
 
 ## ▶ RUN THIS
-Next: Task 2 is **HW-TEST** — **PO:** hands-on device check, then record the verdict (see Hardware gate). Test: manual Connect (unfiltered picker → open → getBaseInfo) · unplug/replug auto-reconnect · Debug-page connect on its separate XDKeyboard. Write `Hardware verdict: PASS — <date>` (or `FAIL — <date> → see F1` + an F1 block) into review-variant-p-imports.md, and set Task 2 → DONE (collapse to ✓) on PASS, or → IN-PROGRESS + "fix ONLY this — see review-variant-p-imports.md §F1" here on FAIL.
-After Task 2 closes: Task 3 (sdk-wrapper skill), then Task 4 (type cleanup — owns the 8 deferred errors + serialNumber decision).
-**No fix round is pending** — the Reviewer found no fail items. Task 3 can start once the PO's verdict lands (or be done in parallel if the PO prefers; it does not touch these files).
+Next: Task 3 (**sdk-wrapper skill**, [trivial]) is PENDING — **Worker:** in a fresh window run "go", then build `.openclaude/skills/sdk-wrapper/` capturing the KeyboardService wrapper pattern per Task 3's "Done when" below (connectedDevice check → ensureKeyboard().<method> → instanceof Error check → return Error, never throw; param types sourced from protocol-keyboard/src). Read only that task's named files + the needed sdk-reference-v2.md sections. It is a docs/skill task: the self-check gate does NOT apply (non-code), and it touches no source.
+Then: Task 4 (type cleanup, [high-stakes]) — owns the 8 errors unmasked by Task 2 at KeyboardService.ts:137/:194 plus the serialNumber decision.
+**Carried forward for Task 4 / PM (from review-variant-p-imports.md, task 2):**
+- **R1 — the self-check gate is unsatisfiable as worded** for an import fix whose latent errors a later task owns (63 > 60 AND a touched file gained them, though the delta is pure unmasking). Task 4 will hit the same wall: PM to add an "unmasked-and-deferred" exception clause or a baseline-note mechanism before Task 4 starts.
+- **R2 — sdk-reference-v2.md §13.7.4 is factually wrong** (`configs` IS reachable via hid's internal `devices()` zero-match fallback → `requestDevice({filters:this.configs})`). Filed in backlog.md; a docs task should correct it. Do not re-derive it from that section.
 
 ## Tasks
 1. ✓ **typecheck script + baseline** — DONE 2026-10-08
-2. **variant-P import fix** — [high-stakes] [hw] — STATUS: HW-TEST (Reviewer **PASS** 2026-10-08, 0 fail items; code done, commits 57305ef+c15d44f; awaiting PO hardware ✓ — details + 2 reviewer notes (R1 gate wording, R2 §13.7.4 doc error) in review-variant-p-imports.md)
+2. ✓ **variant-P import fix** — [high-stakes] [hw] — DONE 2026-10-08 (Reviewer PASS + PO hardware PASS; commits 57305ef+c15d44f; review-variant-p-imports.md)
 3. **sdk-wrapper skill** — [trivial] — STATUS: PENDING
    - Done when: `.openclaude/skills/sdk-wrapper/` captures the KeyboardService wrapper pattern: connectedDevice check → ensureKeyboard().<method> → instanceof Error check → return Error (never throw); param types sourced from protocol-keyboard/src.
    - Files: `.openclaude/skills/sdk-wrapper/`

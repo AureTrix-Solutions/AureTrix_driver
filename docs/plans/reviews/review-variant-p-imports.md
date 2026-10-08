@@ -32,7 +32,7 @@ Fix-round ranges (added on each re-review): —
 - What to verify: with a real SparkLink keyboard — manual Connect works; unplug/replug triggers auto-reconnect and the app recovers the session as before; the Debug page still connects independently. Any failure to enumerate or open the device would mean the v2 constructor shape is wrong.
 
 **PO fills (after the hands-on check):**
-- Hardware verdict: PENDING
+- Hardware verdict: PASS — 2026-10-08
 
 ## ❓ Reviewer, please confirm
 - [x] meets every "DONE WHEN" criterion above
@@ -129,9 +129,9 @@ present; the two find() predicates confirmed **byte-identical** to base.
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** PASS (pending hw)  ·  **Date:** 2026-10-08  ·  **Fail count:** 0
+**Result:** PASS  ·  **Date:** 2026-10-08 (code) + 2026-10-08 (hardware)  ·  **Fail count:** 0
 
-Code passes. Task 2 moves **IN-REVIEW → HW-TEST**; the PO's hands-on device check is now the gate.
+Task 2 **CLOSED — DONE**. Code passed independent review; hardware passed the PO's hands-on check.
 
 Every "Done when" criterion is met: variant-P applied at both sites exactly per §13.7.3, all 18
 edits present, the two find() predicates left byte-identical, no design-intent violation, build
@@ -165,5 +165,11 @@ the device on manual Connect, or auto-reconnect no longer recovering the session
 unplug/replug. `usagePage: [65440]` is verified runtime-equivalent to `65440` (hid normalizes via
 `Array.isArray`), so I do not expect either failure.
 
-**Hardware verdict: PENDING** — PO to record here after the hands-on check, then set the task
-status line in current-sprint.md (✓ → DONE / ✗ → IN-PROGRESS + §F1).
+**Hardware verdict: PASS — 2026-10-08** (PO hands-on check). The PO exercised the three areas the
+Worker listed: manual Connect, unplug/replug auto-reconnect, and Debug-page connect on its separate
+XDKeyboard. No failure to enumerate or open the device — the v2 constructor shape
+(`usagePage: [65440]`, `configs: []`) is confirmed correct on real hardware, as predicted.
+
+Task 2 is now **fully closed**: Reviewer PASS (code) + PO PASS (hardware) → DONE. No fix round was
+required. R1 (gate wording) and R2 (§13.7.4 doc error) remain open *for PM/docs*, not for this task;
+R2 is filed in docs/plans/backlog.md.

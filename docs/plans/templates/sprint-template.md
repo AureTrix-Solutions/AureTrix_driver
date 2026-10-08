@@ -13,10 +13,10 @@
 
 ## Checkpoint
 - Branch: `sprint-NN-<slug>`
-- Last commit: `<hash>` — <message>
+- Last commit: `<hash>` — <message>   (informational — `git log` is the source of truth)
 - tsc baseline: <N> errors (docs/tsc-baseline.txt)
 - Cleanup: <none | .scratch/ has <x> (PO may delete) | _to_delete/ has <y> (PO must git rm)>
-<!-- Session-start check compares branch + last commit against this. On mismatch: STOP, report. -->
+<!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
 <!-- The single entry point. A fresh Worker runs the session-start check, then reads ONLY this

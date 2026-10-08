@@ -28,6 +28,7 @@ Workers/Reviewers who find a new bug append a one-liner here (do NOT fix out of 
 docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet
 reassembly) is the foundation.
 
-## Known bugs / tech debt
-- setMacro is called without touchMode → may reset a key's touch mode to global (test on hardware).
-- Lighting ≥1.0.9 dynamicColorId path is unreachable through the facade.
+### macro-page — build the Macro config page (setMacro wrapper + Macro.vue)
+- Pitfall: setMacro is called without touchMode → may reset a key's touch mode to global.
+  Pass/preserve touchMode when wiring the page; verify on single + RT keys on hardware.
+

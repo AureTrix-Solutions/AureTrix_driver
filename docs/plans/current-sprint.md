@@ -6,18 +6,15 @@
 
 ## Checkpoint
 - Branch: `sprint-01-code-fixes`
-- Last commit: `de1788a` — sprint-01-code-fixes: PM-open — plan sprint (a follow-up PM-open commit updates this checkpoint line)
-- tsc baseline: not yet recorded (Task 1 creates docs/tsc-baseline.txt)
-- Cleanup: none
+- Last commit: Task 1 commit (this commit) — typecheck script + baseline
+- tsc baseline: **60** (docs/tsc-baseline.txt, 2026-10-08) — self-check gate now ACTIVE for Tasks 2–4
+- Cleanup: no cleanup needed (.scratch/ and _to_delete/ untouched)
 
 ## ▶ RUN THIS
-Next: Task 1 — typecheck script + baseline. Do this task, then stop.
+Next: Task 2 — variant-P import fix [high-stakes] [hw]. Do this task, then stop.
 
 ## Tasks
-1. **typecheck script + baseline** — [trivial] — STATUS: PENDING
-   - Done when: package.json has `"typecheck": "tsc --noEmit"` and it runs.
-   - Done when: the first run's error count is saved to docs/tsc-baseline.txt (activates the CLAUDE.md self-check gate for Tasks 2–4).
-   - Files: `package.json`, `docs/tsc-baseline.txt`
+1. ✓ **typecheck script + baseline** — DONE 2026-10-08 — `"typecheck": "tsc --noEmit"` added to package.json; first run = 60 errors, saved to docs/tsc-baseline.txt (KeyboardService.ts 23, router/index.ts 17, DebugKeyboardService.ts 14, profileStore.ts 2, connection.ts 2, travelProfilesStore.ts 1, main.ts 1). Config-only change — self-check gate skipped per CLAUDE.md; gate now active for Tasks 2–4.
 2. **variant-P import fix** — [high-stakes] [hw] — STATUS: PENDING
    - Done when: per docs/sdk-reference-v2.md §13.7.3 — tsconfig paths mapping `@sparklinkplayjoy/hid` → `dist/cjs/index.d.ts`; unused `DeviceInit` imports removed (KeyboardService.ts:2, DebugKeyboardService.ts); device-literal annotations widened annotation-only (§13.7 design constraint: NEVER complete the literals with vendorId/usage/usagePage); XDKeyboard constructor init set to `{ usage: 1, usagePage: [65440], configs: [] }` in both services.
    - Done when: design intent preserved — requestDevice stays unfiltered (`configs: []` → `filters: []`), usagePage 65440 semantics unchanged, wrappers still return Error.

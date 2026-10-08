@@ -90,12 +90,12 @@ docs/plans/current-sprint.md; everything else is archived off the read path.
 
 ### Roles
 - PRODUCT OWNER = human: priorities; approves Worker edits in-session; sprint sign-off; revisions.
-- PM (Planner): bookends a sprint — opens it (plans from docs/plans/backlog.md) and closes it (collects sign-off; archives or revises). Dormant mid-sprint. No implementation. Conduit between Worker/QA and the PO. Maintains docs/plans/backlog.md — removes the item it turns into a sprint; anyone may append a one-line bug/idea to it.
+- PM (Planner): bookends a sprint — opens it (plans from a goal you give OR an item in docs/plans/backlog.md) and closes it (collects sign-off; archives or revises). Dormant mid-sprint. No implementation. Conduit between Worker/QA and the PO. Maintains docs/plans/backlog.md — removes the item it turns into a sprint; anyone may append a one-line bug/idea to it.
 - WORKER: executes ONE task per session; self-checks; checkpoints; reports status into current-sprint.md.
 - REVIEWER (independent QA): fresh session; checks one high-stakes task's diff vs spec; PASS/FAIL; writes the review file; NEVER edits source.
 
 ### Sessions (each a fresh window; entry prompt in quotes)
-- PM-open — "Act as PM per CLAUDE.md. Plan the \"<name>\" sprint from docs/plans/backlog.md." → reads the chosen backlog item, writes current-sprint.md (sprint goal + done-criteria; tasks each with "Done when:" criteria and a [trivial]/[high-stakes] tag), seeds the first task's ▶ RUN THIS, and removes that item from backlog.md.
+- PM-open — "Act as PM per CLAUDE.md. Goal: <...>" OR "Act as PM per CLAUDE.md. Plan the \"<name>\" sprint from docs/plans/backlog.md." → writes current-sprint.md (sprint goal + done-criteria; tasks each with "Done when:" criteria and a [trivial]/[high-stakes] tag), seeds the first task's ▶ RUN THIS. If planning from a backlog item, reads that item and removes it from backlog.md.
 - Worker — "go" → reads current-sprint.md ▶ RUN THIS, does the next task.
 - Reviewer — "follow docs/plans/reviews/review-<slug>.md" → independent PASS/FAIL.
 - PM-close — "Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise."
@@ -117,6 +117,7 @@ docs/plans/current-sprint.md; everything else is archived off the read path.
 5. Never dump large/minified file slices to output — read only the span you need.
 6. Verify every SDK claim against docs/sdk-reference-v2.md (and protocol-keyboard/src when needed) before writing it.
 7. Design intent — never change: unfiltered device selection (filters:[]), usagePage 65440 semantics, wrappers return Error (never throw).
+8. Spot a bug or idea outside your task's scope? Append ONE line to docs/plans/backlog.md (don't fix it, don't read the rest of the file), then carry on. Never fix out of scope.
 
 ### Context hygiene (bounded forever)
 - Read ONLY: current-sprint.md + the active task's named files + the needed sdk-reference-v2.md sections. Never read archive/ or old sprints.

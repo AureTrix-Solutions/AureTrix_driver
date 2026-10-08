@@ -106,7 +106,7 @@ The application runs entirely in the browser and communicates with compatible ke
 - **State Management**: Pinia with localStorage persistence
 - **Styling**: SCSS with custom design system
 - **Routing**: Vue Router with lazy-loaded routes
-- **SDK**: @sparklinkplayjoy/sdk-keyboard v1.0.14
+- **SDK**: @sparklinkplayjoy/sdk-keyboard v1.0.20
 - **Package Manager**: pnpm
 
 ## Project Structure
@@ -179,7 +179,7 @@ src/
 
 Comprehensive documentation is available in the `docs/` directory:
 
-- **SDK_REFERENCE.md**: Complete API reference for the SparkLink SDK
+- **sdk-reference-v2.md**: Complete, verified API reference for the SparkLink SDK (authoritative; `docs/SDK_REFERENCE.md` is superseded)
 - **PAGES_OVERVIEW.md**: Overview of all pages with quick reference
 - **docs/pages/**: Detailed documentation for each functional page
 

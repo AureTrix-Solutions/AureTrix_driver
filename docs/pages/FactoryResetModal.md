@@ -248,7 +248,7 @@ FactoryResetModal renders
 ## Related Documentation
 
 - [GlobalFeatures](./GlobalFeatures.md) - Parent component documentation
-- [SDK Reference](../SDK_REFERENCE.md#factory-reset) - Factory reset SDK method
+- [SDK Reference](../sdk-reference-v2.md#factorydatareset) - Factory reset SDK method
 
 ---
 

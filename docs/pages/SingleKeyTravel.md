@@ -262,12 +262,12 @@ const adjustDeadZone = (delta: number, type: 'top' | 'bottom') => {
 
 | SDK Method | Purpose | Returns |
 |------------|---------|---------|
-| `getSingleTravel(key)` | Load travel distance for specific key | `number` (as string "2.05") |
-| `setSingleTravel(key, value)` | Set travel distance for specific key | `number` |
+| `getSingleTravel(key)` | Load travel distance for specific key | **`string`** — fixed-decimal, e.g. `"2.05"`; callers must `Number()` it |
+| `setSingleTravel(key, value)` | Set travel distance for specific key | **`string`** on success (same fixed-decimal echo), `Error` on failure |
 | `getDpDr(key)` | Load deadzones for specific key | `{ pressDead, releaseDead }` |
-| `setDp(key, value)` | Set top deadzone for specific key | `{ pressDead }` |
-| `setDr(key, value)` | Set bottom deadzone for specific key | `{ releaseDead }` |
-| `setPerformanceMode(key, mode, param)` | Set key to single mode | N/A |
+| `setDp(key, value)` | Set top deadzone for specific key | **single `number`** (written value echoed, mm) — not `{ pressDead }` |
+| `setDr(key, value)` | Set bottom deadzone for specific key | **single `number`** (written value echoed, mm) — not `{ releaseDead }` |
+| `setPerformanceMode(key, mode, param)` | Set key to single mode | `{ touchMode: string; advancedKeyMode: number } \| Error` |
 
 ### Batch Processing Strategy
 
@@ -622,4 +622,4 @@ Performance.vue updates keyboard grid overlays for selected keys
 - [GlobalTravel.md](./GlobalTravel.md) - Global travel configuration
 - [KeyTravel.md](./KeyTravel.md) - Container component
 - [SwitchProfiles.md](./SwitchProfiles.md) - Profile management
-- [SDK_REFERENCE.md](../SDK_REFERENCE.md) - Complete SDK API reference
+- [sdk-reference-v2.md](../sdk-reference-v2.md) - Complete SDK API reference

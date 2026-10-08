@@ -32,7 +32,7 @@ async handleProfileClick(profileId: number) {
 }
 ```
 
-**SDK Method:** `KeyboardService.switchConfig(profileId)` (converts 1-4 to 0-3 internally)
+**App wrapper:** `KeyboardService.switchConfig(profileId)` — not an SDK method. It validates `profileId` 1-4 and converts internally (`configIndex = profileId - 1`). **SDK method:** `switchConfig(configIndex)` (0-3).
 
 ### 2. Profile Export
 Exports the complete keyboard configuration from the currently active profile.
@@ -116,7 +116,7 @@ async handlePollingRateChange() {
 }
 ```
 
-**SDK Method:** `KeyboardService.setPollingRate(value)` / `KeyboardService.getPollingRate()`
+**App wrappers:** `KeyboardService.setPollingRate(value)` / `KeyboardService.getPollingRate()` — not SDK methods. **SDK methods:** `setRateOfReturn(value)` for the write, and `getApi({ type: 'ORDER_TYPE_ROES' })` for the read.
 
 **Important:** Changing polling rate causes the keyboard to disconnect and reconnect. The application handles this automatically.
 
@@ -140,7 +140,7 @@ async handleSystemModeChange() {
 }
 ```
 
-**SDK Methods:** `KeyboardService.setSystemMode('win' | 'mac')` / `KeyboardService.querySystemMode()`
+**App wrappers:** `KeyboardService.setSystemMode('win' | 'mac')` / `KeyboardService.querySystemMode()` — not SDK methods. **SDK methods:** `switchSystemMode(mode)` for the write, and `getApi({ type: 'ORDER_TYPE_QUERY_WIN_MODEL' })` for the read.
 
 ### 7. Factory Reset
 
@@ -239,7 +239,7 @@ Profile Switch
 profileStore.switchProfile(id)
     |
     v
-KeyboardService.switchConfig(id - 1)
+KeyboardService.switchConfig(id)   // id passed UNCHANGED (1-4); wrapper subtracts 1 internally
     |
     v
 window.location.reload()
@@ -283,9 +283,9 @@ Show result alert
 
 ## Related Documentation
 
-- [ExportService](../SDK_REFERENCE.md#configuration-management) - Profile export/import implementation
+- [ExportService](../sdk-reference-v2.md) - Profile export/import implementation
 - [FactoryResetModal](./FactoryResetModal.md) - Confirmation modal component
-- [SDK Reference](../SDK_REFERENCE.md) - SDK methods used
+- [SDK Reference](../sdk-reference-v2.md) - SDK methods used
 
 ---
 

@@ -665,7 +665,7 @@ SwitchProfiles is the third child of KeyTravel:
 - [GlobalTravel.md](./GlobalTravel.md) - Global travel configuration
 - [SingleKeyTravel.md](./SingleKeyTravel.md) - Per-key travel configuration
 - [KeyTravel.md](./KeyTravel.md) - Container component
-- [SDK_REFERENCE.md](../SDK_REFERENCE.md) - Complete SDK API reference
+- [sdk-reference-v2.md](../sdk-reference-v2.md) - Complete SDK API reference
 
 ---
 

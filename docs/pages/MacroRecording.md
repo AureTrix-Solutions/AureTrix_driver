@@ -8,7 +8,7 @@ The Macro Recording page provides a complete visual macro creation and managemen
 - Build multi-step keystroke sequences with custom timing
 - Save, load, edit, and organize macros
 - Export/import macros for backup or sharing
-- Support up to 64 actions per macro (hardware limitation)
+- Support up to 64 actions per macro (app-enforced limit — UI convention, not an SDK/hardware constraint)
 
 ## Key Features
 
@@ -47,7 +47,7 @@ The Macro Recording page provides a complete visual macro creation and managemen
 
 ### 6. **Smart Validations**
 - Prevents empty macro saves
-- Enforces 64-action limit (hardware constraint)
+- Enforces 64-action limit (app-enforced — UI convention, not an SDK/hardware constraint)
 - Duplicate name detection
 - Delay must be ≥ 0ms
 - User-friendly error messages
@@ -331,7 +331,7 @@ UI refreshed, sequence cleared
 ### Save Validations
 1. **Non-empty sequence**: At least one action required
 2. **Name required**: Macro name cannot be blank
-3. **64-action limit**: Cannot exceed hardware maximum
+3. **64-action limit**: App-enforced limit (UI convention), not an SDK/hardware constraint
 4. **Unique names**: No duplicate macro names allowed (when creating new)
 
 ### Runtime Validations

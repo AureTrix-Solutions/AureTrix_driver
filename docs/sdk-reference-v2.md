@@ -949,10 +949,13 @@ getDksTravel: (key: number, dksLayout?: DksLayoutType) => Promise<any>
 >
 > 1. The parameter is typed `DksLayoutType`, which despite the name is the **DB** union
 >    (`Layout_DB1`–`Layout_DB3`) — *not* `DksType` (9–12). The type is what counts.
-> 2. **`getDksTravel` and `getDbTravel` are aliases** — ✅ verified byte-identical in the bundle
->    (both: `cmdLayout(true, {key, layout: KeyLayout[dbLayout ?? 'Layout_DB1']})`, same decoder).
->    Likewise `setDksTravel` ≡ `setDbTravel` (`cmdLayout(false, {…, value: value*1000})`). Pick
->    either; there is no separate "DB dead band" vs "DKS travel" storage.
+> 2. **`getDksTravel` and `getDbTravel` are two separately declared methods with byte-identical
+>    bodies, not a single alias** — ✅ verified: each has its own declaration in the facade, the
+>    controller, and the `.d.ts` (lines 41/43), and both impls are
+>    `cmdLayout(true, {key, layout: KeyLayout[dbLayout ?? 'Layout_DB1']})`; the DB path reuses the
+>    DKS decoder (no separate `getDbTravel` decoder exists). Likewise `setDksTravel`/`setDbTravel`
+>    are two declarations with identical bodies (`cmdLayout(false, {…, value: value*1000})`). Pick
+>    either — behaviorally identical; there is no separate "DB dead band" vs "DKS travel" storage.
 
 #### `setDksTravel`
 
@@ -1291,10 +1294,13 @@ root of the §5.6 "naming trap":
 | **Read TRPS** | `getTrps` / `getTrpsAll` | `cmdLayout(true, Layout_TRPS1…TRPS4)` per slot | `Layout_TRPS1`–`TRPS4` (13–16) |
 | **Read DB travel** | `getDksTravel` / `getDbTravel` | `cmdLayout(true, Layout_DBn)`, one slot | `Layout_DB1`–`DB3` (5–7), default `Layout_DB1` |
 
-`getDksTravel` and `getDbTravel` are **byte-identical** in the bundle — both do
+`getDksTravel` and `getDbTravel` are **two separately declared methods whose implementation bodies
+are byte-for-byte identical** — each is declared independently in the facade, the controller, and the
+`.d.ts` (lines 41/43); they are **not** one method exposed under two names. Both bodies do
 `cmdLayout(true, { key, layout: KeyLayout[dbLayout ?? 'Layout_DB1'] })` and decode with the same
-`getDksTravel` decoder (`((data[4]<<8)|data[3]) / 1000` → mm). They are aliases, not different
-readers. The DKS *actuation points* (`getDks`, raw integers) and the DKS *travel depths*
+`getDksTravel` decoder (`((data[4]<<8)|data[3]) / 1000` → mm) — the DB path reuses the DKS decoder,
+since no separate `getDbTravel` decoder exists. So they are not different readers, and they are
+behaviorally identical. The DKS *actuation points* (`getDks`, raw integers) and the DKS *travel depths*
 (`getDksTravel`, mm from the DB slots) are genuinely different data in different slots — hence the
 §5.6 note that `getDksTravel` is the correct DB reader and **not** a misnomer for `getDks`.
 

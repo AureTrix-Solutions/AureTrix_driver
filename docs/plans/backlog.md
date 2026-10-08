@@ -7,6 +7,12 @@ Workers/Reviewers who find a new bug append a one-liner here (do NOT fix out of 
 ## Candidate sprints (PO picks next)
 
 ### code-fixes — clean up the SDK integration before feature work
+Suggested order: typecheck-script → variant-P → sdk-wrapper → type-cleanup (baseline must exist
+before the cleanup can be measured; variant-P is foundational for the cleanup).
+
+- typecheck script [trivial]: add "typecheck": "tsc --noEmit" to package.json.
+  Done when: script runs; AND the first run's error count is saved to docs/tsc-baseline.txt
+  (this activates the self-check gate in CLAUDE.md).
 - variant-P import fix [high-stakes]: per docs/sdk-reference-v2.md §13.7.3 — add the tsconfig paths
   mapping for @sparklinkplayjoy/hid → dist/cjs/index.d.ts; remove the unused DeviceInit imports;
   widen the device-literal annotations (annotation only); set the XDKeyboard constructor to
@@ -15,10 +21,9 @@ Workers/Reviewers who find a new bug append a one-liner here (do NOT fix out of 
 - sdk-wrapper skill [trivial]: capture the KeyboardService wrapper pattern (connectedDevice check →
   ensureKeyboard().<method> → instanceof Error → return Error; param types from protocol-keyboard).
   Create under .openclaude/skills/sdk-wrapper.
-- typecheck script [trivial]: add "typecheck": "tsc --noEmit" to package.json.
 - type cleanup [high-stakes]: install @types/w3c-web-hid (check for conflict with hid's own
   HIDDevice), fix the missing Calibration import, decide serialNumber handling, and clear the
-  remaining ~60 pre-existing tsc errors.
+  remaining tsc errors down toward zero (ratchet docs/tsc-baseline.txt down as you go).
 
 ### dks-page — build the Dynamic Keystroke config page (setDks wrapper + DKS.vue)
 
@@ -31,4 +36,3 @@ reassembly) is the foundation.
 ### macro-page — build the Macro config page (setMacro wrapper + Macro.vue)
 - Pitfall: setMacro is called without touchMode → may reset a key's touch mode to global.
   Pass/preserve touchMode when wiring the page; verify on single + RT keys on hardware.
-

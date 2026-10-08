@@ -1,6 +1,24 @@
 {
   "modelLimits": { "qwen/qwen3.8-max-0902": { "contextWindow": 256000 } },
   "permissions": {
-    "deny": ["Bash(rm:*)", "Bash(git push:*)"]
+    "deny": [
+      "Bash(rm:*)",
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Bash(git reset:*)",
+      "Bash(git commit --amend:*)",
+      "Bash(git checkout main:*)",
+      "Bash(git checkout -- :*)",
+      "Bash(git restore:*)",
+      "Bash(git clean:*)",
+      "Bash(git branch -D:*)",
+      "Bash(git branch -d:*)",
+      "Bash(git rm:*)",
+      "Bash(Remove-Item:*)",
+      "Bash(del:*)",
+      "Bash(ri:*)",
+      "Bash(erase:*)"
+    ]
   }
 }

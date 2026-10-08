@@ -1,7 +1,9 @@
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
-import type { DeviceInit, Device } from '@sparklinkplayjoy/sdk-keyboard';
+import type { Device, HIDDevice } from '@sparklinkplayjoy/hid';
 import { IDefKeyInfo } from '../types/types';
 import { useConnectionStore } from '../store/connection';
+
+type PairedDevice = { id: string; data: HIDDevice; productName: string };
 
 interface HIDConnectionEvent extends Event {
   device: HIDDevice;
@@ -10,9 +12,9 @@ interface HIDConnectionEvent extends Event {
 class KeyboardService {
   private keyboard: XDKeyboard | null = null;
   private hidListenersRegistered: boolean = false;
-  private connectedDevice: Device | null = null;
+  private connectedDevice: Device | PairedDevice | null = null;
   private isAutoConnecting: boolean = false;
-  private autoConnectPromise: Promise<Device | null> | null = null;
+  private autoConnectPromise: Promise<Device | PairedDevice | null> | null = null;
   private isPollingRateChanging: boolean = false;
   private pollingRateOperationToken: number | null = null;
   private pollingRateTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -40,7 +42,8 @@ class KeyboardService {
     if (!this.keyboard) {
       this.keyboard = new XDKeyboard({
         usage: 1,
-        usagePage: 65440,
+        usagePage: [65440],
+        configs: [],
       });
     }
     return this.keyboard;
@@ -117,7 +120,7 @@ class KeyboardService {
     }
   }
 
-  async requestDevice(): Promise<Device> {
+  async requestDevice(): Promise<Device | PairedDevice> {
     try {
       if (!('hid' in navigator)) {
         throw new Error('WebHID not supported in this browser');
@@ -133,7 +136,7 @@ class KeyboardService {
       const sdkDevices = await this.getDevices();
       const existingDevice = sdkDevices.find(d => d.data.vendorId === device.vendorId && d.data.productId === device.productId && d.data.serialNumber === device.serialNumber);
       const fallbackId = device.id || `${device.vendorId}-${device.productId}-${device.serialNumber || 'unknown'}`;
-      const result = existingDevice || { id: fallbackId, data: device, productName: device.productName || 'Unknown' };
+      const result: Device | PairedDevice = existingDevice || { id: fallbackId, data: device, productName: device.productName || 'Unknown' };
       await this.init(result.id);
       this.connectedDevice = result;
       localStorage.setItem('pairedStableId', fallbackId);
@@ -145,7 +148,7 @@ class KeyboardService {
     }
   }
 
-  async autoConnect(): Promise<Device | null> {
+  async autoConnect(): Promise<Device | PairedDevice | null> {
     if (this.connectedDevice) {
       return this.connectedDevice;
     }
@@ -172,7 +175,7 @@ class KeyboardService {
     }
   }
 
-  private async _autoConnectInternal(savedStableId: string): Promise<Device | null> {
+  private async _autoConnectInternal(savedStableId: string): Promise<Device | PairedDevice | null> {
     try {
       let attempts = 0;
       const maxAttempts = 3;
@@ -190,7 +193,7 @@ class KeyboardService {
             const sdkDevices = await this.getDevices();
             const targetSdkDevice = sdkDevices.find(d => d.data.vendorId === targetHidDevice.vendorId && d.data.productId === targetHidDevice.productId && d.data.serialNumber === targetHidDevice.serialNumber);
             const fallbackId = targetHidDevice.id || `${targetHidDevice.vendorId}-${targetHidDevice.productId}-${targetHidDevice.serialNumber || 'unknown'}`;
-            const device = targetSdkDevice || { id: fallbackId, data: targetHidDevice, productName: targetHidDevice.productName || 'Unknown' };
+            const device: Device | PairedDevice = targetSdkDevice || { id: fallbackId, data: targetHidDevice, productName: targetHidDevice.productName || 'Unknown' };
             await this.init(device.id);
             this.connectedDevice = device;
             await this.initializeKeyboard();

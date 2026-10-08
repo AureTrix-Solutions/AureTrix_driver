@@ -1,14 +1,17 @@
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
-import type { DeviceInit, Device } from '@sparklinkplayjoy/sdk-keyboard';
+import type { Device, HIDDevice } from '@sparklinkplayjoy/hid';
+
+type PairedDevice = { id: string; data: HIDDevice; productName: string };
 
 class DebugKeyboardService {
   private keyboard: XDKeyboard;
-  private connectedDevice: Device | null = null;
+  private connectedDevice: Device | PairedDevice | null = null;
 
   constructor() {
     this.keyboard = new XDKeyboard({
       usage: 1,
-      usagePage: 65440,
+      usagePage: [65440],
+      configs: [],
     });
     if ('hid' in navigator) {
       navigator.hid.addEventListener('connect', this.handleConnect.bind(this));
@@ -27,7 +30,7 @@ class DebugKeyboardService {
     }
   }
 
-  async autoConnect(): Promise<Device | null> {
+  async autoConnect(): Promise<Device | PairedDevice | null> {
     try {
       if (!('hid' in navigator)) {
         console.error('Debug: WebHID not supported');
@@ -46,7 +49,7 @@ class DebugKeyboardService {
             if (!targetDevice.opened) await targetDevice.open();
             const sdkDevices = await this.getDevices();
             const existingDevice = sdkDevices.find(d => d.id === targetDevice.id);
-            const device = existingDevice || { id: targetDevice.id, data: targetDevice, productName: targetDevice.productName || 'Unknown' };
+            const device: Device | PairedDevice = existingDevice || { id: targetDevice.id, data: targetDevice, productName: targetDevice.productName || 'Unknown' };
             await this.init(device.id);
             this.connectedDevice = device;
             return device;
@@ -67,7 +70,7 @@ class DebugKeyboardService {
     }
   }
 
-  async requestDevice(): Promise<Device> {
+  async requestDevice(): Promise<Device | PairedDevice> {
     try {
       if (!('hid' in navigator)) throw new Error('Debug: WebHID not supported');
       const devices = await navigator.hid.requestDevice({ filters: [{ usagePage: 65440, usage: 1 }] });
@@ -76,7 +79,7 @@ class DebugKeyboardService {
       if (!device.opened) await device.open();
       const sdkDevices = await this.getDevices();
       const existingDevice = sdkDevices.find(d => d.id === device.id);
-      const result = existingDevice || { id: device.id, data: device, productName: device.productName || 'Unknown' };
+      const result: Device | PairedDevice = existingDevice || { id: device.id, data: device, productName: device.productName || 'Unknown' };
       await this.init(result.id);
       this.connectedDevice = result;
       return result;

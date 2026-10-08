@@ -152,7 +152,7 @@ not the SDK).
 | §7 Macros | Verified | `protocol-keyboard/src` + bundle | 4, 5 | ✅ `MacroDataPack` per-action wire = `[keyCodeLE16, status<<24\|delay&0xffffff]` (delay is u24, top 4 bits = press/release prefix 1/8; src comment says "低12位" but mask is 24-bit); ✅ `MacroModePack` slot metadata = `[key, indexLE16, macroLen, mode, numLE16, delayLE24]`; ✅ `getMacro` returns full `{key,id,len,mode,num,delay}` decode (see §13.3); `MacroType.status` numeric-consumption confirmed consistent with §13.3. Batch 5: 64-action memo already present, labeled UI convention; the touchMode-clobber encoding is ✅ from bundle but its **runtime reset effect is hardware-pending** (checklist row + §14.9(a)) |
 | §8 Lighting | Verified | `protocol-keyboard/src` + facade bundle | 4, 4c | Config shape and version gate confirmed; ✅ batch 4: `PRGBDatapack`/`SRGBDatapack` wire layout — speed/mode/luminance/sleepDelay/staticColor are raw bytes (0–255 wire range, no SDK clamp); ✅ `getPRGBRecdata` derives `type` from mode (0=static, 1–20=dynamic, >20=custom); ✅ `getSingleRGBRecdata` returns uppercase `{key,R,G,B}`. ✅ batch 4c: logo verified (`cmdLogoRGB` shares the main-RGB packer; `setLogoLighting` force-zeroes `staticColor` for `type:'dynamic'` and `mode` otherwise; `getLogoLighting` decodes with full `getPRGB` decoder + caches on `logoLight`); custom verified (`setCustomLighting` sends immediately per key, returns decoded `{key,R,G,B}`; `saveCustomLighting` = `{key:254,r:254,g:254,b:254}` sentinel; batch `RGBDataPack`/`cmdKRGB` unreachable from facade); `>= 1.0.9` `dynamicColorId` gate **present in the shipped bundle but unreachable via facade** (controller default `'1.0.7'`); ⚠️ on-disk `pack.ts` predates the gate — bundle wins, divergence documented in §8. Remaining `[unverified]`: hardware behaviour of logo/custom effects |
 | §9 Export/import & firmware (intro) | Verified | sdk-keyboard bundle | 4b | ✅ batch 4b: `exportConfig` default filename `"keyboard_config.json"`, AES encrypt/decrypt with hard-coded key + Blob download / sync throw; `importConfig` full flow traced (read → parse → decrypt → flat → validate → `setImportData`), rejects on read/parse/validate, `setMacro` not awaited |
-| §9.1 `KeyboardConfig` | Partial | `.d.ts` | — | Field list from declarations; which fields round-trip through hardware `[unverified]` |
+| §9.1 `KeyboardConfig` | Partial | `.d.ts` | —, 5 | Field list from declarations; which fields round-trip through hardware `[unverified]` — with one known exception: the `advancedKeys.dks` dead-band array does **not** fully round-trip on import (`Layout_DB3` left stale, §14.9(c)) |
 | §9.2 `ConfigValidator` | Verified | empirical import test | — | ✅ Confirmed unreachable — see §13.4 |
 | §9.3 Firmware update | Partial | sdk-keyboard bundle | 4b | ✅ batch 4b: `config` defaults `{ toBootDelay: 4000, writeDelay: 30, toAppDelay: 4000 }` read from bundle; full `updateDrive` flow traced (toBoot → re-init → run-mode check → 0xFF-pad to 512-multiple → sign/erase/write/CRC); bootloader bytes `KB2_BL_*` 0x08–0x0E confirmed in `constants/byte.ts`. Still Partial: never run on hardware |
 | §10.1 What each package exports | Verified | `package.json` + disk | — | ✅ `exports` maps and on-disk file presence checked |
@@ -165,7 +165,7 @@ not the SDK).
 | §11.1 `DeviceBase` | Partial | `.d.ts` + sdk bundle | 4b | ✅ batch 4b: command-queue drain loop verified (serialised flush, `slice(4)` header strip except usagePage 0xFFB0, multi-response queue re-kicks single queue); `destroy()` only stops USB monitoring — does **not** clear queues (earlier claim corrected); input-report dispatch byte[2]→`sdkMap`. `isUpgrading` guard still *(inferred)* from name |
 | §11.2 `WebHIDService` | Partial | `.d.ts` + bundles | 4b | ✅ batch 4b: `devices()` requestDevice-fallback, `initAndConnectDevice` null paths, `reconnection` 100 ms close/re-tag/reopen sequence, `sendReportAndWaitResponse` signature verified; ⚠️ single-queue timeout/sendTime arg swap documented. Send/receive timing not measured on hardware |
 | §11.3 `UsbDetect` | Partial | `.d.ts`, disk | — | `generateStableId` private ✅; stable-id format `[unverified]` |
-| §11.4 Controller layer | Partial | `.d.ts` | — | Members not on `XDKeyboard` enumerated; behaviour not tested |
+| §11.4 Controller layer | Partial | `.d.ts` + facade/controller bundles | 2, 4b, 4c, 5 | Members not on `XDKeyboard` enumerated; batches 2/4b/4c verified several behaviours from the bundles (v-gate drops vs END/SOCD forwarding, `updateKey`→`setKey` rename, `updateDrive` flow, `exportEncryptedJSON` sync throw). Still Partial: controllers are **unreachable at runtime** (§13.4/§13.6), so none of the extra members has ever executed on hardware |
 | §12.1 Wrapped methods (54) | App-layer | `src/services/KeyboardService.ts` | — | Call-site list, verified against `src/`, not the SDK |
 | §12.2 Unwrapped methods (21) | App-layer | `src/services/KeyboardService.ts` | — | Absence of call sites confirmed by search |
 | §12.3 Wrapper → SDK mapping | App-layer | `src/services/KeyboardService.ts` (line-cited) | — | Every row verified against `src/`; the off-by-one traps are app-boundary facts, not SDK facts |
@@ -3499,9 +3499,14 @@ this is SDK behaviour — it is the convention every caller in `src/` follows.
    ```
 
 2. **Thrown exceptions** — the minority channel, but real. The facade's `updateBin`/`toBoot`
-   **rethrow** instead of returning `Error` (§14.8), and `init`/`requestDevice` can throw from
-   the WebHID layer. Anything touching those paths needs `try/catch` *in addition to* the
-   `instanceof Error` check.
+   **rethrow** instead of returning `Error` (§14.8); `exportConfig` failures surface as
+   **synchronous throws** (`导出文件失败: …`, §9); `updateKey` throws `"No response received"`
+   on an empty reply (§4); and `on()` throws for a non-function handler. Anything touching
+   those paths needs `try/catch` *in addition to* the `instanceof Error` check. Note
+   `init` does **not** throw — it resolves `null` on every failure path (§2) — and the SDK's
+   `requestDevice` is not exposed on the facade at all; this app calls
+   `navigator.hid.requestDevice` directly inside its own try/catch
+   (`KeyboardService.ts:120–125`).
 
 **Retry with backoff for bulk reads.** `ExportService` wraps every SDK read in
 `retryWithBackoff` (`src/services/ExportService.ts:9` — defaults `maxRetries = 2` (3 attempts),
@@ -4271,7 +4276,7 @@ dead bands. A complete restore would need the third DB written separately.
 | Priority | Gap | Impact |
 |---|---|---|
 | **High** | `setDks` unwrapped (§14.5) | DKS **and** TRPS cannot be saved at all — no `setTrps` exists anywhere. |
-| **High** | All of `setMT`/`setTGL`/`setEND`/`setSocd`/`setMpt` unwrapped, plus `getMtorTgl` (§14.6) | Five advanced-key pages can render config but not persist it. MT-vs-TGL *is* disambiguable — via `advancedKeyMode` 3/4 from the wrapped `getPerformanceMode` (§5.2) — so the wrapped readers work; what is missing is the **MT/TGL delay**, which only `getMtorTgl` returns (§6.3, §6.5). |
+| **High** | All of `setMT`/`setTGL`/`setEND`/`setSocd`/`setMpt` unwrapped, plus `getMtorTgl` (§14.6) | Five advanced-key pages can render config but not persist it. MT-vs-TGL *is* disambiguable — via `advancedKeyMode` 3/4 from the wrapped `getPerformanceMode` (§5.2) — so the wrapped readers work; what is missing is the **MT delay**, which only `getMtorTgl` returns (TGL's own decoder already includes `delay`, §6.5). |
 | **High** | `getRS`/`setRS` both unwrapped (§14.7) | RS feature entirely unreachable. |
 | **High** | `setMacro` called with no `touchMode` (§7, §14.9) | **Silent config loss, pending hardware confirmation.** The app calls `setMacro(param, macros)` (`KeyboardService.ts:538`), so `touchMode` is `undefined` → `u = 0` → the whole `Layout_Mode` byte is rewritten as `(0 << 4) \| 6`. Since `KeyTouchMode.rt = 2` and `'quick'` is the only value that produces `u = 2`, a macro write to a key already in **single or RT** mode should reset it to **global**. *Test on hardware* — see the [Hardware verification checklist](#hardware-verification-checklist). |
 | **Medium** | `deleteKey` unwrapped (§14.4) | No per-key reset; only `factoryDataReset`. |

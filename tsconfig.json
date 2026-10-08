@@ -17,7 +17,8 @@
       "@styles/*": ["src/styles/*"],
       "@assets/*": ["src/assets/*"],
       "@types/*": ["src/types/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@sparklinkplayjoy/hid": ["node_modules/@sparklinkplayjoy/hid/dist/cjs/index.d.ts"]
     },
     "types": ["vite/client"]
   },

@@ -90,12 +90,12 @@ docs/plans/current-sprint.md; everything else is archived off the read path.
 
 ### Roles
 - PRODUCT OWNER = human: priorities; approves Worker edits in-session; sprint sign-off; revisions.
-- PM (Planner): bookends a sprint — opens it (plans) and closes it (collects sign-off; archives or revises). Dormant mid-sprint. No implementation. Conduit between Worker/QA and the PO.
+- PM (Planner): bookends a sprint — opens it (plans from docs/plans/backlog.md) and closes it (collects sign-off; archives or revises). Dormant mid-sprint. No implementation. Conduit between Worker/QA and the PO. Maintains docs/plans/backlog.md — removes the item it turns into a sprint; anyone may append a one-line bug/idea to it.
 - WORKER: executes ONE task per session; self-checks; checkpoints; reports status into current-sprint.md.
 - REVIEWER (independent QA): fresh session; checks one high-stakes task's diff vs spec; PASS/FAIL; writes the review file; NEVER edits source.
 
 ### Sessions (each a fresh window; entry prompt in quotes)
-- PM-open — "Act as PM per CLAUDE.md. Goal: <...>" → writes current-sprint.md (sprint goal + done-criteria; tasks each with "Done when:" criteria and a [trivial]/[high-stakes] tag), seeds the first task's ▶ RUN THIS.
+- PM-open — "Act as PM per CLAUDE.md. Plan the \"<name>\" sprint from docs/plans/backlog.md." → reads the chosen backlog item, writes current-sprint.md (sprint goal + done-criteria; tasks each with "Done when:" criteria and a [trivial]/[high-stakes] tag), seeds the first task's ▶ RUN THIS, and removes that item from backlog.md.
 - Worker — "go" → reads current-sprint.md ▶ RUN THIS, does the next task.
 - Reviewer — "follow docs/plans/reviews/review-<slug>.md" → independent PASS/FAIL.
 - PM-close — "Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise."

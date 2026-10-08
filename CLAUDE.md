@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to the AI coding agent (OpenClaude, or any Claude Code–compatible tool) when working with code in this repository.
 
 ## Project Overview
 
@@ -13,6 +13,7 @@ npm install           # install dependencies (npm is the package manager; packag
 npm run dev           # dev server on http://localhost:5000 (strictPort)
 npm run build         # production build to dist/
 npm run preview       # serve the production build
+npm run typecheck     # tsc --noEmit (no emit; reports type errors only)
 npm test              # vitest (watch mode by default)
 npx vitest run path/to/file.test.ts   # run a single test file
 ```
@@ -78,7 +79,7 @@ Vite + TS aliases: `@` → src, plus `@components`, `@pages`, `@services`, `@sty
 
 - Use `<script setup lang="ts">` for new components; Composition API only.
 - Use Pinia stores for shared state; no direct DOM manipulation for state changes.
-- Commit style: `Add: ...`, `Fix: ...`, `Update: ...`, `Remove: ...`.
+- Commit style: `Add: ...`, `Fix: ...`, `Update: ...`, `Remove: ...` (sprint work also uses `<sprint>: <task>` — see Git & commits).
 - New keyboard layout contributions go in `src/utils/sharedLayout.ts` with precise mm-level measurements (1u = 19.05mm).
 - When a feature is complete, update this file with any new conventions (1-3 lines).
 
@@ -89,24 +90,24 @@ for all SDK claims is docs/sdk-reference-v2.md. The only live planning file is
 docs/plans/current-sprint.md; everything else is archived off the read path.
 
 ### Roles
-- PRODUCT OWNER = human: priorities; approves Worker edits in-session; sprint sign-off; revisions.
+- PRODUCT OWNER = human: priorities; approves Worker edits in-session; runs hardware tests; sprint sign-off; revisions. Only the PO pushes, merges, deletes branches, or rewrites git history.
 - PM (Planner): bookends a sprint — opens it (plans from a goal you give OR an item in docs/plans/backlog.md) and closes it (collects sign-off; archives or revises). Dormant mid-sprint. No implementation. Conduit between Worker/QA and the PO. Maintains docs/plans/backlog.md — removes the item it turns into a sprint; anyone may append a one-line bug/idea to it.
-- WORKER: executes ONE task per session; self-checks; checkpoints; reports status into current-sprint.md.
-- REVIEWER (independent QA): fresh session; checks one high-stakes task's diff vs spec; PASS/FAIL; writes the review file; NEVER edits source.
+- WORKER: executes ONE task per session; self-checks; commits its own work; checkpoints; reports status into current-sprint.md.
+- REVIEWER (independent QA): fresh session; checks one high-stakes task's diff vs spec; PASS/FAIL; writes the review file; NEVER edits source. The Reviewer passes the CODE; the PO passes the HARDWARE.
 
 ### Sessions (each a fresh window; entry prompt in quotes)
-- PM-open — "Act as PM per CLAUDE.md. Goal: <...>" OR "Act as PM per CLAUDE.md. Plan the \"<name>\" sprint from docs/plans/backlog.md." → writes current-sprint.md (sprint goal + done-criteria; tasks each with "Done when:" criteria and a [trivial]/[high-stakes] tag), seeds the first task's ▶ RUN THIS. If planning from a backlog item, reads that item and removes it from backlog.md.
-- Worker — "go" → reads current-sprint.md ▶ RUN THIS, does the next task.
+- PM-open — "Act as PM per CLAUDE.md. Goal: <...>" OR "Act as PM per CLAUDE.md. Plan the \"<name>\" sprint from docs/plans/backlog.md." → writes current-sprint.md (sprint goal + done-criteria; tasks each with "Done when:" criteria and a [trivial]/[high-stakes] tag, plus [hw] where a task needs on-device confirmation), seeds the first task's ▶ RUN THIS. If planning from a backlog item, reads that item and removes it from backlog.md.
+- Worker — "go" → runs the session-start check, then reads current-sprint.md ▶ RUN THIS and does the next task.
 - Reviewer — "follow docs/plans/reviews/review-<slug>.md" → independent PASS/FAIL.
 - PM-close — "Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise."
 
 ### Two human gates
-- Operational: human approves each Worker edit in-session.
+- Operational: human approves each Worker edit in-session. Commits are NOT gated — the Worker commits freely (see Git & commits).
 - Acceptance: sprint sign-off routed THROUGH the PM to the human. Work reports up via artifacts; it never jumps the chain.
 
 ### Three feedback loops
 - Edit: human rejects an edit → Worker redoes it.
-- Task: Reviewer FAIL → notes + task → IN-PROGRESS → new Worker window fixes ONLY the failed items → Reviewer re-checks only those. The Reviewer NEVER fixes.
+- Task: Reviewer FAIL (or a hardware ✗) → detail into the review file + a fix checklist into ▶ RUN THIS → IN-PROGRESS → new Worker window fixes ONLY the failed items → Reviewer re-checks only those. The Reviewer NEVER fixes.
 - Sprint: PO rejects at PM-close → PM revises the sprint (same name, logged "revN (date): <change>") → Worker → PM-close. Nothing archives until PO sign-off.
 
 ### Hard rules (every session)
@@ -119,8 +120,19 @@ docs/plans/current-sprint.md; everything else is archived off the read path.
 7. Design intent — never change: unfiltered device selection (filters:[]), usagePage 65440 semantics, wrappers return Error (never throw).
 8. Spot a bug or idea outside your task's scope? Append ONE line to docs/plans/backlog.md (don't fix it, don't read the rest of the file), then carry on. Never fix out of scope.
 
+### Git & commits
+- The Worker COMMITS its own work: one commit per task (or per fix-round), message "<sprint>: <task>". Commits are local and reversible and double as crash recovery points — commit often.
+- The Worker NEVER pushes, merges, deletes branches, or rewrites history (no amend, rebase, reset, restore, clean, or branch switching). The PO does all of those manually. These are blocked in .openclaude/settings.json.
+- One sprint = one branch. The PO creates it before the sprint and merges it to main on sign-off.
+
+### Session start (run before any work)
+1. Confirm the current branch is the sprint branch, NEVER main. If on main, STOP and report.
+2. Run `git status` and compare the last commit to current-sprint.md's checkpoint (branch + last-commit line).
+3. On any mismatch (uncommitted edits, a commit the checkpoint doesn't mention, wrong branch), STOP and report to the PO. NEVER discard uncommitted work — only the PO does that.
+4. Otherwise read current-sprint.md and follow its ▶ RUN THIS block.
+
 ### Context hygiene (bounded forever)
-- Read ONLY: current-sprint.md + the active task's named files + the needed sdk-reference-v2.md sections. Never read archive/ or old sprints.
+- Read ONLY: current-sprint.md + the active task's named files + the needed sdk-reference-v2.md sections (+ the relevant template when creating a file). Never read archive/ or old sprints.
 - current-sprint.md is a SNAPSHOT, not a log: overwrite it, collapse DONE tasks to one ✓ line, keep under ~150 lines.
 - Completed sprints + done review files live in docs/plans/archive/ (off the read path). History = git + archive.
 - This CLAUDE.md loads every session: keep it capped and curated. Add rules REACTIVELY, only when a problem recurs, by CONSOLIDATING an existing rule rather than appending. Detail/examples go in on-demand skills, not here. No standing lessons-learned file.
@@ -128,23 +140,55 @@ docs/plans/current-sprint.md; everything else is archived off the read path.
 ### QA tiers
 - Worker MAY fix inline (no review) and must LOG it: typos, grammar, formatting, dead/moved links, path refs, self-created inconsistencies, lint/format.
 - Every [high-stakes] task gets an independent Reviewer window. High-stakes = logic/behavior, multi-file, SDK-correctness, device/firmware-affecting, irreversible. If unsure → high-stakes.
+- A [hw] task also needs the PO's hands-on hardware check after code review: the Reviewer passes the code as PASS (pending hw) → HW-TEST → the PO exercises it on a real device and marks ✓/✗ (see Hardware gate).
+
+### Tag ownership
+- The PM assigns [trivial]/[high-stakes] (and [hw]) at plan time. The Worker MAY upgrade a tag (trivial → high-stakes), NEVER downgrade.
+- Any change touching KeyboardService, store/connection.ts, or the design-intent rules is ALWAYS [high-stakes], regardless of size.
+- A Reviewer who finds a task mis-tagged (should have been high-stakes) auto-FAILs it back for proper review.
+
+### Self-check gate (code tasks only)
+- INACTIVE until the typecheck script + docs/tsc-baseline.txt exist (both created in the code-fixes sprint). Non-code tasks (docs, config, planning) always skip this.
+- For a task that changes source (.ts/.vue), once active: run `npm run typecheck` — error count ≤ docs/tsc-baseline.txt and NO new errors in files you touched. Run `npm run build` ONLY when the change could affect the build; it must pass.
+- Record results in the task's checkpoint (and, for high-stakes, in the review file). The Reviewer reruns whatever you ran.
+- The baseline only ever ratchets DOWN. (Goal: zero errors once the type-cleanup work lands; until then, ≤ baseline is the gate.)
 
 ### Status ownership (in current-sprint.md)
 - → PENDING: PM. PENDING → IN-PROGRESS (+checkpoint): Worker.
 - → DONE (trivial): Worker after self-check (collapse to ✓).
-- → IN-REVIEW (high-stakes): Worker after work+self-check; also writes docs/plans/reviews/review-<slug>.md.
-- IN-REVIEW → DONE (PASS) / → IN-PROGRESS (FAIL): Reviewer. A Worker NEVER marks its own high-stakes task DONE.
+- → IN-REVIEW (high-stakes): Worker after work + self-check; writes docs/plans/reviews/review-<slug>.md beginning with the sprint goal (one line) + this task's "Done when:" criteria, then the Base/Head commit hashes to review.
+- IN-REVIEW → DONE (PASS, non-hw) / → HW-TEST (PASS pending hw) / → IN-PROGRESS (FAIL): Reviewer. On FAIL, the Reviewer puts full detail (stack traces, exact lines/syntax) in review-<slug>.md, then appends a high-level fix checklist to current-sprint.md under ▶ RUN THIS — one bullet per failed item, each citing its review-<slug>.md reference, prefixed "fix ONLY these". The Worker works the checklist and opens the review file only for the detail behind a bullet. A Worker NEVER marks its own high-stakes task DONE.
+- HW-TEST → DONE (✓) / → IN-PROGRESS (✗): PO, after the hands-on check. The PO records the verdict in the review file and updates this status line (see Hardware gate). A ✗ re-enters the Task feedback loop.
 
 ### Completion & sign-off
-- Task complete = "Done when:" criteria met + committed (+ Reviewer PASS for high-stakes).
+- Task complete = "Done when:" criteria met + committed + self-check passed where it applies (+ Reviewer PASS for high-stakes, + PO hardware ✓ for [hw]).
 - Sprint complete = all tasks DONE AND the PO signs off the goal is met. The session finishing the last task flags "ALL TASKS DONE — awaiting PO sign-off" and stops; only PM-close closes it.
 
 ### Close-out & archive (PM, on PO sign-off)
-- Snapshot current-sprint.md → docs/plans/archive/sprint-NN-<slug>/sprint.md (header: goal, started/closed dates, task count, signed-off-by).
-- Move that sprint's review files + resolved scratch into the same folder.
-- One line to docs/plans/index.md: "NN | <slug> | <goal> | closed YYYY-MM-DD | archive/sprint-NN-<slug>/".
+- Snapshot current-sprint.md → docs/plans/archive/sprint-NN-<slug>/sprint.md (header: goal, started/closed dates, task count, signed-off-by), and move that sprint's review files + resolved scratch into the same folder. Commit the move. (Git preserves the content in history either way — no special rename ceremony needed.)
+- One line to docs/plans/index.md: "NN | <slug> | <goal> | closed YYYY-MM-DD | archive/sprint-NN-<slug>/". Numbers never reused.
 - Reset current-sprint.md to "COMPLETE — run PM-open for the next sprint."
 - Naming: PM assigns sprint-NN-<slug> at creation (NN = last index + 1; slug 2–4 kebab words); same name at archive; a revision keeps the same name.
 
-### Session start
-Read docs/plans/current-sprint.md and follow its ▶ RUN THIS block.
+### Hardware gate (PO owns the device)
+The AI cannot operate a keyboard. A [hw] task reaches HW-TEST once the Reviewer passes the code
+(PASS pending hw). The PO then does the hands-on check. Fixed process:
+
+1. Worker, at IN-REVIEW: in the review file's Hardware check section, note in plain language WHAT
+   changed and WHAT to verify (not a scripted checklist).
+2. PO: exercise it on a real device, then record the verdict in the review file and update the
+   task's status line in current-sprint.md — these two writes ARE the gate:
+   - ✓ → in the review file write "Hardware verdict: PASS — <date>" (a note is optional); set the
+     task to DONE (collapse to ✓).
+   - ✗ → in the review file write "Hardware verdict: FAIL — <date> → see F1" and put the symptom
+     ONCE in an F1 block (what you did / expected / actual); set the task to IN-PROGRESS and add
+     "fix ONLY this — see review-<slug>.md §F1" to ▶ RUN THIS. The next Worker fixes only that; a
+     re-check follows.
+3. The PO edits those two files directly (the PO owns the repo). The verdict must land on disk
+   before any fix session — a fresh Worker window cannot see chat.
+
+Design-intent properties are always worth a glance on hardware-affecting changes: any SparkLink
+device connects with no filter added; wrappers return Error, never throw.
+
+### Templates
+Format every file you create from docs/plans/templates/: current-sprint.md ← sprint-template.md (PM); review-<slug>.md ← review-template.md (Worker fills notes/hashes/hw steps, Reviewer adds the verdict).

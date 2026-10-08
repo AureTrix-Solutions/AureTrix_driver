@@ -288,7 +288,7 @@ watch([pressDead, releaseDead], () => {
 | SDK Method | Purpose | Parameters |
 |------------|---------|------------|
 | `getGlobalTouchTravel()` | Load current global settings | None |
-| `setGlobalTouchTravel(param)` | Update global settings | `{ globalTouchTravel, pressDead, releaseDead }` |
+| `setGlobalTouchTravel(param)` *(KeyboardService wrapper — the SDK method is `setDB(param)`)* | Update global settings | `{ globalTouchTravel, pressDead, releaseDead }` |
 | `getPerformanceMode(key)` | Check if key is in global mode | Key ID |
 | `setPerformanceMode(key, mode, param)` | Set key to global mode | Key ID, 'global', 0 |
 | `setDp(key, value)` | Set top deadzone for key | Key ID, pressDead value |
@@ -544,4 +544,4 @@ const loadGlobalSettings = async () => {
 - [SingleKeyTravel.md](./SingleKeyTravel.md) - Per-key travel configuration
 - [KeyTravel.md](./KeyTravel.md) - Container component
 - [SwitchProfiles.md](./SwitchProfiles.md) - Profile management
-- [SDK_REFERENCE.md](../SDK_REFERENCE.md) - Complete SDK API reference
+- [sdk-reference-v2.md](../sdk-reference-v2.md) - Complete SDK API reference

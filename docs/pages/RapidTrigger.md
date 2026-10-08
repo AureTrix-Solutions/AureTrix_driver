@@ -520,8 +520,8 @@ const setToGlobal = async () => {
 - **KeyboardService**: Hardware communication for RT configuration
 - **RT APIs**:
   - `setPerformanceMode(keyId, 'rt', 0)`: Enable RT mode
-  - `getSingleTravel(keyId)`: Get initial actuation point
-  - `setSingleTravel(keyId, value)`: Set initial actuation
+  - `getSingleTravel(keyId)`: Get actuation point **[unverified]** — in RT mode this is interpreted as the *initial* actuation point, but that reading is not source-verified; the wire read/write is mode-agnostic (`Layout_DB0`, ×1000). See sdk-reference-v2.md §5.3–§5.4 (hardware-pending).
+  - `setSingleTravel(keyId, value)`: Set actuation point **[unverified]** — same caveat: the RT-mode "initial actuation" meaning is hardware-pending, not confirmed in SDK source.
   - `getRtTravel(keyId)`: Get RT press/release travel
   - `setRtPressTravel(keyId, value)`: Set re-trigger distance
   - `setRtReleaseTravel(keyId, value)`: Set reset distance

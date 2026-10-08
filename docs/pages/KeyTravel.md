@@ -467,7 +467,7 @@ The component applies no styling beyond a wrapper div. All visual styling is han
 - [GlobalTravel.md](./GlobalTravel.md) - Global travel sub-component
 - [SingleKeyTravel.md](./SingleKeyTravel.md) - Per-key travel sub-component
 - [SwitchProfiles.md](./SwitchProfiles.md) - Profile management sub-component
-- [SDK_REFERENCE.md](../SDK_REFERENCE.md) - Complete SDK API reference
+- [sdk-reference-v2.md](../sdk-reference-v2.md) - Complete SDK API reference
 
 ---
 

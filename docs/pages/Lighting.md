@@ -13,7 +13,7 @@ The Lighting page provides complete RGB lighting control for SparkLink SDK-compa
 ## Key Features
 
 ### 1. **Master Lighting Controls**
-- Brightness (Luminance): 0-4 (Off, Low, Medium, High, Maximum)
+- Brightness (Luminance): 0-4 (Off, Low, Medium, High, Maximum) — **UI-level scale only**; the SDK's `luminance` field is a raw 0-255 byte (see sdk-reference-v2.md), so 0-4 is not the SDK luminance range
 - Speed: 0-4 (Slowest to Fastest) - affects animation speed
 - Sleep Timer: Never, 1-120 minutes (13 options)
 - Direction: Normal or Reverse (reverses animation direction)
@@ -458,7 +458,7 @@ Physical keyboard updated
 ## User Workflows
 
 ### Change Brightness
-1. Select brightness level (0-4) from dropdown
+1. Select brightness level (0-4) from dropdown — a UI-level scale, not the SDK luminance range (the SDK `luminance` field is a raw 0-255 byte)
 2. Brightness applies immediately to keyboard
 3. No confirmation needed
 

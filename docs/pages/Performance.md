@@ -302,7 +302,7 @@ const handleModeChange = (data: { keyIds: number[]; newMode: 'global' | 'single'
 ### Services
 - **KeyboardService**: Hardware communication for travel adjustments
 - **Performance Mode APIs**:
-  - `getPerformanceMode(keyId)`: Get global/single mode
+  - `getPerformanceMode(keyId)`: Get touch mode (`'global' | 'single' | 'rt'`) plus `advancedKeyMode: number`
   - `getSingleTravel(keyId)`: Get per-key travel
   - `getDpDr(keyId)`: Get press/release deadzones
 
@@ -444,7 +444,7 @@ The page frequently fetches performance modes to determine which overlay system 
 
 ```typescript
 await KeyboardService.getPerformanceMode(keyId)
-  // Returns: { touchMode: 'global' | 'single' }
+  // Returns: { touchMode: 'global' | 'single' | 'rt', advancedKeyMode: number } | Error
 ```
 
 This determines:

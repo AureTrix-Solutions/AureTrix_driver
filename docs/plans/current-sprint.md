@@ -6,7 +6,7 @@
 
 ## Checkpoint
 - Branch: `sprint-01-code-fixes`
-- Last commit: `767693a` — added scratch and to delete folders
+- Last commit: `de1788a` — sprint-01-code-fixes: PM-open — plan sprint (a follow-up PM-open commit updates this checkpoint line)
 - tsc baseline: not yet recorded (Task 1 creates docs/tsc-baseline.txt)
 - Cleanup: none
 

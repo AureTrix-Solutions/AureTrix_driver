@@ -23,3 +23,5 @@ reassembly) is the foundation.
 ### macro-page — build the Macro config page (setMacro wrapper + Macro.vue)
 - Pitfall: setMacro is called without touchMode → may reset a key's touch mode to global.
   Pass/preserve touchMode when wiring the page; verify on single + RT keys on hardware.
+
+- [docs] sdk-reference-v2.md §13.7.4 wrongly claims `configs` never reaches a `filters` arg — hid's internal `devices()` zero-match fallback calls `requestDevice({filters:this.configs})`; correct the section. (Found in Task 2 review, 2026-10-08.)

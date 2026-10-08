@@ -11,12 +11,13 @@
 - Cleanup: `.scratch/` holds 4 typecheck capture files (baseline-services.txt, post-services.txt, base-norm.txt, post-norm.txt) — PO may delete. `_to_delete/` empty.
 
 ## ▶ RUN THIS
-Next: Task 2 is **IN-REVIEW** — Reviewer: follow docs/plans/reviews/review-variant-p-imports.md (Base 819202c → Head c15d44f). Pay attention to the deferred-unmask ruling + gate-conflict flag in Worker notes. On PASS → HW-TEST: PO verifies connect / auto-reconnect / Debug-page connect on a real device.
+Next: Task 2 is **HW-TEST** — **PO:** hands-on device check, then record the verdict (see Hardware gate). Test: manual Connect (unfiltered picker → open → getBaseInfo) · unplug/replug auto-reconnect · Debug-page connect on its separate XDKeyboard. Write `Hardware verdict: PASS — <date>` (or `FAIL — <date> → see F1` + an F1 block) into review-variant-p-imports.md, and set Task 2 → DONE (collapse to ✓) on PASS, or → IN-PROGRESS + "fix ONLY this — see review-variant-p-imports.md §F1" here on FAIL.
 After Task 2 closes: Task 3 (sdk-wrapper skill), then Task 4 (type cleanup — owns the 8 deferred errors + serialNumber decision).
+**No fix round is pending** — the Reviewer found no fail items. Task 3 can start once the PO's verdict lands (or be done in parallel if the PO prefers; it does not touch these files).
 
 ## Tasks
 1. ✓ **typecheck script + baseline** — DONE 2026-10-08
-2. **variant-P import fix** — [high-stakes] [hw] — STATUS: IN-REVIEW (code done, commits 57305ef+c15d44f; awaiting Reviewer, then PO hardware ✓; details in review-variant-p-imports.md)
+2. **variant-P import fix** — [high-stakes] [hw] — STATUS: HW-TEST (Reviewer **PASS** 2026-10-08, 0 fail items; code done, commits 57305ef+c15d44f; awaiting PO hardware ✓ — details + 2 reviewer notes (R1 gate wording, R2 §13.7.4 doc error) in review-variant-p-imports.md)
 3. **sdk-wrapper skill** — [trivial] — STATUS: PENDING
    - Done when: `.openclaude/skills/sdk-wrapper/` captures the KeyboardService wrapper pattern: connectedDevice check → ensureKeyboard().<method> → instanceof Error check → return Error (never throw); param types sourced from protocol-keyboard/src.
    - Files: `.openclaude/skills/sdk-wrapper/`

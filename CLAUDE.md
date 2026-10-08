@@ -9,12 +9,12 @@ AureTrix is a browser-based configuration tool for hall effect keyboards (SparkL
 ## Commands
 
 ```bash
-pnpm install          # install dependencies (pnpm is the declared package manager)
-pnpm dev              # dev server on http://localhost:5000 (strictPort)
-pnpm build            # production build to dist/
-pnpm preview          # serve the production build
-pnpm test             # vitest (watch mode by default)
-pnpm vitest run path/to/file.test.ts   # run a single test file
+npm install           # install dependencies (npm is the package manager; package-lock.json is the lockfile)
+npm run dev           # dev server on http://localhost:5000 (strictPort)
+npm run build         # production build to dist/
+npm run preview       # serve the production build
+npm test              # vitest (watch mode by default)
+npx vitest run path/to/file.test.ts   # run a single test file
 ```
 
 There is no lint script and currently no test files, despite vitest/@vue/test-utils being installed.
@@ -81,3 +81,69 @@ Vite + TS aliases: `@` → src, plus `@components`, `@pages`, `@services`, `@sty
 - Commit style: `Add: ...`, `Fix: ...`, `Update: ...`, `Remove: ...`.
 - New keyboard layout contributions go in `src/utils/sharedLayout.ts` with precise mm-level measurements (1u = 19.05mm).
 - When a feature is complete, update this file with any new conventions (1-3 lines).
+
+## Operating Protocol
+
+How work runs here. Four roles across separate sessions; the human is Product Owner. Ground truth
+for all SDK claims is docs/sdk-reference-v2.md. The only live planning file is
+docs/plans/current-sprint.md; everything else is archived off the read path.
+
+### Roles
+- PRODUCT OWNER = human: priorities; approves Worker edits in-session; sprint sign-off; revisions.
+- PM (Planner): bookends a sprint — opens it (plans) and closes it (collects sign-off; archives or revises). Dormant mid-sprint. No implementation. Conduit between Worker/QA and the PO.
+- WORKER: executes ONE task per session; self-checks; checkpoints; reports status into current-sprint.md.
+- REVIEWER (independent QA): fresh session; checks one high-stakes task's diff vs spec; PASS/FAIL; writes the review file; NEVER edits source.
+
+### Sessions (each a fresh window; entry prompt in quotes)
+- PM-open — "Act as PM per CLAUDE.md. Goal: <...>" → writes current-sprint.md (sprint goal + done-criteria; tasks each with "Done when:" criteria and a [trivial]/[high-stakes] tag), seeds the first task's ▶ RUN THIS.
+- Worker — "go" → reads current-sprint.md ▶ RUN THIS, does the next task.
+- Reviewer — "follow docs/plans/reviews/review-<slug>.md" → independent PASS/FAIL.
+- PM-close — "Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise."
+
+### Two human gates
+- Operational: human approves each Worker edit in-session.
+- Acceptance: sprint sign-off routed THROUGH the PM to the human. Work reports up via artifacts; it never jumps the chain.
+
+### Three feedback loops
+- Edit: human rejects an edit → Worker redoes it.
+- Task: Reviewer FAIL → notes + task → IN-PROGRESS → new Worker window fixes ONLY the failed items → Reviewer re-checks only those. The Reviewer NEVER fixes.
+- Sprint: PO rejects at PM-close → PM revises the sprint (same name, logged "revN (date): <change>") → Worker → PM-close. Nothing archives until PO sign-off.
+
+### Hard rules (every session)
+1. ONE task per session. Never start a second — write handoff and stop.
+2. Save after every edit/finding. Never hold work only in memory.
+3. CHECKPOINT CONTINUOUSLY into your role's file (Worker/PM → current-sprint.md; Reviewer → the review file). Nearing the turn/context limit, write the handoff and STOP cleanly. Never run to a crash.
+4. NO sub-agents. If a task seems to need one, stop and ask the human.
+5. Never dump large/minified file slices to output — read only the span you need.
+6. Verify every SDK claim against docs/sdk-reference-v2.md (and protocol-keyboard/src when needed) before writing it.
+7. Design intent — never change: unfiltered device selection (filters:[]), usagePage 65440 semantics, wrappers return Error (never throw).
+
+### Context hygiene (bounded forever)
+- Read ONLY: current-sprint.md + the active task's named files + the needed sdk-reference-v2.md sections. Never read archive/ or old sprints.
+- current-sprint.md is a SNAPSHOT, not a log: overwrite it, collapse DONE tasks to one ✓ line, keep under ~150 lines.
+- Completed sprints + done review files live in docs/plans/archive/ (off the read path). History = git + archive.
+- This CLAUDE.md loads every session: keep it capped and curated. Add rules REACTIVELY, only when a problem recurs, by CONSOLIDATING an existing rule rather than appending. Detail/examples go in on-demand skills, not here. No standing lessons-learned file.
+
+### QA tiers
+- Worker MAY fix inline (no review) and must LOG it: typos, grammar, formatting, dead/moved links, path refs, self-created inconsistencies, lint/format.
+- Every [high-stakes] task gets an independent Reviewer window. High-stakes = logic/behavior, multi-file, SDK-correctness, device/firmware-affecting, irreversible. If unsure → high-stakes.
+
+### Status ownership (in current-sprint.md)
+- → PENDING: PM. PENDING → IN-PROGRESS (+checkpoint): Worker.
+- → DONE (trivial): Worker after self-check (collapse to ✓).
+- → IN-REVIEW (high-stakes): Worker after work+self-check; also writes docs/plans/reviews/review-<slug>.md.
+- IN-REVIEW → DONE (PASS) / → IN-PROGRESS (FAIL): Reviewer. A Worker NEVER marks its own high-stakes task DONE.
+
+### Completion & sign-off
+- Task complete = "Done when:" criteria met + committed (+ Reviewer PASS for high-stakes).
+- Sprint complete = all tasks DONE AND the PO signs off the goal is met. The session finishing the last task flags "ALL TASKS DONE — awaiting PO sign-off" and stops; only PM-close closes it.
+
+### Close-out & archive (PM, on PO sign-off)
+- Snapshot current-sprint.md → docs/plans/archive/sprint-NN-<slug>/sprint.md (header: goal, started/closed dates, task count, signed-off-by).
+- Move that sprint's review files + resolved scratch into the same folder.
+- One line to docs/plans/index.md: "NN | <slug> | <goal> | closed YYYY-MM-DD | archive/sprint-NN-<slug>/".
+- Reset current-sprint.md to "COMPLETE — run PM-open for the next sprint."
+- Naming: PM assigns sprint-NN-<slug> at creation (NN = last index + 1; slug 2–4 kebab words); same name at archive; a revision keeps the same name.
+
+### Session start
+Read docs/plans/current-sprint.md and follow its ▶ RUN THIS block.

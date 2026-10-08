@@ -26,7 +26,7 @@ dist-ssr/
 secrets.*
 credentials.*
 
-# AI agent tools (KEEP CLAUDE.md, .claude/agents/, .claude/settings.json tracked)
+
 # OpenClaude: ignore session data/cache/secrets, keep config + skills
 .openclaude/*
 !.openclaude/settings.json
@@ -68,6 +68,7 @@ coverage/
 *.cache
 scratch/
 tmp/
+.scratch/
 
 # Documentation / generated
 docs/_build/

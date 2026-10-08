@@ -1,6 +1,0 @@
-{
-  "modelLimits": { "qwen3.8-max-0902": { "contextWindow": 256000 } },
-  "permissions": {
-    "deny": ["Bash(rm:*)", "Bash(git push:*)"]
-  }
-}

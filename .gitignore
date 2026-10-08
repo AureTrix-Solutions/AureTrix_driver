@@ -27,8 +27,11 @@ secrets.*
 credentials.*
 
 # AI agent tools (KEEP CLAUDE.md, .claude/agents/, .claude/settings.json tracked)
+# OpenClaude: ignore session data/cache/secrets, keep config + skills
+.openclaude/*
+!.openclaude/settings.json
+!.openclaude/skills/
 .openclaude-profile.json
-.claude/settings.local.json
 .codex/
 
 # Editor and IDE files

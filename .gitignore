@@ -5,14 +5,31 @@ npm-debug.log*
 pnpm-debug.log*
 yarn-error.log*
 
-# Vite build output
+# Vite build output / cache
 dist/
 dist-ssr/
+*.local
+.vite/
+
+# TypeScript build output
+*.tsbuildinfo
 
 # Environment variables
 .env
 .env.*
 !.env.example
+
+# Secrets and keys
+*.pem
+*.key
+*.p12
+secrets.*
+credentials.*
+
+# AI agent tools (KEEP CLAUDE.md, .claude/agents/, .claude/settings.json tracked)
+.openclaude-profile.json
+.claude/settings.local.json
+.codex/
 
 # Editor and IDE files
 .idea/
@@ -28,27 +45,28 @@ dist-ssr/
 # Operating system files
 .DS_Store
 Thumbs.db
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
 
-# TypeScript build output
-*.tsbuildinfo
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
 
 # Test coverage reports
 coverage/
 
-# Temporary files
+# Temporary and scratch files
 *.tmp
 *.temp
 *.bak
 *.cache
+scratch/
+tmp/
 
-# Local development artifacts
-*.local
-
-
-# Vite cache
-.vite/
-
-# Documentation or generated files (if any)
+# Documentation / generated
 docs/_build/
 *.mdx
 

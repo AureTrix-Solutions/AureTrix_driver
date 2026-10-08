@@ -15,6 +15,7 @@
 - Branch: `sprint-NN-<slug>`
 - Last commit: `<hash>` — <message>
 - tsc baseline: <N> errors (docs/tsc-baseline.txt)
+- Cleanup: <none | .scratch/ has <x> (PO may delete) | _to_delete/ has <y> (PO must git rm)>
 <!-- Session-start check compares branch + last commit against this. On mismatch: STOP, report. -->
 
 ## ▶ RUN THIS

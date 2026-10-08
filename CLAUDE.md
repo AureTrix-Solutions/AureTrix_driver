@@ -125,6 +125,11 @@ docs/plans/current-sprint.md; everything else is archived off the read path.
 - The Worker NEVER pushes, merges, deletes branches, or rewrites history (no amend, rebase, reset, restore, clean, or branch switching). The PO does all of those manually. These are blocked in .openclaude/settings.json.
 - One sprint = one branch. The PO creates it before the sprint and merges it to main on sign-off.
 
+### Deletes & cleanup (the agent never deletes — those commands are blocked)
+- Throwaway/experiment files → put them in `.scratch/` (gitignored). Never try to delete them; the PO empties `.scratch/` freely (no git needed).
+- A real repo file that should be removed → MOVE it into `_to_delete/` (tracked), never delete it. The PO does the `git rm`.
+- REPORT cleanup at the end of the task, in the current-sprint.md checkpoint: list anything left in `.scratch/` (PO can just delete) and anything in `_to_delete/` (PO must `git rm`). If both are empty, say "no cleanup needed." Never leave the PO to discover leftovers.
+
 ### Session start (run before any work)
 1. Confirm the current branch is the sprint branch, NEVER main. If on main, STOP and report.
 2. Run `git status` and compare the last commit to current-sprint.md's checkpoint (branch + last-commit line).

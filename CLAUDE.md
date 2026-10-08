@@ -72,7 +72,7 @@ Vite + TS aliases: `@` → src, plus `@components`, `@pages`, `@services`, `@sty
 
 ### Docs
 
-`docs/pages/*.md` documents each feature page. `docs/sdk-reference-v2.md` is the verified SDK reference; read only the sections relevant to the task. `docs/SDK_REFERENCE.md` is superseded; don't use it. `docs/plans/roadmap.md` tracks what's next.
+`docs/pages/*.md` documents each feature page. `docs/sdk-reference-v2.md` is the verified SDK reference; read only the sections relevant to the task. `docs/plans/current-sprint.md` is the live sprint plan and handoff (what's next); completed sprints are archived under `docs/plans/archive/` with a one-line index in `docs/plans/index.md`.
 
 ## Conventions (from CONTRIBUTING.md)
 

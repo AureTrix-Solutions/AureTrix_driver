@@ -179,7 +179,7 @@ src/
 
 Comprehensive documentation is available in the `docs/` directory:
 
-- **sdk-reference-v2.md**: Complete, verified API reference for the SparkLink SDK (authoritative; `docs/SDK_REFERENCE.md` is superseded)
+- **sdk-reference-v2.md**: Complete, verified API reference for the SparkLink SDK (authoritative)
 - **PAGES_OVERVIEW.md**: Overview of all pages with quick reference
 - **docs/pages/**: Detailed documentation for each functional page
 

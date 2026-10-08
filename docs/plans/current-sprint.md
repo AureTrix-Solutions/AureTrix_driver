@@ -6,7 +6,6 @@
 
 ## Checkpoint
 - Branch: `sprint-01-code-fixes`
-- Last commit: Task 1 commit (this commit) — typecheck script + baseline
 - tsc baseline: **60** (docs/tsc-baseline.txt, 2026-10-08) — self-check gate now ACTIVE for Tasks 2–4
 - Cleanup: no cleanup needed (.scratch/ and _to_delete/ untouched)
 

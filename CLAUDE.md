@@ -118,7 +118,7 @@ docs/plans/current-sprint.md; everything else is archived off the read path.
 5. Never dump large/minified file slices to output — read only the span you need.
 6. Verify every SDK claim against docs/sdk-reference-v2.md (and protocol-keyboard/src when needed) before writing it.
 7. Design intent — never change: unfiltered device selection (filters:[]), usagePage 65440 semantics, wrappers return Error (never throw).
-8. Spot a bug or idea outside your task's scope? Append ONE line to docs/plans/backlog.md (don't fix it, don't read the rest of the file), then carry on. Never fix out of scope.
+8. Spot a bug or idea outside your task's scope? Append ONE line to docs/plans/backlog.md (don't fix it, don't read the rest of the file), then carry on. Never fix out of scope. When planning a sprint (plan mode), put that backlog line IN the plan's backlog.md changes so it's written on approval — never just drop the finding.
 
 ### Git & commits
 - The Worker COMMITS its own work: one commit per task (or per fix-round), message "<sprint>: <task>". Commits are local and reversible and double as crash recovery points — commit often.
@@ -132,9 +132,8 @@ docs/plans/current-sprint.md; everything else is archived off the read path.
 
 ### Session start (run before any work)
 1. Confirm the current branch is the sprint branch, NEVER main. If on main, STOP and report.
-2. Run `git status` and compare the last commit to current-sprint.md's checkpoint (branch + last-commit line).
-3. On any mismatch (uncommitted edits, a commit the checkpoint doesn't mention, wrong branch), STOP and report to the PO. NEVER discard uncommitted work — only the PO does that.
-4. Otherwise read current-sprint.md and follow its ▶ RUN THIS block.
+2. Run `git status`. If there are uncommitted changes (a crashed earlier session), STOP and report to the PO. NEVER discard uncommitted work — only the PO does that.
+3. Otherwise read current-sprint.md and follow its ▶ RUN THIS block.
 
 ### Context hygiene (bounded forever)
 - Read ONLY: current-sprint.md + the active task's named files + the needed sdk-reference-v2.md sections (+ the relevant template when creating a file). Never read archive/ or old sprints.

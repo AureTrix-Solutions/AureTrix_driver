@@ -38,6 +38,22 @@ Next: **Task 4b ([high-stakes] [hw], the LAST task)** — full spec + worklist i
 4a. ✓ **type cleanup — deps + Calibration** — [high-stakes] — DONE 2026-10-09 (commit 1f7a615; review-type-cleanup-4a.md; w3c-web-hid NOT installed, measured net +5; 63→61)
 4b. **type cleanup — services to zero (shim + d.data guards + serialNumber)** — [high-stakes] [hw] — STATUS: IN-PROGRESS
 
+   **CHECKPOINT 5 (2026-10-09, resumed session #2; PO gave decisions on D + G and ordered execution).**
+   Items C–G all APPLIED per rev2 spec; typecheck re-run: **services = 0, total 36 → 23**
+   (13 resolved, none unmasked; reconciliation 36 = 23 + 13). Artifact: `.scratch/tsc-4b-final.txt`
+   (tsc-4b-resume.txt superseded).
+   - C: KS getDbTravel/setDbTravel/getDksTravel/setDksTravel + DBKS getDksTravel/getDbTravel
+     layout param → `DksLayoutType`; KS getDks `type?: DksType`; KS+DBKS getCustomLighting
+     `key?: number` → `key: number` (callers verified: Lighting.vue:705 + ExportService:455 pass
+     numbers). DBKS gained `import { DksLayoutType } from '../types/types'`.
+   - E: KS:863 filter callback `(t: number)` annotation.
+   - F: KS:1192 `const result: unknown = await ...setRateOfReturn(value)` (plan's `number | Error`
+     annotation caused TS2358 — primitive in union; `unknown` keeps the runtime guard + narrowing
+     intact).
+   - G: KS setMacro 3rd param `touchMode: string` (no default per PO), passed through. No callers.
+   - D: DBKS exportEncryptedJSON wrapper REMOVED via edit (PO decision; dead code, non-facade call).
+   - **Cleanup:** `.scratch/` += tsc-4b-final.txt (PO may delete). `_to_delete/` empty.
+
    **CHECKPOINT 3 (2026-10-09, PO "stop and checkpoint"; PO then ordered a wip commit — items A+B +
    unions are COMMITTED as a crash-recovery point; items C/D/E/F/G remain, task still IN-PROGRESS).**
    Verified since writing: tsconfig has NO `noUnusedLocals`/`noUnusedParameters` → the not-yet-used

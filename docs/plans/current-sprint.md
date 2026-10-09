@@ -6,7 +6,7 @@
 
 ## Checkpoint
 - Branch: `sprint-01-code-fixes`
-- tsc baseline: **60** (docs/tsc-baseline.txt) — self-check gate ACTIVE. Current count **61**; the 1-error excess is covered by the waiver below until 4b ratchets the baseline DOWN (expected ≈**23** — the remaining out-of-scope errors: router/index.ts ×17, profileStore ×2, connection ×2, travelProfilesStore ×1, main.ts ×1; a ~23 landing is SUCCESS, not failure; backlog candidate, do not chase).
+- tsc baseline: **23** (docs/tsc-baseline.txt, ratcheted 2026-10-09 on Task 4b commit fb20895) — self-check gate ACTIVE. Current count **23** = baseline; waiver **EXPIRED** (was needed only while 61 > 60). Remaining 23 are all out-of-scope (router/index.ts ×17, profileStore ×2, connection ×2, travelProfilesStore ×1, main.ts ×1; backlog candidate, do not chase).
 - Task 2 DONE 2026-10-08 (Reviewer PASS + PO hardware PASS; R1 resolved — scoped waiver below, CLAUDE.md gate deliberately unchanged; R2 → backlog).
 - Task 3 DONE 2026-10-08 (skill written; 3 real SDK deviations documented, not fixed; 1 finding → backlog). No tooling change is needed or wanted for the baseline (it is prose-enforced by design).
 - Task 4a DONE 2026-10-09 (Reviewer PASS, review-type-cleanup-4a.md; commit 1f7a615): `@types/w3c-web-hid@1.0.7` measured **net +5 (63→68) — DO NOT INSTALL**; `Calibration` TS2304 ×2 fixed via `any | Error` precedent; 63→**61**; baseline stays 60 per review §3 ruling (writing 61 would ratchet UP — forbidden).
@@ -36,7 +36,7 @@ Next: **Task 4b ([high-stakes] [hw], the LAST task)** — full spec + worklist i
 2. ✓ **variant-P import fix** — [high-stakes] [hw] — DONE 2026-10-08 (commits 57305ef+c15d44f; review-variant-p-imports.md)
 3. ✓ **sdk-wrapper skill** — DONE 2026-10-08 (.openclaude/skills/sdk-wrapper/SKILL.md; canonical shape + 3 deviations + batching + type-sourcing order)
 4a. ✓ **type cleanup — deps + Calibration** — [high-stakes] — DONE 2026-10-09 (commit 1f7a615; review-type-cleanup-4a.md; w3c-web-hid NOT installed, measured net +5; 63→61)
-4b. **type cleanup — services to zero (shim + d.data guards + serialNumber)** — [high-stakes] [hw] — STATUS: IN-PROGRESS
+4b. **type cleanup — services to zero (shim + d.data guards + serialNumber)** — [high-stakes] [hw] — STATUS: IN-REVIEW (code review: docs/plans/reviews/review-type-cleanup-4b.md, Base 5cc3260 → Head fb20895)
 
    **CHECKPOINT 5 (2026-10-09, resumed session #2; PO gave decisions on D + G and ordered execution).**
    Items C–G all APPLIED per rev2 spec; typecheck re-run: **services = 0, total 36 → 23**

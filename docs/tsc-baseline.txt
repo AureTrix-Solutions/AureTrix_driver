@@ -1,4 +1,5 @@
-60
+23
 # Baseline recorded 2026-10-08 (sprint-01-code-fixes, Task 1) via `npm run typecheck` (tsc --noEmit, typescript ^5.9.2).
+# Ratcheted to 23 on 2026-10-09 (Task 4b, commit fb20895): services to zero, 60 -> 36 -> 23.
 # Gate: error count <= first line; no new errors in touched files. Ratchet DOWN only.
-# Breakdown: KeyboardService.ts 23, router/index.ts 17, DebugKeyboardService.ts 14, profileStore.ts 2, connection.ts 2, travelProfilesStore.ts 1, main.ts 1.
+# Breakdown: router/index.ts 17, profileStore.ts 2, connection.ts 2, travelProfilesStore.ts 1, main.ts 1. KeyboardService.ts 0, DebugKeyboardService.ts 0.

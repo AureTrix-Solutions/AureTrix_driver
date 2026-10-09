@@ -1,13 +1,9 @@
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
 import type { Device, HIDDevice } from '@sparklinkplayjoy/hid';
-import { IDefKeyInfo } from '../types/types';
+import { IDefKeyInfo, DksLayoutType, DksType } from '../types/types';
 import { useConnectionStore } from '../store/connection';
 
 type PairedDevice = { id: string; data: HIDDevice; productName: string };
-
-interface HIDConnectionEvent extends Event {
-  device: HIDDevice;
-}
 
 class KeyboardService {
   private keyboard: XDKeyboard | null = null;
@@ -30,8 +26,8 @@ class KeyboardService {
 
   constructor() {
     if ('hid' in navigator) {
-      navigator.hid.addEventListener('connect', this.handleConnect);
-      navigator.hid.addEventListener('disconnect', this.handleDisconnect);
+      navigator.hid!.addEventListener('connect', this.handleConnect);
+      navigator.hid!.addEventListener('disconnect', this.handleDisconnect);
       this.hidListenersRegistered = true;
     }
     this.cleanupLegacyStorage();
@@ -125,7 +121,7 @@ class KeyboardService {
       if (!('hid' in navigator)) {
         throw new Error('WebHID not supported in this browser');
       }
-      const devices = await navigator.hid.requestDevice({ filters: [] });
+      const devices = await navigator.hid!.requestDevice({ filters: [] });
       if (devices.length === 0) {
         throw new Error('No HID device selected. Please ensure a keyboard is connected and select it.');
       }
@@ -134,7 +130,7 @@ class KeyboardService {
         await device.open();
       }
       const sdkDevices = await this.getDevices();
-      const existingDevice = sdkDevices.find(d => d.data.vendorId === device.vendorId && d.data.productId === device.productId && d.data.serialNumber === device.serialNumber);
+      const existingDevice = sdkDevices.find(d => d.data?.vendorId === device.vendorId && d.data?.productId === device.productId && (d.data as BrowserHIDDevice | undefined)?.serialNumber === device.serialNumber);
       const fallbackId = device.id || `${device.vendorId}-${device.productId}-${device.serialNumber || 'unknown'}`;
       const result: Device | PairedDevice = existingDevice || { id: fallbackId, data: device, productName: device.productName || 'Unknown' };
       await this.init(result.id);
@@ -181,7 +177,7 @@ class KeyboardService {
       const maxAttempts = 3;
       while (attempts < maxAttempts) {
         try {
-          const hidDevices = await navigator.hid.getDevices();
+          const hidDevices = await navigator.hid!.getDevices();
           const targetHidDevice = hidDevices.find(d => {
             const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
             return fallbackId === savedStableId;
@@ -191,7 +187,7 @@ class KeyboardService {
               await targetHidDevice.open();
             }
             const sdkDevices = await this.getDevices();
-            const targetSdkDevice = sdkDevices.find(d => d.data.vendorId === targetHidDevice.vendorId && d.data.productId === targetHidDevice.productId && d.data.serialNumber === targetHidDevice.serialNumber);
+            const targetSdkDevice = sdkDevices.find(d => d.data?.vendorId === targetHidDevice.vendorId && d.data?.productId === targetHidDevice.productId && (d.data as BrowserHIDDevice | undefined)?.serialNumber === targetHidDevice.serialNumber);
             const fallbackId = targetHidDevice.id || `${targetHidDevice.vendorId}-${targetHidDevice.productId}-${targetHidDevice.serialNumber || 'unknown'}`;
             const device: Device | PairedDevice = targetSdkDevice || { id: fallbackId, data: targetHidDevice, productName: targetHidDevice.productName || 'Unknown' };
             await this.init(device.id);
@@ -1216,7 +1212,7 @@ class KeyboardService {
               return;
             }
             
-            const hidDevices = await navigator.hid.getDevices();
+            const hidDevices = await navigator.hid!.getDevices();
             const deviceStillPresent = hidDevices.some(d => {
               const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
               return fallbackId === savedStableId;
@@ -1350,7 +1346,7 @@ class KeyboardService {
               return;
             }
             
-            const hidDevices = await navigator.hid.getDevices();
+            const hidDevices = await navigator.hid!.getDevices();
             const deviceStillPresent = hidDevices.some(d => {
               const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
               return fallbackId === savedStableId;

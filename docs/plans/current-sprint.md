@@ -36,7 +36,74 @@ Next: **Task 4b ([high-stakes] [hw], the LAST task)** — full spec + worklist i
 2. ✓ **variant-P import fix** — [high-stakes] [hw] — DONE 2026-10-08 (commits 57305ef+c15d44f; review-variant-p-imports.md)
 3. ✓ **sdk-wrapper skill** — DONE 2026-10-08 (.openclaude/skills/sdk-wrapper/SKILL.md; canonical shape + 3 deviations + batching + type-sourcing order)
 4a. ✓ **type cleanup — deps + Calibration** — [high-stakes] — DONE 2026-10-09 (commit 1f7a615; review-type-cleanup-4a.md; w3c-web-hid NOT installed, measured net +5; 63→61)
-4b. **type cleanup — services to zero (shim + d.data guards + serialNumber)** — [high-stakes] [hw] — STATUS: PENDING
+4b. **type cleanup — services to zero (shim + d.data guards + serialNumber)** — [high-stakes] [hw] — STATUS: IN-PROGRESS
+
+   **CHECKPOINT 3 (2026-10-09, PO "stop and checkpoint"; PO then ordered a wip commit — items A+B +
+   unions are COMMITTED as a crash-recovery point; items C/D/E/F/G remain, task still IN-PROGRESS).**
+   Verified since writing: tsconfig has NO `noUnusedLocals`/`noUnusedParameters` → the not-yet-used
+   DksLayoutType/DksType imports are NOT a new error (line-60 ⚠️ is moot). Artifacts in `.scratch/`:
+   `tsc-4b-before.txt` (61) · `-afterA.txt` (54) · `-afterB.txt` (43) · **`-afterC0.txt` (36 total;
+   13 in services)**. Last full typecheck = afterC0 (36). Reconciliation so far **61 → 36**
+   (25 resolved: all hid TS18046/TS18048/TS7006 + TS2552 + serialNumber TS2339 gone; 0 unmasked).
+
+   **DONE (items A + B complete):**
+   - `src/types/webhid.d.ts` created (module + `declare global`): `BrowserHIDDevice`,
+     `HIDConnectionEvent`, `HID`, `Navigator { readonly hid? }` + `export {}`. Deleted KS's
+     file-local `HIDConnectionEvent`.
+   - `navigator.hid!` added after existing guards (guards NOT weakened) — KS ctor/requestDevice/
+     `_autoConnectInternal` + the :180 site; DBKS ctor handlers + getDevices + requestDevice.
+   - serialNumber: both KS `find()` predicates use
+     `(d.data as BrowserHIDDevice | undefined)?.serialNumber` (no `as any`).
+   - `d.data?.` optional chaining in both predicates (runtime-identical; no device literal completed).
+
+   **DONE this stretch (2 edits, UNVERIFIED by typecheck):**
+   - `src/types/types.ts`: added exported `DksLayoutType` + `DksType` (verbatim from type.d.ts:17,19).
+   - KS import line now `import { IDefKeyInfo, DksLayoutType, DksType } from '../types/types'` —
+     **DksLayoutType/DksType NOT yet used.** ⚠️ If tsconfig has `noUnusedLocals`, this is a NEW
+     error until item C consumes them. Next session: apply item C first, THEN typecheck.
+
+   **REMAINING — items C/D/E/F/G (13 service errors from afterC0.txt):**
+   - **C** KS:607/621 getDbTravel/setDbTravel + KS:775/789 getDksTravel/setDksTravel: change param
+     `dbLayout/dksLayout: string = 'Layout_DB1'` → `: DksLayoutType = 'Layout_DB1'` (default is a
+     valid member). KS:1064 getDks `type?: string` → `type?: DksType`. KS:974 getCustomLighting
+     `key?: number` → `key: number` (facade requires it; sole caller Lighting.vue:705 passes a
+     number — VERIFIED). DBKS:189/201 same DksLayoutType narrowing; DBKS:297 getCustomLighting
+     `key?: number`→ guard `if (key === undefined) throw new Error(…)` (DBKS throws, not returns).
+   - **E** KS:863 getRm6X21Travel `flatTravels.filter(t => t > 0)`: annotate `(t: number)`.
+     `result.travels` is `number[][]` (reference :625) → `.flat()` is `number[]`; maxTravel fallback
+     4.0 semantics unchanged.
+   - **F** KS:1192 setRateOfReturn: facade `setRateOfReturn(value:number)=>Promise<number>` so
+     `result instanceof Error` is TS2358 (LHS number). Keep runtime identical — type the awaited
+     result as `number | Error` (e.g. `const result: number | Error = await …setRateOfReturn(value)`)
+     so the existing `instanceof` guard + isPollingRateChanging/restoreConsoleError recovery stays.
+   - **G** KS:537 setMacro: facade is 3-arg `(param: IMacroMode, macros: MacroType[], touchMode:
+     string)`. Wrapper is 2-arg → add explicit `touchMode: string` param + pass through. Reference
+     :105 tracks the missing-touchMode reset BUG — do NOT silently default it. No external callers
+     (grep = KS only). Consider typing `param: IMacroMode, macros: MacroType[]` (import both —
+     `MacroType` NOT yet added to types.ts; `IMacroMode` from protocol-keyboard or declare locally).
+   - **D** DBKS:419-429 `exportEncryptedJSON` wrapper: reference §11.4 confirms it is
+     ExportController-only, NOT on the XDKeyboard facade; wrapper calls `this.keyboard.exportEncryptedJSON(filename)`
+     (1 arg, wrong shape); ZERO callers under src/ (only docs/pages/Debug.md:191,214). → **dead code.
+     Per item-D spec branch 1: REMOVE the DBKS method + log.** (Debug.md is docs, not src — leave or
+     note; no code caller to remove.) **CONFIRM with PO before deleting** (destructive-ish; it's a
+     wrapper removal). Alternatively move to `_to_delete/` per CLAUDE.md cleanup rule.
+
+   **Verified facts (rule 6, checked this session):** facade index.d.ts — getCustomLighting(key:number)
+   :28; travel methods `dksLayout?: DksLayoutType` :41-44; setMacro 3-arg :76; setRateOfReturn
+   (value:number)=>Promise<number> :19; getDks(key:number, type?:DksType) higherKey.d.ts:7.
+   `MacroType={keyCode,timeDifference,status}` type.d.ts:21-25; `IMacroMode={key,index,len,mode,num,delay}`
+   protocol-keyboard/src/types/interface.ts:158-164. Deep-path import of the SDK unions is BLOCKED
+   (probed: TS2307) → local declaration in types.ts is correct. DBKS wrappers THROW (match style).
+   Callers: only getCustomLighting has one (Lighting.vue:705, passes number). travel/getDks/setMacro:
+   no external callers → signature narrowing is caller-safe.
+
+   **NEXT SESSION:** (1) item C (consumes the imported unions — clears any noUnusedLocals risk);
+   (2) items E, F, G; (3) item D — CONFIRM removal with PO first; (4) fresh typecheck → services to 0,
+   publish reconciliation `61 → final`; (5) `npm run build` (services touched); (6) ratchet
+   docs/tsc-baseline.txt DOWN if total ≤ baseline; (7) commit `sprint-01-code-fixes: Task 4b …`;
+   (8) review file from review-template.md (Base/Head hashes + hw check) → status IN-REVIEW→HW-TEST.
+   **Cleanup:** `.scratch/` holds tsc-4b-before/afterA/afterB/afterC0.txt + tsc-4b-start.txt +
+   probe-import.ts (PO may delete). Nothing in `_to_delete/` yet (item D may add one).
 
    **Scope:** all **38** remaining errors in the two services (KeyboardService.ts ×26, DebugKeyboardService.ts ×12 — enumerated in `.scratch/tsc-after-calib.txt`; re-derive from a fresh `npm run typecheck` — the worklist is the guide, the compiler is the truth). Expected landing: 61 → ≈23.
 

@@ -1,5 +1,6 @@
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
 import type { Device, HIDDevice } from '@sparklinkplayjoy/hid';
+import { DksLayoutType } from '../types/types';
 
 type PairedDevice = { id: string; data: HIDDevice; productName: string };
 
@@ -183,7 +184,7 @@ class DebugKeyboardService {
     }
   }
 
-  async getDksTravel(key: number, dksLayout: string = 'Layout_DB1'): Promise<any> {
+  async getDksTravel(key: number, dksLayout: DksLayoutType = 'Layout_DB1'): Promise<any> {
     try {
       if (!this.connectedDevice) throw new Error('Debug: No device connected');
       const result = await this.keyboard.getDksTravel(key, dksLayout);
@@ -195,7 +196,7 @@ class DebugKeyboardService {
     }
   }
 
-  async getDbTravel(key: number, dbLayout: string = 'Layout_DB1'): Promise<any> {
+  async getDbTravel(key: number, dbLayout: DksLayoutType = 'Layout_DB1'): Promise<any> {
     try {
       if (!this.connectedDevice) throw new Error('Debug: No device connected');
       const result = await this.keyboard.getDbTravel(key, dbLayout);
@@ -291,7 +292,7 @@ class DebugKeyboardService {
     }
   }
 
-  async getCustomLighting(key?: number): Promise<any> {
+  async getCustomLighting(key: number): Promise<any> {
     try {
       if (!this.connectedDevice) throw new Error('Debug: No device connected');
       const result = await this.keyboard.getCustomLighting(key);
@@ -416,17 +417,6 @@ class DebugKeyboardService {
     }
   }
 
-  async exportEncryptedJSON(filename?: string): Promise<void> {
-  try {
-      if (!this.connectedDevice) throw new Error('Debug: No device connected');
-      // Test call without data param—let SDK handle defaults
-      await this.keyboard.exportEncryptedJSON(filename || 'default-config.json');
-      console.log(`Debug: SDK export called without data param (filename: ${filename || 'default-config.json'})`);
-  } catch (error) {
-      console.error('Debug: SDK export failed (no params):', error);
-      throw new Error(`Debug: Export test failed: ${(error as Error).message}`);
-  }
-  }
   async getRm6x21Travel(): Promise<{ status: any; travels: number[]; maxTravel: number }> {
     try {
       if (!this.connectedDevice) throw new Error('Debug: No device connected');

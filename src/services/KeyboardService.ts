@@ -529,12 +529,12 @@ class KeyboardService {
     }
   }
 
-  async setMacro(param: any, macros: any[]): Promise<void | Error> {
+  async setMacro(param: any, macros: any[], touchMode: string): Promise<void | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
       }
-      await this.ensureKeyboard().setMacro(param, macros);
+      await this.ensureKeyboard().setMacro(param, macros, touchMode);
       await new Promise(resolve => setTimeout(resolve, 1000));
       return;
     } catch (error) {
@@ -599,7 +599,7 @@ class KeyboardService {
     }
   }
 
-  async getDbTravel(key: number, dbLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
+  async getDbTravel(key: number, dbLayout: DksLayoutType = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -613,7 +613,7 @@ class KeyboardService {
     }
   }
 
-  async setDbTravel(key: number, value: number, dbLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
+  async setDbTravel(key: number, value: number, dbLayout: DksLayoutType = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -767,7 +767,7 @@ class KeyboardService {
     }
   }
 
-  async getDksTravel(key: number, dksLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
+  async getDksTravel(key: number, dksLayout: DksLayoutType = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -781,7 +781,7 @@ class KeyboardService {
     }
   }
 
-  async setDksTravel(key: number, value: number, dksLayout: string = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
+  async setDksTravel(key: number, value: number, dksLayout: DksLayoutType = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -860,7 +860,7 @@ class KeyboardService {
       if (result instanceof Error) return result;
       const travels = result.travels || [];
       const flatTravels = travels.flat();
-      const maxTravel = flatTravels.length > 0 ? Math.max(...flatTravels.filter(t => t > 0)) : 4.0;
+      const maxTravel = flatTravels.length > 0 ? Math.max(...flatTravels.filter((t: number) => t > 0)) : 4.0;
       return { status: result.status, travels: flatTravels, maxTravel };
     } catch (error) {
       console.error('Failed to fetch RM6X21 travel data:', error);
@@ -966,7 +966,7 @@ class KeyboardService {
     }
   }
 
-  async getCustomLighting(key?: number): Promise<any | Error> {
+  async getCustomLighting(key: number): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1056,7 +1056,7 @@ class KeyboardService {
     }
   }
 
-  async getDks(key: number, type?: string): Promise<any | Error> {
+  async getDks(key: number, type?: DksType): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1188,7 +1188,7 @@ class KeyboardService {
       this.pollingRateOperationToken = Date.now();
       this.suppressSDKReconnectError();
       this.isPollingRateChanging = true;
-      const result = await this.ensureKeyboard().setRateOfReturn(value);
+      const result: unknown = await this.ensureKeyboard().setRateOfReturn(value);
       if (result instanceof Error) {
         this.isPollingRateChanging = false;
         this.restoreConsoleError();

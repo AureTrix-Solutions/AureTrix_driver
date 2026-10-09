@@ -1,4 +1,8 @@
+# No active sprint
+
 COMPLETE — run PM-open for the next sprint.
 
-Last closed: sprint-01-code-fixes (2026-10-09, PO signed off; archive/sprint-01-code-fixes/).
-Branch `sprint-01-code-fixes` awaits PO merge to main. Next sprint candidates are in docs/plans/backlog.md.
+## ▶ RUN THIS
+No active sprint. To start one, open a fresh window and paste:
+  Act as PM per CLAUDE.md. Plan the "<name>" sprint from docs/plans/backlog.md.
+(Or a direct goal: Act as PM per CLAUDE.md. Goal: <...>.)

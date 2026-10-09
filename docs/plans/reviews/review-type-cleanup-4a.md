@@ -133,17 +133,56 @@ types are compile-time only, the method bodies are untouched, and no SDK call, d
 `usagePage` was modified. (Task 4b carries the [hw] tag and the PO serialNumber pre-step.)
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above — noting the two logged deviations: (a) no import was
+- [x] meets every "DONE WHEN" criterion above — noting the two logged deviations: (a) no import was
       possible for `Calibration`, so the file's `any | Error` precedent was matched instead;
       (b) the baseline was left at 60 because the post-4a count (61) is above it and ratcheting up is forbidden
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (count 61 vs baseline 60, under the standing ▶ RUN THIS waiver; reconciliation 61 = 63 − 2)
-- [ ] tag is correct ([high-stakes] — KeyboardService.ts touched) — else auto-FAIL
-- [ ] the `@types/w3c-web-hid` "do not install" verdict is sound, and the documented alternative is adequate for 4a
+- [x] diff scope matches the task (no stray files) — note: diff also touches `docs/plans/backlog.md`
+      (one appended line, protocol-compliant per hard rule 8); the "Files touched" list above omits it
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (count 61 vs baseline 60, under the standing ▶ RUN THIS waiver; reconciliation 61 = 63 − 2)
+- [x] tag is correct ([high-stakes] — KeyboardService.ts touched) — else auto-FAIL
+- [x] the `@types/w3c-web-hid` "do not install" verdict is sound, and the documented alternative is adequate for 4a
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:**   ·  **Date:**   ·  **Fail count:**
+**Result:** PASS  ·  **Date:** 2026-10-09  ·  **Fail count:** 0
 
-### Failed items (FAIL only)
+### Reviewer verification (all rerun independently)
+- `npm run typecheck` = **61** errors, matching the report. Per-file: KeyboardService.ts 26,
+  router/index.ts 17, DebugKeyboardService.ts 12, profileStore.ts 2, connection.ts 2,
+  travelProfilesStore.ts 1, main.ts 1. `docs/tsc-baseline.txt` untouched at 60; the 61-vs-60 excess
+  is covered verbatim by the standing ▶ RUN THIS waiver.
+- **Calibration fix is exact:** diffed the full KeyboardService error lists pre/post (`.scratch/tsc-before-4a.txt`
+  vs `tsc-after-calib.txt`) — the ONLY delta is the TS2304 `Calibration` pair at :802/:816 removed;
+  zero new errors, zero swapped codes. TS2304 count repo-wide: 2 → 0.
+- **`any` verdict independently confirmed:** `sdk-keyboard/dist/cjs/src/controller/info.d.ts:10-11`
+  declares `calibrationStart()/calibrationEnd(): Promise<any>`; sdk-reference-v2.md §4 (Verification
+  status table row: **Verified**, src + bundle) documents both as `Promise<any>`. No `Calibration`
+  type exists anywhere in `@sparklinkplayjoy/*` d.ts (grep confirmed — only `OrderType.*_CALIBRATION`
+  enum members). Deviation (a) accepted: matching the file's precedent was the only ground-truth-consistent
+  option; inventing a local type would violate hard rule 6.
+- **Callers safe:** `Calibration.vue:96`/`:147` both do `if (result instanceof Error) throw result;`
+  and discard the success value — return-type widening cannot affect them.
+- **`@types/w3c-web-hid` decision sound:** absent from package.json and package-lock.json (grep: 0
+  matches). `.scratch/` harness (tsconfig.control/measure.json + logs) reproduces the claimed
+  trajectory: before-4a 63, measure2 68 (net +5), control 67 = the npm-re-resolve poisoning the
+  checkpoint documents. tsconfig `"types": ["vite/client"]` whitelist confirmed — the leftover
+  `node_modules/@types/w3c-web-hid` is inert (typecheck = 61 with it present), gitignored, and dies
+  on next `npm ci`. The hid-vs-spec `HIDDevice` analysis (module-scoped shadows global; neither has
+  `serialNumber`) is a valuable, correctly-measured finding for 4b.
+- **Design intent preserved:** `git diff d94d45b..HEAD -- src/` = 2 lines, both return-type
+  annotations; filters:[], usagePage 65440, wrapper bodies, and Error-return contract untouched.
+- **Build not rerun** (Worker's judgment accepted): compile-time-only return widening, callers
+  discard the value, typecheck already covers it.
+
+### §3 ruling (the open question)
+**Leaving `docs/tsc-baseline.txt` at 60 with count 61 is CORRECT.** Both the baseline file
+("Ratchet DOWN only") and CLAUDE.md ("The baseline only ever ratchets DOWN") forbid writing 61.
+The waiver is the right instrument and expires with 4b; the ratchet becomes real when 4b lands.
+Do not edit the baseline file.
+
+### Notes (non-blocking)
+- N1: review file's "Files touched" list omitted `docs/plans/backlog.md` (the appended w3c-web-hid
+  finding line). Content is correct and protocol-compliant; noted here for the record.
+
+Task 4a is NOT [hw] — no hardware gate. Status → DONE.

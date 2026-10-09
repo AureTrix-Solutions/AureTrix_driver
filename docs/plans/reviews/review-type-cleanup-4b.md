@@ -40,20 +40,39 @@ Fix-round ranges (added on each re-review): —
             add "fix ONLY this — see review-<slug>.md §Fn" to ▶ RUN THIS. -->
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (or N/A)
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (or N/A)
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** PASS / PASS (pending hw) / FAIL  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** PASS (pending hw)  ·  **Date:** 2026-10-09  ·  **Fail count:** 0
 
-<!-- PASS (non-hw): one line confirming criteria met; flip task to DONE in current-sprint.md.
-     PASS (pending hw): flip task to HW-TEST; PO does the hands-on check above and marks ✓/✗.
-     FAIL: list each failed item below with full detail. Then append a short checklist to
-     current-sprint.md ▶ RUN THIS, one bullet per item, each citing its §Fn here. -->
+All Done-when criteria independently re-verified at Head 0b9b6fe (code range 5cc3260..fb20895; the trailing commit is docs-only — review file, baseline ratchet, sprint status).
+
+**Gate re-run by Reviewer:**
+- `npm run typecheck`: **23 total** — KeyboardService.ts **0**, DebugKeyboardService.ts **0**. Per-file breakdown matches docs/tsc-baseline.txt exactly (router/index.ts 17, profileStore 2, connection 2, travelProfilesStore 1, main.ts 1). Baseline ratchet 60→23 verified in tsc-baseline.txt (first line `23`, breakdown line updated, waiver noted EXPIRED).
+- `npm run build`: **passes** (✓ built in 1.62s).
+
+**Diff scope:** `git diff --stat 5cc3260..fb20895` touches exactly src/types/webhid.d.ts (new), src/types/types.ts, src/services/KeyboardService.ts, src/services/DebugKeyboardService.ts — plus docs/tsc-baseline.txt and this review file in the trailing commit. No stray files.
+
+**Independent verification of substantive claims:**
+- WebHID shim: ambient-only declarations (no runtime code, no import from @sparklinkplayjoy/hid added); `navigator.hid!` used strictly after pre-existing `'hid' in navigator` guards — narrowing only, zero behavior change.
+- `d.data?.` guards: `data` is spec-present on connect/disconnect events; `?.` only converts a would-be crash on a malformed event into a clean filter miss. Runtime-identity argument confirmed.
+- Facade signature claims re-checked against `sdk-keyboard/dist/cjs/index.d.ts`: `getCustomLighting(key: number)`, `getDks(key, type?: DksType)`, `setMacro(param, macros, touchMode: string)`, `setRateOfReturn(value): Promise<number>`, travel getters take `DksLayoutType` — all match the applied types. Local `DksLayoutType`/`DksType` unions in src/types/types.ts match the SDK's type.d.ts verbatim.
+- setMacro: zero in-app callers confirmed (grep across src/ — only the wrapper itself). The old 2-arg call would have passed `undefined` at runtime (the §7 touchMode-reset trap); the new required 3rd param is stricter, not looser, and no live behavior changes today.
+- getCustomLighting: both callers (Lighting.vue:705, ExportService:455) pass a number — required-param narrowing is caller-safe.
+- `exportEncryptedJSON` removal: dead code — Debug.vue stopped calling it in b1df00d. Underlying SDK method untouched.
+- Design intent: KS `requestDevice({ filters: [] })` intact (line 124); DBKS's usagePage-65440 filter is its own long-standing separate pattern, untouched; wrappers still return Error instances (the setRateOfReturn `instanceof Error` guard kept, result retyped `unknown`).
+- Tag: [high-stakes] [hw] correct — touches KeyboardService (always high-stakes) and the connection layer; hardware gate applies.
+
+**Non-blocking observations (do not affect the verdict):**
+1. Worker note said exportEncryptedJSON had "nothing in docs/" — inaccurate: docs/pages/Debug.md:191,214 still document the removed method. Stale doc, out of this task's scope → appended one line to docs/plans/backlog.md per hard rule 8.
+2. `.scratch/` contains Reviewer-irrelevant leftovers from prior tasks (tsc artifacts, w3c-web-hid probe) — PO may delete freely, as the checkpoint states.
+
+Task flips IN-REVIEW → **HW-TEST**. PO: exercise on a real device per the Hardware check section above (first connect + device info; auto-reconnect after unplug/replug or reload; Debug page connect + travel getters), then record "Hardware verdict: PASS/FAIL — <date>" in this file and set the task DONE (✓) or IN-PROGRESS + F1 (✗) in current-sprint.md.
 
 ### Failed items (FAIL only)
-(none yet)
+(none)

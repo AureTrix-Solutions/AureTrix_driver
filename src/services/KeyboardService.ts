@@ -799,7 +799,7 @@ class KeyboardService {
     }
   }
 
-  async calibrationStart(): Promise<Calibration | Error> {
+  async calibrationStart(): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -813,7 +813,7 @@ class KeyboardService {
     }
   }
 
-  async calibrationEnd(): Promise<Calibration | Error> {
+  async calibrationEnd(): Promise<any | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');

@@ -33,8 +33,7 @@ Fix-round ranges (added on each re-review): —
 - What to verify: that connecting and staying connected behaves exactly as before. Specifically: (1) first connect via the Connect page works and device info displays; (2) auto-reconnect after unplug/replug or page reload still pairs to the remembered keyboard; (3) the Debug page connects and exercises its raw-SDK methods (including the travel getters whose param types changed) without new errors. Anything that worked before should work identically — this task's promise is zero behavioral change.
 
 **PO fills (after the hands-on check):**
-- Hardware verdict: PASS — <date>        (that's all a PASS needs; add a note only if useful)
-  or: FAIL — <date> → see F1              (write the symptom once, in the F1 block below)
+- Hardware verdict: PASS — 2026-10-09  (PO: all hardware testing passed on a real device; recorded by the agent on the PO's word)
 <!-- PASS → set the task to DONE in current-sprint.md.
      FAIL → put the symptom in an Fn block below, set the task to IN-PROGRESS,
             add "fix ONLY this — see review-<slug>.md §Fn" to ▶ RUN THIS. -->

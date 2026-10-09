@@ -19,7 +19,7 @@
 - Cleanup: `.scratch/` holds 4a's measurement artifacts (PO may delete freely); `_to_delete/` empty; leftover `node_modules/@types/w3c-web-hid/` is **inert** (not in the types whitelist, gitignored, vanishes on next `npm ci`). Nothing else outstanding.
 
 ## ▶ RUN THIS
-Next: **Task 4b HW-TEST — PO's hands-on hardware check (the sprint's last gate).** Code review PASSED 2026-10-09 (0 fails; gate re-verified: typecheck 23 total / services 0 = baseline, build ✓). PO: on a real device exercise (1) first connect + device info, (2) auto-reconnect after unplug/replug or reload, (3) Debug page connect + travel getters — then record "Hardware verdict: PASS/FAIL — <date>" in docs/plans/reviews/review-type-cleanup-4b.md and set the task DONE (✓) / IN-PROGRESS + F1 (✗) here, per the hardware gate. On ✓: flag "ALL TASKS DONE — awaiting PO sign-off" and stop; PM-close follows.
+Next: **ALL TASKS DONE — awaiting PO sign-off.** Task 4b closed 2026-10-09 (Reviewer PASS + Hardware PASS). No Worker sessions remain. Next step: PM-close session — "Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise."
 
 **Gate waiver (Task 4a/4b only, expires when 4b closes):**
 - **Count 61 vs baseline 60** — excess inherited from Task 2 (which landed 63-vs-60 as PASS); 4a moved 63→61. Baseline deliberately NOT edited (ratchet-up forbidden; review-type-cleanup-4a.md §3 ruling). The ratchet becomes real when 4b lands: baseline → measured post-4b count (≈23), waiver EXPIRED.
@@ -36,7 +36,7 @@ Next: **Task 4b HW-TEST — PO's hands-on hardware check (the sprint's last gate
 2. ✓ **variant-P import fix** — [high-stakes] [hw] — DONE 2026-10-08 (commits 57305ef+c15d44f; review-variant-p-imports.md)
 3. ✓ **sdk-wrapper skill** — DONE 2026-10-08 (.openclaude/skills/sdk-wrapper/SKILL.md; canonical shape + 3 deviations + batching + type-sourcing order)
 4a. ✓ **type cleanup — deps + Calibration** — [high-stakes] — DONE 2026-10-09 (commit 1f7a615; review-type-cleanup-4a.md; w3c-web-hid NOT installed, measured net +5; 63→61)
-4b. **type cleanup — services to zero (shim + d.data guards + serialNumber)** — [high-stakes] [hw] — STATUS: HW-TEST (Reviewer PASS pending hw 2026-10-09, fail count 0: docs/plans/reviews/review-type-cleanup-4b.md; code Base 5cc3260 → Head fb20895, gate re-run: typecheck 23 total / services 0, build ✓. PO: hands-on check per the review file's Hardware check section → verdict there + status here.)
+4b. ✓ **type cleanup — services to zero (shim + d.data guards + serialNumber)** — [high-stakes] [hw] — DONE 2026-10-09 (commits ee46924+fb20895, verdict cc432dd; Reviewer PASS 0 fails, typecheck 23 total / services 0 = baseline, build ✓; Hardware verdict PASS 2026-10-09; review-type-cleanup-4b.md)
 
    **CHECKPOINT 5 (2026-10-09, resumed session #2; PO gave decisions on D + G and ordered execution).**
    Items C–G all APPLIED per rev2 spec; typecheck re-run: **services = 0, total 36 → 23**

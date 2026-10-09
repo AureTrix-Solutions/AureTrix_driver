@@ -14,8 +14,8 @@ class DebugKeyboardService {
       configs: [],
     });
     if ('hid' in navigator) {
-      navigator.hid.addEventListener('connect', this.handleConnect.bind(this));
-      navigator.hid.addEventListener('disconnect', this.handleDisconnect.bind(this));
+      navigator.hid!.addEventListener('connect', this.handleConnect.bind(this));
+      navigator.hid!.addEventListener('disconnect', this.handleDisconnect.bind(this));
     }
   }
 
@@ -41,7 +41,7 @@ class DebugKeyboardService {
       const maxAttempts = 3;
       while (attempts < maxAttempts) {
         try {
-          const devices = await navigator.hid.getDevices();
+          const devices = await navigator.hid!.getDevices();
           const targetDevice = devices.find(
             d => d.vendorId === 7331 && d.productId === 1793 && d.collections.some(c => c.usagePage === 65440 && c.usage === 1)
           );
@@ -73,7 +73,7 @@ class DebugKeyboardService {
   async requestDevice(): Promise<Device | PairedDevice> {
     try {
       if (!('hid' in navigator)) throw new Error('Debug: WebHID not supported');
-      const devices = await navigator.hid.requestDevice({ filters: [{ usagePage: 65440, usage: 1 }] });
+      const devices = await navigator.hid!.requestDevice({ filters: [{ usagePage: 65440, usage: 1 }] });
       if (devices.length === 0) throw new Error('Debug: No compatible keyboard found');
       const device = devices[0];
       if (!device.opened) await device.open();

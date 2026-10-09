@@ -27,3 +27,5 @@ reassembly) is the foundation.
 - [docs] sdk-reference-v2.md §13.7.4 wrongly claims `configs` never reaches a `filters` arg — hid's internal `devices()` zero-match fallback calls `requestDevice({filters:this.configs})`; correct the section. (Found in Task 2 review, 2026-10-08.)
 
 - [types] protocol-keyboard ships no resolvable root types: package.json `"types"` points at a nonexistent `dist/esm/index.d.ts` and `"exports"` exposes only `"."` with no `types` condition, though `dist/cjs/types/index.d.ts` re-exports the whole interface/param surface. §13.4-class defect (same as hid). Relevant to Task 4 if real types are wanted instead of `any`. Resolution untested. (Found in Task 3, 2026-10-08.)
+
+- [types] router/index.ts carries 17 of the 60 baseline tsc errors — the largest single block, and out of scope for sprint-01 Task 4a/4b (which only touch the two services). Its own type-cleanup sprint is needed before the baseline can approach zero. (Noted during PM R1 ruling, 2026-10-08.)

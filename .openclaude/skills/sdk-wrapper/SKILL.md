@@ -14,11 +14,11 @@ always `[high-stakes]` and needs Reviewer + PO sign-off.
 
 ## The canonical shape
 
-Copy this for any new getter or setter that returns a value. Verbatim from
-`src/services/KeyboardService.ts:802` (`calibrationStart`) — the simplest full example:
+Copy this for any new getter or setter that returns a value. The pattern (cf. `calibrationStart`
+at `src/services/KeyboardService.ts:798`) — the simplest full example:
 
 ```ts
-async calibrationStart(): Promise<Calibration | Error> {
+async calibrationStart(): Promise<any | Error> {
   try {
     if (!this.connectedDevice) {
       return new Error('No device connected');
@@ -36,12 +36,12 @@ async calibrationStart(): Promise<Calibration | Error> {
 Four required parts, in this order:
 
 1. **Return type is `<Success> | Error`.** Never `throws`. The union is what forces callers to
-   handle failure. Note that many existing wrappers write `<any> | Error` (`setLighting`,
-   `getMacro`, `setPollingRate`, …) because the SDK's own `.d.ts` returns `Promise<any>` — prefer a
+   handle failure. Note that many existing wrappers write `<any> | Error` (`getMacro` `:518`,
+   `setLighting` `:913`, `setPollingRate` `:1174`, …) because the SDK's own `.d.ts` returns `Promise<any>` — prefer a
    real type when you can source one (see *Where types come from*).
 2. **`if (!this.connectedDevice) return new Error('No device connected');`** The guard runs *before*
    any SDK access. `connectedDevice` is the service's own private field
-   (`Device | PairedDevice | null`, declared at `:15`) — do not substitute `connectionStore`.
+   (`Device | PairedDevice | null`, declared at `:11`) — do not substitute `connectionStore`.
 3. **`await this.ensureKeyboard().<method>(...)`** — always via `ensureKeyboard()`, never
    `this.keyboard` directly.
 4. **`if (result instanceof Error) return result;`** — the SDK reports failure by *returning* an
@@ -53,7 +53,7 @@ Log with `console.error` naming the operation, then `return error as Error`. Nev
 
 ### What `ensureKeyboard()` actually does
 
-`:41`. It is a lazy constructor, nothing more:
+`:37`. It is a lazy constructor, nothing more:
 
 ```ts
 private ensureKeyboard(): XDKeyboard {
@@ -74,9 +74,9 @@ Not every wrapper follows the canonical shape. These three are deliberate or at 
 
 | Method | Line | Deviation |
 |---|---|---|
-| `setKey` | `:512` | `Promise<void \| Error>`, but **no** `connectedDevice` guard and **no** `instanceof Error` check — just `await this.ensureKeyboard().setKey(keyConfigs); return;` |
-| `getDevices` | `:113` | Returns `Promise<Device[]>` — **no `Error` in the union**; on failure it returns `[]` instead. Also no guard. |
-| `initializeKeyboard` | `:259` | Returns `Promise<void>`; dedupes concurrent calls through `this.initializationPromise`. No `Error` union. The real work is in `_initializeKeyboardInternal` (`:272`, retries ≤ 2), which *does* guard on `connectedDevice`. |
+| `setKey` | `:508` | `Promise<void \| Error>`, but **no** `connectedDevice` guard and **no** `instanceof Error` check — just `await this.ensureKeyboard().setKey(keyConfigs); return;` |
+| `getDevices` | `:109` | Returns `Promise<Device[]>` — **no `Error` in the union**; on failure it returns `[]` instead. Also no guard. |
+| `initializeKeyboard` | `:255` | Returns `Promise<void>`; dedupes concurrent calls through `this.initializationPromise`. No `Error` union. The real work is in `_initializeKeyboardInternal` (`:268`, retries ≤ 2), which *does* guard on `connectedDevice`. |
 
 If your task touches one of these, match the surrounding behaviour and flag the inconsistency in
 your checkpoint. Do not silently normalise them — `getDevices`' empty-array fallback in particular

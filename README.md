@@ -4,7 +4,7 @@ A modern, web-based configuration tool for hall effect keyboards compatible with
 
 The application runs entirely in the browser and communicates with compatible keyboards via the WebHID API, eliminating the need for native drivers or installations.
 
-**GitHub Repository:** [https://github.com/BlastHappy82/AureTrix_driver](https://github.com/BlastHappy82/AureTrix_driver.git)
+**GitHub Repository:** [https://github.com/AureTrix-Solutions/AureTrix_driver](https://github.com/AureTrix-Solutions/AureTrix_driver.git)
 
 ## Features
 
@@ -34,7 +34,7 @@ The application runs entirely in the browser and communicates with compatible ke
 ## Prerequisites
 
 - **Node.js** v18 or higher
-- **pnpm** v9 or higher (recommended) or npm
+- **npm** (bundled with Node.js)
 - A compatible hall effect keyboard with SparkLink SDK support
 - A **Chromium-based browser** with WebHID support (Chrome, Edge, Brave, etc.)
 - **HTTPS connection** (required for WebHID; localhost is exempt)
@@ -43,24 +43,24 @@ The application runs entirely in the browser and communicates with compatible ke
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/BlastHappy82/AureTrix_driver.git
+   git clone https://github.com/AureTrix-Solutions/AureTrix_driver.git
    cd AureTrix_driver
    ```
 
 2. **Install dependencies**:
    ```bash
-   pnpm install
+   npm install
    ```
 
 3. **Run the development server**:
    ```bash
-   pnpm dev
+   npm run dev
    ```
    The app will be available at `http://localhost:5000`
 
 4. **Build for production**:
    ```bash
-   pnpm build
+   npm run build
    ```
 
 ## Usage
@@ -107,7 +107,7 @@ The application runs entirely in the browser and communicates with compatible ke
 - **Styling**: SCSS with custom design system
 - **Routing**: Vue Router with lazy-loaded routes
 - **SDK**: @sparklinkplayjoy/sdk-keyboard v1.0.20
-- **Package Manager**: pnpm
+- **Package Manager**: npm
 
 ## Project Structure
 
@@ -217,7 +217,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 
-For issues, feature requests, or questions, please open an issue on the [GitHub repository](https://github.com/BlastHappy82/AureTrix_driver/issues).
+For issues, feature requests, or questions, please open an issue on the [GitHub repository](https://github.com/AureTrix-Solutions/AureTrix_driver/issues).
 
 ---
 

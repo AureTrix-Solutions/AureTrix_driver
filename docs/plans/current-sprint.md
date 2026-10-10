@@ -15,30 +15,11 @@
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Task 2 — README + CONTRIBUTING pnpm→npm and URL fixes. Do this task, then stop.
+ALL TASKS DONE — awaiting PO sign-off; next session: PM-close ("Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off").
 
 ## Tasks
 ✓ 1. **package.json + lockfile migration** — DONE (2026-10-09, Reviewer PASS — review-npm-lockfile.md; `_to_delete/` awaits PO `git rm`)
-2. **README + CONTRIBUTING pnpm→npm and URL fixes** — [trivial] — STATUS: PENDING
-   - Trivial rationale: docs-only; every edit listed with verified line content; no source file needs opening.
-   - Done when: `grep -riE "pnpm|BlastHappy82" README.md .github/CONTRIBUTING.md` → 0 hits (fork-placeholder `YOUR_USERNAME` at CONTRIBUTING.md:34 stays).
-   - Files: `README.md`, `.github/CONTRIBUTING.md`
-   - Edits — README.md (APPLY):
-     1. L7, L46, L220: `BlastHappy82/AureTrix_driver` → `AureTrix-Solutions/AureTrix_driver` (keep L46's `.git` suffix and L220's `/issues` suffix)
-     2. L37: `- **pnpm** v9 or higher (recommended) or npm` → `- **npm** (bundled with Node.js)`
-     3. L52: `pnpm install` → `npm install`
-     4. L57: `pnpm dev` → `npm run dev`
-     5. L63: `pnpm build` → `npm run build`
-     6. L110: `- **Package Manager**: pnpm` → `- **Package Manager**: npm`
-   - Edits — .github/CONTRIBUTING.md (APPLY):
-     7. L18: CoC URL `BlastHappy82/AureTrix_driver?tab=coc-ov-file` → `AureTrix-Solutions/AureTrix_driver?tab=coc-ov-file`
-     8. L39: upstream remote `BlastHappy82/AureTrix_driver.git` → `AureTrix-Solutions/AureTrix_driver.git`
-     9. L25: same prereq swap as README L37
-     10. L46/51/57/62: `pnpm install`→`npm install`, `pnpm dev`→`npm run dev`, `pnpm test`→`npm test`, `pnpm build`→`npm run build`
-   - Canonical remote (verified in .git/config): `https://github.com/AureTrix-Solutions/AureTrix_driver.git`
-   - Scope: CONTRIBUTING.md wasn't in the backlog worklist but carries the identical defect — PO confirmed inclusion at plan time (2026-10-09). Settled; do not re-ask.
-   - Commit `sprint-02-npm-cleanup: Task 2 docs pnpm→npm + URL fixes`; mark DONE (trivial, self-check = the grep gate).
-   - On DONE: flag "ALL TASKS DONE — awaiting PO sign-off" in the checkpoint and stop; advance ▶ RUN THIS to "await PM-close".
+✓ 2. **README + CONTRIBUTING pnpm→npm and URL fixes** — DONE (2026-10-09; grep gate 0 hits both files; cleanup from `ls`: `.scratch/` empty, `_to_delete/` = pnpm-lock.yaml + pnpm-workspace.yaml awaiting PO `git rm`)
 
 <!-- STATUS values:
      PENDING → IN-PROGRESS → (DONE | IN-REVIEW → DONE)

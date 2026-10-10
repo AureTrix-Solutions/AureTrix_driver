@@ -27,16 +27,24 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task (documentation only; no hardware behavior touched).
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files — only docs/sdk-reference-v2.md + handoff artifacts)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies — N/A (docs-only; baseline unchanged at 23)
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files — only docs/sdk-reference-v2.md + handoff artifacts)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies — N/A (docs-only; baseline unchanged at 23)
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. -->
-**Result:** PASS / FAIL  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** PASS  ·  **Date:** 2026-10-10  ·  **Fail count:** 0
 
-### Failed items (FAIL only)
-(none yet)
+### Evidence (all re-run independently this session)
+- **Criterion 1 (preamble status note):** "Status (2026-10-09, sprint-03)" blockquote at :3780, inside §13.7 (header :3772) before Site 1 ✓
+- **Criterion 2 (§13.7.3 qualified):** header :3940 now reads "— applied in sprint-01 (variant P); proposal text kept as written"; "None of this is in the repo" :3966 followed by Superseded note citing tsconfig.json:21 + KeyboardService.ts:39–43 + DebugKeyboardService.ts:12–16 ✓
+- **Criterion 3 (additions/title-changes only):** `git diff --stat 21a0eca..3a4c9c7` on the doc = 5 insertions / 3 deletions; the 3 deleted lines are exactly the 3 lines that received appended notes — no analysis paragraph removed ✓
+- **Cited facts spot-checked vs live repo:** tsconfig.json:21 `@sparklinkplayjoy/hid` paths ✓ · package.json:11 typecheck script ✓ · baseline 23 ✓ · both services :2 type-only import ✓ · constructors `usagePage:[65440], configs:[]` at the exact cited lines ✓
+- **Edit list conformance:** all 4 PM edits applied verbatim ✓ · no duplicate status-row mention (Task 2's note correctly avoided — grep shows the row already notes banners from Task 1) ✓
+- **Scope:** 3 files changed = doc + review file + handoff — no strays ✓
+
+### Findings (Reviewer one-liners)
+- (none — no new defects beyond the existing Findings entry)

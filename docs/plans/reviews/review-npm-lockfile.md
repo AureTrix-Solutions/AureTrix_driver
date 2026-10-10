@@ -25,5 +25,13 @@ Fix-round ranges (added on each re-review):
 N/A — not a [hw] task.
 
 ## ✅ Reviewer verdict
-- VERDICT: — [PASS | FAIL]
+- VERDICT: **PASS** (2026-10-09) — not a [hw] task, so this closes the task (no HW-TEST).
+- Diff reviewed: `git diff 6f658d6..3f9fbe3` (5 files). Scope clean — package.json (exactly the 2 pnpm keys removed), package-lock.json (pnpm dep + node_modules/pnpm block removed), pnpm-lock.yaml + pnpm-workspace.yaml as pure renames → `_to_delete/` (0 content change), current-sprint.md status line only. No source (.ts/.vue) touched; no out-of-scope files.
+- Gates re-run by Reviewer:
+  - `grep -c pnpm package-lock.json` → 0 ✓
+  - `npm run typecheck` → 23 errors = docs/tsc-baseline.txt baseline ✓
+  - `npm run build` → ✓ built in 1.62s ✓
+  - `npm install` → succeeds; tree clean afterwards → regenerated lockfile is idempotent ✓
+  - `ls _to_delete/` → pnpm-lock.yaml + pnpm-workspace.yaml; `.scratch/` empty ✓ (checkpoint Cleanup line accurate)
 - Findings:
+  - R1: `npm install` reports 3 audit vulnerabilities (1 moderate, 2 critical) — pre-existing in the dep graph, out of migration scope; routed to current-sprint.md `## Findings` for the PM.

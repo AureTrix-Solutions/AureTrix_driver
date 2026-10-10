@@ -15,12 +15,10 @@
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Reviewer session for Task 1 — "follow docs/plans/reviews/review-npm-lockfile.md". On PASS, Task 2 (docs pnpm→npm + URL fixes) proceeds.
+Next: Task 2 — README + CONTRIBUTING pnpm→npm and URL fixes. Do this task, then stop.
 
 ## Tasks
-1. **package.json + lockfile migration** — [high-stakes] — STATUS: IN-REVIEW
-   - Checkpoint: both pnpm entries removed from package.json; lockfiles `git mv`'d to `_to_delete/`; `npm install` regenerated package-lock.json (`grep -c pnpm` → 0); typecheck = 23 (= baseline); build passed. Committed. Review file: docs/plans/reviews/review-npm-lockfile.md (Base 6f658d6, Head = this commit).
-   - Note for PM/Reviewer: `npm install` reported 3 vulnerabilities (1 mod, 2 crit) — pre-existing in the dep graph, out of migration scope.
+✓ 1. **package.json + lockfile migration** — DONE (2026-10-09, Reviewer PASS — review-npm-lockfile.md; `_to_delete/` awaits PO `git rm`)
 2. **README + CONTRIBUTING pnpm→npm and URL fixes** — [trivial] — STATUS: PENDING
    - Trivial rationale: docs-only; every edit listed with verified line content; no source file needs opening.
    - Done when: `grep -riE "pnpm|BlastHappy82" README.md .github/CONTRIBUTING.md` → 0 hits (fork-placeholder `YOUR_USERNAME` at CONTRIBUTING.md:34 stays).
@@ -48,6 +46,6 @@ Next: Reviewer session for Task 1 — "follow docs/plans/reviews/review-npm-lock
      Collapse a finished task to one line:  ✓ 1. <title> — DONE (YYYY-MM-DD) -->
 
 ## Findings (raw — PM routes at close)
-- <none yet>
+- `npm install` reports 3 audit vulnerabilities (1 moderate, 2 critical), pre-existing in the dep graph — verify with `npm audit`; out of this sprint's migration scope.
 
 <!-- Keep this file under ~150 lines. It is a SNAPSHOT, not a log. Overwrite, don't append. -->

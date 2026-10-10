@@ -26,17 +26,31 @@ Base: `956548c` (PM-open)   Head: `a3ee408` (this task)
 N/A — docs-only task, not tagged [hw].
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files — only docs/sdk-reference-v2.md)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies — N/A (docs-only; baseline unchanged at 23)
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files — only docs/sdk-reference-v2.md + handoff artifacts)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies — N/A (docs-only; baseline unchanged at 23)
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** PASS / PASS (pending hw) / FAIL  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** PASS  ·  **Date:** 2026-10-10  ·  **Fail count:** 0
+
+### Evidence (all re-run independently this session)
+- **Grep gate:** all 3 forbidden strings → 0 occurrences in docs/sdk-reference-v2.md ✓
+- **Surviving content:** "vendorId: 7331" caveat 1×, "against hard-coding" design-intent sentence present (:4043), §R2 citation 2×, "May prompt" cross-ref 2× (incl. §1 row :231) ✓
+- **Bundle facts (spot-check prescribed by plan):** `filters:this.configs` 1× and zero-match fallback `if(0===e.length){try{await this.requestDevice()}` 1× in node_modules/@sparklinkplayjoy/hid/dist/esm/index.js ✓; `this.configs=e` assignment 1× ✓
+- **R2 citation real:** review-variant-p-imports.md:85 §R2; doc's chain matches R2's chain (the doc's current line refs :42/:109/:124/:15 are correct against current source — R2's older :136/:193 predate sprint-01 edits; Worker cited current source, correct call) ✓
+- **Status row :179** notes the sprint-03 correction, matching the plan's edit-3 text; forward-reference to Task 2's banner-notes is per plan (current-sprint.md:43) ✓
+- **Scope:** git diff 956548c..931b972 touches only docs/sdk-reference-v2.md + current-sprint.md + this review file ✓
+
+### Findings (non-blocking)
+1. Review file's Head hash says `a3ee408`, but the IN-REVIEW handoff artifacts landed in a second commit `931b972` (which also made a small wording tweak to the §13.7 status row). Reviewed the full range 956548c..931b972 instead — both commits are within Task 1's scope and message convention. No action needed; noted for the record.
+2. **RETRACTED — Reviewer misquote.** An earlier draft finding claimed a garbled sentence ("it the type-correct") near :4048. Verified against the file: grep for that string → 0 matches. Both delivered sentences read cleanly — :4044 "`[]` is both the type-correct and the intent-preserving choice" and :4062–4064 "`configs: []` is both the minimal type-correct change and the intent-preserving one". The PO initially ruled FAIL on this bad evidence; on re-verification the PO confirmed PASS. No defect in the delivered text.
+3. **PO policy point (for PM):** a text defect in the ground-truth reference (docs/sdk-reference-v2.md) is a blocking FAIL item, not a deferrable inline fix — the QA-tiers "Worker MAY fix inline" rule applies only during the Worker's own session, and a PASS leaves no mechanism to fix it afterward.
 
 ### Failed items (FAIL only)
+None — PASS.

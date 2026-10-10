@@ -12,22 +12,11 @@
 - PM-open complete: backlog item removed, this file seeded.
 
 ## ▶ RUN THIS
-Next: Reviewer session — "follow docs/plans/reviews/review-sdk-ref-configs-fix.md" (Task 1, Base 956548c, Head in review file).
+Next: Worker session — "go" (Task 2: Banner-note §13.7 staleness — spec + edit list in Tasks below).
 
 ## Tasks
 
-1. **Correct §13.7.4 `configs` reachability claims** — [high-stakes] — STATUS: IN-REVIEW
-   - Checkpoint (Worker, 2026-10-10): all 3 edit sites applied; grep gate 0/0/0; bundle facts re-confirmed by count-only grep (`filters:this.configs` 1×, zero-match fallback 1×); docs-only, baseline stays 23; review file seeded.
-   - Done when: §13.7.4 contains none of the strings "never invoked on this code path", "simply does not happen in the SDK", "pure type-formality with no runtime consequence" (grep gate).
-   - Done when: corrected text names the devices()→requestDevice zero-match fallback chain and cites sprint-01 review §R2 as the source; design-intent warning (unfiltered selection, no hard-coded IDs, superseded SDK_REFERENCE.md caveat) survives.
-   - Done when: Verification status row §13.7 (sdk-reference-v2.md:179) notes the sprint-03 correction.
-   - Files: `docs/sdk-reference-v2.md`
-   - Ground truth for the correction (bundle-verified, sprint-01 review-variant-p-imports.md §R2, lines 85–116): `KeyboardService.getDevices()` → `XDKeyboard.getDevices()` → hid's internal `devices()`; on **zero** matches after the usage/usagePage filter, hid calls its own internal `requestDevice()` → `navigator.hid.requestDevice({ filters: this.configs })`. `XDKeyboard` not exposing `requestDevice` on the façade is irrelevant — hid reaches it internally. Doc's own §1 getDevices row (line 231, "**May prompt**") already says this; §13.7.4 contradicted it.
-   - Edit list (3 sites; all spans read by PM 2026-10-10):
-     1. **Lines 4012–4031** (the "**This note is now closed — the missing `configs` is harmless…**" paragraph through "…must not be read as a requirement.)"): REPLACE with a corrected note that (a) states the earlier conclusion was wrong, corrected 2026-10-09/sprint-03 per review §R2; (b) gives the chain above (a small code block is fine: KeyboardService.getDevices() at src/services/KeyboardService.ts:109 → XDKeyboard.getDevices() → hid devices() → `if (e.length === 0)` → hid internal requestDevice() → `navigator.hid.requestDevice({filters: this.configs})`); (c) states `configs` therefore DOES reach a `filters` argument — but only on the zero-match fallback, with whatever value the constructor got: this repo passes `configs: []` (KeyboardService.ts:42, DebugKeyboardService.ts:15), so that prompt is unfiltered, matching the app-level `navigator.hid!.requestDevice({ filters: [] })` in KeyboardService.requestDevice() (KeyboardService.ts:124); (d) KEEPS verbatim the intentional-unfiltered design-intent sentences and the superseded SDK_REFERENCE.md vendorId 7331/productId 1793 caveat (current lines 4026–4031), and notes a filtering `configs` value would violate design intent; (e) cross-references §1's getDevices "May prompt" row.
-     2. **Lines 4042–4046** ("Net: … and (b) supply or silence the required `configs`, which is a **pure type-formality** with no runtime consequence here. Passing `configs: []` is the minimal honest change; it types correctly and preserves today's behaviour exactly."): REPLACE the (b) clause — `configs` is NOT a pure type-formality; the value is reachable at runtime via hid's internal zero-match fallback (see corrected note above). `configs: []` is both the minimal type-correct change and the intent-preserving one: it keeps the fallback prompt unfiltered, matching the app-level `filters: []`. Keep clause (a) (usagePage wrap) unchanged.
-     3. **Line 179** (status row `| §13.7 How src/ imports these types | Verified | … | ✅ Import sites and their failure modes confirmed |`): APPEND to the Notes cell, matching the doc's "Batch 4b: ✅ corrected…" convention: "sprint-03: ✅ corrected §13.7.4's `configs` claim — reachable via hid's internal devices()→requestDevice zero-match fallback (chain verified in sprint-01 review-variant-p-imports.md §R2) — and banner-noted preamble/Site 1/§13.7.3 as superseded by sprint-01's variant-P adoption".
-   - Reviewer spot-check: confirm `filters:this.configs` and the `0===e.length` (or equivalent) fallback exist in `node_modules/@sparklinkplayjoy/hid/dist/esm/index.js` (grep, small span only).
+1. **Correct §13.7.4 `configs` reachability claims** — ✓ DONE (Reviewer PASS 2026-10-10; commits a3ee408 + 931b972; detail: docs/plans/reviews/review-sdk-ref-configs-fix.md)
 
 2. **Banner-note §13.7 staleness (pre-variant-P text)** — [high-stakes] — STATUS: PENDING
    - Done when: §13.7 preamble carries a status note that Site 1 was fixed in sprint-01 via variant P and the text below is pre-fix history; grep "Status (2026-10-09" or equivalent in the §13.7 preamble.
@@ -43,4 +32,4 @@ Next: Reviewer session — "follow docs/plans/reviews/review-sdk-ref-configs-fix
    - Note: the status-row mention of these banners is already added in Task 1 edit 3 — do not duplicate.
 
 ## Findings (raw — PM routes at close)
-- <none yet>
+- Policy (PO, 2026-10-10, Task 1 review): a text defect in ground truth (docs/sdk-reference-v2.md) must be a blocking FAIL item, not a QA-tier inline fix — after PASS no mechanism remains to fix it. Verify: CLAUDE.md QA tiers vs Reviewer verdict handling.

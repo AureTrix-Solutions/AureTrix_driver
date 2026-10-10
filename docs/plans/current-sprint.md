@@ -10,14 +10,14 @@ rev1 (2026-10-10): split Task 1 into sequential 1a→1b→1c — the whole-file 
 - tsc baseline: 23 errors (docs/tsc-baseline.txt) — docs-only sprint, gate skipped
 - Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty — from actual `ls` at PM-open
 - PM-open (2026-10-10): plan written from backlog item; item removed from backlog.md; all claims below grep/read-verified this session
-- PM re-scope (2026-10-10): Task 1 reset to PENDING and split into 1a/1b/1c. Items 1–10 unchanged (shared edit spec below). Task 1 reaches IN-REVIEW only after 1c; 1a/1b are intermediate commits (Worker self-checks via the subtask's Done-when greps, commits, advances ▶ RUN THIS — a Worker never marks this [high-stakes] task DONE).
+- Worker 1a (2026-10-10): both stale sections deleted; all 4 Done-when greps pass; frontmatter untouched; SKILL.md 262→229 lines; committed. Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ only .gitkeep — from actual `ls`.
 
 ## ▶ RUN THIS
-Next: **Task 1a** — delete the two stale sections (edit-spec items 7, 8). Apply, run 1a's Done-when greps, commit, advance ▶ RUN THIS to 1b, stop. (One subtask per session — hard rule 1.)
+Next: **Task 1b** — fix −4 line refs + canonical-shape signature (edit-spec items 2, 3, 4). Apply, run 1b's Done-when greps, commit, advance ▶ RUN THIS to 1c, stop. (One subtask per session — hard rule 1.)
 
 ## Tasks
 
-**Task 1 — verify-and-trim `.openclaude/skills/sdk-wrapper/SKILL.md`** — [high-stakes] — STATUS: PENDING
+**Task 1 — verify-and-trim `.openclaude/skills/sdk-wrapper/SKILL.md`** — [high-stakes] — STATUS: IN-PROGRESS (1a ✓, 1b/1c pending)
 Split into 1a→1b→1c (sequential; each its own commit + recovery point). Single file for all three: `.openclaude/skills/sdk-wrapper/SKILL.md` (docs task → no typecheck gate; self-check = the Done-when greps). One Reviewer pass after 1c covers the cumulative base..head diff.
 
 ### Edit spec — items 1–10 (verified 2026-10-10 — APPLY, do NOT re-derive or re-read source)
@@ -34,13 +34,8 @@ Split into 1a→1b→1c (sequential; each its own commit + recovery point). Sing
 
 ---
 
-### Task 1a — delete the two stale sections — [high-stakes] — STATUS: PENDING
-Scope: edit-spec **items 7, 8** only. Delete the two named `##` sections in place; touch nothing else.
-- Done when: `grep -nE "^## " .openclaude/skills/sdk-wrapper/SKILL.md` lists NEITHER "Known pre-existing type errors in this file" NOR "The self-check gate will fight you here".
-- Done when: `grep -n "TS2304" .openclaude/skills/sdk-wrapper/SKILL.md` returns nothing (that error class lived only in the item-7 section).
-- Done when: `grep -n "review-variant-p-imports" .openclaude/skills/sdk-wrapper/SKILL.md` returns nothing (item-8 dead link gone with the section).
-- Done when: frontmatter (the top `---`…`---` block: name `sdk-wrapper` + description text) untouched.
-- Then: commit `sprint-04-sdk-skill-clean: task 1a — delete stale skill sections`; set 1a STATUS: DONE (collapse to ✓); advance ▶ RUN THIS to 1b. (Task 1 overall stays IN-PROGRESS — not IN-REVIEW until 1c.)
+### Task 1a — delete the two stale sections — [high-stakes] — STATUS: ✓ DONE
+Deleted "Known pre-existing type errors" + "The self-check gate will fight you here" (items 7, 8); all Done-when greps pass; committed.
 
 ### Task 1b — fix −4 line refs + canonical-shape signature — [high-stakes] — STATUS: PENDING
 Scope: edit-spec **items 2, 3, 4**. Correct the KeyboardService line refs (−4 drift) in the canonical-shape block + Known-deviations table; fix the canonical-shape return type.

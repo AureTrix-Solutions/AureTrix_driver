@@ -10,9 +10,6 @@ never a pre-written solution, never duplicated detail.
 
 ### dks-page — build the Dynamic Keystroke config page (setDks wrapper + DKS.vue)
 
-### npm cleanup — finish the pnpm→npm migration
-- Worklist: remove "packageManager" + "pnpm" dep from package.json; move pnpm-lock.yaml + pnpm-workspace.yaml to _to_delete/ (PO git rm); re-run npm install; README pnpm→npm + fix GitHub URL to AureTrix-Solutions.
-
 ### advanced-key-pages — MPT, MT, TGL, END, SOCD, RS pages
 
 ### macro-page — build the Macro config page (setMacro wrapper + Macro.vue)

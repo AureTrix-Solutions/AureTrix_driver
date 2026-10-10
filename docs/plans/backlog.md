@@ -20,6 +20,8 @@ never a pre-written solution, never duplicated detail.
 
 ## Known issues
 
+- [deps] `npm install` reports 3 audit vulnerabilities (1 moderate, 2 critical), pre-existing in the dep graph (surfaced by sprint-02 lockfile regen) — verify with `npm audit`; a fix sprint must weigh `audit fix --force` version bumps against the pinned SDK versions. (2026-10-09.)
+
 - [docs] sprint-02 candidate: verify-and-trim sdk-wrapper skill (.openclaude/skills/sdk-wrapper/SKILL.md) — Batching section misrepresents where batching lives (verify vs src/composables/useBatchProcessing.ts + its callers); overlong ~250 lines vs ~80 target (pattern + checklist only — self-check-gate/unmasking mechanics and verbatim CLAUDE.md §7 duplication don't belong); method names, line refs, and the "Known pre-existing type errors" section stale after Tasks 4a/4b (verify every claim vs current source). (PM curation, 2026-10-09.)
 - [docs] sdk-reference-v2.md §13.7.4 wrongly claims `configs` never reaches a `filters` arg — correct the section; verified call chain in docs/plans/archive/sprint-01-code-fixes/review-variant-p-imports.md §R2. (2026-10-08.)
 - [docs] docs/pages/Debug.md:191,214 still documents DebugKeyboardService.exportEncryptedJSON, removed as dead code in Task 4b (fb20895) — needs a cleanup pass; see docs/plans/archive/sprint-01-code-fixes/review-type-cleanup-4b.md, Reviewer obs 1. (2026-10-09.)

@@ -5,24 +5,16 @@ description: The AureTrix KeyboardService wrapper pattern — how to add or revi
 
 # SDK wrapper pattern
 
-Every hardware call in this app goes through a `KeyboardService` wrapper. The wrapper is the **only**
-place that touches `XDKeyboard`. Pages, components and stores call the wrapper and check for an
-`Error`; they never call the SDK directly and never `try/catch` a hardware call for control flow.
+Every hardware call goes through a `KeyboardService` wrapper — the only place that touches `XDKeyboard`. Callers (pages/components/stores) check `instanceof Error`, never call the SDK directly, and never `try/catch` a hardware call for control flow. Return-`Error`-never-throw is design intent (CLAUDE.md hard rule 7); changing it is always `[high-stakes]`.
 
-Returning `Error` instead of throwing is a **design-intent rule** (CLAUDE.md §7). Changing it is
-always `[high-stakes]` and needs Reviewer + PO sign-off.
+## Canonical shape
 
-## The canonical shape
-
-Copy this for any new getter or setter that returns a value. The pattern (cf. `calibrationStart`
-at `src/services/KeyboardService.ts:798`) — the simplest full example:
+Copy for any new getter/setter (cf. `calibrationStart`, `KeyboardService.ts:798`):
 
 ```ts
 async calibrationStart(): Promise<any | Error> {
   try {
-    if (!this.connectedDevice) {
-      return new Error('No device connected');
-    }
+    if (!this.connectedDevice) return new Error('No device connected');
     const result = await this.ensureKeyboard().calibrationStart();
     if (result instanceof Error) return result;
     return result;
@@ -33,197 +25,65 @@ async calibrationStart(): Promise<any | Error> {
 }
 ```
 
-Four required parts, in this order:
+Four required parts, in order:
+1. **Return type is `<Success> | Error`** — never throws; the union forces callers to handle failure. Many wrappers write `any | Error` (`getMacro :518`, `setLighting :913`, `setPollingRate :1174`) since the SDK's `.d.ts` returns `Promise<any>` — prefer a real type where sourceable (see *Where types come from*).
+2. **`if (!this.connectedDevice) return new Error('No device connected');`** — guard before any SDK access. `connectedDevice` (`Device | PairedDevice | null`, decl `:11`) is the service's own field, not `connectionStore`.
+3. **`await this.ensureKeyboard().<method>(...)`** — always via `ensureKeyboard()`, never `this.keyboard` directly.
+4. **`if (result instanceof Error) return result;`** — the SDK reports failure by *returning* an `Error`; pass it through unchanged (no re-wrap, no stringify). Callers check `instanceof Error` only — truthiness misreads a falsy payload as failure.
 
-1. **Return type is `<Success> | Error`.** Never `throws`. The union is what forces callers to
-   handle failure. Note that many existing wrappers write `<any> | Error` (`getMacro` `:518`,
-   `setLighting` `:913`, `setPollingRate` `:1174`, …) because the SDK's own `.d.ts` returns `Promise<any>` — prefer a
-   real type when you can source one (see *Where types come from*).
-2. **`if (!this.connectedDevice) return new Error('No device connected');`** The guard runs *before*
-   any SDK access. `connectedDevice` is the service's own private field
-   (`Device | PairedDevice | null`, declared at `:11`) — do not substitute `connectionStore`.
-3. **`await this.ensureKeyboard().<method>(...)`** — always via `ensureKeyboard()`, never
-   `this.keyboard` directly.
-4. **`if (result instanceof Error) return result;`** — the SDK reports failure by *returning* an
-   `Error`, not throwing. Pass it through unchanged: don't re-wrap it, don't stringify it, don't
-   replace its message. Callers may match on the instance.
+Outer `try/catch` exists only to convert an unexpected throw into the contract: `console.error` naming the operation, then `return error as Error`; never re-throw. `ensureKeyboard()` (`:37`) is a lazy constructor — `if (!this.keyboard) this.keyboard = new XDKeyboard({ usage: 1, usagePage: [65440], configs: [] }); return this.keyboard;` — no connection-state binding; bypassing it risks a null crash or a second, differently-optioned instance.
 
-The outer `try/catch` exists **only** to convert an unexpected throw into the documented contract.
-Log with `console.error` naming the operation, then `return error as Error`. Never re-throw.
-
-### What `ensureKeyboard()` actually does
-
-`:37`. It is a lazy constructor, nothing more:
-
-```ts
-private ensureKeyboard(): XDKeyboard {
-  if (!this.keyboard) {
-    this.keyboard = new XDKeyboard({ usage: 1, usagePage: [65440], configs: [] });
-  }
-  return this.keyboard;
-}
-```
-
-It does **not** apply connection state or bind the device — it only guarantees a non-null
-`XDKeyboard` carrying the fixed `usagePage: [65440]` and unfiltered `configs: []`. Bypassing it
-risks a null-instance crash or a second instance with different options.
-
-## Known deviations (real code — do not "fix" them in passing)
-
-Not every wrapper follows the canonical shape. These three are deliberate or at least long-standing:
+## Known deviations (real code — don't "fix" in passing)
 
 | Method | Line | Deviation |
 |---|---|---|
-| `setKey` | `:508` | `Promise<void \| Error>`, but **no** `connectedDevice` guard and **no** `instanceof Error` check — just `await this.ensureKeyboard().setKey(keyConfigs); return;` |
-| `getDevices` | `:109` | Returns `Promise<Device[]>` — **no `Error` in the union**; on failure it returns `[]` instead. Also no guard. |
-| `initializeKeyboard` | `:255` | Returns `Promise<void>`; dedupes concurrent calls through `this.initializationPromise`. No `Error` union. The real work is in `_initializeKeyboardInternal` (`:268`, retries ≤ 2), which *does* guard on `connectedDevice`. |
+| `setKey` | `:508` | `Promise<void \| Error>`, but no `connectedDevice` guard, no `instanceof` check |
+| `getDevices` | `:109` | `Promise<Device[]>` — no `Error` union; returns `[]` on failure; no guard |
+| `initializeKeyboard` | `:255` | `Promise<void>`; dedupes via `initializationPromise`. Real work in `_initializeKeyboardInternal` (`:268`, retries ≤ 2), which does guard |
 
-If your task touches one of these, match the surrounding behaviour and flag the inconsistency in
-your checkpoint. Do not silently normalise them — `getDevices`' empty-array fallback in particular
-has callers that depend on it. Per CLAUDE.md §8, a genuine bug outside your task scope gets **one
-line in `docs/plans/backlog.md`** and nothing more.
-
-## Caller side
-
-```ts
-const result = await KeyboardService.calibrationStart();
-if (result instanceof Error) {
-  // surface it — do not swallow, do not throw
-  return;
-}
-// result is narrowed to the success type here
-```
-
-`instanceof Error` is the only supported check. Truthiness checks are wrong: a valid SDK payload can
-be falsy, and `if (result)` then misreads success as failure.
+Match surrounding behaviour and flag the inconsistency; don't silently normalise (`getDevices`' `[]` fallback has dependents). A genuine bug outside scope → one line in `docs/plans/backlog.md` (CLAUDE.md §8).
 
 ## Bulk / many-key operations
 
-**Never loop per-key SDK calls over a whole keyboard** — it overloads the device. Use
-`src/composables/useBatchProcessing.ts`.
+**Never loop per-key SDK calls over a whole keyboard** — it overloads the device. Use `useBatchProcessing.ts`; batching lives in the caller (page/component/service) — never inside KeyboardService. `ExportService.ts` is a service-layer consumer: `private processBatches = useBatchProcessing().processBatches;` at `:6`.
 
-Batching lives in the **component/page layer**, not in `KeyboardService`. The real shape, from
-`src/components/performance/SingleKeyTravel.vue:164`:
+Signature (`useBatchProcessing.ts:5`):
 
 ```ts
-const { processBatches } = useBatchProcessing();
-
-await processBatches(keys, async (physicalKeyValue) => {
-  await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);
-  await KeyboardService.setSingleTravel(physicalKeyValue, singleKeyTravel.value);
-  await KeyboardService.setDp(physicalKeyValue, topDeadZone.value);
-  await KeyboardService.setDr(physicalKeyValue, bottomDeadZone.value);
-});
+processBatches<T>(keys: { physicalKeyValue: number; keyValue: number }[] | number[],
+  updateFn: (physicalKey: number) => Promise<T>, batchSize = 80, delayMs = 100): Promise<void>
 ```
 
-Exact signature (`useBatchProcessing.ts:5`):
-
-```ts
-processBatches<T>(
-  keys: { physicalKeyValue: number; keyValue: number }[] | number[],
-  updateFn: (physicalKey: number) => Promise<T>,
-  batchSize: number = 80,
-  delayMs: number = 100,
-): Promise<void>
-```
-
-- `keys` accepts **either** objects **or** plain numbers. It detects which via
-  `typeof keys[0] === 'object' && 'physicalKeyValue' in keys[0]` (`:12`), then maps objects down to
-  `k.physicalKeyValue`.
-- `updateFn` receives the **`physicalKeyValue`**, never the display `keyValue`. All SDK calls are
-  keyed on `physicalKeyValue` (CLAUDE.md §Key model).
-- Defaults are **80 keys per batch, 100ms between batches**. Don't raise `batchSize` or lower
-  `delayMs` without a hardware-tested reason.
-- Batches are sequential (`await Promise.all(batch.map(updateFn))` then `setTimeout(delayMs)`,
-  `:21`); keys *within* a batch run concurrently.
-- Returns `Promise<void>` and **does not collect or report per-key errors**. If a bulk operation
-  must surface failures, accumulate them yourself inside the `updateFn` closure.
-
-### Gotcha: `physicalKeyValue` is optional in the app's own type
-
-`src/types/types.ts` declares a **local** `IDefKeyInfo` where `physicalKeyValue?: number` is
-optional (it duplicates protocol-keyboard's `IDefKeyInfo` rather than importing it). But
-`processBatches`'s object form requires `physicalKeyValue: number`. The established fix is to
-narrow at the call site with a fallback — `SingleKeyTravel.vue:160`:
-
-```ts
-physicalKeyValue: key.physicalKeyValue || key.keyValue,
-```
-
-Do that; don't loosen the composable's signature.
+- `keys` accepts objects **or** numbers (detects via `'physicalKeyValue' in keys[0]`, `:12`); `updateFn` receives the **`physicalKeyValue`**, never the display `keyValue` (CLAUDE.md §Key model).
+- Defaults **80/batch, 100ms between** — don't raise/lower without a hardware-tested reason. Batches sequential (`await Promise.all(batch.map(updateFn))` then `setTimeout`, `:21`); keys within a batch concurrent. Returns `Promise<void>` and **does not collect per-key errors** — accumulate them in the `updateFn` closure.
+- Example, simplified (real `SingleKeyTravel.vue:164` wraps `setSingleTravel/setDp/setDr` in `travelChanged/deadChanged` conditionals; `setPerformanceMode` unconditional): `await processBatches(keys, async (pkv) => { await KeyboardService.setPerformanceMode(pkv, 'single', 0); await KeyboardService.setSingleTravel(pkv, singleKeyTravel.value); })`
+- **Gotcha:** `types.ts` `IDefKeyInfo.physicalKeyValue?` is optional, but the object form requires `physicalKeyValue: number` — narrow at the call site (`SingleKeyTravel.vue:160`): `physicalKeyValue: key.physicalKeyValue || key.keyValue`. Don't loosen the composable's signature.
 
 ## Where types come from
 
-Ground-truth order (CLAUDE.md §6 — verify before relying on anything):
+Ground-truth order (CLAUDE.md §6 — verify before relying):
+1. `docs/sdk-reference-v2.md` — behaviour/semantics; check its Verification status table first (Partial/Unverified → confirm against source).
+2. `@sparklinkplayjoy/protocol-keyboard/src/` (readable TS, permitted) — param/payload types: `constants/param.ts` (88 ln — `OrderType`, `KeyLayout`, `KeyTouchMode`, `BLControls`); `types/interface.ts` (183 ln — `IDefKeyInfo`, `ILightMode`, `LightModeType`, `IDKSMode`, …). Read bodies for member values — never guess.
+3. `src/types/types.ts` (13 ln) — **three** app types: `IDefKeyInfo`, `DksLayoutType`, `DksType`; header says it mirrors `@sparklinkplayjoy/sdk-keyboard dist/cjs/src/types/type.d.ts` verbatim (not a duplicate of protocol-keyboard's `IDefKeyInfo`).
+4. `sdk-keyboard/dist/cjs/src/controller/*.d.ts` — exact `XDKeyboard` signatures; many return `Promise<any>` (treat as untyped; pin the real shape from reference/source).
 
-1. **`docs/sdk-reference-v2.md`** for behaviour and semantics. Always check its Verification status
-   table first; if a section is Partial or Unverified, confirm against source.
-2. **`node_modules/@sparklinkplayjoy/protocol-keyboard/src/`** for param and payload types —
-   readable TypeScript, explicitly permitted by CLAUDE.md. The two files that matter:
-   - `src/constants/param.ts` (88 lines) — enums `OrderType`, `KeyLayout`, `KeyTouchMode`,
-     `BLControls`.
-   - `src/types/interface.ts` (183 lines) — `IDefKeyInfo`, `ILightMode`, `LightModeType`
-     (`'static' | 'custom' | 'dynamic'`), `IDKSMode`, `IMPTMode`, `IMTMode`, `ITGLMode`, `IEndMode`,
-     `ISOCDMode`/`V2`/`V3`, `IRSMode`, `IKRGBDesc`, `ICmd`, `IKey`, `IDB`, `IRGBDesc`, `IKeyData`.
+### Importing protocol-keyboard types — verify before relying
 
-   Read the enum/interface body for actual member values — **never guess them.**
-3. **`src/types/types.ts`** for the app's own view-model types (currently just the local
-   `IDefKeyInfo`).
-4. **`sdk-keyboard/dist/cjs/src/controller/*.d.ts`** (`key`, `lighting`, `performance`, `system`,
-   `higherKey`, `info`, `export`) for exact `XDKeyboard` signatures. Many return `Promise<any>`;
-   treat those as untyped and pin the real shape from the reference or source.
+⚠️ **Resolution UNTESTED** — test with one `npm run typecheck` after a scratch import. Verified on disk (v1.0.6): `package.json "types"` → **nonexistent** `dist/esm/index.d.ts` (same defect class as `@sparklinkplayjoy/hid`, sdk-reference §13.4); `"exports"` = `"."` only → `{ import: esm, require: cjs }` with no `types` condition; 30 `.d.ts` ship; working decls at **`dist/cjs/types/index.d.ts`** (re-exports `./src/types/interface` + `constantsParam`). Deep-path import **BLOCKED** by the exports map; root import **untested**. Reading `protocol-keyboard/src/*.ts` for semantics/enum values is always safe regardless. A `tsconfig` `paths` remap affects the whole module graph (variant-P precedent, §13.7.3).
 
-### Importing protocol-keyboard types — verify before you rely on it
+## Never change (design intent — CLAUDE.md hard rule 7)
 
-⚠️ **Resolution UNTESTED as of 2026-10-08** — do not assume either outcome. What is verified from
-the package files on disk:
-
-- `package.json` declares `"types": "./dist/esm/index.d.ts"`, and **that file does not exist** — the
-  same class of packaging defect documented for `@sparklinkplayjoy/hid` in sdk-reference-v2.md §13.4.
-- Its `"exports"` map declares only `"."` → `{ import: ./dist/esm/index.js, require:
-  ./dist/cjs/index.js }`, with **no `types` condition** on either branch.
-- The package ships 30 `.d.ts` files. A working root declaration *does* exist at
-  **`dist/cjs/types/index.d.ts`**, which re-exports the useful surface:
-  `export * from './src/types/interface'` and `export * as constantsParam from './src/constants/param'`.
-
-So the types are present and reachable *by file path*, but nothing in the package metadata points
-TypeScript at them. Practically:
-
-- `import type { KeyTouchMode } from '@sparklinkplayjoy/protocol-keyboard'` **may or may not
-  resolve.** Nothing in `src/` imports from `protocol-keyboard` today, so there is no working
-  precedent to copy. **Test it before you rely on it** (one `npm run typecheck` after a scratch
-  import is enough).
-- Deep-path imports (`.../protocol-keyboard/dist/cjs/types`) are likely **blocked** by the `exports`
-  map, which only exposes `"."`. Prefer a `paths` entry in `tsconfig.json` over a deep path — but
-  note **a `paths` remap affects the whole module graph, not just `src/`**, which is exactly how
-  variant-P surfaced 2 extra errors in `DebugKeyboardService` during Task 2. Budget for that, and
-  see §13.7.3 for the hid precedent.
-- Reading `protocol-keyboard/src/*.ts` for *semantics and enum values* is always safe and always
-  allowed, independent of whether the import resolves. Use it to learn the shape, then decide the
-  import strategy separately.
-
-## Never change (design intent — CLAUDE.md §7)
-
-- Device selection stays **unfiltered**: `navigator.hid.requestDevice({ filters: [] })`. No device
-  filters, no hard-coded vendor/product IDs. Any SparkLink keyboard must connect.
-- `usagePage: 65440` (`0xFFA0`, passed as `[65440]` in `ensureKeyboard`) selects the SparkLink
-  **command interface** on an already-chosen device. It is **not** a device filter — never move it
-  into `requestDevice`.
-- Wrappers **return** `Error`, never throw.
-- `DebugKeyboardService` deliberately holds a **separate** `XDKeyboard` instance (`:7`, constructed
-  in its own constructor at `:11`) so raw SDK inspection can't disturb the main connection. Don't
-  unify them.
+See CLAUDE.md hard rule 7 (unfiltered `requestDevice({ filters: [] })`; wrappers return `Error`, never throw). Skill-specific: `usagePage: [65440]` lives in `ensureKeyboard` (`:37`), **never** in `requestDevice` — it selects the SparkLink command interface on an already-chosen device, not a filter. `DebugKeyboardService` holds its **own** `XDKeyboard` (`:7`, constructed `:11`) so raw inspection can't disturb the main connection — don't unify them.
 
 ## Checklist for a new wrapper
 
-- [ ] Return type is `<Success> | Error` (a real type where you can source one, not `any`)
+- [ ] Return type `<Success> | Error` (real type where sourceable, not `any`)
 - [ ] `if (!this.connectedDevice) return new Error('No device connected')` runs first
-- [ ] SDK reached via `this.ensureKeyboard().<method>()`, never `this.keyboard`
-- [ ] `if (result instanceof Error) return result;` present, passed through unchanged
-- [ ] Outer `try/catch` logs via `console.error` and `return error as Error` — no re-throw
+- [ ] SDK via `this.ensureKeyboard().<method>()`, never `this.keyboard`
+- [ ] `if (result instanceof Error) return result;` — passed through unchanged
+- [ ] Outer `try/catch` → `console.error` + `return error as Error`, no re-throw
 - [ ] Param/return types sourced per the order above, not invented
-- [ ] Bulk operations go through `processBatches` (80 / 100ms) from the component layer, keyed on
-      `physicalKeyValue`
+- [ ] Bulk ops via `processBatches` (80/100ms) from the caller, keyed on `physicalKeyValue`
 - [ ] No device filters added; `usagePage 65440` untouched
 - [ ] `npm run typecheck` ≤ baseline, no new errors in touched files
-- [ ] Tagged `[high-stakes]`, plus `[hw]` if hardware behaviour is affected
+- [ ] Tagged `[high-stakes]`, plus `[hw]` if hardware behaviour affected

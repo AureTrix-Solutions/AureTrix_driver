@@ -202,38 +202,6 @@ TypeScript at them. Practically:
   allowed, independent of whether the import resolves. Use it to learn the shape, then decide the
   import strategy separately.
 
-## Known pre-existing type errors in this file
-
-Don't re-discover these as new bugs; they're counted in `docs/tsc-baseline.txt`.
-
-`npm run typecheck` currently reports exactly two `TS2304`s, both in `KeyboardService.ts`:
-
-```
-src/services/KeyboardService.ts(802,37): error TS2304: Cannot find name 'Calibration'.
-src/services/KeyboardService.ts(816,35): error TS2304: Cannot find name 'Calibration'.
-```
-
-`Calibration` is used as the return type of `calibrationStart`/`calibrationEnd` but is **never
-imported or declared** anywhere in `src/`, nor exported from any package root. This is Task 4
-(type-cleanup) territory. **Never fix it inside an unrelated task** — CLAUDE.md §8: one line in
-`docs/plans/backlog.md`, then carry on.
-
-## The self-check gate will fight you here
-
-Any change to `KeyboardService.ts` is `[high-stakes]` **regardless of size** (CLAUDE.md §Tag
-ownership), so the gate applies: `npm run typecheck` must be ≤ `docs/tsc-baseline.txt` with **no new
-errors in files you touched**.
-
-Two traps recorded from Task 2 (`docs/plans/reviews/review-variant-p-imports.md`, finding **R1**):
-
-- Fixing a *latent* error can **unmask** further errors at the same site, so the count rises even
-  though the code improved — and the gate as worded becomes unsatisfiable. If that happens, flag it
-  explicitly in your checkpoint and the review file. Don't hide the delta, and don't revert good
-  work to satisfy a number.
-- The baseline only ever ratchets **down**. If your task legitimately resolves errors, publish the
-  exact reconciliation (`before = after − resolved + unmasked`) so the Reviewer can verify it. Task 2
-  reconciled as `63 = 60 − 5 + 8`.
-
 ## Never change (design intent — CLAUDE.md §7)
 
 - Device selection stays **unfiltered**: `navigator.hid.requestDevice({ filters: [] })`. No device

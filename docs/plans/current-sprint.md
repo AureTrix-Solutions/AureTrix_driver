@@ -7,7 +7,7 @@
 ## Checkpoint
 - Branch: `sprint-02-npm-cleanup`
 - tsc baseline: 23 errors (docs/tsc-baseline.txt) — this sprint touches no source, so it must stay 23
-- Cleanup: none yet (`.scratch/` and `_to_delete/` do not exist as of PM-open 2026-10-09)
+- Cleanup: `.scratch/` empty; `_to_delete/` holds pnpm-lock.yaml + pnpm-workspace.yaml (PO must `git rm`)
 - PM-open: backlog item "npm cleanup" removed from backlog.md; sprint planned from it
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report.
      Do NOT record or update a commit hash here — git log is the source of truth.
@@ -15,22 +15,12 @@
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Task 1 — package.json + lockfile migration. Do this task, then stop.
+Next: Reviewer session for Task 1 — "follow docs/plans/reviews/review-npm-lockfile.md". On PASS, Task 2 (docs pnpm→npm + URL fixes) proceeds.
 
 ## Tasks
-1. **package.json + lockfile migration** — [high-stakes] — STATUS: IN-PROGRESS
-   - High-stakes rationale: dependency-graph change + regeneration of package-lock.json + moving tracked files (PO must `git rm`).
-   - Done when: package.json has no `packageManager` key and no `pnpm` dependency; `grep -c pnpm package-lock.json` → 0; `npm install` and `npm run build` succeed; `npm run typecheck` ≤ 23 errors (baseline unchanged — no source touched).
-   - Done when: `pnpm-lock.yaml` and `pnpm-workspace.yaml` moved via `git mv` into `_to_delete/` (create the dir); checkpoint's Cleanup line reports from an actual `ls`.
-   - Files: `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `_to_delete/`, `package-lock.json` (regenerated)
-   - Edits (APPLY; grep-verified at PM-open 2026-10-09 — do not re-derive):
-     1. package.json — delete line 16 entirely: `"packageManager": "pnpm@10.17.0",`
-     2. package.json — delete line 22 entirely: `"pnpm": "^10.17.1",` (preceding line `"pinia-plugin-persistedstate": "^4.5.0",` keeps its comma; following line `"vue": "^3.5.21",` unchanged; result stays valid JSON)
-     3. `mkdir _to_delete` then `git mv pnpm-lock.yaml pnpm-workspace.yaml _to_delete/` (both are git-tracked — verified via git ls-files)
-     4. `npm install` → rewrites package-lock.json without the pnpm entry (current lock embeds it at lines ~16, 2282–2295) and prunes node_modules/pnpm
-     5. Verify: `grep -c pnpm package-lock.json` → 0 · `npm run typecheck` → ≤ 23 · `npm run build` → passes
-     6. Review file: create `docs/plans/reviews/review-npm-lockfile.md` from docs/plans/templates/review-template.md (sprint goal + Task 1 "Done when:" criteria first, then Base/Head commit hashes), set status IN-REVIEW, commit `sprint-02-npm-cleanup: Task 1 package.json + lockfile migration`
-   - Note: removing a dependency cannot add typecheck errors; any count > 23 means the install went wrong — reinstall and re-check before escalating. `pnpm-workspace.yaml` holds only `onlyBuiltDependencies` (@parcel/watcher, esbuild) — pnpm-specific, no npm equivalent needed.
+1. **package.json + lockfile migration** — [high-stakes] — STATUS: IN-REVIEW
+   - Checkpoint: both pnpm entries removed from package.json; lockfiles `git mv`'d to `_to_delete/`; `npm install` regenerated package-lock.json (`grep -c pnpm` → 0); typecheck = 23 (= baseline); build passed. Committed. Review file: docs/plans/reviews/review-npm-lockfile.md (Base 6f658d6, Head = this commit).
+   - Note for PM/Reviewer: `npm install` reported 3 vulnerabilities (1 mod, 2 crit) — pre-existing in the dep graph, out of migration scope.
 2. **README + CONTRIBUTING pnpm→npm and URL fixes** — [trivial] — STATUS: PENDING
    - Trivial rationale: docs-only; every edit listed with verified line content; no source file needs opening.
    - Done when: `grep -riE "pnpm|BlastHappy82" README.md .github/CONTRIBUTING.md` → 0 hits (fork-placeholder `YOUR_USERNAME` at CONTRIBUTING.md:34 stays).

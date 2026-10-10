@@ -21,4 +21,3 @@
 2. **Banner-note §13.7 staleness (pre-variant-P text)** — ✓ DONE (Reviewer PASS 2026-10-10; commits a16bf5a + 3a4c9c7; detail: docs/plans/reviews/review-sdk-ref-banner-notes.md)
 
 ## Findings (raw — PM routes at close)
-- Policy (PO, 2026-10-10, Task 1 review): a text defect in ground truth (docs/sdk-reference-v2.md) must be a blocking FAIL item, not a QA-tier inline fix — after PASS no mechanism remains to fix it. Verify: CLAUDE.md QA tiers vs Reviewer verdict handling.

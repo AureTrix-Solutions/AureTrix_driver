@@ -176,7 +176,7 @@ not the SDK).
 | §13.4 Packaging defects | Verified | empirical Node import tests | 4b, 5 | ✅ Each claim tested by attempting the import and reading the error code. Batch 4b: ✅ corrected the `byte.d.ts` bullet — `param.ts` uses the same `Layout_` prefix and is the exported file, so `byte.d.ts` is not the source of the exported string unions. Batch 5: ✅ added the readable-`src/` mitigation note (16 `.ts` files, reference-only, not runtime-loadable) |
 | §13.5 Gaps closed after first pass | Verified | disk + bundle greps | — | ✅ `hidv2.js` absence and path-import failure both confirmed |
 | §13.6 Type-vs-runtime gap, generally | Partial | — | — | Interpretation built on §13.4/§13.5 evidence, not independently testable |
-| §13.7 How `src/` imports these types | Verified | `src/` (three sites cited) | — | ✅ Import sites and their failure modes confirmed |
+| §13.7 How `src/` imports these types | Verified | `src/` (three sites cited) | sprint-03 | ✅ Import sites and their failure modes confirmed. Sprint-03 (2026-10-10): §13.7.4's "`configs` never invoked" conclusion corrected per sprint-01 review §R2 — `configs` IS reachable via hid's internal zero-match `devices()`→`requestDevice()` fallback, bundle-verified |
 | §14 The 21 unwrapped SDK methods (+§14.9 cross-cutting gaps) | Verified | `.d.ts` + facade/controller bundle traces + `src/` for §14.9(a)/(c) | 4c, 5 | ✅ All 21 signatures re-verified verbatim against `index.d.ts` (incl. `updateBin` config shape, `toBoot`, `reconnection`). §14.9: (a) `setMacro` touchMode-clobber encoding ✅ from bundle, runtime effect hardware-pending; (b) `v`-gate unreachability ✅ from bundle (§6.0/§8); (c) 2-of-3 DB write ✅ from `setAdvancedKeys` source (§6.1). Implementations traced in the bundle for all functional groups: on/off/reconnection (§14.1), `setTopDeadSwitch` = ORDER_TYPE envelope write, `getSaturation` = `QUERY_LIGHT_FIX_RGB` read on InfoController, `setLightingSaturation` = `[68, …param, 0xff, 0xff]` payload (§14.2–14.3), `deleteKey` = single touch-mode-slot write `value = KeyTouchMode[mode] << 4` (§14.4), DKS/TRPS reads + `setDks` decode-reply pattern (§14.5), common "setters return the decoded read-back" pattern for all seven setters (§14.6), RS read packs `{key, dks: 0}` and set decodes reply (§14.7), `updateBin` rethrows + runtime ArrayBuffer check + fresh controller instance + `updateStatus` strings passed at runtime though absent from the type, `updateDrive` flow re-confirmed (§14.8). Remaining `[unverified]`: hardware behaviour of any of these (never exercised) |
 
 Each verification batch must update its rows here.
@@ -4009,26 +4009,42 @@ brackets":
   `TS2741: Property 'configs' is missing in type '{ usage: number; usagePage: number[]; }' but
   required in type 'DeviceInit'`. Verified by editing the probe, not inferred.
 
-  **This note is now closed — the missing `configs` is harmless, and the reason is worth keeping.**
-  `configs` is only ever consumed by hid's own `requestDevice()`, which does
-  `navigator.hid.requestDevice({ filters: this.configs })` (verified in `hid/dist/esm/index.js`).
-  But **`XDKeyboard` does not expose `requestDevice`** — it is not on the façade at all (§11.1;
-  confirmed by grep over `sdk-keyboard/dist/esm/index.d.ts`). Device picking in this app is done by
-  `KeyboardService.requestDevice()` (`src/services/KeyboardService.ts:120`–`146`), which calls the
-  browser API **directly** with an explicitly empty filter list:
+  **This note was closed — and its conclusion was WRONG. Corrected 2026-10-10 (sprint-03), per
+  sprint-01 review §R2** (`docs/plans/archive/sprint-01-code-fixes/review-variant-p-imports.md`,
+  bundle-verified). The original note claimed `configs` "is only ever consumed by hid's own
+  `requestDevice()`", that "`XDKeyboard` does not expose `requestDevice`", and that hid's
+  `requestDevice` — "and therefore `configs`" — is never invoked on the `getDevices` path. The premise
+  was true but the conclusion did not follow: it missed hid's **internal zero-match fallback**.
+  Verified chain against the installed bundles:
 
-  ```ts
-  const devices = await navigator.hid.requestDevice({ filters: [] });
+  ```
+  KeyboardService.getDevices()            (src/services/KeyboardService.ts:109)
+    → XDKeyboard.getDevices()             (sdk-keyboard/dist/esm/index.js)
+      → hid devices()                     (hid/dist/esm/index.js)
+          if (e.length === 0)             ← zero matches after the usage/usagePage filter
+            → hid internal requestDevice()
+              → navigator.hid.requestDevice({ filters: this.configs })
   ```
 
-  So hid's `requestDevice` — and therefore `configs` — is **never invoked on this code path**, and
-  the `undefined` `configs` never reaches a `filters` argument. Nothing is silently unfiltered;
-  the filtering step simply does not happen in the SDK at all. `filters: []` at the app level is
-  **intentional**: it lets the user pick *any* HID device so the driver works with any
-  SparkLink-compatible keyboard, consistent with the design constraint against hard-coding
-  vendor/product IDs. (The superseded `docs/SDK_REFERENCE.md` hard-codes `vendorId: 7331` /
-  `productId: 1793` in its pairing example; those identify **one** specific board and must not be
-  read as a requirement.)
+  `this.configs` is assigned verbatim from the `DeviceInit` constructor arg
+  (`this.configs = e` in `hid/dist/esm/index.js`). So `configs` **does** reach a `filters`
+  argument — but only on the zero-match fallback path, with whatever value the constructor got.
+  `XDKeyboard` not exposing `requestDevice` on the façade is irrelevant — hid reaches it
+  internally. This repo passes `configs: []` (`src/services/KeyboardService.ts:42`,
+  `src/services/DebugKeyboardService.ts:15`), so the fallback prompt is **unfiltered**, matching
+  the app-level `navigator.hid!.requestDevice({ filters: [] })` in
+  `KeyboardService.requestDevice()` (`src/services/KeyboardService.ts:124`). §1's `getDevices`
+  row already documented this ("**May prompt**" — the hid package's `devices()` falls back to
+  `requestDevice()` → `navigator.hid.requestDevice({ filters: configs })`); the original §13.7.4
+  note contradicted it.
+
+  `filters: []` at the app level is **intentional**: it lets the user pick *any* HID device so
+  the driver works with any SparkLink-compatible keyboard, consistent with the design constraint
+  against hard-coding vendor/product IDs. A filtering `configs` value (e.g.
+  `configs: [{ usage: 1, usagePage: 65440 }]`) would violate that design intent — `[]` is both
+  the type-correct and the intent-preserving choice. (The superseded `docs/SDK_REFERENCE.md`
+  hard-codes `vendorId: 7331` / `productId: 1793` in its pairing example; those identify **one**
+  specific board and must not be read as a requirement.)
 
   **What `usagePage: 65440` actually does.** `65440` = `0xFFA0`, a vendor-defined usage page. It is
   **not a device filter** — it selects the **SparkLink command interface (HID collection)** *within*
@@ -4041,9 +4057,11 @@ brackets":
 
   Net: the two constructor edits variant P forces are (a) wrap `usagePage` as `[65440]` — a genuine
   type-vs-runtime mismatch, since the compiled constructor normalises a scalar via
-  `Array.isArray(s) ? s : [s]` — and (b) supply or silence the required `configs`, which is a **pure
-  type-formality** with no runtime consequence here. Passing `configs: []` is the minimal honest
-  change; it types correctly and preserves today's behaviour exactly.
+  `Array.isArray(s) ? s : [s]` — and (b) supply the required `configs`, which is **not** a pure
+  type-formality: its value is reachable at runtime via hid's internal zero-match
+  `devices()`→`requestDevice()` fallback (see the corrected note above). `configs: []` is both the
+  minimal type-correct change and the intent-preserving one — it keeps the fallback prompt
+  unfiltered, matching the app-level `filters: []`.
 
 The takeaway for the proposal: variant P's 74 is **not** "2 worse than B/D" in any meaningful
 sense — it is B/D's 16 latent errors **plus** the constructor-typing that the dependency's own

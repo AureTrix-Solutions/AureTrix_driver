@@ -18,7 +18,7 @@
 Next: Task 1 — package.json + lockfile migration. Do this task, then stop.
 
 ## Tasks
-1. **package.json + lockfile migration** — [high-stakes] — STATUS: PENDING
+1. **package.json + lockfile migration** — [high-stakes] — STATUS: IN-PROGRESS
    - High-stakes rationale: dependency-graph change + regeneration of package-lock.json + moving tracked files (PO must `git rm`).
    - Done when: package.json has no `packageManager` key and no `pnpm` dependency; `grep -c pnpm package-lock.json` → 0; `npm install` and `npm run build` succeed; `npm run typecheck` ≤ 23 errors (baseline unchanged — no source touched).
    - Done when: `pnpm-lock.yaml` and `pnpm-workspace.yaml` moved via `git mv` into `_to_delete/` (create the dir); checkpoint's Cleanup line reports from an actual `ls`.

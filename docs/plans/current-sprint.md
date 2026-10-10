@@ -12,13 +12,13 @@
 - PM-open complete: backlog item removed, this file seeded.
 
 ## ▶ RUN THIS
-Next: Worker session — "go" (Task 2: Banner-note §13.7 staleness — spec + edit list in Tasks below).
+Next: Reviewer session — "follow docs/plans/reviews/review-sdk-ref-banner-notes.md" (Task 2 is IN-REVIEW).
 
 ## Tasks
 
 1. **Correct §13.7.4 `configs` reachability claims** — ✓ DONE (Reviewer PASS 2026-10-10; commits a3ee408 + 931b972; detail: docs/plans/reviews/review-sdk-ref-configs-fix.md)
 
-2. **Banner-note §13.7 staleness (pre-variant-P text)** — [high-stakes] — STATUS: PENDING
+2. **Banner-note §13.7 staleness (pre-variant-P text)** — [high-stakes] — STATUS: IN-REVIEW (Task 2 work + self-check committed at a16bf5a + handoff; typecheck N/A docs-only; cleanup: no cleanup needed (.scratch/ empty, _to_delete/ has only .gitkeep — ls'd 2026-10-10); awaiting Reviewer)
    - Done when: §13.7 preamble carries a status note that Site 1 was fixed in sprint-01 via variant P and the text below is pre-fix history; grep "Status (2026-10-09" or equivalent in the §13.7 preamble.
    - Done when: §13.7.3 header no longer reads as currently-unapplied without qualification; line 3964's "None of this is in the repo" is followed by a superseded note citing tsconfig.json:21 + both constructors.
    - Done when: diff is ADDITIONS/TITLE-CHANGES only inside §13.7 — no historical analysis paragraphs deleted (Task 1's two replacements excepted, already committed).

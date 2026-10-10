@@ -3777,7 +3777,9 @@ entirely**. That single setting explains all three import sites below, and it is
 disagree with the runtime results in §13.4. Verified with `npx tsc --noEmit -p tsconfig.json`
 (**60 errors project-wide**); there is no `typecheck` script, so nothing in CI surfaces these.
 
-**Site 1 — `KeyboardService.ts:2` and `DebugKeyboardService.ts:2` (identical line): broken.**
+> **Status (2026-10-09, sprint-03): Site 1 was fixed in sprint-01 by adopting variant P** — tsconfig.json:21 `paths` mapping, type-only imports now `from '@sparklinkplayjoy/hid'`, constructors pass `usagePage: [65440]` + `configs: []`, and `npm run typecheck` + docs/tsc-baseline.txt now exist (baseline 23). The text below describes the **pre-fix** state and is kept as historical context; the "60 errors"/"no typecheck script" figures are as-of that measurement, not current.
+
+**Site 1 — `KeyboardService.ts:2` and `DebugKeyboardService.ts:2` (identical line): broken.** *(Superseded — fixed in sprint-01 via variant P; see the status note above. The 4 × TS2614 no longer occur.)*
 
 ```ts
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
@@ -3935,7 +3937,7 @@ misattributed to the import fix): `(538,35) TS2554`, `(608,67) (622,74) (776,68)
 on `DksLayoutType`, `(799,37) (813,35) TS2304` on `Calibration`, `(975,68) TS2345`,
 `(1065,62) TS2345` on `DksType`, `(1193,11) TS2358`.
 
-#### 13.7.3 Proposed fix for Site 1 — not applied
+#### 13.7.3 Proposed fix for Site 1 — applied in sprint-01 (variant P); proposal text kept as written
 
 Four parts, in order of independence:
 
@@ -3961,7 +3963,7 @@ Four parts, in order of independence:
    `@types/w3c-web-hid` is the likely answer for both, but it would re-declare `HIDDevice`
    globally and could collide with hid's own declaration — verify before adopting.
 
-None of this is in the repo. `src/` is unmodified; all measurements came from a scratch copy.
+None of this is in the repo. `src/` is unmodified; all measurements came from a scratch copy. *(Superseded — as of sprint-01, variant P and the constructor edits ARE in the repo: tsconfig.json:21, KeyboardService.ts:39–43, DebugKeyboardService.ts:12–16. Measurements below were from the pre-fix scratch copy.)*
 
 #### 13.7.4 Why the `paths` mapping (variant P) reaches 74, not 72
 

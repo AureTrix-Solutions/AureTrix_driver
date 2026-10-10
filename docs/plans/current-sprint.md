@@ -10,14 +10,14 @@ rev1 (2026-10-10): split Task 1 into sequential 1a→1b→1c — the whole-file 
 - tsc baseline: 23 errors (docs/tsc-baseline.txt) — docs-only sprint, gate skipped
 - Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty — from actual `ls` at PM-open
 - PM-open (2026-10-10): plan written from backlog item; item removed from backlog.md; all claims below grep/read-verified this session
-- Worker 1b (2026-10-10): items 2/3/4 applied — all −4 line refs corrected, snippet re-sourced + `Promise<any | Error>`; all 4 Done-when gates pass; frontmatter untouched; SKILL.md 229 lines; committed. Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ only .gitkeep — from actual `ls`.
+- Worker 1c (2026-10-10): all items applied; SKILL.md 229→89 lines; all 1a/1b/1c gates pass (stale sweeps empty, kept-facts + positives match, frontmatter untouched); committed 1f47e52; Task 1 → IN-REVIEW. Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ only .gitkeep — from actual `ls`.
 
 ## ▶ RUN THIS
-Next: **Task 1c** — items 1, 5, 6, 8, 9, 10: rewrite body → ~100-line final shape (frontmatter UNCHANGED). Then: all 1c greps; Reviewer window; on PASS set review file to PASS, advance ▶ RUN THIS to PM-close. (One subtask per session — hard rule 1.)
+Next: **Reviewer window** — "follow docs/plans/reviews/review-sdk-skill-clean.md" (Task 1 diff `0e0a9f0..1f47e52`, single file SKILL.md). On PASS (non-hw): set Task 1 DONE (collapse to ✓), advance ▶ RUN THIS to PM-close. On FAIL: fix checklist here, "fix ONLY these". (One subtask per session — hard rule 1.)
 
 ## Tasks
 
-**Task 1 — verify-and-trim `.openclaude/skills/sdk-wrapper/SKILL.md`** — [high-stakes] — STATUS: IN-PROGRESS (1a ✓, 1b ✓, 1c pending)
+**Task 1 — verify-and-trim `.openclaude/skills/sdk-wrapper/SKILL.md`** — [high-stakes] — STATUS: IN-REVIEW (1a ✓ 1b ✓ 1c ✓ — awaiting Reviewer)
 Split into 1a→1b→1c (sequential; each its own commit + recovery point). Single file for all three: `.openclaude/skills/sdk-wrapper/SKILL.md` (docs task → no typecheck gate; self-check = the Done-when greps). One Reviewer pass after 1c covers the cumulative base..head diff.
 
 ### Edit spec — items 1–10 (verified 2026-10-10 — APPLY, do NOT re-derive or re-read source)

@@ -15,14 +15,14 @@ Thank you for your interest in contributing to AureTrix! This document provides 
 
 ## Code of Conduct
 
-This project follows a [Code of Conduct](https://github.com/BlastHappy82/AureTrix_driver?tab=coc-ov-file). By participating, you are expected to uphold this code. Please report unacceptable behavior via GitHub Issues.
+This project follows a [Code of Conduct](https://github.com/AureTrix-Solutions/AureTrix_driver?tab=coc-ov-file). By participating, you are expected to uphold this code. Please report unacceptable behavior via GitHub Issues.
 
 ## Getting Started
 
 ### Prerequisites
 
 - **Node.js** v18 or higher
-- **pnpm** v9 or higher (recommended) or npm
+- **npm** (bundled with Node.js)
 - A compatible hall effect keyboard with SparkLink SDK support (for testing hardware features)
 - A **Chromium-based browser** with WebHID support (Chrome, Edge, Brave)
 
@@ -36,30 +36,30 @@ This project follows a [Code of Conduct](https://github.com/BlastHappy82/AureTri
    ```
 3. Add the upstream remote:
    ```bash
-   git remote add upstream https://github.com/BlastHappy82/AureTrix_driver.git
+   git remote add upstream https://github.com/AureTrix-Solutions/AureTrix_driver.git
    ```
 
 ## Development Setup
 
 1. **Install dependencies**:
    ```bash
-   pnpm install
+   npm install
    ```
 
 2. **Start the development server**:
    ```bash
-   pnpm dev
+   npm run dev
    ```
    The app will be available at `http://localhost:5000`
 
 3. **Run tests**:
    ```bash
-   pnpm test
+   npm test
    ```
 
 4. **Build for production**:
    ```bash
-   pnpm build
+   npm run build
    ```
 
 ### Testing Without Hardware

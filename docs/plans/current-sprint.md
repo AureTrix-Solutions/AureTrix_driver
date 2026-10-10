@@ -8,15 +8,16 @@
 ## Checkpoint
 - Branch: `sprint-03-docs-sdk-ref-fix`
 - tsc baseline: 23 errors (docs/tsc-baseline.txt) — docs-only sprint, must not change
-- Cleanup: no cleanup needed (`.scratch/` and `_to_delete/` both empty — ls'd 2026-10-10 at PM-open)
+- Cleanup: no cleanup needed (`.scratch/` and `_to_delete/` both empty — ls'd 2026-10-10 by Worker at Task 1)
 - PM-open complete: backlog item removed, this file seeded.
 
 ## ▶ RUN THIS
-Next: Task 1 — Correct §13.7.4's `configs` claims. Do this task, then stop.
+Next: Reviewer session — "follow docs/plans/reviews/review-sdk-ref-configs-fix.md" (Task 1, Base 956548c, Head in review file).
 
 ## Tasks
 
-1. **Correct §13.7.4 `configs` reachability claims** — [high-stakes] — STATUS: PENDING
+1. **Correct §13.7.4 `configs` reachability claims** — [high-stakes] — STATUS: IN-REVIEW
+   - Checkpoint (Worker, 2026-10-10): all 3 edit sites applied; grep gate 0/0/0; bundle facts re-confirmed by count-only grep (`filters:this.configs` 1×, zero-match fallback 1×); docs-only, baseline stays 23; review file seeded.
    - Done when: §13.7.4 contains none of the strings "never invoked on this code path", "simply does not happen in the SDK", "pure type-formality with no runtime consequence" (grep gate).
    - Done when: corrected text names the devices()→requestDevice zero-match fallback chain and cites sprint-01 review §R2 as the source; design-intent warning (unfiltered selection, no hard-coded IDs, superseded SDK_REFERENCE.md caveat) survives.
    - Done when: Verification status row §13.7 (sdk-reference-v2.md:179) notes the sprint-03 correction.

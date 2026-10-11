@@ -7,21 +7,21 @@
 
 ## Checkpoint
 - Branch: `sprint-07-tsc-errors`
-- tsc baseline: 23 errors (docs/tsc-baseline.txt) → target 0 this sprint
-- Cleanup (actual ls, Task 1): `.scratch/` has only pm-notes.md (PM probe artifacts already gone). `_to_delete/` has only .gitkeep. No cleanup needed.
+- tsc baseline: 0 errors — typecheck reports 0, docs/tsc-baseline.txt re-ratcheted 23 → 0 (Task 2)
+- Cleanup (actual ls, Task 2): `.scratch/` has only pm-notes.md (PM's own working file); `_to_delete/` has only .gitkeep. No cleanup needed.
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report.
      Do NOT record or update a commit hash here — git log is the source of truth.
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph.
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Task 2 — migrate `persist.paths` → `persist.pick` in both stores + re-baseline to 0. Do this task, then stop.
+Next: Reviewer window — "follow docs/plans/reviews/review-persist-pick.md" (Task 2, base 2f9bf1a..head 9183312). On PASS: mark Task 2 DONE (✓), this completes the sprint — flag "ALL TASKS DONE — awaiting PO sign-off".
 
 ## Tasks
 
 1. ✓ **Add the `*.vue` ambient module shim** — [trivial] — DONE (shim created; typecheck 23 → 5, TS2307 = 0, remaining 5 = exactly the predicted 2× TS2769 + 3× TS2339)
 
-2. **Migrate `persist.paths` → `persist.pick` in both stores + re-baseline to 0** — [high-stakes] — STATUS: PENDING
+2. **Migrate `persist.paths` → `persist.pick` in both stores + re-baseline to 0** — [high-stakes] — STATUS: IN-REVIEW (all edits applied per plan; typecheck 5 → 0; build ✓ 1.60s; baseline file re-ratcheted to 0; review file written, base 2f9bf1a head 9183312)
    - Files: `src/store/profileStore.ts`, `src/store/travelProfilesStore.ts`, `docs/tsc-baseline.txt`
    - Background (PM-verified): installed pinia-plugin-persistedstate is ^4.5.0; its types only accept `pick`/`omit` (`pick?: Path<State>[] | string[]` in dist/index.d.ts) — hence the 2 TS2769. Its RUNTIME also reads only pick/omit (dist/index.js), so `paths` is currently dead code and the FULL state persists today. The 3 TS2339 are pure cascade: `syncActiveProfileFromHardware` IS defined as an action in profileStore.ts; the failed defineStore overload wipes action inference. Fixing TS2769 fixes all 5.
    - PO decision (2026-10-11): PRESERVE CURRENT BEHAVIOR — profileStore's pick must include `activeProfileId` (not the v3-intent `['profiles']`). With pick = every state key, deepPick reproduces the same serialized object as today's full-state persist ⇒ behavior-neutral; no [hw]/browser gate needed.

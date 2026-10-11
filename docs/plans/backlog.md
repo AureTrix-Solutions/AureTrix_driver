@@ -18,6 +18,9 @@ never a pre-written solution, never duplicated detail.
 ### custom-firmware (long-term) — firmware for an own board (RP2040/STM32)
 - Foundation: docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet reassembly).
 
+### types-dedupe — replace src/types/types.ts local declarations with real protocol-keyboard root imports (now resolvable since sprint-06)
+- src/types/types.ts (13 ln) mirrors IDefKeyInfo from sdk-keyboard dist/cjs/src/types/type.d.ts verbatim + DksLayoutType/DksType; with the sprint-06 tsconfig paths remap, `import type { IDefKeyInfo } from '@sparklinkplayjoy/protocol-keyboard'` typechecks (verified by probe in sprint-06 planning). Dedupe = swap the mirror for the import; verify vs types.ts + sdk-reference §10.1; touches the app-wide key model → [high-stakes]. (2026-10-11.)
+
 ## Known issues
 
 - [deps] `npm install` reports 3 audit vulnerabilities (1 moderate, 2 critical), pre-existing in the dep graph (surfaced by sprint-02 lockfile regen) — verify with `npm audit`; a fix sprint must weigh `audit fix --force` version bumps against the pinned SDK versions. (2026-10-09.)

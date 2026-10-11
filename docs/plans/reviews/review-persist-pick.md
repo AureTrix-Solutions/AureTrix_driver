@@ -28,15 +28,29 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task. No hardware behavior touched (store persistence only).
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
+
+### Reviewer findings (independent verification, 2026-10-11, fresh session)
+- Diff 2f9bf1a..9183312 inspected: exactly 3 files (profileStore.ts, travelProfilesStore.ts, docs/tsc-baseline.txt), 5+/4−. Edits match the plan's edit list verbatim — `paths:` → `pick:` in both persist blocks, `key:` lines untouched. No strays, no `!`, no `as any`.
+- `npm run typecheck` re-run: 0 errors (clean tsc output). ✓
+- `npm run build` re-run: `✓ built in 1.58s`, no errors. ✓
+- `grep paths: src/store/` → no matches. ✓
+- `grep pick: src/store/` → profileStore.ts:62 `pick: ['profiles', 'activeProfileId'],` + travelProfilesStore.ts:38 `pick: ['profiles', 'selectedProfileId'],`. ✓
+- docs/tsc-baseline.txt first line `0`; ratchet comment added; breakdown "none remaining". 23 → 0 respects ratchet-down-only. ✓
+- Behavior criterion: profileStore state = {profiles, activeProfileId} (:10–17); travelProfilesStore state = {profiles, selectedProfileId} (:10–13). Each pick list = the store's FULL state ⇒ deepPick serializes the same object as today's full-state persist (v4 ignores the unknown `paths` key) — behavior-neutral per PO decision 2026-10-11. ✓
+- Design intent: no SDK/service code touched; filters:[] and wrapper semantics untouched. ✓
+- Tag check: [high-stakes] correct (multi-file store/persistence change); review performed. ✓
+- Observation (non-defect, out of scope): travelProfilesStore.ts has no trailing newline at EOF — pre-existing (diff marker sits on shared context present in both revisions), not introduced here.
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** —  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-10-11  ·  **Fail count:** 0
 
 ### Failed items (FAIL only)
 —
+
+Not a [hw] task (behavior-neutral by PO decision; no browser/hardware gate), so PASS is final → Task 2 DONE. ALL TASKS DONE — sprint complete, awaiting PO sign-off.

@@ -23,15 +23,25 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
-<!-- REVIEWER fills from here down. -->
-**Result:** PASS / PASS (pending hw) / FAIL  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** PASS  ·  **Date:** 2026-10-11  ·  **Fail count:** 0
 
-### Failed items (FAIL only)
+### Evidence (all commands rerun by Reviewer this session)
+- `npm run lint` → exit 1, `✖ 228 problems (7 errors, 221 warnings)` — EXACT match, 0 drift. (Exit 1 correct pre-Task-2.)
+- `npm audit` → `found 0 vulnerabilities`.
+- `npm run typecheck` → exit 0, 0 errors (baseline unchanged; config change did not affect it).
+- `grep -n '"lint": "eslint ."' package.json` → 1 hit (L12); `wc -l eslint.config.mjs` → 41.
+- Diff scope (8694cb9..5fdb069): exactly `eslint.config.mjs` (new, 41 lines), `package.json` (lint script + 6 devDeps at PM-specified versions, all others untouched), `package-lock.json` (transitive deps of those 6 only). No stray files.
+- Config verbatim vs plan block (current-sprint.md L29–69): identical, line-for-line.
+- Design intent: no source files touched — filters:[], usagePage 65440, Error-returning wrappers all untouched.
+- Tag: high-stakes correct (build-toolchain/infrastructure change).
+
+### Findings (non-defect observations)
+- (none)

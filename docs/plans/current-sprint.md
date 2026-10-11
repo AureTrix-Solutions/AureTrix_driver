@@ -10,20 +10,19 @@ rev1 (2026-10-10): split Task 1 into sequential 1a→1b→1c — the whole-file 
 - tsc baseline: 23 errors (docs/tsc-baseline.txt) — docs-only sprint, gate skipped
 - Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty — from actual `ls` at PM-open
 - PM-open (2026-10-10): plan written from backlog item; item removed from backlog.md; all claims below grep/read-verified this session
-- Worker 1c (2026-10-10): all items applied; SKILL.md 229→89 lines; all 1a/1b/1c gates pass (stale sweeps empty, kept-facts + positives match, frontmatter untouched); committed 1f47e52; Task 1 → IN-REVIEW. Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ only .gitkeep — from actual `ls`.
+- Worker fix-round (2026-10-11): F1 SKILL.md:76 refs `:7`/`:11`→`:8`/`:12` (re-verified via grep on DebugKeyboardService.ts); F2 review-file line-39 claim corrected + fix-round range recorded at line 40; nothing else touched (SKILL.md still 89 lines); committed in the fix-round commit; Task 1 → IN-REVIEW. Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ only .gitkeep — from actual `ls`.
 
 ## ▶ RUN THIS
-Next: **Worker fix-round** — Task 1 was reviewed and **FAILED** (2 items). Work **fix ONLY these**, then commit and set Task 1 back to IN-REVIEW; the Reviewer re-checks ONLY these items. Open `docs/plans/reviews/review-sdk-skill-clean.md` for the detail behind each bullet (exact quotes + verified line numbers). Do NOT re-verify passing criteria; do NOT re-trim or reword anything else.
+Next: **Reviewer re-check** — Task 1 fix-round committed; re-check **ONLY** the 2 failed items per review-sdk-skill-clean.md (§F1: SKILL.md:76 now cites `:8`, constructed `:12` — verify against `grep -n "private keyboard: XDKeyboard\|new XDKeyboard" src/services/DebugKeyboardService.ts`; §F2: review-file line-39 sentence + line-40 fix-round range corrected). Do NOT re-check passing criteria. On PASS (non-hw): Task 1 → DONE, advance ▶ RUN THIS (all tasks done → flag "ALL TASKS DONE — awaiting PO sign-off").
 
-- **fix ONLY these** (review-sdk-skill-clean.md §F1): 2 stale refs on `.openclaude/skills/sdk-wrapper/SKILL.md` line 76 — the `DebugKeyboardService` clause cites (`:7`, constructed `:11`); the field decl is line **8** and the construction is line **12**. Change those two numbers only, leaving the sentence otherwise byte-identical.
-- **fix ONLY these** (review-sdk-skill-clean.md §F2): review file line 39 says "the ONLY file touched is SKILL.md" — false; `git diff --name-only 0e0a9f0..1f47e52` also returns `docs/plans/current-sprint.md` (the sanctioned checkpoint). Correct that sentence to name SKILL.md as the only *source* file and the checkpoint as sanctioned mechanics. No source change.
-- Then: add the fix-round commit range to review file line 40 ("Fix-round ranges"), commit `sprint-04-sdk-skill-clean: task 1 fix-round — F1/F2`, set Task 1 STATUS: IN-REVIEW, advance ▶ RUN THIS back to the Reviewer (re-check F1/F2 only).
+- F1 fix applied: SKILL.md line 76 now cites `` `:8` ``, constructed `` `:12` `` — sentence otherwise byte-identical; file still 89 lines.
+- F2 fix applied: review file line 39 names SKILL.md as the only *source* file and current-sprint.md as sanctioned checkpoint mechanics; line 40 records the Round 1 range (base `1f47e52`, head = fix-round commit).
 
 Reviewer notes (NOT fix items — PM routes at close): §RF1 PM edit-spec item 2 falsely blessed `:7`/`:11` as "EXACT — keep as-is" (this is why the Worker inherited the drift); §RF2 bare `:NNN` refs are namespace-ambiguous across files on line 76. Both are in the review file's Reviewer Findings section.
 
 ## Tasks
 
-**Task 1 — verify-and-trim `.openclaude/skills/sdk-wrapper/SKILL.md`** — [high-stakes] — STATUS: IN-PROGRESS (1a ✓ 1b ✓ 1c ✓ — Reviewer FAIL 2026-10-10: 2 items, fix-round open)
+**Task 1 — verify-and-trim `.openclaude/skills/sdk-wrapper/SKILL.md`** — [high-stakes] — STATUS: IN-REVIEW (1a ✓ 1b ✓ 1c ✓; fix-round 2026-10-11 applied F1/F2 — Reviewer re-checks only those)
 Split into 1a→1b→1c (sequential; each its own commit + recovery point). Single file for all three: `.openclaude/skills/sdk-wrapper/SKILL.md` (docs task → no typecheck gate; self-check = the Done-when greps). One Reviewer pass after 1c covers the cumulative base..head diff.
 
 ### Edit spec — items 1–10 (verified 2026-10-10 — APPLY, do NOT re-derive or re-read source)

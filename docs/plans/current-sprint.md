@@ -14,7 +14,7 @@
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Reviewer session for Task 1 — "follow docs/plans/reviews/review-root-types-1.md". On PASS: mark Task 1 DONE (collapse to ✓), advance ▶ RUN THIS to Task 2. On FAIL: write the fix checklist here prefixed "fix ONLY these". Worker must NOT self-mark DONE.
+Next: Worker session — "go" → Task 2 (Docs: sdk-reference-v2.md + sdk-wrapper SKILL.md record the fixed state). Task 1 ✓ DONE (Reviewer PASS 2026-10-11 — review-root-types-1.md).
 
 ## PM research (banked 2026-10-11; re-verify targets in .scratch history — Worker APPLIES, never re-derives)
 - Installed v1.0.6: `"types"` → **nonexistent** `dist/esm/index.d.ts`; no root `index.d.ts`; `"exports"` = `"."` only, no types condition → bare import cannot resolve types today.
@@ -28,25 +28,7 @@ Next: Reviewer session for Task 1 — "follow docs/plans/reviews/review-root-typ
 - Precedent: identical fix already applied for hid (tsconfig `"@sparklinkplayjoy/hid"` → `dist/cjs/index.d.ts`; sdk-reference §13.7.3, variant P).
 
 ## Tasks
-1. **tsconfig paths remap + narrow setPerformanceMode** — [high-stakes] — STATUS: IN-REVIEW
-   Checkpoint: both PM-verified edits applied verbatim (tsconfig paths entry; :596 narrowing); typecheck 23→23 baseline held, 0 protocol/perf errors; build passes (ran: paths change); §5.2 confirmed TouchModeType='global'|'single'|'rt'; review-root-types-1.md written; Base a544af9 Head 4d84f17.
-   *(high-stakes: touches KeyboardService — always high-stakes per tag ownership)*
-   - Done when: `grep -c '"@sparklinkplayjoy/protocol-keyboard"' tsconfig.json` → `1`
-   - Done when: `grep -n "mode: 'global' | 'single' | 'rt'" src/services/KeyboardService.ts` → exactly 1 hit (the :596 wrapper)
-   - Done when: `npx tsc --noEmit 2>&1 | grep -c "error TS"` → `23` (baseline UNCHANGED; the unmasked TS2345 is absorbed by the narrowing — do NOT re-baseline, do NOT silence)
-   - Done when: `git diff --stat` shows only tsconfig.json + src/services/KeyboardService.ts
-   - Files: `tsconfig.json`, `src/services/KeyboardService.ts`
-   - Edits (PM-verified 2026-10-11):
-     1. tsconfig.json — current line (grep `"@sparklinkplayjoy/hid"` in tsconfig.json):
-        `"@sparklinkplayjoy/hid": ["node_modules/@sparklinkplayjoy/hid/dist/cjs/index.d.ts"]`
-        → append comma + new sibling entry:
-        `"@sparklinkplayjoy/hid": ["node_modules/@sparklinkplayjoy/hid/dist/cjs/index.d.ts"],`
-        `"@sparklinkplayjoy/protocol-keyboard": ["node_modules/@sparklinkplayjoy/protocol-keyboard/dist/esm/types/index.d.ts"]`
-     2. KeyboardService.ts:596 — current (grep `setPerformanceMode(key: number, mode: string` in src/services/KeyboardService.ts):
-        `async setPerformanceMode(key: number, mode: string, advancedKeyMode: number): Promise<{ touchMode: string; advancedKeyMode: number } | Error> {`
-        → replace `mode: string` with `mode: 'global' | 'single' | 'rt'` (rest of line unchanged).
-   - Expected post-task typecheck: 23. Self-check gate ACTIVE (code task): run `npm run typecheck`; record count in checkpoint + review file.
-   - At IN-REVIEW: write `docs/plans/reviews/review-root-types-1.md` (sprint goal + this task's Done-whens + Base/Head hashes; no [hw] — type-only change, no hardware check needed).
+1. ✓ **tsconfig paths remap + narrow setPerformanceMode** — [high-stakes] — DONE (Reviewer PASS 2026-10-11; typecheck 23→23, build passes; a544af9..4d84f17; detail in reviews/review-root-types-1.md)
 2. **Docs: sdk-reference-v2.md + sdk-wrapper SKILL.md record the fixed state** — [high-stakes] — STATUS: PENDING
    *(high-stakes: investigation-derived SDK-correctness record; not trivial per tag rule)*
    - Done when: `grep -c "Resolution UNTESTED" .openclaude/skills/sdk-wrapper/SKILL.md` → `0`

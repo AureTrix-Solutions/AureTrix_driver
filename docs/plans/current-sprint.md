@@ -7,16 +7,17 @@
 
 ## Checkpoint
 - Branch: `sprint-09-npm-deps`
+- Task 1 IN-REVIEW @ `358e230`: vitest 5.0.3 installed; audit 0 vulns; typecheck 0 err; build OK (first run segfaulted mid-transform — transient, retry passed; noted in review file); package.json diff = vitest line only; dependencies untouched.
 - tsc baseline: 0 errors (docs/tsc-baseline.txt)
 - Cleanup: no cleanup needed (actual ls: `.scratch/` holds only pm-notes.md — PM working file; `_to_delete/` does not exist)
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report.
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph. -->
 
 ## ▶ RUN THIS
-Next: Task 1 — Upgrade vitest to ^5.0.3 and verify audit-clean + green repo. Do this task, then stop.
+Next: REVIEWER — "follow docs/plans/reviews/review-vitest-5-upgrade.md" (Task 1, base `50aef6d`..head `358e230`). Task 1 is the sprint's only task: on PASS → mark it DONE, flag "ALL TASKS DONE — awaiting PO sign-off", and stop.
 
 ## Tasks
-1. **Upgrade vitest 3.2.7 → ^5.0.3 (clears all 3 audit vulns)** — [high-stakes] — STATUS: IN-PROGRESS (Worker: running `npm install -D vitest@^5.0.3`)
+1. **Upgrade vitest 3.2.7 → ^5.0.3 (clears all 3 audit vulns)** — [high-stakes] — STATUS: IN-REVIEW (commit `358e230`; review file: docs/plans/reviews/review-vitest-5-upgrade.md)
    - Done when: `npm audit` output contains `found 0 vulnerabilities`
    - Done when: `node -p "require('./node_modules/vitest/package.json').version"` prints `5.x` (≥5.0.3)
    - Done when: `npx vitest --version` prints `vitest/5.` prefix

@@ -14,11 +14,12 @@ npm run dev           # dev server on http://localhost:5000 (strictPort)
 npm run build         # production build to dist/
 npm run preview       # serve the production build
 npm run typecheck     # tsc --noEmit (no emit; reports type errors only)
+npm run lint          # ESLint flat config (eslint.config.mjs); exit 0 = clean, warnings tolerated
 npm test              # vitest (watch mode by default)
 npx vitest run path/to/file.test.ts   # run a single test file
 ```
 
-There is no lint script and currently no test files, despite vitest/@vue/test-utils being installed.
+Lint runs via ESLint 10 flat config (`eslint.config.mjs`); ~221 deferred warnings are tolerated (exit 0) and ratchet down per the backlog item. There are currently no test files, despite vitest/@vue/test-utils being installed.
 
 ## Architecture
 

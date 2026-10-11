@@ -12,10 +12,11 @@
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph. -->
 
 ## ▶ RUN THIS
-Next: Task 1 — dedupe src/types/types.ts (whole-file replacement, spec below). Do this task, then stop. It is [high-stakes]: after the self-check, set IN-REVIEW, write docs/plans/reviews/review-types-dedupe.md (from review-template.md), and commit — a separate Reviewer window follows.
+Next: REVIEWER window — "follow docs/plans/reviews/review-types-dedupe.md". Review base e7aa4c5..head 8ae0faf (single file: src/types/types.ts). Note: the plan's "grep -c 'import type' = 2" criterion counts 4 due to prose mentions in the spec's own comments; actual statements = 2 (`grep -c "^import type"`). On PASS → mark Task 1 DONE, advance ▶ RUN THIS to PM-close. No further Worker tasks.
 
 ## Tasks
-1. **Dedupe src/types/types.ts against the SDK type surface** — [high-stakes] — STATUS: PENDING
+1. **Dedupe src/types/types.ts against the SDK type surface** — [high-stakes] — STATUS: IN-REVIEW
+   - Worker done @ 8ae0faf: whole-file replacement per spec; typecheck 0 errors (baseline 0), build ✓ 1.59s; greps pass (IDefKeyInfo export=1, no Layout_* literals, consumers=13). Review file: docs/plans/reviews/review-types-dedupe.md (base e7aa4c5..head 8ae0faf). One plan-math note recorded there: "import type" grep counts 4 not 2 because the spec's own comments contain the phrase; `^import type` statements = 2.
    - Files: `src/types/types.ts` (ONLY this file — the 13 consumers keep importing the same three names from the same path and are NOT touched)
    - Why high-stakes: app-wide key model (IDefKeyInfo used in 11 files; physicalKeyValue/remappedLabel have 160 usages). NOT [hw]: type-level change only, fully erased at build; no runtime/behavior delta to exercise on a device.
    - **PM research (grep-verified 2026-10-11; Worker APPLIES, does not re-derive):**

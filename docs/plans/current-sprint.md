@@ -10,15 +10,15 @@
 ## Checkpoint
 - Branch: `sprint-10-lint-script`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt)
-- Task 1: IN-REVIEW (5fdb069) — lint trial reproduced EXACTLY (228 = 7 err + 221 warn, exit 1); audit 0 vulns; typecheck 0 errors; config 41 lines verbatim
+- Task 1: ✓ DONE (5fdb069) — Reviewer PASS 2026-10-11: all four Done-whens rerun exact (228 = 7 err + 221 warn; audit 0; typecheck 0; script 1 hit + config 41 lines); diff scope clean (3 files); config verbatim vs plan — see reviews/review-lint-setup.md
 - Cleanup (actual ls): .scratch/ = lint-trial/, pm-notes.md, review-sprint-10-task-1-lint-toolchain.md (misnamed stray moved aside; PO may delete all — lint-trial now disposable); _to_delete/ does not exist → nothing needs git rm
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: REVIEWER — follow docs/plans/reviews/review-lint-setup.md (Task 1, base 8694cb9..head 5fdb069); rerun all four Done-whens. Then stop.
+Next: WORKER — Task 2 "Fix the 7 genuine lint errors" (below; apply the 5-step edit spec exactly, then run its three Done-when commands). Then commit, IN-REVIEW, write docs/plans/reviews/review-lint-fixes.md.
 
 ## Tasks
-1. **Install lint toolchain, script, and config** — [high-stakes] — STATUS: IN-REVIEW
+1. **Install lint toolchain, script, and config** — [high-stakes] — STATUS: ✓ DONE (Reviewer PASS 2026-10-11)
    - Files: `package.json` (via npm), `eslint.config.mjs` (new)
    - Edit spec (PM-researched; apply, don't re-derive):
      1. Run: `npm i -D eslint@^10.12.0 @eslint/js@^10.0.1 typescript-eslint@^8.71.1 eslint-plugin-vue@^10.11.1 vue-eslint-parser@^10.4.1 globals@^17.13.0` — npm writes devDependencies + lockfile; NO hand edits. (Note: @eslint/js versions separately from eslint — 10.12.0 does not exist for it; 10.0.1 is latest. Whole set peer-verified against eslint ^10 and TS <6.1; `npm audit` on this exact set = 0 vulnerabilities — must not undo sprint-09.)

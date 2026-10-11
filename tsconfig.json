@@ -18,7 +18,8 @@
       "@assets/*": ["src/assets/*"],
       "@types/*": ["src/types/*"],
       "@utils/*": ["src/utils/*"],
-      "@sparklinkplayjoy/hid": ["node_modules/@sparklinkplayjoy/hid/dist/cjs/index.d.ts"]
+      "@sparklinkplayjoy/hid": ["node_modules/@sparklinkplayjoy/hid/dist/cjs/index.d.ts"],
+      "@sparklinkplayjoy/protocol-keyboard": ["node_modules/@sparklinkplayjoy/protocol-keyboard/dist/esm/types/index.d.ts"]
     },
     "types": ["vite/client"]
   },

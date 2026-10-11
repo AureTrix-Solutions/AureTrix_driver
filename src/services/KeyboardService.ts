@@ -593,7 +593,7 @@ class KeyboardService {
     }
   }
 
-  async setPerformanceMode(key: number, mode: string, advancedKeyMode: number): Promise<{ touchMode: string; advancedKeyMode: number } | Error> {
+  async setPerformanceMode(key: number, mode: 'global' | 'single' | 'rt', advancedKeyMode: number): Promise<{ touchMode: string; advancedKeyMode: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');

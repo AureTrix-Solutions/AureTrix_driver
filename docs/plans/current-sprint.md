@@ -10,14 +10,15 @@
 ## Checkpoint
 - Branch: `sprint-10-lint-script`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt)
-- Cleanup: .scratch/ has lint-trial/ + pm-notes.md (PO may delete; keep lint-trial until Task 1 is committed, then disposable); _to_delete/ empty → no cleanup needed beyond .scratch/
+- Task 1: IN-REVIEW (5fdb069) — lint trial reproduced EXACTLY (228 = 7 err + 221 warn, exit 1); audit 0 vulns; typecheck 0 errors; config 41 lines verbatim
+- Cleanup (actual ls): .scratch/ = lint-trial/, pm-notes.md, review-sprint-10-task-1-lint-toolchain.md (misnamed stray moved aside; PO may delete all — lint-trial now disposable); _to_delete/ does not exist → nothing needs git rm
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: Task 1 — install ESLint toolchain + `lint` script + `eslint.config.mjs` (config below, copy VERBATIM). Then stop.
+Next: REVIEWER — follow docs/plans/reviews/review-lint-setup.md (Task 1, base 8694cb9..head 5fdb069); rerun all four Done-whens. Then stop.
 
 ## Tasks
-1. **Install lint toolchain, script, and config** — [high-stakes] — STATUS: PENDING
+1. **Install lint toolchain, script, and config** — [high-stakes] — STATUS: IN-REVIEW
    - Files: `package.json` (via npm), `eslint.config.mjs` (new)
    - Edit spec (PM-researched; apply, don't re-derive):
      1. Run: `npm i -D eslint@^10.12.0 @eslint/js@^10.0.1 typescript-eslint@^8.71.1 eslint-plugin-vue@^10.11.1 vue-eslint-parser@^10.4.1 globals@^17.13.0` — npm writes devDependencies + lockfile; NO hand edits. (Note: @eslint/js versions separately from eslint — 10.12.0 does not exist for it; 10.0.1 is latest. Whole set peer-verified against eslint ^10 and TS <6.1; `npm audit` on this exact set = 0 vulnerabilities — must not undo sprint-09.)

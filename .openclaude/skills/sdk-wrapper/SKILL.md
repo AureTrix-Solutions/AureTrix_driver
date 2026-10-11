@@ -73,7 +73,7 @@ Ground-truth order (CLAUDE.md §6 — verify before relying):
 
 ## Never change (design intent — CLAUDE.md hard rule 7)
 
-See CLAUDE.md hard rule 7 (unfiltered `requestDevice({ filters: [] })`; wrappers return `Error`, never throw). Skill-specific: `usagePage: [65440]` lives in `ensureKeyboard` (`:37`), **never** in `requestDevice` — it selects the SparkLink command interface on an already-chosen device, not a filter. `DebugKeyboardService` holds its **own** `XDKeyboard` (`:7`, constructed `:11`) so raw inspection can't disturb the main connection — don't unify them.
+See CLAUDE.md hard rule 7 (unfiltered `requestDevice({ filters: [] })`; wrappers return `Error`, never throw). Skill-specific: `usagePage: [65440]` lives in `ensureKeyboard` (`:37`), **never** in `requestDevice` — it selects the SparkLink command interface on an already-chosen device, not a filter. `DebugKeyboardService` holds its **own** `XDKeyboard` (`:8`, constructed `:12`) so raw inspection can't disturb the main connection — don't unify them.
 
 ## Checklist for a new wrapper
 

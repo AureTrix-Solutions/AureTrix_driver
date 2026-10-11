@@ -8,7 +8,8 @@
     "build": "vite build",
     "test": "vitest",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
@@ -22,10 +23,16 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@vue/test-utils": "^2.4.6",
+    "eslint": "^10.12.0",
+    "eslint-plugin-vue": "^10.11.1",
+    "globals": "^17.13.0",
     "sass": "^1.93.0",
     "typescript": "^5.9.2",
+    "typescript-eslint": "^8.71.1",
     "vite": "^7.1.6",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "vue-eslint-parser": "^10.4.1"
   }
 }

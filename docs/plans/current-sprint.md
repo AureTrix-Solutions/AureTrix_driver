@@ -8,13 +8,13 @@
 ## Checkpoint
 - Branch: `sprint-06-root-types`
 - tsc baseline: 23 errors (docs/tsc-baseline.txt) — sprint ends at 23 (unmask absorbed in Task 1, no re-baseline)
-- Cleanup: `.scratch/` has pm-notes.md, tsconfig-probe.json, mkjunction.bat, verify-tree/ (verification agent's patched tree copy + node_modules junction; PO may delete); `_to_delete/` empty — from actual ls 2026-10-11
+- Cleanup: `.scratch/` has pm-notes.md only; `_to_delete/` has .gitkeep only — from actual ls 2026-10-11 (Task 1 session; earlier probe/junction/verify-tree files already removed by PO)
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report.
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph.
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Task 1 — tsconfig remap + absorb the unmasked KeyboardService error. Do this task, then stop.
+Next: Reviewer session for Task 1 — "follow docs/plans/reviews/review-root-types-1.md". On PASS: mark Task 1 DONE (collapse to ✓), advance ▶ RUN THIS to Task 2. On FAIL: write the fix checklist here prefixed "fix ONLY these". Worker must NOT self-mark DONE.
 
 ## PM research (banked 2026-10-11; re-verify targets in .scratch history — Worker APPLIES, never re-derives)
 - Installed v1.0.6: `"types"` → **nonexistent** `dist/esm/index.d.ts`; no root `index.d.ts`; `"exports"` = `"."` only, no types condition → bare import cannot resolve types today.
@@ -28,7 +28,8 @@ Next: Task 1 — tsconfig remap + absorb the unmasked KeyboardService error. Do 
 - Precedent: identical fix already applied for hid (tsconfig `"@sparklinkplayjoy/hid"` → `dist/cjs/index.d.ts`; sdk-reference §13.7.3, variant P).
 
 ## Tasks
-1. **tsconfig paths remap + narrow setPerformanceMode** — [high-stakes] — STATUS: PENDING
+1. **tsconfig paths remap + narrow setPerformanceMode** — [high-stakes] — STATUS: IN-REVIEW
+   Checkpoint: both PM-verified edits applied verbatim (tsconfig paths entry; :596 narrowing); typecheck 23→23 baseline held, 0 protocol/perf errors; build passes (ran: paths change); §5.2 confirmed TouchModeType='global'|'single'|'rt'; review-root-types-1.md written; Base a544af9 Head 4d84f17.
    *(high-stakes: touches KeyboardService — always high-stakes per tag ownership)*
    - Done when: `grep -c '"@sparklinkplayjoy/protocol-keyboard"' tsconfig.json` → `1`
    - Done when: `grep -n "mode: 'global' | 'single' | 'rt'" src/services/KeyboardService.ts` → exactly 1 hit (the :596 wrapper)

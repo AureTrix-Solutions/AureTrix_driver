@@ -13,11 +13,17 @@ rev1 (2026-10-10): split Task 1 into sequential 1a→1b→1c — the whole-file 
 - Worker 1c (2026-10-10): all items applied; SKILL.md 229→89 lines; all 1a/1b/1c gates pass (stale sweeps empty, kept-facts + positives match, frontmatter untouched); committed 1f47e52; Task 1 → IN-REVIEW. Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ only .gitkeep — from actual `ls`.
 
 ## ▶ RUN THIS
-Next: **Reviewer window** — "follow docs/plans/reviews/review-sdk-skill-clean.md" (Task 1 diff `0e0a9f0..1f47e52`, single file SKILL.md). On PASS (non-hw): set Task 1 DONE (collapse to ✓), advance ▶ RUN THIS to PM-close. On FAIL: fix checklist here, "fix ONLY these". (One subtask per session — hard rule 1.)
+Next: **Worker fix-round** — Task 1 was reviewed and **FAILED** (2 items). Work **fix ONLY these**, then commit and set Task 1 back to IN-REVIEW; the Reviewer re-checks ONLY these items. Open `docs/plans/reviews/review-sdk-skill-clean.md` for the detail behind each bullet (exact quotes + verified line numbers). Do NOT re-verify passing criteria; do NOT re-trim or reword anything else.
+
+- **fix ONLY these** (review-sdk-skill-clean.md §F1): 2 stale refs on `.openclaude/skills/sdk-wrapper/SKILL.md` line 76 — the `DebugKeyboardService` clause cites (`:7`, constructed `:11`); the field decl is line **8** and the construction is line **12**. Change those two numbers only, leaving the sentence otherwise byte-identical.
+- **fix ONLY these** (review-sdk-skill-clean.md §F2): review file line 39 says "the ONLY file touched is SKILL.md" — false; `git diff --name-only 0e0a9f0..1f47e52` also returns `docs/plans/current-sprint.md` (the sanctioned checkpoint). Correct that sentence to name SKILL.md as the only *source* file and the checkpoint as sanctioned mechanics. No source change.
+- Then: add the fix-round commit range to review file line 40 ("Fix-round ranges"), commit `sprint-04-sdk-skill-clean: task 1 fix-round — F1/F2`, set Task 1 STATUS: IN-REVIEW, advance ▶ RUN THIS back to the Reviewer (re-check F1/F2 only).
+
+Reviewer notes (NOT fix items — PM routes at close): §RF1 PM edit-spec item 2 falsely blessed `:7`/`:11` as "EXACT — keep as-is" (this is why the Worker inherited the drift); §RF2 bare `:NNN` refs are namespace-ambiguous across files on line 76. Both are in the review file's Reviewer Findings section.
 
 ## Tasks
 
-**Task 1 — verify-and-trim `.openclaude/skills/sdk-wrapper/SKILL.md`** — [high-stakes] — STATUS: IN-REVIEW (1a ✓ 1b ✓ 1c ✓ — awaiting Reviewer)
+**Task 1 — verify-and-trim `.openclaude/skills/sdk-wrapper/SKILL.md`** — [high-stakes] — STATUS: IN-PROGRESS (1a ✓ 1b ✓ 1c ✓ — Reviewer FAIL 2026-10-10: 2 items, fix-round open)
 Split into 1a→1b→1c (sequential; each its own commit + recovery point). Single file for all three: `.openclaude/skills/sdk-wrapper/SKILL.md` (docs task → no typecheck gate; self-check = the Done-when greps). One Reviewer pass after 1c covers the cumulative base..head diff.
 
 ### Edit spec — items 1–10 (verified 2026-10-10 — APPLY, do NOT re-derive or re-read source)
@@ -58,6 +64,7 @@ Scope: edit-spec **items 1, 5, 6, 9, 10** (item 1 is guidance for the Bulk rewri
 - Then: commit `sprint-04-sdk-skill-clean: task 1c — rewrite Bulk/Where-types/Never-change + tighten checklist`; set Task 1 STATUS: IN-REVIEW; write `docs/plans/reviews/review-sdk-skill-clean.md` from the review template (sprint goal + the full Task 1 Done-when criteria across 1a–1c + Base commit = the commit BEFORE 1a, Head = the 1c commit); advance ▶ RUN THIS to the Reviewer.
 
 ## Findings (raw — PM routes at close)
-- <none yet>
+- Reviewer RF1: current-sprint.md edit-spec item 2 asserts DebugKeyboardService refs `:7`/`:11` are "EXACT — keep as-is", but the field decl is line 8 and the construction line 12 — a spec blessing shields inherited drift from the Worker. Verify: `grep -n "private keyboard: XDKeyboard\|new XDKeyboard" src/services/DebugKeyboardService.ts` → 8, 12. (Detail: review-sdk-skill-clean.md §RF1.)
+- Reviewer RF2: SKILL.md line 76 mixes KeyboardService and DebugKeyboardService refs as bare `:NNN` in one sentence; `:11` legitimately means `connectedDevice` in one file and `constructor()` in the other, so refs are namespace-ambiguous to a reader/verifier. Verify: SKILL.md:76 vs SKILL.md:30. (Detail: review-sdk-skill-clean.md §RF2.)
 
 <!-- Keep this file under ~150 lines. It is a SNAPSHOT, not a log. Overwrite, don't append. -->

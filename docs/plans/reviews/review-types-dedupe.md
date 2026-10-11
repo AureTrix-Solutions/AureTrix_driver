@@ -28,18 +28,28 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task. Type-level change only; fully erased at build; no runtime/behavior delta to exercise.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** ___  ·  **Date:** ___  ·  **Fail count:** ___
+**Result:** PASS  ·  **Date:** 2026-10-11  ·  **Fail count:** 0
+
+### Evidence (all commands re-run by Reviewer)
+- `git diff --stat e7aa4c5..8ae0faf` → `src/types/types.ts | 29 +++…---, 1 file changed` — sole file touched; content byte-identical to the PM spec in current-sprint.md Task 1.
+- `npm run typecheck` → `tsc --noEmit`, 0 errors (exit 0); docs/tsc-baseline.txt first line = 0. Gate met, no new errors.
+- `npm run build` → `✓ built in 1.58s` (exit 0).
+- `grep -rl "types/types" src | wc -l` → 13 (consumers untouched).
+- `grep -n "Layout_DB1\|Layout_DKS1" src/types/types.ts` → no output (literal unions gone).
+- `grep -c "export type IDefKeyInfo" src/types/types.ts` → 1.
+- Worker's criterion note verified: `grep -c "import type"` → 4 (phrase appears in the spec's own comment prose, lines 4/13); `grep -c "^import type"` → 2 actual statements. The plan criterion as written ("grep -c 'import type' = 2") is arithmetically wrong against the plan's own spec text; intent (exactly 2 type-only import statements) is satisfied. Not a deviation — the file matches the spec exactly.
+- Design intent: both SDK imports are `import type` (erased at build — §13.4 runtime hazard avoided, §13.7.3 paths remap resolves for tsc); `Omit<SdkIDefKeyInfo,'location'> & {…}` derivation keeps app-side optionality (location) and extensions (physicalKeyValue, remappedLabel) — PO-approved A1. No `extends/implements IDefKeyInfo` in src (typecheck 0 errors across all 13 consumers confirms the interface→type-alias swap is safe).
 
 ### Failed items (FAIL only)
 —

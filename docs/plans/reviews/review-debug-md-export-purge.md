@@ -20,7 +20,7 @@ Base: `2a9adfd` (branch point / last reviewed)   Head: `bdf78e2` (this task)
 <!-- Reviewer runs this itself — do NOT paste the diff here:
        git diff --stat 2a9adfd..bdf78e2     then      git diff 2a9adfd..bdf78e2
      A file touched outside this task's scope is a flag. -->
-Note: the diff includes the checkpoint/review-file updates (docs/plans/) committed with the task; the only content change is docs/pages/Debug.md (1 insertion, 39 deletions — the insertion is the renumbered Clear Data heading).
+Note: this range contains only docs/pages/Debug.md (1 insertion, 39 deletions — the insertion is the renumbered Clear Data heading). The review file + checkpoint update landed separately in `9cd8415` (planning mechanics, not review content).
 Fix-round ranges (added on each re-review): —
 
 ## 🖥️ Hardware check ([hw] tasks only)

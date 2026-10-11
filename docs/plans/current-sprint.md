@@ -8,7 +8,7 @@
 ## Checkpoint
 - Branch: `sprint-06-root-types`
 - tsc baseline: 23 errors (docs/tsc-baseline.txt) — sprint ends at 23 (unmask absorbed in Task 1, no re-baseline)
-- Cleanup: `.scratch/` has pm-notes.md + tsconfig-probe.json (PO may delete); `_to_delete/` empty — from actual ls 2026-10-11
+- Cleanup: `.scratch/` has pm-notes.md, tsconfig-probe.json, mkjunction.bat, verify-tree/ (verification agent's patched tree copy + node_modules junction; PO may delete); `_to_delete/` empty — from actual ls 2026-10-11
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report.
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph.
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->

@@ -1222,6 +1222,8 @@ class KeyboardService {
             
             const hidDevices = await navigator.hid!.getDevices();
             const deviceStillPresent = hidDevices.some(d => {
+              // 'unknown' tail: serialNumber is undefined on Chromium/Windows; with two devices sharing
+              // the same vid/pid this match cannot tell them apart — first enumerated device wins.
               const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
               return fallbackId === savedStableId;
             });
@@ -1356,6 +1358,8 @@ class KeyboardService {
             
             const hidDevices = await navigator.hid!.getDevices();
             const deviceStillPresent = hidDevices.some(d => {
+              // 'unknown' tail: serialNumber is undefined on Chromium/Windows; with two devices sharing
+              // the same vid/pid this match cannot tell them apart — first enumerated device wins.
               const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
               return fallbackId === savedStableId;
             });

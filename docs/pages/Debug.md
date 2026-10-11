@@ -10,7 +10,6 @@ The Debug page is a comprehensive developer tool that provides raw access to all
 - Test keyboard responses without building full UIs
 - Verify hardware configuration and status
 - Debug issues with travel, lighting, axis, and other settings
-- Export complete keyboard configuration as JSON
 
 ## Audience
 This page is designed for **developers and advanced users only**. It exposes raw SDK data and low-level debugging tools that are not intended for typical keyboard configuration workflows.
@@ -40,12 +39,6 @@ This page is designed for **developers and advanced users only**. It exposes raw
 - Set Global Mode button
 - Test mode switching functionality
 - Immediate re-fetch to verify changes
-
-### 5. **Configuration Export**
-- Export entire keyboard config as encrypted JSON
-- Custom filename support
-- Downloads to browser
-- Useful for backup, sharing, or support tickets
 
 ## User Interface Elements
 
@@ -90,10 +83,6 @@ This page is designed for **developers and advanced users only**. It exposes raw
 - **Set Single Mode**: Switch selected key to single mode
 - **Set Global Mode**: Switch selected key to global mode
 
-#### Export Section
-- **Filename Input**: Default "debug-config.json"
-- **Export Config Button**: Download configuration file
-
 ### Data Display
 - **Loading State**: "Loading..." text during fetch
 - **Data Sections**: One per fetched method
@@ -113,7 +102,6 @@ setup() {
   const rawData = ref<{ [key: string]: any }>({});
   const isLoading = ref(false);
   const error = ref<string | null>(null);
-  const exportFilename = ref('debug-config.json');
   
   // Uses DebugKeyboardService (not regular KeyboardService)
   ...
@@ -183,21 +171,7 @@ const setSingleMode = async () => {
 }
 ```
 
-#### 4. **Export Configuration**
-```typescript
-const exportConfig = async () => {
-  isLoading.value = true;
-  
-  await debugKeyboardService.exportEncryptedJSON(exportFilename.value);
-  
-  notification.value = { 
-    message: `Successfully exported ${exportFilename.value}`, 
-    isError: false 
-  };
-}
-```
-
-#### 5. **Clear Data**
+#### 4. **Clear Data**
 ```typescript
 const clearData = () => {
   rawData.value = {};
@@ -211,7 +185,6 @@ const clearData = () => {
 ### Services
 - **DebugKeyboardService**: Development-specific service with verbose logging
   - All SDK getter methods
-  - `exportEncryptedJSON()`: Configuration export
   - `autoConnect()` / `requestDevice()`: Connection management
 - **KeyboardService**: Used for setter methods (mode testing)
 
@@ -281,12 +254,6 @@ JSON displayed in <pre> block
 5. Verify mode changed to "single"
 6. Click "Set Global Mode"
 7. Verify mode changed back to "global"
-
-### Export Configuration
-1. (Optional) Edit filename in input field
-2. Click "Export Config"
-3. JSON file downloads to browser
-4. Notification confirms success
 
 ### Bulk Data Retrieval
 1. Click "All Getters" button
@@ -385,7 +352,6 @@ JSON displayed in <pre> block
 ## State Persistence
 - **No Persistence**: All data cleared on page refresh
 - **Real-Time**: Always fetches live data from keyboard
-- **Export Only**: Use export feature to save snapshots
 
 ## Performance Considerations
 
@@ -430,14 +396,12 @@ JSON displayed in <pre> block
 - No comparison view (before/after)
 - Can't edit values inline (read-only)
 - No data history/timeline
-- Export format is encrypted (not human-readable JSON)
 - Debug service connection separate from main app
 
 ## Future Enhancements
 - Editable JSON (live editing)
 - Data diff viewer (compare before/after changes)
 - Historical snapshots (timeline view)
-- Import configuration (reverse of export)
 - Automated test runner
 - Performance benchmarks (response times)
 - Data validation warnings
@@ -447,6 +411,4 @@ JSON displayed in <pre> block
 - Auto-connect runs on mount with 500ms delay before initial fetch
 - Clear data when key selection changes (prevents confusion)
 - Details element HTML native (no Vue component needed)
-- Export uses encrypted format from SDK (not plain JSON)
-- Perfect for debugging reported issues (ask user to export config)
 - Can run alongside main app (separate connection)

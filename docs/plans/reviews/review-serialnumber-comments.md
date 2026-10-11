@@ -43,3 +43,19 @@ N/A — not a [hw] task (comments and docs only; no runtime behavior change).
 **Result:**   ·  **Date:**   ·  **Fail count:**
 
 ### Failed items (FAIL only)
+**Result:** PASS  ·  **Date:** 2026-10-11  ·  **Fail count:** 0
+
+### Verification performed (commands + results)
+- `git diff --stat aad81f6..09948ba` → 4 files: KeyboardService.ts (+8), Connect.md (+1), sdk-reference-v2.md (+13/−6... net), current-sprint.md (checkpoint + Findings line — standard Worker writes). No stray files; every hunk is within the task's named files + the Worker's own checkpoint.
+- Done-when 1: `grep -n -B2 serialNumber src/services/KeyboardService.ts` → known-limitation comment immediately above all 5 sites (now L137, L139, L188, L197, L199; spec's L133/134/182/190/191 + the inserted comment lines = expected drift). All 8 spec edits verified VERBATIM against the diff, including the 4-line block above the requestDevice compare and the two sdk-ref edits.
+- Done-when 2: `npm run typecheck` → **23 errors = baseline 23** (docs/tsc-baseline.txt first line), `grep -c KeyboardService` in typecheck output → **0**. Comments changed no types ✓
+- Done-when 3: `grep -n "deserves a decision" docs/sdk-reference-v2.md` → no matches (exit 1) ✓
+- Done-when 4: `grep -n "(134,138)"` → line 3906, cell now reads `KeyboardService.ts (134,138) (191,163) — as measured in sprint-01; positions have since drifted by ~1 line` — filename qualified, numbers not re-timed, per spec edit 7 ✓
+- Done-when 5: `grep -ni serialNumber docs/pages/Connect.md` → exactly 1 match (L14, the Auto-Connect sub-bullet) ✓
+- Cross-reference integrity: `docs/plans/archive/sprint-01-code-fixes/review-type-cleanup-4a.md` exists and contains the net-+5 `@types/w3c-web-hid` measurement cited by both the code comment and the Resolved paragraph ✓
+- Design intent: `filters: []` untouched; both find() predicates' serialNumber compares unchanged (diff shows insertion-only in KeyboardService.ts — 8 added lines, 0 modified/deleted); wrappers still return Error ✓
+- Tag correctness: [high-stakes] applied (touches KeyboardService → always high-stakes); NOT [hw] is correct — comment/docs-only, zero behavior change ✓
+- Inline-fixable defect sweep: no typos/broken refs found in the landed text; Worker's self-caught draft drift (wrong date/invented attribution) was corrected pre-commit — committed diff is spec-verbatim ✓
+
+### Findings (non-defect observations)
+- None new. The Worker's Findings line (2 unannotated `serialNumber || 'unknown'` sites ~L1225/~L1359, grep `deviceStillPresent`) already covers the only out-of-scope observation; PM to route at close.

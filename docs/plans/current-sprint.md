@@ -11,7 +11,7 @@
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Task 2 is IN-REVIEW. Reviewer: "follow docs/plans/reviews/review-serialnumber-comments.md" (base aad81f6, head 09948ba). On PASS → DONE + ALL TASKS DONE — awaiting PO sign-off (PM-close next).
+ALL TASKS DONE — awaiting PO sign-off (PM-close next). Task 2 verdict: PASS (review-serialnumber-comments.md).
 
 ## Tasks
 
@@ -38,8 +38,8 @@ Task 2 is IN-REVIEW. Reviewer: "follow docs/plans/reviews/review-serialnumber-co
    - 12 edit-sites, 1 file, all deletions + one heading renumber — no prose to author. Do NOT touch `src/pages/Debug.vue` (already correct).
    - Inline-fixable defect duty applies: after deleting, check for orphaned headings, broken numbering, and any dangling export reference elsewhere in the file — clear them before handoff.
 
-2. **Land the `serialNumber` known-limitation comments and record the resolved decision** — [high-stakes] (tag rule: anything touching KeyboardService is always high-stakes). NOT [hw]: comment-only, zero behavior change. — STATUS: IN-REVIEW
-   - Checkpoint (2026-10-11): all 8 spec edits applied verbatim (5 comments in KeyboardService.ts L133-199 region, Connect.md sub-bullet, sdk-ref §13.7.2 annotation + Resolved paragraph). All 5 Done-when checks pass; typecheck 23 = baseline 23, 0 in KeyboardService.ts. Commit 09948ba. Review file: review-serialnumber-comments.md. Findings: 2 extra unannotated `serialNumber || 'unknown'` sites (~L1225/~L1359) outside spec scope. Cleanup: `.scratch/` has pm-notes.md (PO may delete); `_to_delete/` only .gitkeep — no cleanup needed.
+2. **Land the `serialNumber` known-limitation comments and record the resolved decision** — [high-stakes] — STATUS: DONE
+   - ✓ Reviewer PASS 2026-10-11 (all 5 Done-when checks + verbatim spec match + typecheck 23=baseline, 0 in KeyboardService.ts; 0 fails) — detail in review-serialnumber-comments.md. Commit 09948ba.
    - Done when: `grep -n -B2 "serialNumber" src/services/KeyboardService.ts` shows a known-limitation comment immediately above each of the 5 sites (L133, L134, L182, L190, L191)
    - Done when: `npm run typecheck` → 23 errors, unchanged (KeyboardService.ts baseline is 0). If the count moves, STOP and report — comments must not change types.
    - Done when: `grep -n "deserves a decision" docs/sdk-reference-v2.md` → no matches

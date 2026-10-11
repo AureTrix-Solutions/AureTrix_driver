@@ -25,7 +25,14 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task; docs-only, no runtime behavior changed.
 
 ## Verdict (Reviewer fills)
-- [ ] PASS — code passes (non-hw → Reviewer sets DONE)
+- [x] PASS — code passes (non-hw → Reviewer sets DONE)
 - [ ] FAIL — detail below + fix checklist into current-sprint.md ▶ RUN THIS
 
 Reviewer findings:
+- **Diff scope** (`git diff --stat 8eb6319..50a5bd1`): exactly `.openclaude/skills/sdk-wrapper/SKILL.md` (1 line replaced) + `docs/sdk-reference-v2.md` (+4/-2 across 2 hunks) — matches the expected scope in 🔍 Commits; no other file touched. No .ts/.vue → typecheck gate legitimately skipped (docs task, per plan line 27).
+- **Done-when greps rerun** (Reviewer, this session): `Resolution UNTESTED` in SKILL.md → **0** ✓ · `is present. |` in sdk-reference → **0** ✓ · `sprint-06` in sdk-reference → **2** (line 16 table row + §13.7 status note) ✓ · `sprint-06` in SKILL.md → **1** ✓. All 4 pass.
+- **Edits vs PM spec** (current-sprint.md Task 2 edits 1–3): all three applied verbatim. Table row: "Broken upstream" + both barrels + "Fixed in-app (sprint-06)" remap note ✓. §13.7 blockquote: inserted immediately after the sprint-03 blockquote (verified in diff context) ✓. SKILL.md: `⚠️ Resolution UNTESTED` → `✅ Resolution FIXED (sprint-06)` with remap mechanics, still-broken upstream facts, TouchModeType literal-union guidance, VersionString caveat ✓.
+- **Factual claims spot-checked against disk (not memory):** both barrels exist — `ls` confirms `dist/esm/types/index.d.ts` AND `dist/cjs/types/index.d.ts` ✓ (the "old 'only esm' claim was wrong" correction is accurate). tsconfig remap present at tsconfig.json:22 → esm barrel ✓ (variant-P, §13.7.3). Cross-refs resolve: §13.1 `VersionString` dangling type exists (line 3561, verified row line 173) ✓; §13.7.3 referenced and present ✓.
+- **Consistency with Task 1 record:** "exactly one error unmasked… baseline unchanged at 23" matches review-root-types-1.md (23→23) and the setPerformanceMode narrowing at KeyboardService.ts ✓.
+- Inline-fixable defects: none found (typo/dead-ref scan of both hunks clean; markdown well-formed).
+- Findings (non-defect, out of scope): none.

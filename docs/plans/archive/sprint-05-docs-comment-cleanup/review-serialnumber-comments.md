@@ -40,10 +40,10 @@ N/A — not a [hw] task (comments and docs only; no runtime behavior change).
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:**   ·  **Date:**   ·  **Fail count:**
+**Result:** PASS  ·  **Date:** 2026-10-11  ·  **Fail count:** 0
 
 ### Failed items (FAIL only)
-**Result:** PASS  ·  **Date:** 2026-10-11  ·  **Fail count:** 0
+None.
 
 ### Verification performed (commands + results)
 - `git diff --stat aad81f6..09948ba` → 4 files: KeyboardService.ts (+8), Connect.md (+1), sdk-reference-v2.md (+13/−6... net), current-sprint.md (checkpoint + Findings line — standard Worker writes). No stray files; every hunk is within the task's named files + the Worker's own checkpoint.

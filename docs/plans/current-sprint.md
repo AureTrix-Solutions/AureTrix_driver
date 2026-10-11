@@ -1,8 +1,9 @@
 # SPRINT: sprint-05-docs-comment-cleanup
 
-**GOAL:** Clear the two verified low-hanging backlog items that need no design decisions — purge the removed export feature from docs/pages/Debug.md, and land the `serialNumber` known-limitation comments (which also records the resolved sdk-reference decision and qualifies its one bare cross-file ref).
-**DONE-CRITERIA (sprint):** `grep -ni export docs/pages/Debug.md` → no matches; `grep -n serialNumber src/services/KeyboardService.ts` shows a known-limitation comment at all 5 sites; `grep -n "deserves a decision" docs/sdk-reference-v2.md` → no matches; `npm run typecheck` ≤ 23 (docs/tsc-baseline.txt).
+**GOAL:** Clear the verified low-hanging backlog items that need no design decisions — purge the removed export feature from docs/pages/Debug.md, land the `serialNumber` known-limitation comments (which also records the resolved sdk-reference decision and qualifies its one bare cross-file ref), and (rev1) extend that comment coverage to the two `deviceStillPresent` fallbackId sites flagged in Findings.
+**DONE-CRITERIA (sprint):** `grep -ni export docs/pages/Debug.md` → no matches; `grep -n serialNumber src/services/KeyboardService.ts` shows a known-limitation comment at all 5 sites; `grep -c "same vid/pid" src/services/KeyboardService.ts` → 2; `grep -n "deserves a decision" docs/sdk-reference-v2.md` → no matches; `npm run typecheck` ≤ 23 (docs/tsc-baseline.txt).
 **Started:** 2026-10-11  ·  **Status:** IN PROGRESS
+- rev1 (2026-10-11): scope expanded — routed the live Findings item (uncommented `deviceStillPresent` fallbackId blocks in KeyboardService.ts) into this sprint as Task 3 instead of backlog, per PO directive. Sprint reopened from ALL TASKS DONE.
 
 ## Checkpoint
 - Branch: `sprint-05-docs-comment-cleanup`
@@ -11,7 +12,7 @@
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-ALL TASKS DONE — awaiting PO sign-off (PM-close next). Task 2 verdict: PASS (review-serialnumber-comments.md).
+Task 3 (PENDING) — Worker: run it per its spec below (ONE Edit with replace_all → exactly 2 comment insertions in KeyboardService.ts; comment-only, no logic). Then set IN-REVIEW and create docs/plans/reviews/review-devicestillpresent-comments.md from the template. Tasks 1–2: DONE (PASS — review-debug-md-export-purge.md, review-serialnumber-comments.md).
 
 ## Tasks
 
@@ -77,5 +78,34 @@ ALL TASKS DONE — awaiting PO sign-off (PM-close next). Task 2 verdict: PASS (r
    - 8 edit-sites, 3 files, ~22 new lines authored — within single-session limits.
    - Expected post-task typecheck: **23**, unchanged; no re-baselining.
 
+3. **Extend the `serialNumber` known-limitation comment to the two `deviceStillPresent` fallbackId blocks in KeyboardService.ts** — [high-stakes] (KeyboardService.ts is always high-stakes by the binary rule, even for comment-only; mirrors Task 2's PASSED no-[hw] call) — STATUS: PENDING
+   - Resolved up front (rev1 PO directive): **comment-only**. No disambiguation logic, no behavior change. Design intent untouched.
+   - Done when: `grep -c "same vid/pid" src/services/KeyboardService.ts` → `2`
+   - Done when: `grep -n -A1 "const deviceStillPresent" src/services/KeyboardService.ts` shows the new comment line directly after each of the 2 `const deviceStillPresent` lines
+   - Done when: `npm run typecheck` → ≤ 23 (baseline unchanged; no re-baselining)
+   - Files: `src/services/KeyboardService.ts` (only)
+   - Verified current state (grep `deviceStillPresent` → lines 1224, 1229, 1358, 1363; both blocks read at KS.ts:1218–1231 and 1352–1365): the two blocks are byte-identical across this exact 3-line span —
+     ```
+                 const hidDevices = await navigator.hid!.getDevices();
+                 const deviceStillPresent = hidDevices.some(d => {
+                   const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
+     ```
+     → ONE Edit with `replace_all: true` lands both insertions identically. Do not hand-edit each block separately.
+   - The edit — old_string (verbatim, current, 16-space indent inside the timeout-state-machine handler):
+     ```
+                 const deviceStillPresent = hidDevices.some(d => {
+                   const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
+     ```
+     replacement (adds exactly ONE comment line before `const fallbackId`; keep the rest byte-identical):
+     ```
+                 const deviceStillPresent = hidDevices.some(d => {
+                   // 'unknown' tail: serialNumber is undefined on Chromium/Windows; with two devices sharing
+                   // the same vid/pid this match cannot tell them apart — first enumerated device wins.
+                   const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
+     ```
+     Use the short-form convention (canonical long-form note lives at KS.ts:133 — do not repeat it).
+   - 1 edit-site (replace_all → 2 insertions), 1 file, 2 new lines authored — well within single-session limits.
+   - Expected post-task typecheck: **23**, unchanged.
+
 ## Findings (raw — PM routes at close)
-- Two more `serialNumber || 'unknown'` fallbackId sites in KeyboardService.ts (in HID connect/disconnect listeners; grep `deviceStillPresent` — now ~L1225, ~L1359) carry no known-limitation comment; outside Task 2's 5 named sites. Same pattern, same defect class.
+- ~~Two more `serialNumber || 'unknown'` fallbackId sites in KeyboardService.ts (grep `deviceStillPresent`) carry no known-limitation comment~~ — **ROUTED (rev1, 2026-10-11): folded into this sprint as Task 3 per PO directive; not going to backlog.**

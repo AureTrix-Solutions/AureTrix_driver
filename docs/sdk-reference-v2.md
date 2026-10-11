@@ -3903,11 +3903,14 @@ installed (`node_modules/@types` holds only chai, crypto-js, deep-eql, estree), 
 
 | Diagnostic | Sites | Meaning |
 |---|---|---|
-| `TS2339` `Property 'serialNumber' does not exist on type 'HIDDevice'` | `(134,138) (191,163)` | `d.data.serialNumber === device.serialNumber` — the property is read but never declared. `serialNumber` appears nowhere in hid's types. At runtime the value is `undefined` on both sides, so `undefined === undefined` is `true` and the comparison silently passes for every device. The stable-ID fallback at `(135,…)` already anticipates this (`device.serialNumber \|\| 'unknown'`), which is why it works. |
+| `TS2339` `Property 'serialNumber' does not exist on type 'HIDDevice'` | `KeyboardService.ts (134,138) (191,163) — as measured in sprint-01; positions have since drifted by ~1 line` | `d.data.serialNumber === device.serialNumber` — the property is read but never declared. `serialNumber` appears nowhere in hid's types. At runtime the value is `undefined` on both sides, so `undefined === undefined` is `true` and the comparison silently passes for every device. The stable-ID fallback at `(135,…)` already anticipates this (`device.serialNumber \|\| 'unknown'`), which is why it works. |
 
-This one deserves a decision of its own, separate from the import fix: either install
-`@types/w3c-web-hid` (which declares `serialNumber` as `string`, matching the platform) or
-drop the comparison.
+**Resolved (2026-10-10, PO hardware check).** Neither option was taken. `serialNumber` is confirmed
+`undefined` on Chromium/Windows, so the compares are no-ops and auto-reconnect matches on
+vendorId+productId only; the compares are kept as-is and `@types/w3c-web-hid` was rejected
+(measured net +5 tsc errors — see docs/plans/archive/sprint-01-code-fixes/review-type-cleanup-4a.md §1).
+The limitation is documented at each call site in KeyboardService.ts and in docs/pages/Connect.md.
+Not a bug to fix — a platform limitation.
 
 **Caused by `Device`'s optional `data`.** `types.d.ts:47` declares
 `type Device = DeviceInfo & { id: string; productName: string; data?: HIDDevice; collections: ReadonlyArray<HIDCollectionInfo> }` — note `data?`:

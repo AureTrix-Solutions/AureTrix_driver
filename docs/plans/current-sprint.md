@@ -10,7 +10,7 @@ rev1 (2026-10-10): split Task 1 into sequential 1a→1b→1c — the whole-file 
 - tsc baseline: 23 errors (docs/tsc-baseline.txt) — docs-only sprint, gate skipped
 - Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty — from actual `ls` at PM-open
 - PM-open (2026-10-10): plan written from backlog item; item removed from backlog.md; all claims below grep/read-verified this session
-- Worker fix-round (2026-10-11): F1 SKILL.md:76 refs `:7`/`:11`→`:8`/`:12` (re-verified via grep on DebugKeyboardService.ts); F2 review-file line-39 claim corrected + fix-round range recorded at line 40; nothing else touched (SKILL.md still 89 lines); committed in the fix-round commit; Task 1 → IN-REVIEW. Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ only .gitkeep — from actual `ls`.
+- Worker fix-round (2026-10-11): F1 SKILL.md:76 refs `:7`/`:11`→`:8`/`:12` (re-verified via grep on DebugKeyboardService.ts); F2 review-file line-39 claim corrected + fix-round range recorded at line 40; nothing else touched (SKILL.md still 89 lines); committed 2b37bde; Task 1 → IN-REVIEW. Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ only .gitkeep — from actual `ls`.
 
 ## ▶ RUN THIS
 Next: **Reviewer re-check** — Task 1 fix-round committed; re-check **ONLY** the 2 failed items per review-sdk-skill-clean.md (§F1: SKILL.md:76 now cites `:8`, constructed `:12` — verify against `grep -n "private keyboard: XDKeyboard\|new XDKeyboard" src/services/DebugKeyboardService.ts`; §F2: review-file line-39 sentence + line-40 fix-round range corrected). Do NOT re-check passing criteria. On PASS (non-hw): Task 1 → DONE, advance ▶ RUN THIS (all tasks done → flag "ALL TASKS DONE — awaiting PO sign-off").

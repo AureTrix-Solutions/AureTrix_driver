@@ -37,7 +37,7 @@ Sprint-level: zero stale line-refs/claims; all still-true facts kept — includi
 ## 🔍 Commits to review
 Base: `0e0a9f0fc56d5424f65b265c2806d657033f48c4` (commit before 1a)   Head: `1f47e52f5041e93c4a3b9b83d037de0804d60c7a` (task 1c)
 Cumulative diff covers 1a + 1b + 1c. The only *source* file touched is `.openclaude/skills/sdk-wrapper/SKILL.md`; `git diff --name-only 0e0a9f0..1f47e52` also lists `docs/plans/current-sprint.md` — the sanctioned checkpoint update required by status-ownership mechanics, not a stray file.
-Fix-round ranges (added on each re-review): Round 1 — base `1f47e52`, head = commit `sprint-04-sdk-skill-clean: task 1 fix-round — F1/F2` (F1: SKILL.md line 76 `:7`→`:8`, `:11`→`:12`; F2: this line-39 sentence corrected; nothing else changed).
+Fix-round ranges (added on each re-review): Round 1 — base `1f47e52`, head `2b37bde` (F1: SKILL.md line 76 `:7`→`:8`, `:11`→`:12`; F2: this line-39 sentence corrected; nothing else changed).
 
 ## 🖥️ Hardware check ([hw] tasks only)
 N/A — not a [hw] task. Skill/docs file only; no hardware behaviour changed.

@@ -11,12 +11,12 @@
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Task 1 is IN-REVIEW. Reviewer: "follow docs/plans/reviews/review-debug-md-export-purge.md" (base 2a9adfd, head bdf78e2). No Worker task until the verdict lands.
+Task 2 (serialNumber comments) is PENDING — Worker: run it per its spec below. Task 1 verdict: PASS (review-debug-md-export-purge.md).
 
 ## Tasks
 
-1. **Purge the removed export feature from docs/pages/Debug.md** — [high-stakes] (docs-only; tagged high-stakes because the spec required source investigation) — STATUS: IN-REVIEW
-   - Checkpoint (2026-10-11): all 12 plan edits + 3 inline-fixable stragglers (Known Limitations / Future Enhancements / Developer Notes export lines) applied; all 3 Done-when greps pass (0 export hits, 0 symbol hits, Clear Data ×2 with `#### 4.`); typecheck N/A (docs-only). Detail in review-debug-md-export-purge.md. Commit bdf78e2.
+1. **Purge the removed export feature from docs/pages/Debug.md** — [high-stakes] — STATUS: DONE
+   - ✓ Reviewer PASS 2026-10-11 (all 3 Done-when greps + numbering/residual/source cross-checks; 0 fails) — detail in review-debug-md-export-purge.md. Commit bdf78e2.
    - Done when: `grep -ni export docs/pages/Debug.md` → no matches (the page has no export feature; every hit must be gone)
    - Done when: `grep -n exportEncryptedJSON docs/pages/Debug.md` → no matches
    - Done when: Core Functionality's Clear Data heading reads `#### 4.` (`grep -n "Clear Data" docs/pages/Debug.md`)

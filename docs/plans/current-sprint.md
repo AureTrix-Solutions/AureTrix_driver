@@ -16,7 +16,7 @@
 Next: Task 1 — Upgrade vitest to ^5.0.3 and verify audit-clean + green repo. Do this task, then stop.
 
 ## Tasks
-1. **Upgrade vitest 3.2.7 → ^5.0.3 (clears all 3 audit vulns)** — [high-stakes] — STATUS: PENDING
+1. **Upgrade vitest 3.2.7 → ^5.0.3 (clears all 3 audit vulns)** — [high-stakes] — STATUS: IN-PROGRESS (Worker: running `npm install -D vitest@^5.0.3`)
    - Done when: `npm audit` output contains `found 0 vulnerabilities`
    - Done when: `node -p "require('./node_modules/vitest/package.json').version"` prints `5.x` (≥5.0.3)
    - Done when: `npx vitest --version` prints `vitest/5.` prefix

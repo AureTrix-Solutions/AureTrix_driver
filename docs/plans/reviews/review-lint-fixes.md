@@ -28,17 +28,26 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task. No hardware-facing behavior changed: SwitchProfiles edit removed two redundant setup() returns whose values the template already resolves from declared props (identical values, identical reactivity); remaining edits are type/const/void-tag only.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
-<!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
-     to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
-     Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** PASS / FAIL  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** PASS  ·  **Date:** 2026-10-11  ·  **Fail count:** 0
 
-### Failed items (FAIL only)
+### Evidence (all commands rerun by Reviewer this session)
+- `npm run lint` → `✖ 221 problems (0 errors, 221 warnings)`, exit 0 — EXACT match to Done-when and to the 228−7=221 deferred set from Task 1; warning tier unchanged.
+- `grep '<br></br>' src/` → no matches. `grep 'props.profileMaxTravel,' SwitchProfiles.vue` → no matches.
+- `npm run typecheck` → exit 0, 0 errors (baseline 0 unchanged). `npm run build` → exit 0, `✓ built in 1.59s`.
+- Diff scope (855c853..de8f62c): exactly the 3 named files, 5 insertions / 8 deletions — matches Worker report; no stray files.
+- Semantic check of the setup() removal: `profileMaxTravel`/`selectedKeys` are declared props (L91/L103); Vue exposes declared props to the template directly (already relied on at L33 for `selectedKeys`), so the removed aliases were redundant — and being one-time snapshots, removing them if anything restores live-prop reactivity. Template grep confirms no other binding depends on the aliases.
+- `let rows: number;` definite assignment verified against source: assigned in both branches (baseLayout L165, else L178) before first use (L167/L208/L211). `gapsAfterCol`/`rowSpacing` never reassigned → const correct.
+- throttle signature `(...args: unknown[]) => void`: typecheck passes; wrapper still forwards args unchanged — no behavior change.
+- Design intent: no service/connection files touched; filters:[], usagePage 65440, Error-returning wrappers all untouched.
+- Tag [high-stakes] correct (multi-file logic-adjacent edits); review performed accordingly. No [hw] — agreed, no hardware-facing behavior changed.
+
+### Findings (Reviewer)
+- None. (Non-defect observation, no action: `throttle`'s inner `(...args: any[])` remains an `any` — part of the deferred 221-warning tier, correctly out of scope here.)

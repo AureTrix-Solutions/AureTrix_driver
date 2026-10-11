@@ -11,12 +11,12 @@
 - Branch: `sprint-10-lint-script`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt)
 - Task 1: ✓ DONE (5fdb069) — Reviewer PASS 2026-10-11 — see reviews/review-lint-setup.md
-- Task 2: IN-REVIEW (de8f62c) — 5-step spec applied verbatim (3 files, +5/−8); lint 0 errors/221 warnings exit 0; typecheck 0; build ✓; both grep gates clean — see reviews/review-lint-fixes.md
+- Task 2: ✓ DONE (de8f62c) — Reviewer PASS 2026-10-11: all three Done-whens rerun exact (lint 0 err/221 warn exit 0; both greps clean; typecheck 0; build ✓ 1.59s); scope 3 files +5/−8; setup-removal semantics + definite-assignment verified — see reviews/review-lint-fixes.md
 - Cleanup (actual ls): .scratch/ = lint-trial/, pm-notes.md, review-sprint-10-task-1-lint-toolchain.md (PO may delete all); _to_delete/ does not exist → nothing needs git rm
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: REVIEWER — follow docs/plans/reviews/review-lint-fixes.md (Task 2, base 855c853..head de8f62c); rerun the three Done-whens (lint, greps, typecheck+build last). Then stop.
+Next: WORKER — Task 3 "Update CLAUDE.md for the new script" (below; [trivial], docs-only 2-edit spec, skip typecheck/build gate, hand off defect-free). Then run its two grep Done-whens, mark DONE, and stop — that is the last task: flag "ALL TASKS DONE — awaiting PO sign-off".
 
 ## Tasks
 1. **Install lint toolchain, script, and config** — [high-stakes] — STATUS: ✓ DONE (Reviewer PASS 2026-10-11)
@@ -76,7 +76,7 @@ Next: REVIEWER — follow docs/plans/reviews/review-lint-fixes.md (Task 2, base 
    - Done when: `grep -n '"lint": "eslint ."' package.json` → 1 hit; `wc -l eslint.config.mjs` → 41
    - On finish: IN-REVIEW; write `docs/plans/reviews/review-lint-setup.md` (sprint goal + these Done-whens + base/head hashes). Reviewer reruns all four commands.
 
-2. **Fix the 7 genuine lint errors (3 files)** — [high-stakes] — STATUS: IN-REVIEW (de8f62c)
+2. **Fix the 7 genuine lint errors (3 files)** — [high-stakes] — STATUS: ✓ DONE (Reviewer PASS 2026-10-11)
    - Files: `src/components/performance/SwitchProfiles.vue`, `src/utils/layoutConfigs.ts`, `src/pages/Lighting.vue`
    - Edit spec (all PM-verified safe this session; apply exactly):
      1. SwitchProfiles.vue L56 (inside the `<p>` help text): `<br></br>` → `<br />` (invalid void-element close tag; grep: `<br></br>`)

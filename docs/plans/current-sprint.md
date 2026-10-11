@@ -8,13 +8,13 @@
 ## Checkpoint
 - Branch: `sprint-06-root-types`
 - tsc baseline: 23 errors (docs/tsc-baseline.txt) — sprint ends at 23 (unmask absorbed in Task 1, no re-baseline)
-- Cleanup: `.scratch/` has pm-notes.md only; `_to_delete/` has .gitkeep only — from actual ls 2026-10-11 (Task 1 session; earlier probe/junction/verify-tree files already removed by PO)
+- Cleanup: `.scratch/` has pm-notes.md only; `_to_delete/` has .gitkeep only — from actual ls 2026-10-11 (Task 2 session)
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report.
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph.
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Worker session — "go" → Task 2 (Docs: sdk-reference-v2.md + sdk-wrapper SKILL.md record the fixed state). Task 1 ✓ DONE (Reviewer PASS 2026-10-11 — review-root-types-1.md).
+Next: Reviewer session for Task 2 — "follow docs/plans/reviews/review-root-types-2.md". On PASS: mark Task 2 DONE (collapse to ✓); it is the LAST task → flag "ALL TASKS DONE — awaiting PO sign-off" and stop (only PM-close closes the sprint). On FAIL: write fix checklist into ▶ RUN THIS prefixed "fix ONLY these". Worker must NOT self-mark DONE.
 
 ## PM research (banked 2026-10-11; re-verify targets in .scratch history — Worker APPLIES, never re-derives)
 - Installed v1.0.6: `"types"` → **nonexistent** `dist/esm/index.d.ts`; no root `index.d.ts`; `"exports"` = `"."` only, no types condition → bare import cannot resolve types today.
@@ -29,7 +29,8 @@ Next: Worker session — "go" → Task 2 (Docs: sdk-reference-v2.md + sdk-wrappe
 
 ## Tasks
 1. ✓ **tsconfig paths remap + narrow setPerformanceMode** — [high-stakes] — DONE (Reviewer PASS 2026-10-11; typecheck 23→23, build passes; a544af9..4d84f17; detail in reviews/review-root-types-1.md)
-2. **Docs: sdk-reference-v2.md + sdk-wrapper SKILL.md record the fixed state** — [high-stakes] — STATUS: PENDING
+2. **Docs: sdk-reference-v2.md + sdk-wrapper SKILL.md record the fixed state** — [high-stakes] — STATUS: IN-REVIEW
+   Checkpoint: 3 PM-verified edits applied verbatim (package-table row; §13.7 sprint-06 blockquote; SKILL.md Resolution FIXED); all 4 Done-when greps pass 0/0/2/1; docs task — typecheck gate skipped, no .ts/.vue touched; review-root-types-2.md written; Base 8eb6319 Head 50a5bd1.
    *(high-stakes: investigation-derived SDK-correctness record; not trivial per tag rule)*
    - Done when: `grep -c "Resolution UNTESTED" .openclaude/skills/sdk-wrapper/SKILL.md` → `0`
    - Done when: `grep -c "is present. |" docs/sdk-reference-v2.md` → `0` (old table-row tail gone; grep target: `Only \`dist/esm/types/index.d.ts\` is present`)

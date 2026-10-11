@@ -36,9 +36,6 @@ N/A — not a [hw] task (docs-only; no hardware behavior touched).
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. -->
-**Result:** _pending_  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** —
-## ✅ REVIEWER VERDICT
-<!-- After ONE verification pass, RULE. -->
 **Result:** PASS  ·  **Date:** 2026-10-11  ·  **Fail count:** 0
 
 ### Verification performed (commands + results)

@@ -13,7 +13,7 @@ documented as a separate API.
 | Package | Installed | `types` entry point | Notes |
 |---|---|---|---|
 | `@sparklinkplayjoy/sdk-keyboard` | **1.0.20** | `./dist/esm/index.d.ts` | Declared in app `package.json` as `^1.0.14` |
-| `@sparklinkplayjoy/protocol-keyboard` | **1.0.6** | `./dist/esm/index.d.ts` | **Broken**: that file does not exist on disk. Only `dist/esm/types/index.d.ts` is present. |
+| `@sparklinkplayjoy/protocol-keyboard` | **1.0.6** | `./dist/esm/index.d.ts` | **Broken upstream**: that file does not exist on disk; working root-type barrels ship at `dist/esm/types/index.d.ts` and `dist/cjs/types/index.d.ts` (the old "only esm" claim was wrong — cjs exists too). **Fixed in-app (sprint-06)**: tsconfig `paths` remaps the bare specifier to the esm barrel — root type imports now resolve (variant-P pattern, §13.7.3). |
 | `@sparklinkplayjoy/hid` | **1.0.11** | `./dist/esm//types/enum.d.ts` | **Broken — does not resolve.** Two defects: the double slash (typo) and, decisively, `hid/dist/esm/types/` **does not exist on disk at all** (`dist/esm` contains only `index.js`, `index.d.ts`, `src/`). `main` is `./dist/cjs/index.js`. Because `types` *is* declared, `tsconfig`'s legacy `"moduleResolution": "node"` honours it and **never falls back** to the valid adjacent `dist/esm/index.d.ts`. See §13.7. |
 
 ## Dependency graph
@@ -3778,6 +3778,8 @@ disagree with the runtime results in §13.4. Verified with `npx tsc --noEmit -p 
 (**60 errors project-wide**); there is no `typecheck` script, so nothing in CI surfaces these.
 
 > **Status (2026-10-09, sprint-03): Site 1 was fixed in sprint-01 by adopting variant P** — tsconfig.json:21 `paths` mapping, type-only imports now `from '@sparklinkplayjoy/hid'`, constructors pass `usagePage: [65440]` + `configs: []`, and `npm run typecheck` + docs/tsc-baseline.txt now exist (baseline 23). The text below describes the **pre-fix** state and is kept as historical context; the "60 errors"/"no typecheck script" figures are as-of that measurement, not current.
+
+> **Status (2026-10-11, sprint-06): the protocol-keyboard root specifier now resolves too** — tsconfig paths remaps `@sparklinkplayjoy/protocol-keyboard` → `dist/esm/types/index.d.ts` (same variant-P pattern as hid). sdk-keyboard's own .d.ts root imports (type.d.ts ~24 names, validate.d.ts LightModeType) are now real instead of silent `any` under skipLibCheck. Exactly one error unmasked, absorbed in-sprint: KeyboardService.setPerformanceMode wrapper param narrowed `string` → `'global' | 'single' | 'rt'` (TouchModeType). VersionString remains dangling (§13.1). Baseline unchanged at 23.
 
 **Site 1 — `KeyboardService.ts:2` and `DebugKeyboardService.ts:2` (identical line): broken.** *(Superseded — fixed in sprint-01 via variant P; see the status note above. The 4 × TS2614 no longer occur.)*
 

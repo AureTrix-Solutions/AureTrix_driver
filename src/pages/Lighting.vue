@@ -335,7 +335,7 @@ export default defineComponent({
 
     const customColors = reactive<Record<number, { R: number; G: number; B: number }>>({});
 
-    const throttle = (func: Function, delay: number) => {
+    const throttle = (func: (...args: unknown[]) => void, delay: number) => {
       let lastCall = 0;
       return (...args: any[]) => {
         const now = Date.now();

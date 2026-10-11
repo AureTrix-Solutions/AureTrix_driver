@@ -59,6 +59,6 @@ export const useProfileStore = defineStore('profiles', {
   },
   persist: {
     key: 'keyboard-profiles',
-    paths: ['profiles'],
+    pick: ['profiles', 'activeProfileId'],
   },
 });

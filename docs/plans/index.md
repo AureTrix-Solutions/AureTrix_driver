@@ -10,3 +10,4 @@ Status tokens: `signed off` = closed, not yet merged · `merged` = on main · `a
 | 01 | code-fixes | SDK integration cleanup: typecheck infra, variant-P import fix, wrapper skill, type-error cleanup | merged | 2026-10-09 | archive/sprint-01-code-fixes/ |
 | 02 | npm-cleanup | Finish the pnpm→npm migration: package.json, lockfiles, contributor docs all speak npm and point at AureTrix-Solutions | merged | 2026-10-09 | archive/sprint-02-npm-cleanup/ |
 | 03 | docs-sdk-ref-fix | sdk-reference-v2.md §13.7 states the verified truth about `configs` reachability and carries the current repo state | signed off | 2026-10-10 | archive/sprint-03-docs-sdk-ref-fix/ |
+| 04 | sdk-skill-clean | Verify every claim in the sdk-wrapper skill against current source and trim it to the tight pattern+checklist (89 ≤ 100 lines) | signed off | 2026-10-11 | archive/sprint-04-sdk-skill-clean/ |

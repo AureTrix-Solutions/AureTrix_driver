@@ -19,7 +19,6 @@ never a pre-written solution, never duplicated detail.
 - Foundation: docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet reassembly).
 
 ## Deps issues
-- [deps] `npm install` reports 3 audit vulnerabilities (1 moderate, 2 critical), pre-existing in the dep graph (surfaced by sprint-02 lockfile regen) — verify with `npm audit`; a fix sprint must weigh `audit fix --force` version bumps against the pinned SDK versions. (2026-10-09.)
 - [deps] On any @sparklinkplayjoy version bump, re-verify the two tsconfig.json pinned `paths` targets still exist (hid `dist/cjs/index.d.ts`; protocol-keyboard `dist/esm/types/index.d.ts` since sprint-06 — upstream ships no root types, so a moved/renamed barrel or a fixed upstream release silently breaks typecheck or makes the remap redundant) — grep `"@sparklinkplayjoy` in tsconfig.json, then `ls` both paths. (2026-10-11.)
 
 ## Process issues

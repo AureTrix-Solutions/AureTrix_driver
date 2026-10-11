@@ -15,3 +15,4 @@ Status tokens: `signed off` = closed, not yet merged · `merged` = on main · `a
 | 06 | root-types | Root type imports from @sparklinkplayjoy/protocol-keyboard resolve (tsconfig paths remap); unmasked error absorbed, baseline 23; sdk-reference + sdk-wrapper skill record fixed state | merged | 2026-10-11 | archive/sprint-06-root-types/ |
 | 07 | tsc-errors | tsc baseline 23 → 0: *.vue ambient shim + persist.paths → persist.pick (v4) in both stores; baseline file at 0 | merged | 2026-10-11 | archive/sprint-07-tsc-errors/ |
 | 08 | types-dedupe | src/types/types.ts derives from SDK types (IDefKeyInfo via protocol-keyboard root import; DksLayoutType/DksType re-exported type-only deep import); 13 consumers untouched | merged | 2026-10-11 | archive/sprint-08-types-dedupe/ |
+| 09 | npm-deps | Clear npm audit (3 vulns) via vitest 3.2.7 → 5.0.3; repo green; production deps untouched | signed off | 2026-10-11 | archive/sprint-09-npm-deps/ |

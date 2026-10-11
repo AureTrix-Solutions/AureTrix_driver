@@ -2,7 +2,7 @@
 
 **GOAL:** Verify every claim in `.openclaude/skills/sdk-wrapper/SKILL.md` against current source and trim it to the tight pattern+checklist the context-hygiene rule requires (~60–80 lines, hard cap 100).
 **DONE-CRITERIA (sprint):** SKILL.md ≤ 100 lines, zero stale line-refs/claims, both task-specific sections deleted, all still-true facts kept (incl. the protocol-keyboard import record the backlog [types] entry depends on).
-**Started:** 2026-10-10  ·  **Status:** IN PROGRESS
+**Started:** 2026-10-10  ·  **Status:** ALL TASKS DONE — awaiting PO sign-off
 rev1 (2026-10-10): split Task 1 into sequential 1a→1b→1c — the whole-file rewrite stalled as a single generation. Edit-spec items 1–10 preserved VERBATIM (no re-verification); only regrouped + per-subtask Done-when greps added. ▶ RUN THIS seeded at 1a.
 
 ## Checkpoint
@@ -10,19 +10,16 @@ rev1 (2026-10-10): split Task 1 into sequential 1a→1b→1c — the whole-file 
 - tsc baseline: 23 errors (docs/tsc-baseline.txt) — docs-only sprint, gate skipped
 - Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty — from actual `ls` at PM-open
 - PM-open (2026-10-10): plan written from backlog item; item removed from backlog.md; all claims below grep/read-verified this session
-- Worker fix-round (2026-10-11): F1 SKILL.md:76 refs `:7`/`:11`→`:8`/`:12` (re-verified via grep on DebugKeyboardService.ts); F2 review-file line-39 claim corrected + fix-round range recorded at line 40; nothing else touched (SKILL.md still 89 lines); committed 2b37bde; Task 1 → IN-REVIEW. Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ only .gitkeep — from actual `ls`.
+- Reviewer re-check (2026-10-11): Round 1 F1/F2 both ✓ (SKILL.md:76 `:8`/`:12` matches grep on DebugKeyboardService.ts; review-file line-39 scope claim now accurate) → **Task 1 PASS → DONE**. Verdict in review file. Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ only .gitkeep — from actual `ls`.
 
 ## ▶ RUN THIS
-Next: **Reviewer re-check** — Task 1 fix-round committed; re-check **ONLY** the 2 failed items per review-sdk-skill-clean.md (§F1: SKILL.md:76 now cites `:8`, constructed `:12` — verify against `grep -n "private keyboard: XDKeyboard\|new XDKeyboard" src/services/DebugKeyboardService.ts`; §F2: review-file line-39 sentence + line-40 fix-round range corrected). Do NOT re-check passing criteria. On PASS (non-hw): Task 1 → DONE, advance ▶ RUN THIS (all tasks done → flag "ALL TASKS DONE — awaiting PO sign-off").
+Next: **PO** — ALL TASKS DONE — awaiting PO sign-off. Task 1 PASSed Round 1 re-check (2026-10-11; F1/F2 verified ✓ — see review-sdk-skill-clean.md verdict). On sign-off: run PM-close ("Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise."). On rejection: revise per the Sprint feedback loop.
 
-- F1 fix applied: SKILL.md line 76 now cites `` `:8` ``, constructed `` `:12` `` — sentence otherwise byte-identical; file still 89 lines.
-- F2 fix applied: review file line 39 names SKILL.md as the only *source* file and current-sprint.md as sanctioned checkpoint mechanics; line 40 records the Round 1 range (base `1f47e52`, head = fix-round commit).
-
-Reviewer notes (NOT fix items — PM routes at close): §RF1 PM edit-spec item 2 falsely blessed `:7`/`:11` as "EXACT — keep as-is" (this is why the Worker inherited the drift); §RF2 bare `:NNN` refs are namespace-ambiguous across files on line 76. Both are in the review file's Reviewer Findings section.
+Reviewer Findings (NOT fix items — PM routes at close): §RF1 PM edit-spec item 2 falsely blessed `:7`/`:11` as "EXACT"; §RF2 bare `:NNN` refs namespace-ambiguous on line 76. Both also in the Findings section below and in the review file's Reviewer Findings section.
 
 ## Tasks
 
-**Task 1 — verify-and-trim `.openclaude/skills/sdk-wrapper/SKILL.md`** — [high-stakes] — STATUS: IN-REVIEW (1a ✓ 1b ✓ 1c ✓; fix-round 2026-10-11 applied F1/F2 — Reviewer re-checks only those)
+**Task 1 — verify-and-trim `.openclaude/skills/sdk-wrapper/SKILL.md`** — [high-stakes] — STATUS: ✓ DONE (1a ✓ 1b ✓ 1c ✓; Reviewer FAIL 2026-10-10 → fix-round F1/F2 → Round 1 re-check PASS 2026-10-11; SKILL.md 89 lines ≤ 100, all Done-when greps pass — see review-sdk-skill-clean.md)
 Split into 1a→1b→1c (sequential; each its own commit + recovery point). Single file for all three: `.openclaude/skills/sdk-wrapper/SKILL.md` (docs task → no typecheck gate; self-check = the Done-when greps). One Reviewer pass after 1c covers the cumulative base..head diff.
 
 ### Edit spec — items 1–10 (verified 2026-10-10 — APPLY, do NOT re-derive or re-read source)
@@ -42,25 +39,11 @@ Split into 1a→1b→1c (sequential; each its own commit + recovery point). Sing
 ### Task 1a — delete the two stale sections — [high-stakes] — STATUS: ✓ DONE
 Deleted "Known pre-existing type errors" + "The self-check gate will fight you here" (items 7, 8); all Done-when greps pass; committed.
 
-### Task 1b — fix −4 line refs + canonical-shape signature — [high-stakes] — STATUS: PENDING
-Scope: edit-spec **items 2, 3, 4**. Correct the KeyboardService line refs (−4 drift) in the canonical-shape block + Known-deviations table; fix the canonical-shape return type.
-- Done when: `grep -n "Promise<any | Error>" .openclaude/skills/sdk-wrapper/SKILL.md` matches (canonical-shape signature corrected — item 3).
-- Done when: `grep -n "Promise<Calibration | Error>" .openclaude/skills/sdk-wrapper/SKILL.md` returns nothing, AND `grep -n "Calibration" .openclaude/skills/sdk-wrapper/SKILL.md` returns nothing (capital-C type gone; item-7 section already removed in 1a).
-- Done when: EVERY corrected ref present (items 2, 3, 4: ensureKeyboard, getDevices, initializeKeyboard, internal, setKey, getMacro, calibrationStart, setLighting, setPollingRate) — this loop prints nothing: `for r in ":37" ":109" ":255" ":268" ":508" ":518" ":798" ":913" ":1174"; do grep -qE "$r\b" .openclaude/skills/sdk-wrapper/SKILL.md || echo "MISSING $r"; done`
-- Done when: frontmatter untouched.
-- Note: the whole-file stale-ref sweep (`:15|:41\b|:113|:259|:272|:512|:802|:816` → nothing) is gated on 1c, since some stale refs sit in sections 1c rewrites. 1b only asserts its own positive corrections.
-- Then: commit `sprint-04-sdk-skill-clean: task 1b — fix skill line-refs + canonical-shape signature`; set 1b STATUS: DONE (collapse to ✓); advance ▶ RUN THIS to 1c.
+### Task 1b — fix −4 line refs + canonical-shape signature — [high-stakes] — STATUS: ✓ DONE
+Items 2/3/4 applied (all refs corrected, `Promise<any | Error>` canonical shape, no `Calibration`); all Done-when greps pass (re-recorded in review-sdk-skill-clean.md §"Done when" lines 12–16); committed.
 
-### Task 1c — rewrite Bulk + Where-types + Never-change + tighten checklist — [high-stakes] — STATUS: PENDING
-Scope: edit-spec **items 1, 5, 6, 9, 10** (item 1 is guidance for the Bulk rewrite — no phantom "misrepresentation" to hunt). This is the final subtask: it also carries the comprehensive whole-file gates.
-- Done when: `wc -l .openclaude/skills/sdk-wrapper/SKILL.md` ≤ 100 (aim ~80).
-- Done when: whole-file stale-ref sweep — `grep -nE ":15|:41\b|:113|:259|:272|:512|:802|:816" .openclaude/skills/sdk-wrapper/SKILL.md` returns nothing.
-- Done when: `grep -nE "TS2304|Calibration" .openclaude/skills/sdk-wrapper/SKILL.md` returns nothing (re-verify 1a/1b held after 1c's rewrites).
-- Done when: `grep -nE "^## " .openclaude/skills/sdk-wrapper/SKILL.md` still lists NEITHER deleted section.
-- Done when: kept-facts greps all match — `grep -n "dist/cjs/types/index.d.ts" …`, `grep -n "no \`types\` condition" …` (item 6), `grep -n "ExportService" …` (item 5).
-- Done when: item-5/6/9 positives — `grep -n "never inside KeyboardService" …` matches; `grep -ni "simplified" …` matches (SingleKeyTravel snippet); all three types present — `for t in IDefKeyInfo DksLayoutType DksType; do grep -q "$t" .openclaude/skills/sdk-wrapper/SKILL.md || echo "MISSING $t"; done` prints nothing; `grep -n "hard rule 7" …` and `grep -n "65440" …` match (Never-change pointer + usagePage fact kept).
-- Done when: frontmatter untouched.
-- Then: commit `sprint-04-sdk-skill-clean: task 1c — rewrite Bulk/Where-types/Never-change + tighten checklist`; set Task 1 STATUS: IN-REVIEW; write `docs/plans/reviews/review-sdk-skill-clean.md` from the review template (sprint goal + the full Task 1 Done-when criteria across 1a–1c + Base commit = the commit BEFORE 1a, Head = the 1c commit); advance ▶ RUN THIS to the Reviewer.
+### Task 1c — rewrite Bulk + Where-types + Never-change + tighten checklist — [high-stakes] — STATUS: ✓ DONE
+Items 1/5/6/9/10 applied; 89 lines ≤ 100; whole-file gates (stale sweep, TS2304/Calibration, section headers, kept-facts, item-5/6/9 positives, frontmatter) all pass (re-recorded in review-sdk-skill-clean.md §"Done when" lines 18–25); committed 1f47e52.
 
 ## Findings (raw — PM routes at close)
 - Reviewer RF1: current-sprint.md edit-spec item 2 asserts DebugKeyboardService refs `:7`/`:11` are "EXACT — keep as-is", but the field decl is line 8 and the construction line 12 — a spec blessing shields inherited drift from the Worker. Verify: `grep -n "private keyboard: XDKeyboard\|new XDKeyboard" src/services/DebugKeyboardService.ts` → 8, 12. (Detail: review-sdk-skill-clean.md §RF1.)

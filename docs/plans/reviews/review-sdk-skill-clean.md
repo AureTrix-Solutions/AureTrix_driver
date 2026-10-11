@@ -51,7 +51,16 @@ N/A — not a [hw] task. Skill/docs file only; no hardware behaviour changed.
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** FAIL  ·  **Date:** 2026-10-10  ·  **Fail count:** 2
+**Result:** PASS  ·  **Date:** 2026-10-11  ·  **Fail count:** 0
+Round 1 re-check (F1/F2 only) supersedes the FAIL of 2026-10-10, which is retained below for history.
+
+### Round 1 re-check (2026-10-11) — F1 ✓ · F2 ✓
+- **F1 ✓** — ground truth re-run this session: `grep -n "private keyboard: XDKeyboard\|new XDKeyboard" src/services/DebugKeyboardService.ts` → `8:  private keyboard: XDKeyboard;` and `12:    this.keyboard = new XDKeyboard({`. SKILL.md line 76 now cites `` `:8` ``, constructed `` `:12` ``; the rest of the sentence is unchanged and `wc -l` is still **89**. `git diff --stat 1f47e52..2b37bde` shows SKILL.md at 1 insertion / 1 deletion — the 2-character fix, nothing else.
+- **F2 ✓** — line 39 now reads "The only *source* file touched is `.openclaude/skills/sdk-wrapper/SKILL.md`; `git diff --name-only 0e0a9f0..1f47e52` also lists `docs/plans/current-sprint.md` — the sanctioned checkpoint update…", which matches the actual two-file diff re-run this session. Line 40 records Round 1: base `1f47e52` → head `2b37bde`. The line-47 checkbox contradiction is resolved (scope stated accurately, sanctioned mechanics named).
+- **Scope** — only F1/F2 re-checked per the fix-round rule; passing criteria not re-verified. Fix-round diff touches SKILL.md + this review file + current-sprint.md (the sanctioned mechanics files): no stray source, no design-intent file, no `.ts`/`.vue` — typecheck/build gate still N/A.
+
+### Prior pass (FAIL, 2026-10-10) — retained for history
+Everything below belongs to that pass. Superseded by the re-check above: the two ✗ rows for `:7`/`:11` in the ref table, the sprint-level ✗ in Criteria disposition, and "meets every DONE WHEN — NO" in Reviewer confirmations. RF1/RF2 remain live non-defect observations for the PM.
 
 ### Failed items (FAIL only)
 

@@ -26,17 +26,30 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task. Comment-only; zero behavior change, nothing to exercise on a device.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (only KeyboardService.ts + this review file + current-sprint.md checkpoint)
-- [ ] no design-intent violation (fallbackId compare unchanged; both blocks still identical)
-- [ ] typecheck gate met (23 = baseline 23, 0 in KeyboardService.ts)
-- [ ] tag is correct ([high-stakes] per the always-high-stakes KeyboardService rule) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (only KeyboardService.ts + this review file + current-sprint.md checkpoint)
+- [x] no design-intent violation (fallbackId compare unchanged; both blocks still identical)
+- [x] typecheck gate met (23 = baseline 23, 0 in KeyboardService.ts)
+- [x] tag is correct ([high-stakes] per the always-high-stakes KeyboardService rule)
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** PASS / FAIL  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** PASS  ·  **Date:** 2026-10-11  ·  **Fail count:** 0
 
 ### Failed items (FAIL only)
+None.
+
+### Reviewer verification (re-ran independently, not trusting Worker notes)
+- `git diff --stat 13ceb4e..bb3760c` → KeyboardService.ts only, +4/−0. Full range to HEAD adds only this review file + the sprint checkpoint — no out-of-scope file touched.
+- Diff body: the 2-line comment inserted identically after both `const deviceStillPresent = hidDevices.some(d => {` lines (post-edit L1224→1225, L1360→1361); text matches the plan's replacement verbatim (short-form convention; canonical long note at KS.ts:133 not duplicated). `fallbackId` expression and compare untouched; blocks still byte-identical.
+- Done-when 1: `grep -c "same vid/pid" src/services/KeyboardService.ts` → 2 ✓
+- Done-when 2: `grep -n -A1 "const deviceStillPresent"` → comment directly after both lines ✓
+- Done-when 3: `npm run typecheck` → 23 errors = baseline 23 (docs/tsc-baseline.txt); 0 in KeyboardService.ts ✓
+- Design intent (rule 7): filters:[] untouched, usagePage 65440 untouched, wrappers still return Error — comment-only, zero behavior change ✓
+- Tag: [high-stakes] correct (KeyboardService binary rule); no [hw] needed — nothing to exercise on a device ✓
+
+### Reviewer Findings
+None — all known `serialNumber || 'unknown'` fallbackId sites in KeyboardService.ts are now covered (5 from Task 2 + these 2); grep `serialNumber` / `deviceStillPresent` to verify.

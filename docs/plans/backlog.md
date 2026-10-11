@@ -21,7 +21,6 @@ never a pre-written solution, never duplicated detail.
 ## Known issues
 
 - [deps] `npm install` reports 3 audit vulnerabilities (1 moderate, 2 critical), pre-existing in the dep graph (surfaced by sprint-02 lockfile regen) — verify with `npm audit`; a fix sprint must weigh `audit fix --force` version bumps against the pinned SDK versions. (2026-10-09.)
-
 - [docs] docs/pages/Debug.md:191,214 still documents DebugKeyboardService.exportEncryptedJSON, removed as dead code in Task 4b (fb20895) — needs a cleanup pass; see docs/plans/archive/sprint-01-code-fixes/review-type-cleanup-4b.md, Reviewer obs 1. (2026-10-09.)
 - [types] Remaining 23 baseline tsc errors are all outside the services (router/index.ts ×17 the largest block; breakdown in docs/tsc-baseline.txt) — own cleanup sprint needed before baseline reaches zero; do NOT install @types/w3c-web-hid (measured net +5 — detail in docs/plans/archive/sprint-01-code-fixes/review-type-cleanup-4a.md §1). (2026-10-09.)
 - [types] protocol-keyboard ships no resolvable root types ("types" → nonexistent dist/esm/index.d.ts; "exports" has no types condition; deep-path import confirmed BLOCKED, root import untested) — relevant if real SDK types are ever wanted instead of local declarations; verify vs the installed package's package.json/exports map; fullest record in the sdk-wrapper skill's import section. (2026-10-08, upd 2026-10-09.)

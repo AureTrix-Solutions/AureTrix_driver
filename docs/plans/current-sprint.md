@@ -12,7 +12,7 @@
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Task 3 (PENDING) — Worker: run it per its spec below (ONE Edit with replace_all → exactly 2 comment insertions in KeyboardService.ts; comment-only, no logic). Then set IN-REVIEW and create docs/plans/reviews/review-devicestillpresent-comments.md from the template. Tasks 1–2: DONE (PASS — review-debug-md-export-purge.md, review-serialnumber-comments.md).
+Task 3 is IN-REVIEW. Reviewer: "follow docs/plans/reviews/review-devicestillpresent-comments.md" (base 13ceb4e, head bb3760c). On PASS → DONE + ALL TASKS DONE — awaiting PO sign-off (PM-close next). Tasks 1–2: DONE (PASS).
 
 ## Tasks
 
@@ -78,7 +78,8 @@ Task 3 (PENDING) — Worker: run it per its spec below (ONE Edit with replace_al
    - 8 edit-sites, 3 files, ~22 new lines authored — within single-session limits.
    - Expected post-task typecheck: **23**, unchanged; no re-baselining.
 
-3. **Extend the `serialNumber` known-limitation comment to the two `deviceStillPresent` fallbackId blocks in KeyboardService.ts** — [high-stakes] (KeyboardService.ts is always high-stakes by the binary rule, even for comment-only; mirrors Task 2's PASSED no-[hw] call) — STATUS: PENDING
+3. **Extend the `serialNumber` known-limitation comment to the two `deviceStillPresent` fallbackId blocks in KeyboardService.ts** — [high-stakes] (KeyboardService.ts is always high-stakes by the binary rule, even for comment-only; mirrors Task 2's PASSED no-[hw] call) — STATUS: IN-REVIEW
+   - Checkpoint (2026-10-11): spec edit applied verbatim via ONE replace_all Edit → 2 comment insertions (KS.ts L1225-1226, L1361-1362), 4 lines added, no logic touched. All 3 Done-when checks pass (count=2; comment directly after both `deviceStillPresent` lines; typecheck 23 = baseline, 0 in KeyboardService.ts). Commit bb3760c. Review file: review-devicestillpresent-comments.md. Findings: none new. Cleanup (actual ls): `.scratch/` has pm-notes.md (PM-private, PO may delete); `_to_delete/` no visible entries — nothing to `git rm`.
    - Resolved up front (rev1 PO directive): **comment-only**. No disambiguation logic, no behavior change. Design intent untouched.
    - Done when: `grep -c "same vid/pid" src/services/KeyboardService.ts` → `2`
    - Done when: `grep -n -A1 "const deviceStillPresent" src/services/KeyboardService.ts` shows the new comment line directly after each of the 2 `const deviceStillPresent` lines

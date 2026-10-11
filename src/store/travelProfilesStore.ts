@@ -35,6 +35,6 @@ export const useTravelProfilesStore = defineStore('travelProfiles', {
   },
   persist: {
     key: 'travel-profiles', // localStorage key
-    paths: ['profiles', 'selectedProfileId'],
+    pick: ['profiles', 'selectedProfileId'],
   },
 });

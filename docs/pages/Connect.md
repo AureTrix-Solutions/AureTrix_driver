@@ -11,6 +11,7 @@ The Connect page is the entry point for establishing a connection between the we
 ## Key Features
 - **WebHID Connection**: Triggers the browser's device selection dialog
 - **Auto-Connect**: Automatically attempts to reconnect to previously paired devices on app startup
+  - Known limitation: WebHID exposes no usable serialNumber on Chromium/Windows, so auto-reconnect matches vendorId+productId only — with two same-model boards it may open the wrong one. Manual connect via the browser picker is unaffected.
 - **Connection State Display**: Button text changes based on connection status
 - **Visual Design**: Features a large circuit board SVG background for brand identity
 

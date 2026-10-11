@@ -77,4 +77,4 @@ Task 2 (serialNumber comments) is PENDING — Worker: run it per its spec below.
    - Expected post-task typecheck: **23**, unchanged; no re-baselining.
 
 ## Findings (raw — PM routes at close)
-- <none yet>
+- Two more `serialNumber || 'unknown'` fallbackId sites in KeyboardService.ts (in HID connect/disconnect listeners; grep `deviceStillPresent` — now ~L1225, ~L1359) carry no known-limitation comment; outside Task 2's 5 named sites. Same pattern, same defect class.

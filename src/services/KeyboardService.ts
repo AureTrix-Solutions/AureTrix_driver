@@ -130,7 +130,12 @@ class KeyboardService {
         await device.open();
       }
       const sdkDevices = await this.getDevices();
+      // KNOWN LIMITATION: HIDDevice.serialNumber is undefined on Chromium/Windows, so this serial
+      // compare is a no-op — matching falls back to vendorId+productId. With two same-model boards
+      // auto-reconnect can open the wrong twin. Compare kept by design; do not install
+      // @types/w3c-web-hid (net +5 tsc errors). See docs/sdk-reference-v2.md §13.7.2.
       const existingDevice = sdkDevices.find(d => d.data?.vendorId === device.vendorId && d.data?.productId === device.productId && (d.data as BrowserHIDDevice | undefined)?.serialNumber === device.serialNumber);
+      // serialNumber resolves to 'unknown' on Chromium/Windows, so the persisted id looks like 7333-5890-unknown.
       const fallbackId = device.id || `${device.vendorId}-${device.productId}-${device.serialNumber || 'unknown'}`;
       const result: Device | PairedDevice = existingDevice || { id: fallbackId, data: device, productName: device.productName || 'Unknown' };
       await this.init(result.id);
@@ -179,6 +184,7 @@ class KeyboardService {
         try {
           const hidDevices = await navigator.hid!.getDevices();
           const targetHidDevice = hidDevices.find(d => {
+            // 'unknown' tail: serialNumber is undefined on Chromium/Windows (known-limitation note above).
             const fallbackId = d.id || `${d.vendorId}-${d.productId}-${d.serialNumber || 'unknown'}`;
             return fallbackId === savedStableId;
           });
@@ -187,7 +193,9 @@ class KeyboardService {
               await targetHidDevice.open();
             }
             const sdkDevices = await this.getDevices();
+            // KNOWN LIMITATION: serialNumber compare is a no-op on Chromium/Windows — same as requestDevice() above.
             const targetSdkDevice = sdkDevices.find(d => d.data?.vendorId === targetHidDevice.vendorId && d.data?.productId === targetHidDevice.productId && (d.data as BrowserHIDDevice | undefined)?.serialNumber === targetHidDevice.serialNumber);
+            // 'unknown' tail: serialNumber is undefined on Chromium/Windows.
             const fallbackId = targetHidDevice.id || `${targetHidDevice.vendorId}-${targetHidDevice.productId}-${targetHidDevice.serialNumber || 'unknown'}`;
             const device: Device | PairedDevice = targetSdkDevice || { id: fallbackId, data: targetHidDevice, productName: targetHidDevice.productName || 'Unknown' };
             await this.init(device.id);

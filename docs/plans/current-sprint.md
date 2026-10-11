@@ -2,7 +2,7 @@
 
 **GOAL:** Add a working `npm run lint` (ESLint 10 flat config, TS + Vue) that exits 0, with all genuine lint defects fixed and the bulk warning load deliberately deferred to a ratchet-down backlog item.
 **DONE-CRITERIA (sprint):** `npm run lint` exits 0 (0 errors; ≤221 tolerated warnings); `npm audit` = 0 vulnerabilities; typecheck stays 0 errors; `npm run build` passes; CLAUDE.md reflects the new script.
-**Started:** 2026-10-11  ·  **Status:** IN PROGRESS
+**Started:** 2026-10-11  ·  **Status:** ALL TASKS DONE — awaiting PO sign-off
 <!-- revN (YYYY-MM-DD): <what changed>   ← log revisions here, newest last -->
 
 **PM trial-run result (PO asked to capture):** with js.recommended + typescript-eslint.recommended + eslint-plugin-vue flat/**essential** (recommended tier added 1066 pure-formatting warnings — rejected), the codebase reports **1322 raw problems → 228 after deliberate config policy: 7 genuine errors + 221 deferred warnings**. DECISION baked into this plan: **fix the 7 real defects in this sprint (Task 2); defer the 221 warnings** (109 no-explicit-any SDK-boundary, 81 no-unused-vars, 31 preserve-caught-error) to warn-tier + a backlog ratchet-down item (mirrors the tsc-baseline approach). Rig: `.scratch/lint-trial/` (PM-validated; config there is identical to the block below).
@@ -12,11 +12,12 @@
 - tsc baseline: 0 errors (docs/tsc-baseline.txt)
 - Task 1: ✓ DONE (5fdb069) — Reviewer PASS 2026-10-11 — see reviews/review-lint-setup.md
 - Task 2: ✓ DONE (de8f62c) — Reviewer PASS 2026-10-11: all three Done-whens rerun exact (lint 0 err/221 warn exit 0; both greps clean; typecheck 0; build ✓ 1.59s); scope 3 files +5/−8; setup-removal semantics + definite-assignment verified — see reviews/review-lint-fixes.md
-- Cleanup (actual ls): .scratch/ = lint-trial/, pm-notes.md, review-sprint-10-task-1-lint-toolchain.md (PO may delete all); _to_delete/ does not exist → nothing needs git rm
+- Task 3: ✓ DONE — Worker self-check 2026-10-11: both greps pass (lint line at CLAUDE.md:17; old "no lint script" line gone); docs-only, gate skipped per spec
+- Cleanup (actual ls): .scratch/ = lint-trial/, pm-notes.md, review-sprint-10-task-1-lint-toolchain.md (PO may delete all); _to_delete/ = .gitkeep only → nothing needs git rm
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: WORKER — Task 3 "Update CLAUDE.md for the new script" (below; [trivial], docs-only 2-edit spec, skip typecheck/build gate, hand off defect-free). Then run its two grep Done-whens, mark DONE, and stop — that is the last task: flag "ALL TASKS DONE — awaiting PO sign-off".
+ALL TASKS DONE — awaiting PO sign-off. Next: PM-close ("Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise."). No Worker tasks remain.
 
 ## Tasks
 1. **Install lint toolchain, script, and config** — [high-stakes] — STATUS: ✓ DONE (Reviewer PASS 2026-10-11)
@@ -89,7 +90,7 @@ Next: WORKER — Task 3 "Update CLAUDE.md for the new script" (below; [trivial],
    - Done when: `npm run typecheck` → 0 errors; `npm run build` passes
    - On finish: IN-REVIEW; write `docs/plans/reviews/review-lint-fixes.md`. Reviewer reruns the Done-whens (build last).
 
-3. **Update CLAUDE.md for the new script** — [trivial] — STATUS: PENDING
+3. **Update CLAUDE.md for the new script** — [trivial] — STATUS: ✓ DONE (Worker self-check 2026-10-11)
    - File: `CLAUDE.md` (docs only; skip the typecheck/build gate; still hand off defect-free)
    - Edit spec:
      1. In the Commands code block, after the `npm run typecheck …` line add: `npm run lint          # ESLint flat config (eslint.config.mjs); exit 0 = clean, warnings tolerated`

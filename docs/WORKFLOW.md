@@ -11,10 +11,14 @@ The authoritative rules live in `CLAUDE.md`; this is the quick operator's guide.
 
 | Role | Fresh window, paste | Does |
 |------|---------------------|------|
-| PM — open | `Act as PM per CLAUDE.md. Plan the "<name>" sprint from docs/plans/backlog.md.`  (or `… Goal: <...>.`) | Writes the sprint plan into current-sprint.md |
+| PM — open | `Act as PM per CLAUDE.md. Plan the "<name>" sprint from docs/plans/backlog.md. After EACH grep/read that confirms a fact, immediately write it to .scratch/pm-notes.md before doing anything else.`  (or `… Goal: <...>. After EACH grep/read …`) | Writes the sprint plan into current-sprint.md |
 | Worker | `go` | Does the next task, commits, reports status |
 | Reviewer | `follow docs/plans/reviews/review-<slug>.md` | Independent PASS/FAIL on a high-stakes task |
 | PM — close | `Act as PM per CLAUDE.md. Close the sprint for my sign-off.` | Shows the report; on approval, archives |
+
+> **Why the extra PM-open sentence:** the PM verifies a lot of claims at open, and its reads get
+> elided from context, sending it into a re-read loop. The banking rule is in CLAUDE.md, but putting
+> it in the live prompt makes it actually fire. Keep it on the PM-open paste.
 
 ---
 
@@ -102,12 +106,16 @@ Two distinct PM actions on a candidate:
 - **Scope** (flesh out, don't start): turn on **plan mode in OpenClaude** (read-only — it researches
   and proposes but writes nothing until you approve), then in a PM window:
   `Act as PM per CLAUDE.md. Flesh out the "<name>" candidate in docs/plans/backlog.md — list the
-  tasks under its ### header with tags. Do NOT start a sprint or touch current-sprint.md.`
+  tasks under its ### header with tags. After EACH grep/read that confirms a fact, immediately write
+  it to .scratch/pm-notes.md before doing anything else. Do NOT start a sprint or touch current-sprint.md.`
+  (Same bank-as-you-go sentence as PM-open — Scope does the same heavy verification, so it thrashes the same way without it.)
 - **Open** (promote to a live sprint): the normal PM-open call. This moves the item into
   current-sprint.md and removes it from the backlog.
+  `Act as PM per CLAUDE.md. Plan the "<name>" sprint from docs/plans/backlog.md. After EACH grep/read
+  that confirms a fact, immediately write it to .scratch/pm-notes.md before doing anything else.`
 
 When to skip the backlog: a small, clear idea can go straight to PM-open with a direct
-`Goal: <...>` — no need to park it first.
+`Goal: <...>` — no need to park it first (keep the same `After EACH grep/read …` sentence on the end).
 
 Candidates are kept roughly in the order you'd tackle them (top = next); you pick regardless.
 

@@ -154,11 +154,11 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
 
 function processLayoutConfig(config: LayoutConfig, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[]) {
 
-  let rows = 0;
+  let rows: number;
   let cols = 0;
   let keySizes = customKeySizes || config.keySizes;
-  let gapsAfterCol = customGapsAfterCol || config.gapsAfterCol;
-  let rowSpacing = customRowSpacing || config.rowSpacing;
+  const gapsAfterCol = customGapsAfterCol || config.gapsAfterCol;
+  const rowSpacing = customRowSpacing || config.rowSpacing;
 
   // Use baseLayout if provided, otherwise fall back to default
   if (baseLayout && baseLayout.length > 0) {

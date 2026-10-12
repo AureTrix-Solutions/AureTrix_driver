@@ -142,7 +142,6 @@ src/
 │       └── SwitchProfiles.vue
 ├── services/            # Hardware abstraction layer
 │   ├── KeyboardService.ts       # Main SDK wrapper
-│   ├── DebugKeyboardService.ts  # Dev-only SDK access
 │   ├── ExportService.ts         # Profile backup/restore
 │   └── LayoutStorageService.ts  # IndexedDB layout storage
 ├── store/               # Pinia state management

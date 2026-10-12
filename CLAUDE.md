@@ -34,7 +34,6 @@ Vue pages (src/pages/*)
 
 - **Services are singletons**: each service class ends with `export default new XService()`. Importing `KeyboardService` anywhere gets the same instance. `KeyboardService` is also `app.provide`d in `main.ts` as `'KeyboardService'`, but most code imports the singleton directly.
 - **`KeyboardService`** (~1400 lines) is the core hardware wrapper: connection/auto-reconnect (paired device tracked via `pairedStableId` in localStorage), key remapping, lighting, rapid trigger, calibration, profile switching, factory reset. It registers HID connect/disconnect listeners in its constructor and does deferred auto-reconnect on app start. It contains operation-token and timeout state machines for polling-rate changes, factory reset, and reconnection, plus temporary `console.error` suppression around reconnects.
-- **`DebugKeyboardService`** is a *separate* XDKeyboard instance used only by the Debug page, so raw SDK inspection doesn't interfere with the main connection.
 - **`ExportService`** gathers full keyboard config for export/import (JSON), using batch processing and retry-with-backoff around SDK calls.
 - **`store/connection.ts`** holds connection status/deviceInfo and is the bridge pages use to know if hardware is available. `profileStore` (4 hardware profiles) and `travelProfilesStore` (persisted via pinia-plugin-persistedstate) are small.
 

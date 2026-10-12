@@ -491,9 +491,9 @@ class ExportService {
   async gatherKeyboardSnapshot(): Promise<KeyboardConfig> {
     this.globalTravelCache = null;
 
-    let originalLighting: any = null;
-    let originalLogo: any = null;
-    let originalSpecial: any = null;
+    let originalLighting: (ILightMode & { dynamicColorId: number }) | Error | null = null;
+    let originalLogo: (ILightMode & { dynamicColorId: number }) | Error | null = null;
+    let originalSpecial: ILightMode | Error | null = null;
 
     try {
       originalLighting = await KeyboardService.getLighting();
@@ -505,7 +505,7 @@ class ExportService {
       }
 
       const { dynamicColorId, ...originalParams } = originalLighting;
-      const tempCustomParams: any = {
+      const tempCustomParams: ILightMode = {
         ...originalParams,
         type: 'custom',
         mode: 21,
@@ -543,18 +543,20 @@ class ExportService {
           }
 
           if (originalLogo && !(originalLogo instanceof Error)) {
-            const logoWasOn = originalLogo.open === true || originalLogo.open === 1;
+            const logoWasOn = originalLogo.open === true;
             if (logoWasOn) {
               const { dynamicColorId: logoColorId, ...logoParams } = originalLogo;
-              await KeyboardService.setLogoLighting(logoParams);
+              await KeyboardService.setLogoLighting({
+                ...logoParams,
+                type: logoParams.type === 'dynamic' ? 'dynamic' : 'static',
+              });
             }
           }
 
           if (originalSpecial && !(originalSpecial instanceof Error)) {
-            const specialWasOn = originalSpecial.open === true || originalSpecial.open === 1;
+            const specialWasOn = originalSpecial.open === true;
             if (specialWasOn) {
-              const { dynamicColorId: specialColorId, ...specialParams} = originalSpecial;
-              await KeyboardService.setSpecialLighting(specialParams);
+              await KeyboardService.setSpecialLighting(originalSpecial);
             }
           }
         } catch (error) {

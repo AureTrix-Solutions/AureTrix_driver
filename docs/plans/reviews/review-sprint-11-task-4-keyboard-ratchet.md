@@ -75,3 +75,7 @@ None.
 
 ### Reviewer Findings
 - None new. Worker-logged observations (getMacroDataRecdata stub; `.sArg` live-read = PO call; connection.ts getBaseInfo spread) already sit in `## Findings` / backlog routing.
+
+### Cleanup report (from actual `ls`, Reviewer)
+- `.scratch/`: 14 entries — 12 pre-existing PM/Worker files + `.scratch/ks.diff` and `.scratch/es.diff` staged by this review (PO may delete freely; gitignored).
+- `_to_delete/`: `DebugKeyboardService.ts` (from Task 2 — PO must `git rm`).

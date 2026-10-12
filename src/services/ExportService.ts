@@ -577,8 +577,17 @@ class ExportService {
     }
   }
 
-  private convertLightConfigToSDKFormat(lightConfig: KeyboardConfig['light']['main']): any {
-    const sdkFormat: any = {
+  private convertLightConfigToSDKFormat(lightConfig: KeyboardConfig['light']['main']): LightModeConfigs {
+    let mode = 0;
+    if (lightConfig.mode === 'static') {
+      mode = 0;
+    } else if (lightConfig.mode === 'dynamic') {
+      mode = lightConfig.dynamic;
+    } else if (lightConfig.mode === 'custom') {
+      mode = 21;
+    }
+
+    const sdkFormat: LightModeConfigs = {
       direction: lightConfig.direction,
       speed: lightConfig.speed,
       colors: lightConfig.staticColors,
@@ -586,15 +595,9 @@ class ExportService {
       sleepDelay: lightConfig.sleepTime,
       staticColor: lightConfig.selectStaticColor,
       type: lightConfig.mode,
+      mode,
+      superResponse: false,
     };
-
-    if (lightConfig.mode === 'static') {
-      sdkFormat.mode = 0;
-    } else if (lightConfig.mode === 'dynamic') {
-      sdkFormat.mode = lightConfig.dynamic;
-    } else if (lightConfig.mode === 'custom') {
-      sdkFormat.mode = 21;
-    }
 
     return sdkFormat;
   }
@@ -622,7 +625,11 @@ class ExportService {
 
     if (config.light?.logo && config.light.logo.open) {
       const logoLighting = this.convertLightConfigToSDKFormat(config.light.logo);
-      const result = await KeyboardService.setLogoLighting(logoLighting);
+      const result = await KeyboardService.setLogoLighting({
+        ...logoLighting,
+        open: true,
+        type: logoLighting.type === 'dynamic' ? 'dynamic' : 'static',
+      });
       if (result instanceof Error) {
         console.error('Failed to apply logo lighting:', result.message);
       }
@@ -637,7 +644,7 @@ class ExportService {
     }
   }
 
-  async applyImportedConfig(config: KeyboardConfig): Promise<void> {
+  async applyImportedConfig(_config: KeyboardConfig): Promise<void> {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
 

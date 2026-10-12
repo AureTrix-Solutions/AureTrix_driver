@@ -47,6 +47,31 @@ N/A — Task 4 is not tagged [hw]. (Typing-only ratchet; no runtime behavior cha
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** ___  ·  **Date:** ______  ·  **Fail count:** ___
+**Result:** PASS  ·  **Date:** 2026-10-12  ·  **Fail count:** 0
 
 ### Failed items (FAIL only)
+None.
+
+### Gate re-runs (Reviewer, all exact)
+- `npx eslint src/services/KeyboardService.ts` → exit 0, **0 warnings** ✓ (Done-when: 0)
+- `npm run lint` → **94 problems (0 errors, 94 warnings)** ✓ = baseline; no warning lines in KeyboardService.ts ✓ (Done-when: total 94)
+- `npm run typecheck` → exit 0 ✓ (Done-when: 0 errors)
+- `npm run build` → exit 0, built in 1.41s ✓
+- Suppression gate on added lines of `*.ts`/`*.vue`/`*.mjs` → **0 hits** ✓ (only matches are the gate command quoted in current-sprint.md + this review file — docs, not source)
+- `docs/lint-baseline.txt` line 1 = **94**; ratchet history 137→123→111→104→94 intact with per-sub-task lines ✓
+- Diff scope = 4 files (KeyboardService.ts, ExportService.ts, Lighting.vue + planning docs) — matches task plan; no stray files ✓
+
+### SDK claims spot-verified (bundle dist/cjs/index.js + protocol-keyboard/src/utils/recdata.ts)
+- `getDks/getMpt/getSocd/getTGL/getEND/getMacro` return unions match the recdata decoders member-for-member (incl. SocdConfig's v-dependent 1.0.5-vs-else branches, default `"1.0.5"` ✓)
+- `getMT` → `{dks1..dks4}`: recdata `getMTRecdata` is a stub (`return data`); the bundle's `getMT` decodes per-layout with dks1..dks4 — claim correctly sourced from the bundle ✓
+- `CustomLightColor {key,R,G,B}` uppercase per bundle `getSingleRGB` ✓ (lowercase IKRGBDesc correctly rejected); `saveCustomLighting` → `undefined|Error` (no success return in bundle) ✓
+- `ILightMode & {dynamicColorId}` per bundle `getPRGB` (field defaults 0, populated later) ✓; `getSpecialSingleRGB` 9-field ILightMode shape ✓; `ILightMode.open: boolean` per interface.ts:106 ✓
+- `calibrationStart/End` → `null|Error`: bundle `getCmd` ends `…:null` with no ORDER_TYPE 12/13 branch ✓
+- `setSystemMode` → `number|null|Error`: bundle `switchSystemMode` → `getCmd` ✓
+- `setPollingRate` → `number|Error`: bundle `setRateOfReturn` catch **resolves** the error (`catch(e){return e}`), so the `instanceof` guard is live despite the `Promise<number>` d.ts; the final `as number` is an honest post-guard narrow ✓
+- `GetApiResult` union matches every `Gn` (getCmd) branch: text/version-string/precision-object/raw index number/`{configID,hasFourConfig:true}`/axisList/both system shapes/two booleans/`{r,g,b}`/null fall-through ✓; sdk-reference §3 rows corroborate (`TOP_DEAD_SWITCH` → boolean :475, `ROES` → index number :518) ✓
+- ExportService dead-code claims all hold: `.sArg` absent from the getApi union → literals `3`/`0` preserve prior exported values, HID queries kept; `open === 1` impossible on `boolean`; `R !== undefined` impossible on typed `R: number`; decoder shapes carry no `.enable`/`.keyValue`/`.triggeringPoint` → `advancedType` was always `'none'` and `activeType`/`activeValue` were always `undefined` (JSON.stringify drops undefined → export byte-identical) ✓
+- Wrapper contract intact across all touched wrappers: `connectedDevice` guard, `ensureKeyboard()`, `instanceof Error` pass-through, outer try/catch → console.error + return — signature/type-only edits; the two `{ cause }` throws are the pre-existing non-wrapper sites (requestDevice/initializeDevice), untouched by design ✓
+
+### Reviewer Findings
+- None new. Worker-logged observations (getMacroDataRecdata stub; `.sArg` live-read = PO call; connection.ts getBaseInfo spread) already sit in `## Findings` / backlog routing.

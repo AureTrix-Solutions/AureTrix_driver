@@ -216,8 +216,9 @@ interface DeviceInfo {
 
 The instance is built around a **singleton** `DeviceBase`, which itself wraps a singleton
 `WebHIDService`. Constructing two `XDKeyboard` objects in one page therefore shares one
-underlying HID service — this is why `DebugKeyboardService` in this repo uses a deliberately
-separate instance and why the two connections can interfere.
+underlying HID service, so the two connections can interfere. *(Historical note: this repo
+once had a separate `DebugKeyboardService` instance for its Debug page; that service was
+deleted in sprint-11 — Debug.vue now uses the shared `KeyboardService` singleton.)*
 
 ### `getDevices`
 

@@ -115,7 +115,7 @@ This document provides a comprehensive index of all functional pages in the Aure
 
 **Primary Use Case**: Development, testing, and troubleshooting
 
-**Dependencies**: DebugKeyboardService
+**Dependencies**: KeyboardService
 
 **Note**: This page is intended for development and debugging only. It may not be included in production builds.
 
@@ -368,8 +368,7 @@ Common patterns:
 ## Architecture Overview
 
 ### Service Layer
-- **KeyboardService**: Main hardware communication
-- **DebugKeyboardService**: Development-specific service
+- **KeyboardService**: Main hardware communication (shared by all pages, including Debug)
 - **SparkLink SDK**: Low-level keyboard protocol
 
 ### Utility Layer

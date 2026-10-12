@@ -1,11 +1,36 @@
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
 import type { Device, HIDDevice } from '@sparklinkplayjoy/hid';
 import type { IDB, ILightMode, ILoGoLightMode, IMacroMode } from '@sparklinkplayjoy/protocol-keyboard';
-import type { LightModeConfigs, MacroType } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/types/type';
+import type { ICmd, LightModeConfigs, MacroType } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/types/type';
 import { IDefKeyInfo, DksLayoutType, DksType } from '../types/types';
 import { useConnectionStore } from '../store/connection';
 
 type PairedDevice = { id: string; data: HIDDevice; productName: string };
+
+/** Single-key custom RGB color as decoded by the SDK's getSingleRGB — UPPERCASE
+ *  R/G/B (verified against the bundle). NOT the SDK's IKRGBDesc, which is lowercase
+ *  `{ key, r?, g?, b? }` and describes the set direction only. */
+export interface CustomLightColor {
+  key: number;
+  R: number;
+  G: number;
+  B: number;
+}
+
+/** Return union of getApi, verified against sdk-reference-v2.md §3 (verified rows)
+ *  and protocol-keyboard/src/utils/recdata.ts getCmd. SET_WIN_MODEL (0|null) and
+ *  SET_MAC_MODEL (1|null) are subsumed by number|null. */
+export type GetApiResult =
+  | string
+  | number
+  | boolean
+  | null
+  | { precision: number; decimalPlace: number; minTouchTravel: number; maxTouchTravel: number; VID: number; PID: number }
+  | { configID: number; hasFourConfig: true }
+  | { hasAxisSetting: true; axisList: number[] }
+  | { currentSystem: '' | 'win' | 'mac'; hasWinMode: boolean }
+  | { currentSystem: 'mac' | 'win'; hasMacMode: boolean }
+  | { r: number; g: number; b: number };
 
 /** Macro slot metadata as decoded by getMacroRecdata (sdk-reference-v2.md §7).
  *  The SDK has NO macro-action readback — getMacroDataRecdata is a stub (`return data`). */
@@ -991,7 +1016,7 @@ class KeyboardService {
     }
   }
 
-  async closedLighting(): Promise<any | Error> {
+  async closedLighting(): Promise<boolean | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1005,7 +1030,7 @@ class KeyboardService {
     }
   }
 
-  async getCustomLighting(key: number): Promise<any | Error> {
+  async getCustomLighting(key: number): Promise<CustomLightColor | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1019,7 +1044,7 @@ class KeyboardService {
     }
   }
 
-  async setCustomLighting(param: { key: number; r: number; g: number; b: number }): Promise<any | Error> {
+  async setCustomLighting(param: { key: number; r: number; g: number; b: number }): Promise<CustomLightColor | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1033,7 +1058,7 @@ class KeyboardService {
     }
   }
 
-  async saveCustomLighting(): Promise<any | Error> {
+  async saveCustomLighting(): Promise<undefined | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1047,7 +1072,7 @@ class KeyboardService {
     }
   }
 
-  async switchConfig(profileId: number): Promise<any | Error> {
+  async switchConfig(profileId: number): Promise<{ configID: number; hasFourConfig: true } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1065,7 +1090,7 @@ class KeyboardService {
     }
   }
 
-  async getApi(param: any): Promise<any | Error> {
+  async getApi(param: ICmd): Promise<GetApiResult | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');

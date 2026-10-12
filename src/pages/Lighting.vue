@@ -704,7 +704,7 @@ export default defineComponent({
             const keyValue = key.physicalKeyValue || key.keyValue;
             const result = await KeyboardService.getCustomLighting(keyValue);
 
-            if (!(result instanceof Error) && result && result.R !== undefined) {
+            if (!(result instanceof Error) && result) {
               tempColors[keyValue] = {
                 R: result.R,
                 G: result.G,

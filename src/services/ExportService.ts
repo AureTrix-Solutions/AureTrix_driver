@@ -33,11 +33,15 @@ class ExportService {
         return {};
       }
 
-      const pollingRateResult = await KeyboardService.getApi({ type: 'ORDER_TYPE_ROES' });
-      const pollingRate = pollingRateResult instanceof Error ? 3 : pollingRateResult.sArg || 3;
-
-      const topDeadBandResult = await KeyboardService.getApi({ type: 'ORDER_TYPE_TOP_DEAD_SWITCH' });
-      const topDeadBand = topDeadBandResult instanceof Error ? 0 : topDeadBandResult.sArg || 0;
+      // getApi's verified §3 union decodes ROES → number and TOP_DEAD_SWITCH → boolean —
+      // neither carries `.sArg`, so the previous `.sArg || 3` / `.sArg || 0` reads were
+      // always-dead (values were always 3 / 0). Kept as literal defaults to preserve the
+      // exported JSON shape; the queries stay so HID traffic is unchanged. Making these
+      // live is a PO call — see sprint Findings / backlog exportservice-review.
+      await KeyboardService.getApi({ type: 'ORDER_TYPE_ROES' });
+      const pollingRate = 3;
+      await KeyboardService.getApi({ type: 'ORDER_TYPE_TOP_DEAD_SWITCH' });
+      const topDeadBand = 0;
 
       return {
         rateOfReturn: pollingRate,
@@ -458,7 +462,7 @@ class ExportService {
     try {
       const customLight = await this.retryWithBackoff(() => KeyboardService.getCustomLighting(keyValue));
 
-      if (!(customLight instanceof Error) && customLight.R !== undefined) {
+      if (!(customLight instanceof Error)) {
         keyData.light = {
           custom: {
             R: customLight.R,

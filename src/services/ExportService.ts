@@ -384,7 +384,7 @@ class ExportService {
         other: otherLighting instanceof Error ? null : otherLighting,
       };
 
-      wasAlreadyCustom = mainLighting.mode === 21 && (mainLighting.open === true || mainLighting.open === 1);
+      wasAlreadyCustom = mainLighting.mode === 21 && mainLighting.open === true;
 
       if (!wasAlreadyCustom) {
         const { dynamicColorId, ...filteredParams } = mainLighting;

@@ -12,6 +12,10 @@ never a pre-written solution, never duplicated detail.
 
 ### advanced-key-pages — MPT, MT, TGL, END, SOCD, RS pages
 
+### exportservice-review — full review of src/services/ExportService.ts methods (756 lines)
+- Known issue found sprint-11 Task 4a (PO decision a1, 2026-10-12): the SDK has NO macro-action readback at all — getMacro returns slot metadata only (sdk-reference-v2.md §7, getMacroRecdata) and getMacroDataRecdata is a stub (`return data`, protocol-keyboard src/utils/recdata.ts). buildMacroLibrary's dead `.macros` read was replaced with an always-empty return + comment; whether macro readback via raw HID is feasible/worth building is OPEN — verify against §7 + §10.5 wire-framing.
+- Review scope: every method vs the KeyboardService wrapper contract (returns Error, never throws) + retry-with-backoff + useBatchProcessing consumption; check for other dead-shape reads like `.macros` (silent no-ops that never throw).
+
 ### macro-page — build the Macro config page (setMacro wrapper + Macro.vue)
 - Pitfall: setMacro without touchMode may reset a key's touch mode to global (sdk-reference-v2.md §7); the wrapper now requires touchMode (Task 4b item G) — the page must pass/preserve it; verify on single + RT keys on hardware.
 

@@ -21,15 +21,27 @@
 Base: `dcbac5a`   Head: `2db12f7`
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files — expect exactly eslint.config.mjs + docs/lint-baseline.txt)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files — expect exactly eslint.config.mjs + docs/lint-baseline.txt)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
-<!-- Reviewer fills this section. -->
-**Result:**  ·  **Date:**  ·  **Fail count:**
+**Result:** PASS  ·  **Date:** 2026-10-12  ·  **Fail count:** 0
 
-### Failed items (FAIL only)
+### Evidence (all re-run this session, fresh)
+1. `npm run lint | grep -oE '[0-9]+ problems.*'` → `193 problems (0 errors, 193 warnings)` ✓
+2. Per-rule counts → `108 no-explicit-any` / `54 no-unused-vars` / `31 preserve-caught-error` ✓ (exact match)
+3. `npx eslint src/types/vue-shim.d.ts` → no output, exit 0 ✓
+4. `head -1 docs/lint-baseline.txt` → `193` ✓
+5. `npm run typecheck` → exit 0 ✓
+6. Suppression gate: `git diff dcbac5a..2db12f7 | grep -cE '^\+.*(as any|@ts-ignore|@ts-expect-error|eslint-disable)'` → 0 ✓
+7. Scope: `git diff --stat dcbac5a..2db12f7` → exactly eslint.config.mjs + docs/lint-baseline.txt (new); follow-up commit 69b93d3 is checkpoint/review-file mechanics only ✓
+8. Final config verified line-by-line vs edit spec: array-form no-unused-vars (ignoreRestSiblings + argsIgnorePattern/varsIgnorePattern/destructuredArrayIgnorePattern `^_`) + rest-sibling comment; `**/*.d.ts` block now AFTER the warn-rules block (later-wins restores the exemption) with its comment; stale `(109)/(81)/(31)` counts deleted; baseline file mirrors tsc-baseline.txt format (count, `#` history, `# Gate:`) ✓
+9. Design intent: no source touched — filters:[], usagePage 65440, wrappers-return-Error unaffected ✓
+10. Tag: plan carries [high-stakes]; review performed accordingly ✓
+
+### Findings
+- None.

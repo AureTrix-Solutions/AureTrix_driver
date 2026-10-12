@@ -1,8 +1,72 @@
-# No active sprint
+# SPRINT: sprint-11-lint-warnings
 
-COMPLETE — run PM-open for the next sprint.
+**GOAL:** Ratchet ESLint warnings 221 → 0 honestly (real types + real dead-code removal, no new suppressions), delete the orphaned DebugKeyboardService, and end with the three deferred rules promoted to errors and docs/lint-baseline.txt at 0 — mirroring the tsc-baseline ratchet (sprint-07).
+**DONE-CRITERIA (sprint):** `npm run lint` → `0 problems` with no-explicit-any / no-unused-vars / preserve-caught-error at `"error"`; `npm run typecheck` exit 0; docs/lint-baseline.txt line 1 = `0`; `grep -rn DebugKeyboardService src/ CLAUDE.md README.md docs/pages/ docs/PAGES_OVERVIEW.md .openclaude/` → nothing (archive/ and historical sdk-ref evidence excepted, see Task 3); sprint diff adds no `as any` / `@ts-ignore` / `eslint-disable`.
+**Started:** 2026-10-12 · **Status:** IN PROGRESS
+<!-- PO decisions locked 2026-10-11: (1) DebugKeyboardService.ts → DELETE (orphaned: zero importers since commit 929d723, 2025-11-29, when Debug.vue switched to KeyboardService). (2) unused-vars → idiomatic rule options (ignoreRestSiblings + "^_" patterns) + hand-fix catch params/dead code; NO caughtErrors:"none". -->
+
+## Checkpoint
+- Branch: `sprint-11-lint-warnings`
+- tsc baseline: 0 errors (docs/tsc-baseline.txt) · lint baseline: 221 warnings measured 2026-10-11 (docs/lint-baseline.txt created in Task 1 at 193)
+- Cleanup: .scratch/ holds PM research (pm-notes.md, test-eslint.config.mjs, lint measurement dumps — PO may delete); _to_delete/ does not exist yet — Task 2 creates it with DebugKeyboardService.ts (PO must `git rm` after sign-off)
 
 ## ▶ RUN THIS
-No active sprint. To start one, open a fresh window and paste:
-  Act as PM per CLAUDE.md. Plan the "<name>" sprint from docs/plans/backlog.md.
-(Or a direct goal: Act as PM per CLAUDE.md. Goal: <...>.)
+Next: Task 1 — config ratchet + lint-baseline file. Do this task, then stop.
+
+## Global rules (apply to EVERY task below; Done-whens assume them)
+- Enumerate sites fresh with `npx eslint <files>` — line numbers below are 2026-10-11 measurements and DRIFT as edits land; trust eslint output, never this plan's numbers.
+- After edits: `npm run typecheck` → 0 errors. If tightening a type UNMASKS caller errors, fix the callers properly (part of the same ratchet); never silence with `!`/`as any`. Record any tsc re-baseline in the checkpoint.
+- Re-baseline: write the new `npm run lint` total as line 1 of docs/lint-baseline.txt + one `#` history line (down only).
+- Suppression gate: `git diff | grep -E "^\+.*(as any|@ts-ignore|@ts-expect-error|eslint-disable)"` → nothing.
+- Nuance rules: (a) a "dead" local whose RHS is `await …getX()` — keep the CALL, drop only the `const x =` binding (side effect); (b) never delete a function live in a template/return — fix its unused PARAMS (`_`-prefix); (c) design intent untouched: wrappers RETURN Error, never throw; (d) preserve-caught-error fix = append `, { cause: error }` to the rethrow (verified empirically; target esnext supports ErrorOptions); (e) unused `catch (error)` binding → optional catch binding `catch {`.
+- Verified typing guidance (PM-researched 2026-10-11): the SDK's own d.ts declares most XDKeyboard methods `Promise<any>` — type OUR wrapper returns to the verified domain shape from docs/sdk-reference-v2.md (all needed sections Verified per its Verification-status table), keeping the `| Error` union (SDK resolves to the caught Error on failure, §13.2). protocol-keyboard's types barrel (already a tsconfig path alias, zero `any`) exports IDefKeyInfo, IKeyData, ILightMode, IRGBDesc, IKRGBDesc, IDKSMode, IMTMode, ITGLMode, IEndMode, ISOCDMode(/V2/V3), IRSMode, IMacroMode, LightModeConfigs — prefer these over inventing types. Known shapes: getBaseInfo §3 `{appVersion: string, …}`; getSingleTravel §5.3 `string`; getRtTravel §5.4 `{pressTravel, releaseTravel}`; getDksAll §6.1 `{dks1..dks4}`; getMT §6.5, getTGL §6.6, getEND §6.7, getSocd §6.8, getMacro §7; lighting §8 (getSingleRGBRecdata → uppercase `{key,R,G,B}`); getApi return-union table §3; switchConfig(config:number); console shims `(...args: any[])` → `unknown[]`. Verify each against the doc section before writing (rule 6).
+
+## Tasks
+1. **Config ratchet + lint-baseline file** — [high-stakes] — STATUS: PENDING
+   - Done when: `npm run lint 2>&1 | grep -oE '[0-9]+ problems.*'` → `193 problems (0 errors, 193 warnings)`; per-rule counts (`grep -oE '(no-explicit-any|no-unused-vars|preserve-caught-error)$' | sort | uniq -c`) → 108 / 54 / 31; `npx eslint src/types/vue-shim.d.ts` → 0 warnings; docs/lint-baseline.txt line 1 = `193`; `npm run typecheck` exit 0.
+   - Files: `eslint.config.mjs`, `docs/lint-baseline.txt` (new)
+   - Edit spec (PM verified this EXACT config empirically — the 193/108/54/31 numbers are measured, evidence in .scratch/test-eslint.config.mjs):
+     1. Replace `"@typescript-eslint/no-unused-vars": "warn", // unused vars (81)` with the array form `["warn", { ignoreRestSiblings: true, argsIgnorePattern: "^_", varsIgnorePattern: "^_", destructuredArrayIgnorePattern: "^_" }]` + one comment: rest-sibling strips (`const {a, ...rest}`) are intentional. (Clears 27: 25 rest-siblings + 2 `[_, x]` array placeholders.)
+     2. MOVE the whole `{ files: ["**/*.d.ts"], … }` block from BEFORE the warn-rules block to AFTER it — flat config is later-wins, so the no-explicit-any exemption is currently DEAD (that is vue-shim.d.ts's 1 warning). Keep its comment.
+     3. Delete the stale `(109)`/`(81)`/`(31)` counts from the three warn-rule comments.
+     4. Create docs/lint-baseline.txt mirroring docs/tsc-baseline.txt: line 1 `193`, then `#` history (`# 2026-10-12 sprint-11 Task 1: 221 → 193 (unused-vars options + d.ts exemption fix)`) and `# Gate: warning count <= first line; ratchet DOWN only.`
+   - Note: CLAUDE.md's "~221 deferred warnings" sentence is updated once, in Task 11 — don't touch it per-task.
+2. **Delete orphaned DebugKeyboardService + core docs** — [high-stakes] — STATUS: PENDING
+   - Done when: `_to_delete/DebugKeyboardService.ts` exists AND `src/services/DebugKeyboardService.ts` does NOT; `npm run lint` → `137 problems (0 errors, 137 warnings)`; `grep -rn DebugKeyboardService CLAUDE.md README.md .openclaude/skills/sdk-wrapper/SKILL.md` → nothing; `npm run typecheck` exit 0; `npm run build` passes.
+   - Files: MOVE `src/services/DebugKeyboardService.ts` → `_to_delete/` (agent never deletes — PO does `git rm`); edit `CLAUDE.md`, `README.md`, `.openclaude/skills/sdk-wrapper/SKILL.md`.
+   - Spec: first re-verify the orphan claim (`grep -rln DebugKeyboardService src/` → only the file itself). CLAUDE.md: delete the Architecture bullet "**`DebugKeyboardService`** is a *separate* XDKeyboard instance used only by the Debug page…" (stale since 929d723; Debug.vue uses KeyboardService). README.md: 1 mention → remove. SKILL.md: 2 mentions → drop `src/services/DebugKeyboardService.ts` from trigger paths/body. (`_to_delete/` is already in eslint ignores L7 and outside tsconfig include `src/**/*` → both tools drop it automatically; PM measured 137 with the file excluded.)
+3. **Doc mention sweep** — [trivial] — STATUS: PENDING
+   - Done when: `grep -c DebugKeyboardService docs/pages/Debug.md docs/PAGES_OVERVIEW.md` → 0 and 0; `grep -n DebugKeyboardService docs/sdk-reference-v2.md` → only historical verification-evidence lines, each listed with its disposition in the checkpoint; lint total unchanged (137); no archive/ file touched.
+   - Files: `docs/pages/Debug.md` (4 mentions), `docs/PAGES_OVERVIEW.md` (2), `docs/sdk-reference-v2.md` (9).
+   - Spec: Debug.md/PAGES_OVERVIEW.md describe current architecture → rewrite to KeyboardService or delete the sentence (grep each mention; leave no stale claim). sdk-reference-v2.md is ground truth: where a mention presents DebugKeyboardService as LIVE app code, reword to the raw-SDK/KeyboardService equivalent ONLY if the fact still holds; where it is historical evidence (batch notes, verification rows), leave the name — it records what was true then. Never alter an SDK fact to make a mention disappear.
+4. **KeyboardService ratchet** (42 sites: 35 any + 5 unused + 2 pce) — [high-stakes] — sub-tasks 4a→4d, ONE Reviewer at the end over the cumulative base..head diff; parent stays IN-PROGRESS until 4d, then IN-REVIEW + review file — STATUS: PENDING
+   - Files: `src/services/KeyboardService.ts` ONLY (1430 lines >800 → forced by-section split; each sub-task commits separately).
+   - 4a Done when: `npx eslint src/services/KeyboardService.ts | grep -c warning` → 29; lint total → 124. Sites (13): 5 unused — 1 catch param (→ `catch {`), syncHardwareSettings' `const pollingRate = …`/`const systemMode = …` (drop bindings, KEEP awaits — nuance a), handleConnect/handleDisconnect unused `event` params (→ `_event`; the handlers are REGISTERED listeners at the constructor — never delete them, nuance b) + 2 pce (`{ cause: error }`) + 6 early anys: console.error shim args → `unknown[]`; getBaseInfo, getMacro, setMacro (param + `macros: any[]`), setGlobalTouchTravel param.
+   - 4b Done when: file → 17; total → 112. Sites (12): wrapper band first half — calibrationStart, calibrationEnd, getRm6X21Travel (`status: any` member), getLighting, getLogoLighting, getSpecialLighting, setLighting/setLogoLighting/setSpecialLighting (2 each: `lightModeConfig: any` param → LightModeConfigs + return).
+   - 4c Done when: file → 10; total → 105. Sites (7): closedLighting, getCustomLighting, setCustomLighting return, saveCustomLighting, switchConfig, getApi (param → ICmd + return).
+   - 4d Done when: file → 0; total → 95. Sites (10): getDks, getMpt, getSocd, getMT, getTGL, getEND, setPollingRate, setSystemMode, exportConfig (`data: any` → KeyboardConfig), importConfig.
+   - Callers in pages already guard `instanceof Error` (26 grep hits across RapidTrigger/GlobalTravel/SwitchProfiles) — if tightening unmasked a caller error, fix the caller in the same sub-task and note it in the checkpoint.
+5. **ExportService ratchet** (15 sites: 14 any + 1 unused) — [high-stakes] — STATUS: PENDING
+   - Done when: `npx eslint src/services/ExportService.ts | grep -c warning` → 0; lint total → 80; typecheck 0.
+   - Files: `src/services/ExportService.ts` (756 lines).
+   - Spec: file ALREADY imports typed `KeyboardConfig` from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate' and uses indexed types — prefer `KeyboardConfig['light']['main']`-style indexed types over new interfaces. PM-sampled sites: `lastError: any` → `unknown`; `originalLighting/originalLogo/originalSpecial: any` + `tempCustomParams: any` → KeyboardConfig-indexed; convertLightingToConfig param; `keyInfo` in forEach → IDefKeyInfo; macro map param; convertLightConfigToSDKFormat return + local `sdkFormat`; inline `{main/logo/other: any}` members; 1 unused (eslint lists it).
+6. **Performance components ratchet** (48 sites) — [high-stakes] — sub-tasks 6a→6d, ONE Reviewer at the end; parent IN-PROGRESS until 6d — STATUS: PENDING
+   - 6a Done when: total → 65. Files: `src/components/performance/SingleKeyTravel.vue` (14: 13 unused dead locals from a watch-handler refactor + 1 `PropType<any>`), `KeyTravel.vue` (1 `PropType<any>`). PropType fix: grep what the parent binds to the tag → IDefKeyInfo or the real prop shape. Dead locals: pure deletions (cheap); apply nuance (a) if any RHS is an await.
+   - 6b Done when: total → 56. File: `GlobalTravel.vue` (9: 8 unused + 1 `const globalSettings = globalSettingsResult as any` — the cast dissolves against Task 4's typed wrapper; narrow via the existing instanceof guard).
+   - 6c Done when: total → 41. Files: `SwitchProfiles.vue` (11: 8 unused + 3 `type: Array as any` / `Object as any` props → `PropType<T[]>` / `PropType<T>` with the real T), `Performance.vue` (4 unused: dead store import, selectKey unused params → `_`-prefix (function live), catch param → `catch {`).
+   - 6d Done when: total → 32. File: `RapidTrigger.vue` (9: 7 `(result as any).x` casts on KS-wrapper results — after Task 4 DELETE the casts and rely on existing `instanceof Error` narrowing; 2 unused). DEPENDS ON Task 4 — do not start 6d before 4d is DONE.
+7. **Utils/store ratchet** (9 sites) — [high-stakes] (touches store/connection.ts → always HS) — STATUS: PENDING
+   - Done when: total → 23; typecheck 0. Files: `src/utils/layoutConfigs.ts` (6 any: `baseLayout?: any[][]` etc. → the layout row type actually consumed — verify against IDefKeyInfo[][] / getLayoutConfig's callers), `src/store/connection.ts` (2: `deviceInfo: null as any` → proper `DeviceInfo | null`; `device: any` → HIDDevice from '@sparklinkplayjoy/hid'), `src/utils/MappedKeyboard.ts` (1 pce → `{ cause: error }`).
+8. **Layout pages ratchet** (10 sites) — [trivial] — STATUS: PENDING
+   - Done when: total → 13. Files: `src/pages/LayoutPreview.vue` (7: 6 any — `ref<any[][]>` → layout row type, `ref<any>` → named shape or verified SDK result, `row: any` → number[]; 1 unused), `src/pages/LayoutCreator.vue` (3: 1 `ref<any[]>` → the saved-layout item type from LayoutStorageService; 2 unused — `const router = useRouter()` dead (PM verified 0 `router.` uses; delete binding + the import if unused elsewhere), `arrayToCompactSyntax` dead (LayoutStorageService's copy is the live one)). Re-grep each symbol before deleting (`grep -n <sym> <file>` → definition only).
+9. **Remaining pages ratchet** (10 sites) — [trivial] — STATUS: PENDING
+   - Done when: total → 3. Files: `src/pages/KeyMapping.vue` (5 unused — TRAP: `isDropTarget` is LIVE in the template (L37) and returned; only its two PARAMS are unused → `_row`/`_colIdx` (body is `return true`); the rest per eslint output), `src/App.vue` (3: 2 any — `openCategory: null as any` → `string | null` or the real category union, `item: any` → the menu-item type; 1 unused `computed` import → drop from the import list), `src/pages/Lighting.vue` (2: 1 any — console shim `(...args: any[])` → `unknown[]`; 1 unused catch param → `catch {`).
+10. **Tail cleanup** (3 sites) — [trivial] — STATUS: PENDING
+    - Done when: `npm run lint` → `0 problems (0 errors, 0 warnings)`; docs/lint-baseline.txt line 1 = `0` + history line; typecheck 0; `npm run build` passes. Files: `src/pages/Calibration.vue` (1 unused), `src/composables/useBatchProcessing.ts` (1 unused), `src/services/LayoutStorageService.ts` (1 unused catch param → `catch {`).
+11. **Promote rules to error + final docs** — [high-stakes] — STATUS: PENDING
+    - Done when: `grep -n 'no-explicit-any\|no-unused-vars\|preserve-caught-error' eslint.config.mjs` shows all three at `"error"`; `npm run lint` exit 0 → `0 problems`; docs/lint-baseline.txt line 1 = `0`; `grep -n "221" CLAUDE.md` → nothing and the Commands-section sentence now says warnings ratcheted to 0 in sprint-11 with the three rules at error (≤2 lines — CLAUDE.md curation rule); typecheck 0.
+    - Files: `eslint.config.mjs`, `docs/lint-baseline.txt`, `CLAUDE.md`.
+
+## Findings
+<!-- one line per out-of-scope observation: DEFECT + WHERE TO VERIFY (never a pre-written fix). PM routes at close. -->
+(none yet)

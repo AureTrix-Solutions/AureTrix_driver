@@ -18,10 +18,6 @@ never a pre-written solution, never duplicated detail.
 ### custom-firmware (long-term) — firmware for an own board (RP2040/STM32)
 - Foundation: docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet reassembly).
 
-### lint-warnings-ratchet — burn down the deferred ESLint warning load (sprint-10 follow-up)
-- sprint-10 set `@typescript-eslint/no-explicit-any`, `@typescript-eslint/no-unused-vars`, and `preserve-caught-error` to **warn** so `npm run lint` exits 0 with ~221 tolerated warnings (109 / 81 / 31 respectively); genuine errors were fixed in-sprint. Ratchet these down in batches toward 0, mirroring the tsc-baseline approach (docs/tsc-baseline.txt, sprint-07) — the config only ever moves toward stricter.
-- Reproduce the current count: `npm run lint` (warnings summary line). Config: `eslint.config.mjs`. Most `no-explicit-any` sit at the SparkLink SDK boundary (verify each against docs/sdk-reference-v2.md before typing); `preserve-caught-error` is missing `{ cause }` on rethrows in retry/teardown paths (KeyboardService, ExportService).
-
 ## Deps issues
 - [deps] On any @sparklinkplayjoy version bump, re-verify the two tsconfig.json pinned `paths` targets still exist (hid `dist/cjs/index.d.ts`; protocol-keyboard `dist/esm/types/index.d.ts` since sprint-06 — upstream ships no root types, so a moved/renamed barrel or a fixed upstream release silently breaks typecheck or makes the remap redundant) — grep `"@sparklinkplayjoy` in tsconfig.json, then `ls` both paths. (2026-10-11.)
 

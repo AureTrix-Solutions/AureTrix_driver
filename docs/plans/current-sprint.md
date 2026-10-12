@@ -11,7 +11,7 @@
 - Cleanup (from `ls`): .scratch/ holds PM research + lint measurement dumps (PO may delete); _to_delete/ holds .gitkeep + DebugKeyboardService.ts (PO must `git rm` after sign-off)
 
 ## ▶ RUN THIS
-Next: Reviewer — "follow docs/plans/reviews/review-sprint-11-task-2-delete-debugservice.md". On PASS: flip Task 2 → DONE, advance ▶ RUN THIS to Task 3, commit.
+Next: Worker — Task 3 (Doc mention sweep, [trivial]). Read the Task 3 spec below; enumerate mentions fresh with grep (counts DRIFT). On finish, flip Task 3 → DONE, advance ▶ RUN THIS to Task 4, commit.
 
 ## Global rules (apply to EVERY task below; Done-whens assume them)
 - Enumerate sites fresh with `npx eslint <files>` — line numbers below are 2026-10-11 measurements and DRIFT as edits land; trust eslint output, never this plan's numbers.
@@ -23,10 +23,7 @@ Next: Reviewer — "follow docs/plans/reviews/review-sprint-11-task-2-delete-deb
 
 ## Tasks
 1. **Config ratchet + lint-baseline file** — [high-stakes] — STATUS: DONE ✓ 2026-10-12 (Reviewer PASS, 0 fail — review-sprint-11-task-1-config-ratchet.md; all 5 Done-whens re-run exact: 193 = 108 any / 54 unused / 31 pce, shim exit 0, baseline 193, tsc exit 0, suppression gate 0; commits dcbac5a..2db12f7)
-2. **Delete orphaned DebugKeyboardService + core docs** — [high-stakes] — STATUS: IN-REVIEW (review-sprint-11-task-2-delete-debugservice.md · base 8b54b75, head 6fcb34c + checkpoint commit · self-check: lint 137 = 80/54/3, scoped grep empty, tsc exit 0, build ✓, suppression gate 0; docs/pages mentions left for Task 3)
-   - Done when: `_to_delete/DebugKeyboardService.ts` exists AND `src/services/DebugKeyboardService.ts` does NOT; `npm run lint` → `137 problems (0 errors, 137 warnings)`; `grep -rn DebugKeyboardService CLAUDE.md README.md .openclaude/skills/sdk-wrapper/SKILL.md` → nothing; `npm run typecheck` exit 0; `npm run build` passes.
-   - Files: MOVE `src/services/DebugKeyboardService.ts` → `_to_delete/` (agent never deletes — PO does `git rm`); edit `CLAUDE.md`, `README.md`, `.openclaude/skills/sdk-wrapper/SKILL.md`.
-   - Spec: first re-verify the orphan claim (`grep -rln DebugKeyboardService src/` → only the file itself). CLAUDE.md: delete the Architecture bullet "**`DebugKeyboardService`** is a *separate* XDKeyboard instance used only by the Debug page…" (stale since 929d723; Debug.vue uses KeyboardService). README.md: 1 mention → remove. SKILL.md: 2 mentions → drop `src/services/DebugKeyboardService.ts` from trigger paths/body. (`_to_delete/` is already in eslint ignores L7 and outside tsconfig include `src/**/*` → both tools drop it automatically; PM measured 137 with the file excluded.)
+2. **Delete orphaned DebugKeyboardService + core docs** — [high-stakes] — STATUS: DONE ✓ 2026-10-12 (Reviewer PASS, 0 fail — review-sprint-11-task-2-delete-debugservice.md; move is a 100% rename, 0 content changed; all 5 Done-whens re-run exact: lint 137 = 80/54/3, scoped grep exit 1, tsc exit 0, build ✓ 1.61s, suppression gate 0; commits 8b54b75..6fcb34c + checkpoint)
 3. **Doc mention sweep** — [trivial] — STATUS: PENDING
    - Done when: `grep -c DebugKeyboardService docs/pages/Debug.md docs/PAGES_OVERVIEW.md` → 0 and 0; `grep -n DebugKeyboardService docs/sdk-reference-v2.md` → only historical verification-evidence lines, each listed with its disposition in the checkpoint; lint total unchanged (137); no archive/ file touched.
    - Files: `docs/pages/Debug.md` (4 mentions), `docs/PAGES_OVERVIEW.md` (2), `docs/sdk-reference-v2.md` (9).

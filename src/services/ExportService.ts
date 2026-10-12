@@ -1,6 +1,9 @@
 import KeyboardService from './KeyboardService';
 import { useBatchProcessing } from '../composables/useBatchProcessing';
 import type { KeyboardConfig, Keyboards } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
+import type { ILightMode, IKey } from '@sparklinkplayjoy/protocol-keyboard';
+import type { LightModeConfigs } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/types/type';
+import type { IDefKeyInfo } from '../types/types';
 
 class ExportService {
   private processBatches = useBatchProcessing().processBatches;
@@ -11,7 +14,7 @@ class ExportService {
     maxRetries: number = 2,
     backoffMs: number = 200
   ): Promise<T> {
-    let lastError: any;
+    let lastError: unknown;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         return await fn();
@@ -83,7 +86,7 @@ class ExportService {
     }
   }
 
-  private convertLightingToConfig(lighting: any): KeyboardConfig['light']['main'] {
+  private convertLightingToConfig(lighting: ILightMode): KeyboardConfig['light']['main'] {
     return {
       open: lighting.open ?? true,
       mode: lighting.type ?? 'static',
@@ -180,7 +183,7 @@ class ExportService {
           const layoutInfo = await this.retryWithBackoff(() => KeyboardService.getLayoutKeyInfo(params));
           
           if (!(layoutInfo instanceof Error) && Array.isArray(layoutInfo)) {
-            layoutInfo.forEach((keyInfo: any, index) => {
+            layoutInfo.forEach((keyInfo: IKey, index) => {
               const keyValue = params[index].key;
               const keyData = dataMap.get(keyValue);
               if (keyData) {
@@ -208,10 +211,10 @@ class ExportService {
     }
   }
 
-  private findKeyLocation(layout: any[][], keyValue: number): { row: number; col: number } | null {
+  private findKeyLocation(layout: IDefKeyInfo[][], keyValue: number): { row: number; col: number } | null {
     for (const layer of layout) {
       for (const key of layer) {
-        if (key.keyValue === keyValue) {
+        if (key.keyValue === keyValue && key.location) {
           return { row: key.location.row, col: key.location.col };
         }
       }
@@ -343,9 +346,9 @@ class ExportService {
 
   private async withCustomModeForExport<T>(callback: () => Promise<T>): Promise<T> {
     interface LightingSnapshot {
-      main: any;
-      logo: any;
-      other: any;
+      main: ILightMode & { dynamicColorId: number };
+      logo: (ILightMode & { dynamicColorId: number }) | null;
+      other: ILightMode | null;
     }
 
     let snapshot: LightingSnapshot | null = null;
@@ -388,7 +391,7 @@ class ExportService {
     } finally {
       if (snapshot && !wasAlreadyCustom) {
         try {
-          const mainWasOff = snapshot.main.open === false || snapshot.main.open === 0;
+          const mainWasOff = snapshot.main.open === false;
           
           if (mainWasOff) {
             const { dynamicColorId, ...mainParams } = snapshot.main;
@@ -406,10 +409,13 @@ class ExportService {
           }
 
           if (snapshot.logo) {
-            const logoWasOn = snapshot.logo.open === true || snapshot.logo.open === 1;
+            const logoWasOn = snapshot.logo.open === true;
             if (logoWasOn) {
               const { dynamicColorId, ...logoParams } = snapshot.logo;
-              const logoResult = await KeyboardService.setLogoLighting(logoParams);
+              const logoResult = await KeyboardService.setLogoLighting({
+                ...logoParams,
+                type: logoParams.type === 'dynamic' ? 'dynamic' : 'static',
+              });
               if (logoResult instanceof Error) {
                 console.error('Failed to restore logo lighting:', logoResult.message);
               }
@@ -417,10 +423,9 @@ class ExportService {
           }
 
           if (snapshot.other) {
-            const otherWasOn = snapshot.other.open === true || snapshot.other.open === 1;
+            const otherWasOn = snapshot.other.open === true;
             if (otherWasOn) {
-              const { dynamicColorId, ...otherParams } = snapshot.other;
-              const otherResult = await KeyboardService.setSpecialLighting(otherParams);
+              const otherResult = await KeyboardService.setSpecialLighting(snapshot.other);
               if (otherResult instanceof Error) {
                 console.error('Failed to restore special lighting:', otherResult.message);
               }

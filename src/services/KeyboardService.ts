@@ -1,6 +1,6 @@
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
 import type { Device, HIDDevice } from '@sparklinkplayjoy/hid';
-import type { IDB, ILightMode, ILoGoLightMode, IMacroMode } from '@sparklinkplayjoy/protocol-keyboard';
+import type { IDB, ILightMode, ILoGoLightMode, IMacroMode, IKey } from '@sparklinkplayjoy/protocol-keyboard';
 import type { ICmd, LightModeConfigs, MacroType } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/types/type';
 import type { ImportResult, KeyboardConfig } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
 import { IDefKeyInfo, DksLayoutType, DksType } from '../types/types';
@@ -547,7 +547,7 @@ class KeyboardService {
     }
   }
 
-  async getLayoutKeyInfo(params: { key: number; layout: number }[]): Promise<IDefKeyInfo[] | Error> {
+  async getLayoutKeyInfo(params: { key: number; layout: number }[]): Promise<IKey[] | Error> {
     const maxRetries = 3;
     let attempt = 0;
     try {

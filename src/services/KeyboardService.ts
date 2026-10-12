@@ -1,9 +1,40 @@
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
 import type { Device, HIDDevice } from '@sparklinkplayjoy/hid';
+import type { IDB, IMacroMode } from '@sparklinkplayjoy/protocol-keyboard';
+import type { MacroType } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/types/type';
 import { IDefKeyInfo, DksLayoutType, DksType } from '../types/types';
 import { useConnectionStore } from '../store/connection';
 
 type PairedDevice = { id: string; data: HIDDevice; productName: string };
+
+/** Macro slot metadata as decoded by getMacroRecdata (sdk-reference-v2.md §7).
+ *  The SDK has NO macro-action readback — getMacroDataRecdata is a stub (`return data`). */
+export interface MacroSlotInfo {
+  key: number;
+  id: number;
+  len: number;
+  mode: number;
+  num: number;
+  delay: number;
+}
+
+/** Device identity block returned by getBaseInfo (decoded by getCmdSyncRecdata;
+ *  sdk-reference-v2.md §3 — verified against protocol-keyboard/src/utils/recdata.ts).
+ *  `firewareSpaceSize` (sic) and `versionString` are mutually exclusive: firmware
+ *  reports either (hardVersion >= 1000 → firewareSpaceSize) or (hardVersion < 1000 → versionString). */
+export interface KeyboardBaseInfo {
+  BoardID: number;
+  KeyboardLayout: number;
+  KeyType: number;
+  CustomerID: number; // always 0 — never assigned by the decoder
+  ProductionId: number; // always 0 — never assigned by the decoder
+  KeyboardRunMode: number;
+  KeyboardSN: string;
+  firewareSpaceSize: number;
+  appVersion: string;
+  appBuildDate: string;
+  versionString: string;
+}
 
 class KeyboardService {
   private keyboard: XDKeyboard | null = null;
@@ -79,7 +110,7 @@ class KeyboardService {
     if (this.originalConsoleError) return;
     
     this.originalConsoleError = console.error;
-    console.error = (...args: any[]) => {
+    console.error = (...args: unknown[]) => {
       const message = args.map(arg => {
         if (arg instanceof Error) {
           return `${arg.name}: ${arg.message}`;
@@ -145,7 +176,7 @@ class KeyboardService {
       return result;
     } catch (error) {
       console.error('Failed to request device:', error);
-      throw new Error(`Failed to request device: ${(error as Error).message}`);
+      throw new Error(`Failed to request device: ${(error as Error).message}`, { cause: error });
     }
   }
 
@@ -233,7 +264,7 @@ class KeyboardService {
       return result;
     } catch (error) {
       console.error('Failed to initialize device:', error);
-      throw new Error(`Failed to initialize device: ${(error as Error).message}`);
+      throw new Error(`Failed to initialize device: ${(error as Error).message}`, { cause: error });
     }
   }
 
@@ -248,7 +279,7 @@ class KeyboardService {
         if (!(result instanceof Error) && typeof result === 'number') {
           return true;
         }
-      } catch (error) {
+      } catch {
       }
       
       if (attempt < maxAttempts - 1) {
@@ -314,19 +345,19 @@ class KeyboardService {
 
   private async syncHardwareSettings(): Promise<void> {
     try {
-      const pollingRate = await this.getPollingRate();
+      await this.getPollingRate();
     } catch (error) {
       console.error('Failed to sync polling rate:', error);
     }
-    
+
     try {
-      const systemMode = await this.querySystemMode();
+      await this.querySystemMode();
     } catch (error) {
       console.error('Failed to sync system mode:', error);
     }
   }
 
-  private handleConnect = async (event: HIDConnectionEvent): Promise<void> => {
+  private handleConnect = async (_event: HIDConnectionEvent): Promise<void> => {
     if (this.connectedDevice) {
       return;
     }
@@ -399,7 +430,7 @@ class KeyboardService {
     }
   }
 
-  private handleDisconnect = (event: HIDConnectionEvent): void => {
+  private handleDisconnect = (_event: HIDConnectionEvent): void => {
     if (this.errorSuppressionCleanupTimeout) {
       clearTimeout(this.errorSuppressionCleanupTimeout);
       this.errorSuppressionCleanupTimeout = null;
@@ -426,7 +457,7 @@ class KeyboardService {
     connectionStore.disconnect();
   }
 
-  async getBaseInfo(): Promise<any | Error> {
+  async getBaseInfo(): Promise<KeyboardBaseInfo | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -523,7 +554,7 @@ class KeyboardService {
     }
   }
 
-  async getMacro(key: number): Promise<any | Error> {
+  async getMacro(key: number): Promise<MacroSlotInfo | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -537,7 +568,7 @@ class KeyboardService {
     }
   }
 
-  async setMacro(param: any, macros: any[], touchMode: string): Promise<void | Error> {
+  async setMacro(param: IMacroMode, macros: MacroType[], touchMode: string): Promise<void | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -565,7 +596,7 @@ class KeyboardService {
     }
   }
 
-  async setGlobalTouchTravel(param: any): Promise<{ globalTouchTravel: number; pressDead: number; releaseDead: number } | Error> {
+  async setGlobalTouchTravel(param: IDB): Promise<{ globalTouchTravel: number; pressDead: number; releaseDead: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');

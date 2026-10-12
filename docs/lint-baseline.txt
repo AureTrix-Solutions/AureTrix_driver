@@ -1,4 +1,5 @@
-137
+123
 # 2026-10-12 sprint-11 Task 1: 221 → 193 (unused-vars options + d.ts exemption fix)
 # 2026-10-12 sprint-11 Task 2: 193 → 137 (DebugKeyboardService moved to _to_delete/; 80 any / 54 unused / 3 pce)
+# 2026-10-12 sprint-11 Task 4a: 137 → 123 (KeyboardService 43→29: getBaseInfo/getMacro/setMacro/setGlobalTouchTravel typed, shim+pce+5 unused cleared; ExportService buildMacroLibrary dead body replaced)
 # Gate: warning count <= first line; ratchet DOWN only.

@@ -42,11 +42,15 @@ class ExportService {
       return {
         rateOfReturn: pollingRate,
         topDeadBandSwitch: topDeadBand,
-        productId: baseInfo.productId || 0,
-        vendorId: baseInfo.vendorId || 0,
-        keyboardName: baseInfo.keyboardName || '',
-        usage: baseInfo.usage || 0,
-        usagePage: baseInfo.usagePage || 0,
+        // getBaseInfo returns only the 11 §3 identity fields (getCmdSyncRecdata) — it never
+        // carried productId/vendorId/keyboardName/usage/usagePage, so these reads were always
+        // undefined → defaults. Kept as literal defaults to preserve the exported JSON shape
+        // (removing fields is a PO call — see sprint Findings / backlog exportservice-review).
+        productId: 0,
+        vendorId: 0,
+        keyboardName: '',
+        usage: 0,
+        usagePage: 0,
       };
     } catch (error) {
       console.error('Error gathering device info:', error);
@@ -486,46 +490,15 @@ class ExportService {
   }
 
   async buildMacroLibrary(): Promise<KeyboardConfig['macro']> {
-    try {
-      const layout = await KeyboardService.defKey();
-      if (layout instanceof Error) {
-        return { list: [], v2list: [] };
-      }
-
-      const allKeys: number[] = [];
-      layout.forEach(layer => {
-        layer.forEach(key => {
-          if (!allKeys.includes(key.keyValue)) {
-            allKeys.push(key.keyValue);
-          }
-        });
-      });
-
-      const macros: KeyboardConfig['macro']['list'] = [];
-      let macroId = 1;
-
-      await this.processBatches(allKeys, async (keyValue) => {
-        const macroResult = await KeyboardService.getMacro(keyValue);
-        if (!(macroResult instanceof Error) && macroResult && macroResult.macros && macroResult.macros.length > 0) {
-          macros.push({
-            date: new Date().toISOString(),
-            id: macroId++,
-            name: `Macro ${keyValue}`,
-            step: macroResult.macros.map((m: any, idx: number) => ({
-              id: idx,
-              keyValue: m.keyCode || 0,
-              status: m.status === 'press' ? 1 : 0,
-              delay: m.timeDifference || 0,
-            })),
-          });
-        }
-      }, 40);
-
-      return { list: macros, v2list: [] };
-    } catch (error) {
-      console.error('Error building macro library:', error);
-      return { list: [], v2list: [] };
-    }
+    // The SDK has no macro-action readback: getMacro returns slot metadata only
+    // ({key,id,len,mode,num,delay} — sdk-reference-v2.md §7, getMacroRecdata) and
+    // getMacroDataRecdata is a stub (`return data`). The previous implementation
+    // read `macroResult.macros`, which never exists, so the guard never passed and
+    // the exported macro list was always empty. Returning the empty library directly
+    // preserves the KeyboardConfig schema (caller gatherKeyboardSnapshot) without
+    // dead hardware round-trips. A real readback would need raw-HID work — see
+    // backlog `exportservice-review`.
+    return { list: [], v2list: [] };
   }
 
   async gatherKeyboardSnapshot(): Promise<KeyboardConfig> {

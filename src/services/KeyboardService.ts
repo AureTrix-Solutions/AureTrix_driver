@@ -2,10 +2,17 @@ import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
 import type { Device, HIDDevice } from '@sparklinkplayjoy/hid';
 import type { IDB, ILightMode, ILoGoLightMode, IMacroMode } from '@sparklinkplayjoy/protocol-keyboard';
 import type { ICmd, LightModeConfigs, MacroType } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/types/type';
+import type { ImportResult, KeyboardConfig } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
 import { IDefKeyInfo, DksLayoutType, DksType } from '../types/types';
 import { useConnectionStore } from '../store/connection';
 
 type PairedDevice = { id: string; data: HIDDevice; productName: string };
+
+/** SOCD read-back shape, version-dependent (bundle getSocdRecdata, verified):
+ *  firmware ≥1.0.7 decodes the 7-field shape; older (default v='1.0.5') decodes 4 fields. */
+export type SocdConfig =
+  | { pos1: number; pos2: number; key1: number; key2: number; type: number; mode: number; delay: number }
+  | { pos: number; key: number; type: number; mode: number };
 
 /** Single-key custom RGB color as decoded by the SDK's getSingleRGB — UPPERCASE
  *  R/G/B (verified against the bundle). NOT the SDK's IKRGBDesc, which is lowercase
@@ -1120,7 +1127,7 @@ class KeyboardService {
     }
   }
 
-  async getDks(key: number, type?: DksType): Promise<any | Error> {
+  async getDks(key: number, type?: DksType): Promise<{ dks: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1134,7 +1141,7 @@ class KeyboardService {
     }
   }
 
-  async getMpt(key: number): Promise<any | Error> {
+  async getMpt(key: number): Promise<{ dks: number[]; dbs: number[] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1148,7 +1155,7 @@ class KeyboardService {
     }
   }
 
-  async getSocd(key: number, version?: string): Promise<any | Error> {
+  async getSocd(key: number, version?: string): Promise<SocdConfig | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1162,7 +1169,7 @@ class KeyboardService {
     }
   }
 
-  async getMT(key: number): Promise<any | Error> {
+  async getMT(key: number): Promise<{ dks1: number; dks2: number; dks3: number; dks4: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1176,7 +1183,7 @@ class KeyboardService {
     }
   }
 
-  async getTGL(key: number): Promise<any | Error> {
+  async getTGL(key: number): Promise<{ dks: number; delay: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1190,7 +1197,7 @@ class KeyboardService {
     }
   }
 
-  async getEND(key: number): Promise<any | Error> {
+  async getEND(key: number): Promise<{ dks: number; delay: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1235,7 +1242,7 @@ class KeyboardService {
     }
   }
 
-  async setPollingRate(value: number): Promise<any | Error> {
+  async setPollingRate(value: number): Promise<number | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1252,6 +1259,8 @@ class KeyboardService {
       this.pollingRateOperationToken = Date.now();
       this.suppressSDKReconnectError();
       this.isPollingRateChanging = true;
+      // d.ts says Promise<number>, but the bundle's info-controller catch RESOLVES the
+      // error (verified) — widened to unknown so the live instanceof guard below compiles.
       const result: unknown = await this.ensureKeyboard().setRateOfReturn(value);
       if (result instanceof Error) {
         this.isPollingRateChanging = false;
@@ -1312,7 +1321,8 @@ class KeyboardService {
         }
       }, 5000);
       
-      return result;
+      // Bundle-verified: on success the SDK resolves the applied rate index (number).
+      return result as number;
     } catch (error) {
       console.error('Failed to set polling rate:', error);
       this.isPollingRateChanging = false;
@@ -1360,7 +1370,7 @@ class KeyboardService {
     }
   }
 
-  async setSystemMode(mode: 'win' | 'mac'): Promise<any | Error> {
+  async setSystemMode(mode: 'win' | 'mac'): Promise<number | null | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -1461,14 +1471,14 @@ class KeyboardService {
     }
   }
 
-  exportConfig(data: any, filename: string): void {
+  exportConfig(data: KeyboardConfig, filename: string): void {
     if (!this.connectedDevice) {
       throw new Error('No device connected');
     }
     this.ensureKeyboard().exportConfig(data, filename);
   }
 
-  async importConfig(file: File): Promise<any | Error> {
+  async importConfig(file: File): Promise<ImportResult | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');

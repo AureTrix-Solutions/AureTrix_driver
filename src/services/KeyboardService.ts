@@ -1,7 +1,7 @@
 import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
 import type { Device, HIDDevice } from '@sparklinkplayjoy/hid';
-import type { IDB, IMacroMode } from '@sparklinkplayjoy/protocol-keyboard';
-import type { MacroType } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/types/type';
+import type { IDB, ILightMode, ILoGoLightMode, IMacroMode } from '@sparklinkplayjoy/protocol-keyboard';
+import type { LightModeConfigs, MacroType } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/types/type';
 import { IDefKeyInfo, DksLayoutType, DksType } from '../types/types';
 import { useConnectionStore } from '../store/connection';
 
@@ -834,7 +834,7 @@ class KeyboardService {
     }
   }
 
-  async calibrationStart(): Promise<any | Error> {
+  async calibrationStart(): Promise<null | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -848,7 +848,7 @@ class KeyboardService {
     }
   }
 
-  async calibrationEnd(): Promise<any | Error> {
+  async calibrationEnd(): Promise<null | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -890,7 +890,7 @@ class KeyboardService {
     }
   }
 
-  async getRm6X21Travel(): Promise<{ status: any; travels: number[]; maxTravel: number } | Error> {
+  async getRm6X21Travel(): Promise<{ status: number[][]; travels: number[]; maxTravel: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -907,7 +907,7 @@ class KeyboardService {
     }
   }
 
-  async getLighting(): Promise<any | Error> {
+  async getLighting(): Promise<ILightMode & { dynamicColorId: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -921,7 +921,7 @@ class KeyboardService {
     }
   }
 
-  async getLogoLighting(): Promise<any | Error> {
+  async getLogoLighting(): Promise<ILightMode & { dynamicColorId: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -935,7 +935,7 @@ class KeyboardService {
     }
   }
 
-  async getSpecialLighting(): Promise<any | Error> {
+  async getSpecialLighting(): Promise<ILightMode | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -949,7 +949,7 @@ class KeyboardService {
     }
   }
 
-  async setLighting(lightModeConfig: any): Promise<any | Error> {
+  async setLighting(lightModeConfig: LightModeConfigs): Promise<DataView | DataView[] | null | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -963,7 +963,7 @@ class KeyboardService {
     }
   }
 
-  async setLogoLighting(lightModeConfig: any): Promise<any | Error> {
+  async setLogoLighting(lightModeConfig: ILoGoLightMode): Promise<DataView | DataView[] | null | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -977,7 +977,7 @@ class KeyboardService {
     }
   }
 
-  async setSpecialLighting(lightModeConfig: any): Promise<any | Error> {
+  async setSpecialLighting(lightModeConfig: LightModeConfigs): Promise<ILightMode | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');

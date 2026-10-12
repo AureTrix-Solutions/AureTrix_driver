@@ -11,7 +11,7 @@
 - Cleanup (from `ls`): .scratch/ holds PM research + lint measurement dumps (PO may delete); _to_delete/ holds .gitkeep + DebugKeyboardService.ts (PO must `git rm` after sign-off)
 
 ## ▶ RUN THIS
-Next: Worker — Task 3 (Doc mention sweep, [trivial]). Read the Task 3 spec below; enumerate mentions fresh with grep (counts DRIFT). On finish, flip Task 3 → DONE, advance ▶ RUN THIS to Task 4, commit.
+Next: Worker — Task 4a (KeyboardService ratchet, [high-stakes]; sub-tasks 4a→4d each with its own commit; parent stays IN-PROGRESS until 4d, then IN-REVIEW + review file). Read the Task 4 block below: 4a Done-when (file → 29 warnings; lint total → 124) + the 13 sites listed. On finishing 4a: commit, update the 4a checkpoint line, continue to 4b only if session budget allows (ONE task per session — a fresh window picks up the next sub-task).
 
 ## Global rules (apply to EVERY task below; Done-whens assume them)
 - Enumerate sites fresh with `npx eslint <files>` — line numbers below are 2026-10-11 measurements and DRIFT as edits land; trust eslint output, never this plan's numbers.
@@ -24,10 +24,7 @@ Next: Worker — Task 3 (Doc mention sweep, [trivial]). Read the Task 3 spec bel
 ## Tasks
 1. **Config ratchet + lint-baseline file** — [high-stakes] — STATUS: DONE ✓ 2026-10-12 (Reviewer PASS, 0 fail — review-sprint-11-task-1-config-ratchet.md; all 5 Done-whens re-run exact: 193 = 108 any / 54 unused / 31 pce, shim exit 0, baseline 193, tsc exit 0, suppression gate 0; commits dcbac5a..2db12f7)
 2. **Delete orphaned DebugKeyboardService + core docs** — [high-stakes] — STATUS: DONE ✓ 2026-10-12 (Reviewer PASS, 0 fail — review-sprint-11-task-2-delete-debugservice.md; move is a 100% rename, 0 content changed; all 5 Done-whens re-run exact: lint 137 = 80/54/3, scoped grep exit 1, tsc exit 0, build ✓ 1.61s, suppression gate 0; commits 8b54b75..6fcb34c + checkpoint)
-3. **Doc mention sweep** — [trivial] — STATUS: PENDING
-   - Done when: `grep -c DebugKeyboardService docs/pages/Debug.md docs/PAGES_OVERVIEW.md` → 0 and 0; `grep -n DebugKeyboardService docs/sdk-reference-v2.md` → only historical verification-evidence lines, each listed with its disposition in the checkpoint; lint total unchanged (137); no archive/ file touched.
-   - Files: `docs/pages/Debug.md` (4 mentions), `docs/PAGES_OVERVIEW.md` (2), `docs/sdk-reference-v2.md` (9).
-   - Spec: Debug.md/PAGES_OVERVIEW.md describe current architecture → rewrite to KeyboardService or delete the sentence (grep each mention; leave no stale claim). sdk-reference-v2.md is ground truth: where a mention presents DebugKeyboardService as LIVE app code, reword to the raw-SDK/KeyboardService equivalent ONLY if the fact still holds; where it is historical evidence (batch notes, verification rows), leave the name — it records what was true then. Never alter an SDK fact to make a mention disappear.
+3. **Doc mention sweep** — [trivial] — STATUS: DONE ✓ 2026-10-12 (Debug.md 4→0, PAGES_OVERVIEW.md 2→0 incl. `Dependencies:` + Service Layer bullet; sdk-reference-v2.md 9→9 all historical: L217–221 live prose reworded to historical note per spec, L3785/3802–3803/3929/3972/3986/4004/4042 verification-evidence rows kept verbatim; lint 137 unchanged (0 errors); no archive/ touched. Cleanup: .scratch/ has 12 files (PO deletes); _to_delete/DebugKeyboardService.ts from Task 2 (PO `git rm`). Finding logged: Debug.md content stale beyond service names)
 4. **KeyboardService ratchet** (42 sites: 35 any + 5 unused + 2 pce) — [high-stakes] — sub-tasks 4a→4d, ONE Reviewer at the end over the cumulative base..head diff; parent stays IN-PROGRESS until 4d, then IN-REVIEW + review file — STATUS: PENDING
    - Files: `src/services/KeyboardService.ts` ONLY (1430 lines >800 → forced by-section split; each sub-task commits separately).
    - 4a Done when: `npx eslint src/services/KeyboardService.ts | grep -c warning` → 29; lint total → 124. Sites (13): 5 unused — 1 catch param (→ `catch {`), syncHardwareSettings' `const pollingRate = …`/`const systemMode = …` (drop bindings, KEEP awaits — nuance a), handleConnect/handleDisconnect unused `event` params (→ `_event`; the handlers are REGISTERED listeners at the constructor — never delete them, nuance b) + 2 pce (`{ cause: error }`) + 6 early anys: console.error shim args → `unknown[]`; getBaseInfo, getMacro, setMacro (param + `macros: any[]`), setGlobalTouchTravel param.
@@ -58,4 +55,4 @@ Next: Worker — Task 3 (Doc mention sweep, [trivial]). Read the Task 3 spec bel
 
 ## Findings
 <!-- one line per out-of-scope observation: DEFECT + WHERE TO VERIFY (never a pre-written fix). PM routes at close. -->
-(none yet)
+- [Task 3] docs/pages/Debug.md still describes a 16-getter debug panel (autoConnect/requestDevice/fetchAllData, mode testing, export JSON), but src/pages/Debug.vue (~307 lines) is now a simple axis inspector: select key → KeyboardService.getAxis() → JSON display. Doc is stale well beyond the service-name mentions fixed in Task 3. Verify: src/pages/Debug.vue script section vs docs/pages/Debug.md "Features" / "Data Flow" / "API Reference" sections.

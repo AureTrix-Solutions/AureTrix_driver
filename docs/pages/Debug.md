@@ -103,7 +103,7 @@ setup() {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   
-  // Uses DebugKeyboardService (not regular KeyboardService)
+  // Uses KeyboardService (the main hardware wrapper)
   ...
 }
 </script>
@@ -126,10 +126,10 @@ const fetchMethod = async (method: string) => {
   let result: any;
   switch (method) {
     case 'getGlobalTouchTravel':
-      result = await debugKeyboardService.getGlobalTouchTravel();
+      result = await KeyboardService.getGlobalTouchTravel();
       break;
     case 'getPerformanceMode':
-      result = await debugKeyboardService.getPerformanceMode(keyValue);
+      result = await KeyboardService.getPerformanceMode(keyValue);
       break;
     // ... more cases
   }
@@ -183,10 +183,9 @@ const clearData = () => {
 ## Dependencies
 
 ### Services
-- **DebugKeyboardService**: Development-specific service with verbose logging
-  - All SDK getter methods
-  - `autoConnect()` / `requestDevice()`: Connection management
-- **KeyboardService**: Used for setter methods (mode testing)
+- **KeyboardService**: The main hardware wrapper (singleton, `@services/KeyboardService`)
+  - SDK getter methods used by the page
+  - Connection managed app-wide by KeyboardService (no separate debug connection)
 
 ### Utilities
 - **useMappedKeyboard**: Fetch keyboard layout
@@ -202,21 +201,13 @@ Page Mount
     ↓
 fetchLayerLayout() - Get keyboard visual
     ↓
-debugKeyboardService.autoConnect() - Connect debug service
-    ↓
-If failed: requestDevice() - Prompt user
-    ↓
-fetchAllData() - Initial data load (500ms delay)
-    ↓
 User Selects Key on Keyboard
     ↓
 selectedKey updated
     ↓
-User Clicks Getter Button
-    ↓
 fetchMethod(methodName)
     ↓
-debugKeyboardService.[method](keyValue)
+KeyboardService.[method](keyValue)
     ↓
 rawData[methodName] = result
     ↓
@@ -336,18 +327,11 @@ JSON displayed in <pre> block
 - Error message: "Select a key first"
 - Prevents invalid API calls
 
-## Debug Service vs Regular Service
+## Service Layer
 
-### DebugKeyboardService
-- **Verbose Logging**: Logs every request/response
-- **Simplified APIs**: Easier method signatures
-- **Development Focus**: Extra error details
-- **Separate Connection**: Doesn't interfere with main app
-
-### KeyboardService (Regular)
-- **Production Use**: Used by all other pages
-- **Optimized**: Minimal logging
-- **Shared Connection**: App-wide connection state
+- **KeyboardService** (shared singleton, `@services/KeyboardService`): the main hardware wrapper, used by this page and every other page
+- **Production Use**: same wrappers as the rest of the app
+- **Shared Connection**: app-wide connection state — there is no separate debug connection
 
 ## State Persistence
 - **No Persistence**: All data cleared on page refresh
@@ -396,7 +380,6 @@ JSON displayed in <pre> block
 - No comparison view (before/after)
 - Can't edit values inline (read-only)
 - No data history/timeline
-- Debug service connection separate from main app
 
 ## Future Enhancements
 - Editable JSON (live editing)
@@ -407,8 +390,7 @@ JSON displayed in <pre> block
 - Data validation warnings
 
 ## Developer Notes
-- Uses `DebugKeyboardService` NOT `KeyboardService`
+- Uses `KeyboardService` (the main wrapper); there is no separate debug service
 - Auto-connect runs on mount with 500ms delay before initial fetch
 - Clear data when key selection changes (prevents confusion)
 - Details element HTML native (no Vue component needed)
-- Can run alongside main app (separate connection)

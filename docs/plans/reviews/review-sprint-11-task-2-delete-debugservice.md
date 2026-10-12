@@ -27,6 +27,11 @@ Fix-round ranges (added on each re-review):
 N/A — not a [hw] task. No hardware behavior changed: the deleted service had zero importers, and no SDK call path was edited.
 
 ## ✅ Verdict (Reviewer fills)
-Verdict:
+Verdict: **PASS** · Date 2026-10-12 · Fail count 0
 Findings:
-Reviewer's own Findings lines (for the PM to route):
+- All 5 Done-whens re-run exact by Reviewer: `_to_delete/DebugKeyboardService.ts` present + `src/services/DebugKeyboardService.ts` absent (git shows a 100% rename, 0 content lines changed — a pure move, no edit); `npm run lint` → `137 problems (0 errors, 137 warnings)`; scoped `grep -rn DebugKeyboardService CLAUDE.md README.md .openclaude/skills/sdk-wrapper/SKILL.md` → exit 1 (nothing); `npm run typecheck` exit 0; `npm run build` ✓ built in 1.61s.
+- Orphan claim independently re-verified: `grep -rln DebugKeyboardService src/` → nothing (only the now-moved file, gone from src).
+- Suppression gate clean: `git diff 8b54b75..HEAD | grep -E "^\+.*(as any|@ts-ignore|@ts-expect-error|eslint-disable)"` → nothing.
+- Diff scope matches the task: the move + CLAUDE.md (-1) + README.md (-1) + SKILL.md (2 mentions dropped: frontmatter trigger + body sentence) + baseline ratchet + the checkpoint/review-file commit. No stray source files.
+- Design intent preserved: no SDK-facing source touched (only .ts change is the whole-file move). Tag [high-stakes] correct (multi-file deletion task).
+Reviewer's own Findings lines (for the PM to route): (none)

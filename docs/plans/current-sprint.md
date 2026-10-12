@@ -7,11 +7,11 @@
 
 ## Checkpoint
 - Branch: `sprint-11-lint-warnings`
-- tsc baseline: 0 errors (docs/tsc-baseline.txt) · lint baseline: 221 warnings measured 2026-10-11 (docs/lint-baseline.txt created in Task 1 at 193)
-- Cleanup: .scratch/ holds PM research (pm-notes.md, test-eslint.config.mjs, lint measurement dumps — PO may delete); _to_delete/ does not exist yet — Task 2 creates it with DebugKeyboardService.ts (PO must `git rm` after sign-off)
+- tsc baseline: 0 errors (docs/tsc-baseline.txt) · lint baseline: docs/lint-baseline.txt = 193 (Task 1, 2026-10-12; per-rule 108 any / 54 unused / 31 pce)
+- Cleanup (from `ls`): .scratch/ holds PM research + lint measurement dumps (PO may delete); _to_delete/ already exists with only .gitkeep — Task 2 moves DebugKeyboardService.ts into it (PO must `git rm` after sign-off)
 
 ## ▶ RUN THIS
-Next: Task 1 — config ratchet + lint-baseline file. Do this task, then stop.
+Next: Reviewer — "follow docs/plans/reviews/review-sprint-11-task-1-config-ratchet.md". On PASS: flip Task 1 → DONE, advance ▶ RUN THIS to Task 2, commit.
 
 ## Global rules (apply to EVERY task below; Done-whens assume them)
 - Enumerate sites fresh with `npx eslint <files>` — line numbers below are 2026-10-11 measurements and DRIFT as edits land; trust eslint output, never this plan's numbers.
@@ -22,7 +22,7 @@ Next: Task 1 — config ratchet + lint-baseline file. Do this task, then stop.
 - Verified typing guidance (PM-researched 2026-10-11): the SDK's own d.ts declares most XDKeyboard methods `Promise<any>` — type OUR wrapper returns to the verified domain shape from docs/sdk-reference-v2.md (all needed sections Verified per its Verification-status table), keeping the `| Error` union (SDK resolves to the caught Error on failure, §13.2). protocol-keyboard's types barrel (already a tsconfig path alias, zero `any`) exports IDefKeyInfo, IKeyData, ILightMode, IRGBDesc, IKRGBDesc, IDKSMode, IMTMode, ITGLMode, IEndMode, ISOCDMode(/V2/V3), IRSMode, IMacroMode, LightModeConfigs — prefer these over inventing types. Known shapes: getBaseInfo §3 `{appVersion: string, …}`; getSingleTravel §5.3 `string`; getRtTravel §5.4 `{pressTravel, releaseTravel}`; getDksAll §6.1 `{dks1..dks4}`; getMT §6.5, getTGL §6.6, getEND §6.7, getSocd §6.8, getMacro §7; lighting §8 (getSingleRGBRecdata → uppercase `{key,R,G,B}`); getApi return-union table §3; switchConfig(config:number); console shims `(...args: any[])` → `unknown[]`. Verify each against the doc section before writing (rule 6).
 
 ## Tasks
-1. **Config ratchet + lint-baseline file** — [high-stakes] — STATUS: PENDING
+1. **Config ratchet + lint-baseline file** — [high-stakes] — STATUS: IN-REVIEW (review-sprint-11-task-1-config-ratchet.md · dcbac5a..2db12f7 · self-check: 193 total, 108/54/31, shim exit 0, baseline 193, tsc exit 0, suppression gate 0)
    - Done when: `npm run lint 2>&1 | grep -oE '[0-9]+ problems.*'` → `193 problems (0 errors, 193 warnings)`; per-rule counts (`grep -oE '(no-explicit-any|no-unused-vars|preserve-caught-error)$' | sort | uniq -c`) → 108 / 54 / 31; `npx eslint src/types/vue-shim.d.ts` → 0 warnings; docs/lint-baseline.txt line 1 = `193`; `npm run typecheck` exit 0.
    - Files: `eslint.config.mjs`, `docs/lint-baseline.txt` (new)
    - Edit spec (PM verified this EXACT config empirically — the 193/108/54/31 numbers are measured, evidence in .scratch/test-eslint.config.mjs):

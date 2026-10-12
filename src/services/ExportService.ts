@@ -302,60 +302,38 @@ class ExportService {
       const end = await this.retryWithBackoff(() => KeyboardService.getEND(keyValue));
 
       const advancedKeys: Keyboards['advancedKeys'] = {};
-      let activeType: string | undefined;
-      let activeValue: number = 0;
 
+      // The old per-mode `.enable`/`.keyValue`/`.triggeringPoint` detection read fields
+      // that no SDK getDks/getMpt/getSocd/getMT/getTGL read-back shape has ever had
+      // (verified decoders: {dks}, {dks[],dbs[]}, SocdConfig, {dks1..4}, {dks,delay}),
+      // so advancedType was always 'none'. Kept verbatim; the raw mode objects below
+      // carry the real data.
       if (!(dks instanceof Error) && dks) {
         advancedKeys.dks = dks;
-        if (dks.enable) {
-          activeType = 'dks';
-          activeValue = dks.keyValue;
-        }
       }
 
       if (!(mpt instanceof Error) && mpt) {
         advancedKeys.mpt = mpt;
-        if (mpt.enable && !activeType) {
-          activeType = 'mpt';
-          activeValue = mpt.triggeringPoint;
-        }
       }
 
       if (!(socd instanceof Error) && socd) {
         advancedKeys.socd = socd;
-        if (socd.enable && !activeType) {
-          activeType = 'socd';
-          activeValue = socd.mode;
-        }
       }
 
       if (!(mt instanceof Error) && mt) {
         advancedKeys.mt = mt;
-        if (mt.enable && !activeType) {
-          activeType = 'mt';
-          activeValue = mt.mode;
-        }
       }
 
       if (!(tgl instanceof Error) && tgl) {
         advancedKeys.tgl = tgl;
-        if (tgl.enable && !activeType) {
-          activeType = 'tgl';
-          activeValue = 0;
-        }
       }
 
       if (!(end instanceof Error) && end) {
         advancedKeys.end = end;
       }
 
-      if (activeType) {
-        advancedKeys.advancedType = activeType;
-        advancedKeys.value = activeValue;
-      } else {
-        advancedKeys.advancedType = 'none';
-        advancedKeys.value = 0;
-      }
+      advancedKeys.advancedType = 'none';
+      advancedKeys.value = 0;
 
       keyData.advancedKeys = advancedKeys;
     } catch (error) {

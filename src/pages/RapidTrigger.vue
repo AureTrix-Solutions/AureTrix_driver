@@ -334,7 +334,7 @@ export default defineComponent({
       }
     };
 
-    const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
+    const selectKey = (key: IDefKeyInfo, _rowIdx: number, _colIdx: number) => {
       const physicalKeyValue = key.physicalKeyValue || key.keyValue;
       const existingIndex = selectedKeys.value.findIndex(k => (k.physicalKeyValue || k.keyValue) === physicalKeyValue);
       if (existingIndex > -1) {
@@ -422,10 +422,9 @@ export default defineComponent({
           throw new Error('Failed to fetch global settings');
         }
 
-        const globalSettings = globalSettingsResult as any;
-        const globalTravel = Number(globalSettings.globalTouchTravel);
-        const globalPressDead = Number(globalSettings.pressDead);
-        const globalReleaseDead = Number(globalSettings.releaseDead);
+        const globalTravel = Number(globalSettingsResult.globalTouchTravel);
+        const globalPressDead = Number(globalSettingsResult.pressDead);
+        const globalReleaseDead = Number(globalSettingsResult.releaseDead);
         
         if (isNaN(globalTravel) || isNaN(globalPressDead) || isNaN(globalReleaseDead)) {
           throw new Error('Invalid global settings: one or more values are not valid numbers');
@@ -569,8 +568,8 @@ export default defineComponent({
       try {
         const result = await KeyboardService.getDpDr(physicalKeyValue);
         if (!(result instanceof Error)) {
-          const pressDead = (result as any).pressDead;
-          const releaseDead = (result as any).releaseDead;
+          const pressDead = result.pressDead;
+          const releaseDead = result.releaseDead;
           
           if (pressDead !== undefined && pressDead !== null) {
             const pressNum = Number(pressDead);
@@ -715,11 +714,11 @@ export default defineComponent({
             let pressDeadValue = 0.00;
             let releaseDeadValue = 0.00;
             if (!(dzResult instanceof Error) && typeof dzResult === 'object' && dzResult !== null) {
-              if (typeof (dzResult as any).pressDead === 'number') {
-                pressDeadValue = Number((dzResult as any).pressDead.toFixed(2));
+              if (typeof dzResult.pressDead === 'number') {
+                pressDeadValue = Number(dzResult.pressDead.toFixed(2));
               }
-              if (typeof (dzResult as any).releaseDead === 'number') {
-                releaseDeadValue = Number((dzResult as any).releaseDead.toFixed(2));
+              if (typeof dzResult.releaseDead === 'number') {
+                releaseDeadValue = Number(dzResult.releaseDead.toFixed(2));
               }
             }
 

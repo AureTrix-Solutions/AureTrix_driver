@@ -270,8 +270,13 @@ class ExportService {
       }
 
       if (!(dpDr instanceof Error)) {
-        keyData.performance!.deadBandPressValue = dpDr.dpThreshold ?? 0;
-        keyData.performance!.deadBandReleaseValue = dpDr.drThreshold ?? 0;
+        // WHY literal 0: these reads used dpDr.dpThreshold/drThreshold — fields that never
+        // existed on the verified getDpDr payload ({pressDead, releaseDead}: sdk-reference §5.5
+        // Verified + dist/esm bundle — two cmdLayout reads, getDpDrRecdata u16LE ÷1000 mm), so
+        // the exported dead-band values were ALWAYS 0. Value preserved verbatim; making them
+        // live (real pressDead/releaseDead readback) is a PO call — see current-sprint Findings.
+        keyData.performance!.deadBandPressValue = 0;
+        keyData.performance!.deadBandReleaseValue = 0;
       }
 
       if (!(axis instanceof Error)) {

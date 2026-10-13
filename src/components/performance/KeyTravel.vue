@@ -49,7 +49,7 @@ export default defineComponent({
       required: true,
     },
     baseLayout: {
-      type: Object as PropType<any>,
+      type: Object as PropType<IDefKeyInfo[][] | null>,
       default: null,
     },
   },

@@ -124,7 +124,7 @@ export default defineComponent({
       required: true,
     },
     baseLayout: {
-      type: Object as PropType<any>,
+      type: Object as PropType<IDefKeyInfo[][] | null>,
       default: null,
     },
     profileMaxTravel: {
@@ -208,7 +208,7 @@ export default defineComponent({
             return;
           }
         }
-      } catch (error) {
+      } catch {
       }
       singleKeyTravel.value = 2.0;
       prevSingleKeyTravel.value = 2.0;
@@ -237,7 +237,7 @@ export default defineComponent({
           }
           return;
         }
-      } catch (error) {
+      } catch {
       }
       topDeadZone.value = 0.2;
       bottomDeadZone.value = 0.2;
@@ -251,14 +251,10 @@ export default defineComponent({
         bottomDeadZone.value = topDeadZone.value;
       }
       // Clamp travel to new bounds
-      let clamped = false;
-      const oldTravel = singleKeyTravel.value;
       if (singleKeyTravel.value < minTravel.value) {
         singleKeyTravel.value = Number(minTravel.value.toFixed(2));
-        clamped = true;
       } else if (singleKeyTravel.value > maxTravel.value) {
         singleKeyTravel.value = Number(maxTravel.value.toFixed(2));
-        clamped = true;
       }
       if (props.selectedKeys.length === 0) return;
       await updateSingleKeyAll();
@@ -306,27 +302,21 @@ export default defineComponent({
     };
 
     // Watchers
-    watch(topDeadZone, (newVal, oldVal) => {
-      let clamped = false;
-      const oldTravel = singleKeyTravel.value;
+    watch(topDeadZone, () => {
       if (singleKeyTravel.value < minTravel.value) {
         singleKeyTravel.value = Number(minTravel.value.toFixed(2));
-        clamped = true;
       }
     });
 
-    watch(bottomDeadZone, (newVal, oldVal) => {
+    watch(bottomDeadZone, () => {
       if (!deadZonesLinked.value) {
-        let clamped = false;
-        const oldTravel = singleKeyTravel.value;
         if (singleKeyTravel.value > maxTravel.value) {
           singleKeyTravel.value = Number(maxTravel.value.toFixed(2));
-          clamped = true;
         }
       }
     });
 
-    watch(() => props.selectedKeys, async (newKeys) => {
+    watch(() => props.selectedKeys, async () => {
       await loadSingleKeyTravel();
       await loadDeadZones();
     }, { deep: true });

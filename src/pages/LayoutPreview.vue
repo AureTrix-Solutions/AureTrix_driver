@@ -34,12 +34,12 @@ import LayoutStorageService, { type CustomLayoutConfig } from '@/services/Layout
 export default defineComponent({
   name: 'LayoutPreview',
   setup() {
-    const layout = ref<any[][]>([]);
+    const layout = ref<number[][][]>([]);
     const selectedLayout = ref<number | string | null>(null); // Can be number or productName string
     const layouts = [61, 67, 68, 80, 82, 84, 87]; // Supported layouts
     const customLayouts = ref<CustomLayoutConfig[]>([]);
 
-    const layoutData = ref<any>({ rows: 0, cols: 0, keyPositions: [], gaps: [] });
+    const layoutData = ref<ReturnType<typeof getLayoutConfig>>({ rows: 0, cols: 0, keyPositions: [], gaps: [] });
 
     // Grid computation
     const gridStyle = computed(() => {
@@ -47,8 +47,8 @@ export default defineComponent({
       if (!keyPositions || keyPositions.length === 0) {
         return { height: '0px', width: '0px' };
       }
-      const containerHeight = keyPositions.reduce((max: number, row: any, i: number) => max + Math.max(...row.map((pos: any) => pos[1] + pos[3])) + (gaps[i] || 0), 0);
-      const maxRowWidth = Math.max(...keyPositions.map((row: any) => row.reduce((sum: number, pos: any) => sum + pos[2], 0)));
+      const containerHeight = keyPositions.reduce((max: number, row: number[][], i: number) => max + Math.max(...row.map((pos: number[]) => pos[1] + pos[3])) + (gaps[i] || 0), 0);
+      const maxRowWidth = Math.max(...keyPositions.map((row: number[][]) => row.reduce((sum: number, pos: number[]) => sum + pos[2], 0)));
       return {
         position: 'relative',
         height: `${containerHeight}px`,
@@ -95,11 +95,6 @@ export default defineComponent({
       } catch (error) {
         console.warn('Failed to load custom layouts:', error);
       }
-    };
-
-    const handleLayoutSaved = async () => {
-      await loadCustomLayouts();
-      await updateLayout();
     };
 
     // Restore from localStorage on mount

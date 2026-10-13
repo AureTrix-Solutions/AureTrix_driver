@@ -107,9 +107,8 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import { useConnectionStore } from '@/store/connection';
-import LayoutStorageService from '@/services/LayoutStorageService';
+import LayoutStorageService, { type CustomLayoutConfig } from '@/services/LayoutStorageService';
 import KeyboardService from '@/services/KeyboardService';
 import { uToMm, KEY_SIZES, mmToPx } from '@/utils/keyUnits';
 import { sharedLayoutMap } from '@/utils/sharedLayout';
@@ -124,7 +123,6 @@ interface VirtualKey {
 export default defineComponent({
   name: 'LayoutCreator',
   setup() {
-    const router = useRouter();
     const connectionStore = useConnectionStore();
 
     const productName = ref('');
@@ -136,7 +134,7 @@ export default defineComponent({
 
     const selectedKeys = ref<{ row: number; col: number }[]>([]);
     const selectedKeyData = ref<VirtualKey>({ size: 1, sizeMm: uToMm(1), gap: 0 });
-    const savedLayouts = ref<any[]>([]);
+    const savedLayouts = ref<CustomLayoutConfig[]>([]);
     const selectedSavedLayout = ref('');
     const importFileInput = ref<HTMLInputElement | null>(null);
 
@@ -478,50 +476,6 @@ export default defineComponent({
         selectedKeys.value.forEach(key => {
           virtualKeyboard.value[key.row][key.col] = { ...selectedKeyData.value };
         });
-      }
-    };
-
-    // Helper function to convert array to compact syntax
-    const arrayToCompactSyntax = (arr: number[]): string => {
-      const segments: string[] = [];
-      let i = 0;
-
-      while (i < arr.length) {
-        const current = arr[i];
-        let count = 1;
-
-        // Count consecutive identical values
-        while (i + count < arr.length && arr[i + count] === current) {
-          count++;
-        }
-
-        if (count >= 3) {
-          // Use Array.fill() for 3 or more consecutive values
-          segments.push(`Array(${count}).fill(${current})`);
-          i += count;
-        } else {
-          // Add individual values
-          for (let j = 0; j < count; j++) {
-            segments.push(String(current));
-          }
-          i += count;
-        }
-      }
-
-      // Format output
-      if (segments.length === 1 && segments[0].startsWith('Array(')) {
-        return segments[0];
-      } else if (segments.every(s => !s.startsWith('Array('))) {
-        return `[${segments.join(', ')}]`;
-      } else {
-        // Mixed format - use concat
-        const first = segments[0].startsWith('Array(') ? segments[0] : `[${segments[0]}]`;
-        if (segments.length === 1) return first;
-
-        const rest = segments.slice(1).map(s =>
-          s.startsWith('Array(') ? s : s
-        );
-        return `${first}.concat(${rest.join(', ')})`;
       }
     };
 

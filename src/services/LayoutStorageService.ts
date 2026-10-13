@@ -121,7 +121,7 @@ class LayoutStorageService {
           const layout = JSON.parse(e.target?.result as string) as CustomLayoutConfig;
           await this.saveLayout(layout);
           resolve(layout);
-        } catch (error) {
+        } catch {
           reject(new Error('Failed to parse layout file'));
         }
       };

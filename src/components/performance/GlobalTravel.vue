@@ -138,7 +138,7 @@ export default defineComponent({
                 break;
               }
             }
-          } catch (keyError) {
+          } catch {
             // Silently continue to next key
           }
         }
@@ -186,7 +186,7 @@ export default defineComponent({
             ]);
           });
         }
-      } catch (error) {
+      } catch {
       }
     };
 
@@ -194,14 +194,10 @@ export default defineComponent({
     const updateGlobalSettings = async () => {
       try {
         // Clamp travel before setting
-        let clamped = false;
-        const oldTravel = globalTravel.value;
         if (globalTravel.value < minTravel.value) {
           globalTravel.value = Number(minTravel.value.toFixed(2));
-          clamped = true;
         } else if (globalTravel.value > maxTravel.value) {
           globalTravel.value = Number(maxTravel.value.toFixed(2));
-          clamped = true;
         }
 
         const param = { globalTouchTravel: globalTravel.value, pressDead: pressDead.value, releaseDead: releaseDead.value };
@@ -214,7 +210,7 @@ export default defineComponent({
           prevPressDead.value = pressDead.value;
           prevReleaseDead.value = releaseDead.value;
         }
-      } catch (error) {
+      } catch {
       }
       if (showOverlay.value) {
         emit('update-overlay', {
@@ -271,10 +267,9 @@ export default defineComponent({
           throw new Error('Failed to fetch global settings');
         }
         
-        const globalSettings = globalSettingsResult as any;
-        const globalTravelValue = Number(globalSettings.globalTouchTravel);
-        const globalPressDead = Number(globalSettings.pressDead);
-        const globalReleaseDead = Number(globalSettings.releaseDead);
+        const globalTravelValue = Number(globalSettingsResult.globalTouchTravel);
+        const globalPressDead = Number(globalSettingsResult.pressDead);
+        const globalReleaseDead = Number(globalSettingsResult.releaseDead);
         
         if (isNaN(globalTravelValue) || isNaN(globalPressDead) || isNaN(globalReleaseDead)) {
           throw new Error('Invalid global settings: one or more values are not valid numbers');
@@ -349,7 +344,7 @@ export default defineComponent({
                 break;
               }
             }
-          } catch (keyError) {
+          } catch {
             // Silently continue to next key
           }
         }
@@ -366,14 +361,10 @@ export default defineComponent({
 
     // Watchers
     watch([pressDead, releaseDead], () => {
-      let clamped = false;
-      const oldTravel = globalTravel.value;
       if (globalTravel.value < minTravel.value) {
         globalTravel.value = Number(minTravel.value.toFixed(2));
-        clamped = true;
       } else if (globalTravel.value > maxTravel.value) {
         globalTravel.value = Number(maxTravel.value.toFixed(2));
-        clamped = true;
       }
       if (deadZonesLinked.value) {
         releaseDead.value = pressDead.value;

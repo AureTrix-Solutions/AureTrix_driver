@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useMappedKeyboard } from '@/utils/MappedKeyboard';
 import KeyboardService from '@/services/KeyboardService';
 import { useConnectionStore } from '../store/connection';

@@ -740,7 +740,7 @@ class KeyboardService {
     }
   }
 
-  async getDpDr(key: number): Promise<{ dpThreshold: number; drThreshold: number } | Error> {
+  async getDpDr(key: number): Promise<{ pressDead: number; releaseDead: number } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');

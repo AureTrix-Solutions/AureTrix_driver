@@ -30,18 +30,33 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task; no hardware behavior touched.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies — 0/0, no unmasked errors
-- [ ] tag is correct ([high-stakes] as assigned by PM — config-level enforcement change for the whole repo)
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies — 0/0, no unmasked errors
+- [x] tag is correct ([high-stakes] as assigned by PM — config-level enforcement change for the whole repo)
 
 ---
 ## ✅ REVIEWER VERDICT
-<!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
-     to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
-     Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** ___  ·  **Date:** ____-__-__  ·  **Fail count:** ___
+**Result:** PASS  ·  **Date:** 2026-10-13  ·  **Fail count:** 0
+
+### Done-when re-runs (all exact)
+1. `grep -n 'no-explicit-any\|no-unused-vars\|preserve-caught-error' eslint.config.mjs` → L28 `"error"`, L30 `["error", {…}]`, L36 `"error"` (the L44 hit is the `**/*.d.ts` override at `"off"` — pre-existing Task-1 Vue-shim exemption, intentionally untouched).
+2. `npm run lint` → exit 0, zero output (0 problems).
+3. `docs/lint-baseline.txt` line 1 = `0` (verify-only; not in diff, as planned).
+4. `grep -n "221" CLAUDE.md` → nothing; L22 replacement sentence says warnings ratcheted to 0 (sprint-11), three named rules at `"error"` — 1 line, curation rule met.
+5. `npm run typecheck` → exit 0, zero errors.
+
+### Additional checks
+- Diff scope: `git diff --name-only e2416d6..57ab083` → exactly CLAUDE.md, eslint.config.mjs, docs/plans/current-sprint.md (checkpoint mechanics). Zero `src/` files. lint-baseline.txt correctly absent (verify-only).
+- Diff content review: only the three severity flips + two comment refreshes (stale warn-tier header, removed `// SDK-boundary anys` trailing comment) in eslint.config.mjs; one-line CLAUDE.md sentence swap. `no-unused-vars` options block (`ignoreRestSiblings` + three `^_` patterns) preserved untouched per locked PO decision 2.
+- Suppression gate on diff: `grep -cE "^\+.*(as any|@ts-ignore|@ts-expect-error|eslint-disable)"` → 0.
+- Build: `npm run build` → ✓ built in 1.58s (config-only change; build unaffected).
+- Design intent: untouched (no source files in diff; filters:[], usagePage 65440, wrappers-return-Error all outside this change).
+- Worker claims in notes all grep-verified accurate (L28/L30/L36 positions, comment text, CLAUDE.md L22).
 
 ### Failed items (FAIL only)
-_(none yet)_
+_(none)_
+
+### Reviewer findings
+_(none — clean config/docs-only task; no new out-of-scope observations)_

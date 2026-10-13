@@ -107,7 +107,7 @@ const layoutMap: Record<number, LayoutConfig> = {
 
 // Generate fallback layout dynamically based on baseLayout row count
 // Single column with 1u keys, used when no other layout matches
-function generateFallbackLayout(baseLayout?: any[][]): LayoutConfig {
+function generateFallbackLayout(baseLayout?: unknown[][]): LayoutConfig {
   const rowCount = baseLayout && baseLayout.length > 0 ? baseLayout.length : 6;
   return {
     keySizes: Array(rowCount).fill([19.05]),
@@ -116,7 +116,7 @@ function generateFallbackLayout(baseLayout?: any[][]): LayoutConfig {
   };
 }
 
-export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[], productName?: string) => {
+export const getLayoutConfig = (keyCount: number, baseLayout?: unknown[][], customKeySizes?: number[][], customGapsAfterCol?: Record<number, number>[], customRowSpacing?: number[], productName?: string) => {
   // Priority 1: Check IndexedDB for user-created custom layouts by productName
   if (productName) {
     const customLayout = customLayoutsCache.find(layout => layout.productName === productName);
@@ -152,7 +152,7 @@ export const getLayoutConfig = (keyCount: number, baseLayout?: any[][], customKe
   return processLayoutConfig(config, baseLayout, customKeySizes, customGapsAfterCol, customRowSpacing);
 };
 
-function processLayoutConfig(config: LayoutConfig, baseLayout?: any[][], customKeySizes?: number[][], customGapsAfterCol?: any[], customRowSpacing?: number[]) {
+function processLayoutConfig(config: LayoutConfig, baseLayout?: unknown[][], customKeySizes?: number[][], customGapsAfterCol?: Record<number, number>[], customRowSpacing?: number[]) {
 
   let rows: number;
   let cols = 0;
@@ -213,7 +213,7 @@ function processLayoutConfig(config: LayoutConfig, baseLayout?: any[][], customK
 
 // Helper function to get padded keySizes for Keyboard Creator initialization
 // Returns keySizes array (in mm) with all keys as 1u, padded to match baseLayout
-export function getPaddedKeySizes(baseLayout: any[][] | null): number[][] {
+export function getPaddedKeySizes(baseLayout: unknown[][] | null): number[][] {
   if (!baseLayout || baseLayout.length === 0) {
     // Default to 6 rows with 1 key each
     return Array(6).fill([19.05]);

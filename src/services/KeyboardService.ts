@@ -614,7 +614,7 @@ class KeyboardService {
     }
   }
 
-  async getGlobalTouchTravel(): Promise<{ globalTouchTravel: number } | Error> {
+  async getGlobalTouchTravel(): Promise<IDB | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');

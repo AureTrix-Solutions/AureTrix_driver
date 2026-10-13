@@ -337,7 +337,7 @@ export default defineComponent({
 
     const throttle = (func: (...args: unknown[]) => void, delay: number) => {
       let lastCall = 0;
-      return (...args: any[]) => {
+      return (...args: unknown[]) => {
         const now = Date.now();
         if (now - lastCall >= delay) {
           lastCall = now;
@@ -711,7 +711,7 @@ export default defineComponent({
                 B: result.B,
               };
             }
-          } catch (error) {
+          } catch {
           }
         }
 

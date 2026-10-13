@@ -151,7 +151,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, nextTick } from 'vue';
+import { defineComponent, nextTick } from 'vue';
 import { RouterLink, RouterView } from 'vue-router';
 import { useConnectionStore } from './store/connection';
 import { useProfileStore } from './store/profileStore';
@@ -173,6 +173,12 @@ const SYSTEM_MODE_OPTIONS = [
   { value: 'win', label: 'Windows' },
   { value: 'mac', label: 'Mac' },
 ];
+
+interface MenuCategory {
+  name: string;
+  items: { name: string; path: string; tooltip?: string }[];
+  isCategory: boolean;
+}
 
 export default defineComponent({
   name: 'App',
@@ -251,7 +257,7 @@ export default defineComponent({
         },
         { name: 'Debug', path: '/debug', isCategory: false }
       ],
-      openCategory: null as any,
+      openCategory: null as MenuCategory | null,
       flyoutTop: 0,
       editingProfileId: null as number | null,
       editingProfileName: '',
@@ -313,7 +319,7 @@ export default defineComponent({
       }
       return String(value);
     },
-    handleCategoryClick(item: any, event: MouseEvent) {
+    handleCategoryClick(item: MenuCategory, event: MouseEvent) {
       if (this.openCategory === item) {
         this.closeCategory();
         return;

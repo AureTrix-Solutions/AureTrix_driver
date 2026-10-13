@@ -72,7 +72,6 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed, watch, onMounted } from 'vue';
-import KeyboardService from '@services/KeyboardService';
 import { keyMap } from '@utils/keyMap';
 import { categories, categorizedKeys } from '@utils/keyCategories';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
@@ -181,7 +180,6 @@ export default defineComponent({
           }
         }
 
-        const numKeys = selectedKeys.value.length;
         selectedKeys.value = [];
         await fetchLayerLayout();
       } catch (error) {
@@ -236,7 +234,7 @@ export default defineComponent({
       draggedKey.value = null;
     };
 
-    const isDropTarget = (row: IDefKeyInfo[], colIdx: number) => {
+    const isDropTarget = (_row: IDefKeyInfo[], _colIdx: number) => {
       return true;
     };
 
@@ -247,7 +245,7 @@ export default defineComponent({
     };
 
     // Watchers and lifecycle
-    watch(selectedLayer, (newLayer) => {
+    watch(selectedLayer, (_newLayer) => {
       fetchLayerLayout();
     });
 

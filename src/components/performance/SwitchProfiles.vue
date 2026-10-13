@@ -79,7 +79,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onUnmounted, computed, watch } from 'vue';
+import { defineComponent, ref, onUnmounted, computed, watch, PropType } from 'vue';
 import KeyboardService from '@services/KeyboardService';
 import { useTravelProfilesStore } from '@/store/travelProfilesStore';
 import { keyMap } from '@utils/keyMap';
@@ -89,15 +89,15 @@ export default defineComponent({
   name: 'SwitchProfiles',
   props: {
     selectedKeys: {
-      type: Array as any,
+      type: Array as PropType<IDefKeyInfo[]>,
       default: () => [],
     },
     layout: {
-      type: Array as any,
+      type: Array as PropType<IDefKeyInfo[][]>,
       required: true,
     },
     baseLayout: {
-      type: Object as any,
+      type: Object as PropType<IDefKeyInfo[][] | null>,
       default: null,
     },
     profileMaxTravel: {
@@ -202,7 +202,7 @@ export default defineComponent({
               capturedTravel.value = maxObservedTravel;
             }
           }
-        } catch (error) {
+        } catch {
         }
       }, 0);
 
@@ -249,7 +249,6 @@ export default defineComponent({
     const loadActuationPoint = async () => {
       if (props.selectedKeys.length === 0) return;
       const physicalKeyValue = props.selectedKeys[0].physicalKeyValue || props.selectedKeys[0].keyValue;
-      const keyValue = props.selectedKeys[0].keyValue;
       try {
         const result = await KeyboardService.getSingleTravel(physicalKeyValue);
         if (result instanceof Error) throw result;
@@ -259,7 +258,7 @@ export default defineComponent({
         } else {
           throw new Error(`Out of range: ${loadedValue} mm`);
         }
-      } catch (error) {
+      } catch {
         keyTestEnabled.value = false;
       }
     };
@@ -280,12 +279,12 @@ export default defineComponent({
       if (originalKeyMapping.value === null) return;
       try {
         await KeyboardService.setKey([{ key: physicalKey, value: originalKeyMapping.value, layout: 0 }]);
-      } catch (error) {
+      } catch {
       }
       originalKeyMapping.value = null;
     };
 
-    const startPolling = async (physicalKey: number) => {
+    const startPolling = async (_physicalKey: number) => {
       if (keyTestInterval) {
         clearInterval(keyTestInterval);
         keyTestInterval = null;
@@ -328,7 +327,7 @@ export default defineComponent({
               pendingTriggerCapture.value = false;
             }
           }
-        } catch (error) {
+        } catch {
         }
       }, 0);
 
@@ -370,7 +369,7 @@ export default defineComponent({
       try {
         await remapKeyForTest(physicalKey);
         await startPolling(physicalKey);
-      } catch (error) {
+      } catch {
         keyTestEnabled.value = false;
       }
     };

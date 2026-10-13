@@ -32,18 +32,50 @@ Fix-round ranges (added on each re-review): —
 N/A — Task 6 is not tagged [hw]: all changes are lint-ratchet edits (dead-code deletion, `_`-param renames, honest types). The two KeyboardService edits (6b getGlobalTouchTravel, 6d getDpDr) are DECLARATION-only — runtime bodies byte-identical; wrappers' behavior toward the device is unchanged.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** —  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-10-13  ·  **Fail count:** 0
+
+### Done-when re-runs (cumulative Base 4b190d1 .. Head 0f1f9a2)
+- Scope: `git diff --stat` = 10 files, exactly the expected set (6 .vue + KeyboardService.ts + ExportService.ts + lint-baseline.txt + current-sprint.md). No strays.
+- Lint: `npm run lint` → `✖ 32 problems (0 errors, 32 warnings)` = total **32** ✓ (6d Done-when).
+- Per-file: `npx eslint` over all six touched .vue files → exit 0, no output = **0 warnings each** ✓ (6a/6b/6c/6d Done-whens).
+- Typecheck: `npm run typecheck` → 0 errors ✓.
+- Build: `npm run build` → ✓ 1.61s.
+- Suppression gate: `git diff 4b190d1..0f1f9a2 -- src/ | grep -E '^\+.*(as any|@ts-ignore|@ts-expect-error|eslint-disable)'` → 0 matches ✓.
+- Baseline: docs/lint-baseline.txt line 1 = `32` (down-only from 80) + 4 history lines (6a 65, 6b 56, 6c 41, 6d 32) ✓.
+
+### KS declaration spot-checks (both type-only; runtime bodies byte-identical per diff — only the `Promise<...>` lines changed)
+- `getGlobalTouchTravel` → `IDB | Error` (6b): protocol-keyboard `dist/cjs/types/src/types/interface.d.ts:59` — `interface IDB { globalTouchTravel: number; pressDead: number; releaseDead: number; }`. Bundle decoder resolves all three fields (dist/esm/index.js `getGlobalTouchTravel` body). Declaration matches the verified payload; additive across all 4 readers.
+- `getDpDr` → `{ pressDead: number; releaseDead: number } | Error` (6d): bundle `dist/esm/index.js` — `getDpDr(e){const{Layout_DP...}` decodes via `getDpDrRecdata` (u16LE ÷1000 mm), resolves `{pressDead, releaseDead}` or the caught Error; sdk-reference §5.5 Verified row agrees. The OLD declared fields `dpThreshold/drThreshold` appear nowhere in bundle/recdata/sdk-reference — `grep -rn "dpThreshold\|drThreshold" src/` now returns only the WHY comment (ExportService.ts:273). Declaration honest.
+- Narrowing at all 6d cast-deletion sites confirmed live: RapidTrigger.vue :421 (`instanceof Error` throw-guard above :425-427 reads), :570 (`if (!(result instanceof Error))` around :571-572), :693/:716 (`dzResult instanceof Error` guards around :717-721); GlobalTravel.vue same pattern at its two read sites.
+
+### ExportService value-preservation (6d unmask)
+Confirmed value-preserving, not a behavior change: old code read `dpDr.dpThreshold ?? 0` — `dpThreshold` never existed on the payload (verified above), so the expression evaluated to `undefined ?? 0` = 0 on every run. New code writes literal `0` with a WHY comment inside the same `if (!(dpDr instanceof Error))` guard. Exported JSON byte-identical. Same class as the 4c `.sArg`/4d advanced-key preservations; PO call logged as Finding for making it live.
+
+### Finding-13 word-boundary greps (deleted/renamed symbols, all 6 .vue files + RapidTrigger.vue)
+- `\bglobalSettings\b` (bare, 6b+6d deleted local) → 0 hits in GlobalTravel.vue / RapidTrigger.vue ✓ (only `globalSettingsResult` remains, correctly).
+- `\browIdx\b`/`\bcolIdx\b` → 0 bare hits (only `_rowIdx`/`_colIdx` definitions) ✓.
+- `\bclamped\b` → RapidTrigger.vue :762-774 = that file's OWN live local (declared :762, assigned :765/:768, read :774) — not a dangling ref; GlobalTravel/SingleKeyTravel copies deleted cleanly, 0 hits there ✓.
+- `\boldTravel\b` → 0 hits across all files ✓.
+- `\bkeyError\b` → 0 hits ✓ (checked via eslint 0 + diff: both `catch (keyError)` → `catch {`).
+- SwitchProfiles.vue: dead `keyValue` local gone — surviving `physicalKey` hits (:266-409) are other functions' own live locals/params ✓; `_physicalKey` body of `startPolling` contains no bare `physicalKey` reference ✓; `IDefKeyInfo` import (line 86) now USED by the 3 PropType decls ✓.
+- Performance.vue: `useTravelProfilesStore` import deleted, 0 remaining references ✓.
+
+### Design intent
+Untouched: no device filters added, no usagePage semantics changed, both KS edits are declaration-only (runtime bodies unchanged in the diff), wrappers still RETURN Error (the instanceof guards in callers are preserved, not converted to throws).
+
+### Tag
+[high-stakes] correct — multi-file, SDK-declaration-correctness. Not [hw]: no runtime/device behavior changed.
 
 ### Failed items (FAIL only)
 —

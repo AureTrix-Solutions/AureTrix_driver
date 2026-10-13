@@ -31,17 +31,37 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task. No device behavior change: type annotations only, plus one error-cause append on an existing throw path.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
-- [ ] the HIDDevice → structural-type deviation is justified (sole caller KS:268 passes `Device | PairedDevice`; PairedDevice is not a HIDDevice)
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] the HIDDevice → structural-type deviation is justified (sole caller KS:268 passes `Device | PairedDevice`; PairedDevice is not a HIDDevice)
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Output = PASS/FAIL + findings. -->
-**Result:** (pending)  ·  **Date:**  ·  **Fail count:**
+**Result:** PASS  ·  **Date:** 2026-10-13  ·  **Fail count:** 0
+
+### Done-whens re-run (Reviewer, 2026-10-13)
+| Check | Command | Result |
+| --- | --- | --- |
+| lint total | `npm run lint` | ✓ `23 problems (0 errors, 23 warnings)` |
+| rule split | lint output grep | ✓ 10 no-explicit-any / 13 no-unused-vars / 0 pce |
+| three files clean | `npx eslint src/utils/layoutConfigs.ts src/store/connection.ts src/utils/MappedKeyboard.ts` | ✓ no output, exit 0 |
+| typecheck | `npm run typecheck` | ✓ 0 errors (no unmasking) |
+| build | `npm run build` | ✓ `✓ built in 1.65s` |
+| suppression gate | `git diff 1cc6cc6..1cc2fdf -- src/ \| grep -E "^\+.*(as any\|@ts-ignore\|@ts-expect-error\|eslint-disable)"` | ✓ nothing (App.vue:254 `as any` confirmed pre-existing at base via `git show 1cc6cc6:src/App.vue`) |
+| baseline | `docs/lint-baseline.txt` | ✓ line 1 = `23`, history line `32 → 23` down-only |
+| diff scope | `git diff --stat 1cc6cc6..1cc2fdf` | ✓ exactly layoutConfigs.ts / connection.ts / MappedKeyboard.ts / lint-baseline.txt |
+
+### Spot-checks (all grep-verified this session)
+1. **baseLayout → `unknown[][]` honest:** every `baseLayout` reference in layoutConfigs.ts (110–227) consumes only `.length` counts (`.length`, `.map(row => row.length)`) — zero property access off rows. `customGapsAfterCol → Record<number, number>[]` matches the existing `LayoutConfig.gapsAfterCol` type (layoutConfigs.ts:7).
+2. **onAutoConnectSuccess structural param justified:** sole caller KS:268 passes `device` typed `Device | PairedDevice` (autoConnect signature KS:215); `PairedDevice` (KS:9) = `{ id, data: HIDDevice, productName }` — wraps HIDDevice in `.data`, is NOT one, so the plan's HIDDevice suggestion would have broken the call site. Body reads only `.productName`/`.id` (connection.ts:125). Deviation correct.
+3. **deviceInfo union matches real writes/reads:** writes = `{productName, id}` then `getBaseInfo()` spread; typechecked reads (App.vue isStatusReady, Connect.vue deviceInfoText, LayoutCreator productName — .vue files are tsc-invisible but grepped) touch only productName/BoardID/KeyboardSN/appVersion, all in `({productName,id} & Partial<KeyboardBaseInfo>) | null`. `Partial` is honest: base-info fields only exist after the spread succeeds.
+4. **pce fix matches precedent:** MappedKeyboard.ts:74 `{ cause: error }` — same shape as KS:211/KS:299.
+5. **Design intent untouched:** no filters/usagePage/wrapper-contract changes anywhere in the diff.
+6. **Tag:** high-stakes correct (connection.ts touched → always HS).
 
 ### Failed items (FAIL only)
 —

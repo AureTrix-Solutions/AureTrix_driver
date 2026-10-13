@@ -24,16 +24,16 @@ export default tseslint.config(
       "no-self-assign": "off",
       // Swallowing SDK errors in retry/teardown paths is the established pattern here
       "no-empty": ["error", { allowEmptyCatch: true }],
-      // Deferred to warn tier — ratchet-down tracked in backlog:
-      "@typescript-eslint/no-explicit-any": "warn", // SDK-boundary anys
+      // Ratcheted 221 → 0 warnings in sprint-11; promoted to error:
+      "@typescript-eslint/no-explicit-any": "error",
       // rest-sibling strips (`const { a, ...rest }`) are intentional
-      "@typescript-eslint/no-unused-vars": ["warn", {
+      "@typescript-eslint/no-unused-vars": ["error", {
         ignoreRestSiblings: true,
         argsIgnorePattern: "^_",
         varsIgnorePattern: "^_",
         destructuredArrayIgnorePattern: "^_",
       }],
-      "preserve-caught-error": "warn", // missing { cause } on rethrow
+      "preserve-caught-error": "error", // missing { cause } on rethrow
     },
   },
   // Standard Vue SFC shim boilerplate (DefineComponent<{}, {}, any>)

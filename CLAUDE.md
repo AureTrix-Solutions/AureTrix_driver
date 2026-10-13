@@ -19,7 +19,7 @@ npm test              # vitest (watch mode by default)
 npx vitest run path/to/file.test.ts   # run a single test file
 ```
 
-Lint runs via ESLint 10 flat config (`eslint.config.mjs`); ~221 deferred warnings are tolerated (exit 0) and ratchet down per the backlog item. There are currently no test files, despite vitest/@vue/test-utils being installed.
+Lint runs via ESLint 10 flat config (`eslint.config.mjs`); warnings were ratcheted to 0 (sprint-11) and `no-explicit-any` / `no-unused-vars` / `preserve-caught-error` are enforced at `"error"`. There are currently no test files, despite vitest/@vue/test-utils being installed.
 
 ## Architecture
 

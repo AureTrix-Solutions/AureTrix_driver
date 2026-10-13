@@ -1,6 +1,6 @@
 // connection.ts
 import { defineStore } from 'pinia';
-import KeyboardService from '@services/KeyboardService';
+import KeyboardService, { type KeyboardBaseInfo } from '@services/KeyboardService';
 import { useProfileStore } from './profileStore';
 
 export const useConnectionStore = defineStore('connection', {
@@ -11,7 +11,7 @@ export const useConnectionStore = defineStore('connection', {
     isInitialized: false,
     isPostReconnectionSuppression: false,
     status: '',
-    deviceInfo: null as any,
+    deviceInfo: null as ({ productName: string; id: string } & Partial<KeyboardBaseInfo>) | null,
     initializationError: null as string | null,
   }),
 
@@ -121,7 +121,7 @@ export const useConnectionStore = defineStore('connection', {
     },
 
     // Handle successful auto-connect callback for reconnects
-    async onAutoConnectSuccess(device: any) {
+    async onAutoConnectSuccess(device: { productName: string; id: string }) {
       this.deviceInfo = { productName: device.productName || 'Unknown', id: device.id };
       try {
         const info = await KeyboardService.getBaseInfo();

@@ -71,7 +71,7 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
         await KeyboardService.setKey(batch);
       } catch (error) {
         console.error(`Batch setKey failed for keys ${batch[0].key} to ${batch[batch.length - 1].key}:`, error);
-        throw new Error(`Failed to set key batch`);
+        throw new Error(`Failed to set key batch`, { cause: error });
       }
     }
   }

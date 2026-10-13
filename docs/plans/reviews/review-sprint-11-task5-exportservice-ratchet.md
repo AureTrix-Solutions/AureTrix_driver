@@ -54,7 +54,38 @@ N/A — not a [hw] task. No runtime behavior change intended: all edits are type
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. -->
-**Result:** —  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-10-12  ·  **Fail count:** 0
+
+### Done-when gates (all re-run by Reviewer)
+| Gate | Command | Expected | Reviewer got |
+|---|---|---|---|
+| ExportService eslint | `npx eslint src/services/ExportService.ts` | 0 warnings | 0 (exit 0) ✓ |
+| lint total | `npm run lint` | 80 | `80 problems (0 errors, 80 warnings)` ✓ |
+| typecheck | `npm run typecheck` | 0 | exit 0, no output ✓ |
+| build | `npm run build` | passes | exit 0, `✓ built in 1.59s` ✓ |
+| suppression gate | `git diff c1cef79..HEAD -- src/ \| grep -E '^\+' \| grep -cE 'as any\|@ts-ignore\|@ts-expect-error\|eslint-disable\|[^!=]![^!=]'` | 0 | 0 added lines ✓ |
+| baseline line 1 | `head -1 docs/lint-baseline.txt` | 80 | 80 + one `#` history line (Task 5: 94→80), down-only ✓ |
+
+### Scope (git diff --name-only c1cef79..HEAD) — all in scope
+`src/services/ExportService.ts`, `src/services/KeyboardService.ts`, `docs/lint-baseline.txt`, `docs/plans/current-sprint.md`, `docs/plans/reviews/review-sprint-11-task5-...md`, `docs/plans/reviews/review-sprint-11-task-4-...md`. No stray files.
+
+### Spot-checks (per review file §13-24) — all verified against source, not memory
+1. **`superResponse: false` bit-identical** ✓ — `getLightBitmap(open,direction,superResponse)` (protocol-keyboard src/utils/index.ts) sets bit 4 only when `superResponse` is truthy; old code passed `undefined`, new passes `false` → both falsy → bit 4 = 0 in both. Wire byte unchanged. Confirmed via `pack.ts` getLightBitmap call site (index.ts:16 bit-0=`open`, bit-4=`superResponse`).
+2. **logo `type`-mapping (`custom`→`static`) in bundle payload** ✓ — top-level `setLogoLighting` (sdk lighting.d.ts:13 takes `ILoGoLightMode`); the encoder destructures `type:u` and uses it ONLY in the gate `"dynamic"===u ? h.staticColor=0 : h.mode=0`. `custom` and `static` both fall to the else-branch (`mode=0`); `type` itself is NOT spread into the payload `d={...h,open:l}` (h excludes type). So the mapping is behavior-preserving. Note: `open`→wire bit 0 — see Finding #1 below.
+3. **KS `getLayoutKeyInfo` declaration vs `getFnLayoutKeyRecdata`** ✓ — decoder (recdata.ts:338-348) returns `Keys = IKey[]` where `IKey = {key, layout, value?}` (interface.ts:36-42). Base declared `IDefKeyInfo[] | Error` (factually wrong); HEAD declares `IKey[] | Error` — matches decoder. Type-only (body untouched, KS diff = import line + declaration line only). Verified all 5 callers consume only `{key,value}`: SwitchProfiles.vue:271 (`.value`), Performance.vue:132 & RapidTrigger.vue:312 (type-guard `{key,value}`), MappedKeyboard.ts:122 (`as LayerKeyInfo` → `.key/.value`), ExportService.ts:186 (`IKey`, `.value`). No caller reads IDefKeyInfo-only fields → fix is safe even for tsc-invisible `.vue` callers.
+
+### Dead-code removal — verified honest
+- **`dynamicColorId` destructures**: field absent from `ILightMode`/`ILoGoLightMode` (grep 0 hits in interface.d.ts). Base destructured it from `snapshot.other` (plain `ILightMode`) and `originalSpecial` (plain `ILightMode`) — dead reads. HEAD drops them; `snapshot.other` passes straight to `setSpecialLighting` (:428), `originalSpecial` unchanged. All remaining `dynamicColorId` destructures (375/397/404/414/507/539/548/667) sit on `& { dynamicColorId }` intersection types (main/logo) — correctly kept. Resolves 4b Finding #82.
+- **`open === 0/1` TS2367 clauses**: boolean-vs-number comparisons, dead by typing. Removed consistent with 4b `=== 1` precedent.
+
+### Design intent — intact
+Wrappers still RETURN `Error` (`getLayoutKeyInfo` unchanged body; `setLogoLighting` result checked via `instanceof Error` at all sites). No new device filters, no usagePage change. No suppressions introduced.
 
 ### Failed items (FAIL only)
-—
+— (none)
+
+### Reviewer Findings (non-defect observations; for PM routing at close)
+1. **[Task 5 review — behavior note, NOT a defect] `open:true` at ExportService.ts:630 (applyImportedConfig logo path).** Base `convertLightConfigToSDKFormat` did NOT set `open` → base passed `open:undefined` → wire bit 0 = 0 (logo OFF), even though the enclosing guard `config.light.logo.open` (:626) is truthy — a latent bug (imported logo configs never lit). HEAD adds `open:true`, flipping bit 0 → 1. This is FORCED by the honest type (`ILoGoLightMode.open: boolean` is required) and is the only guard-consistent value (the block only runs when the import wants the logo ON). Disclosed by the Worker (review-file line 22). **Verdict: correct fix, not a regression.** Worth a [hw] sanity glance next time a lighting-import runs on-device (logo should now light as configured), but no code action needed. Verify: `grep -n "open" node_modules/@sparklinkplayjoy/protocol-keyboard/src/utils/index.ts` (getLightBitmap bit 0) + ExportService.ts:626-632.
+2. **[Task 5 review — typecheck gap, matches Worker Finding] `.vue` files invisible to `npm run typecheck`.** The `tsc --noEmit` script has no vue-tsc, so a type error in a `.vue` consumer (e.g. a caller relying on a removed/renamed field) would not fail the gate. Task 5's KS declaration fix was safe here (verified all 5 callers by grep), but this is a standing blind spot for any ratchet touching a type consumed by `.vue`. Verify: `grep -n '"typecheck"' package.json` (no vue-tsc) — PO/PM call whether to add vue-tsc or keep the grep-the-callers discipline. Related: Worker Finding on the getLayoutKeyInfo mis-declaration.
+
+### Verdict: PASS — Task 5 code approved.

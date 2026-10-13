@@ -62,7 +62,6 @@
 
 <script lang="ts">
 import { defineComponent, ref, watch, onMounted, computed } from 'vue';
-import { useTravelProfilesStore } from '@/store/travelProfilesStore';
 import { useMappedKeyboard } from '@utils/MappedKeyboard';
 import { keyMap } from '@utils/keyMap';
 import KeyboardService from '@services/KeyboardService';
@@ -154,7 +153,7 @@ export default defineComponent({
       }
     };
 
-    const selectKey = (key: IDefKeyInfo, rowIdx: number, colIdx: number) => {
+    const selectKey = (key: IDefKeyInfo, _rowIdx: number, _colIdx: number) => {
       const physicalKeyValue = key.physicalKeyValue || key.keyValue;
       const existingIndex = selectedKeys.value.findIndex(k => (k.physicalKeyValue || k.keyValue) === physicalKeyValue);
       if (existingIndex > -1) {
@@ -326,7 +325,7 @@ export default defineComponent({
           try {
             const mode = await KeyboardService.getPerformanceMode(keyId);
             newKeyModeMap[keyId] = mode.touchMode as 'global' | 'single';
-          } catch (error) {
+          } catch {
             // Default to global if fetch fails
             newKeyModeMap[keyId] = 'global';
           }

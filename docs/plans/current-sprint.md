@@ -9,6 +9,8 @@
 - tsc baseline: 0 errors (docs/tsc-baseline.txt line 1 = 0; typecheck exit 0 verified 2026-10-13)
 - Cleanup (actual ls 2026-10-13): `.scratch/` has `pce-test`, `pm-notes.md` (PO may delete); `_to_delete/` has `DebugKeyboardService.ts` (PO must git rm)
 - PM research base: `.scratch/pm-notes.md` — all line refs below were grep/read-verified THIS PM session (2026-10-13) against ExportService.ts (730 lines), KeyboardService.ts, useBatchProcessing.ts (26 lines), and the SDK bundle. Facts marked "banked" there are confirmed; do not re-derive.
+- Task 3a verified (Worker, 2026-10-13, sdk-reference-v2.md — grep targets in parens): getDksAll(key)→{dks1..dks4:number} (§6.1, grep "getDksAll: (key"); getTrpsAll(key)→{trps1..trps4:number} (§6.2, grep "getTrpsAll: (key"); getMtorTgl(key)→Promise<number> = MT/TGL delay in ms, decoder returns raw×10 (§6.3 Verified, grep "getMtorTglRecdata"). Insertion point: after setDksTravel (grep "async setDksTravel"), before calibrationStart. Canonical wrapper shape copied from getDksTravel (:841, grep "async getDksTravel").
+- Task 3a DONE (Worker 2026-10-13): 3 wrappers added in KeyboardService.ts after setDksTravel; Done-whens pass: grep -c "async getDksAll\|async getTrpsAll\|async getMtorTgl" = 3, typecheck 0, lint 0. Next: 3b (ExportService mt.dksAll read + dks shape).
 
 ## ▶ RUN THIS
 Next: WORKER — "go" → Task 3 (D2 group: advanced-key wrappers + export shapes, 3a→3d sequential, ONE review at group end, [high-stakes] [hw]). Start with 3a (new KeyboardService wrappers getDksAll/getTrpsAll/getMtorTgl near KS :841, following the sdk-wrapper skill); each sub-task gets its OWN commit; group stays IN-PROGRESS until 3d, then IN-REVIEW with review file `review-d2-advanced-keys.md` (base = Task 2's `9f7ecfa`..head = 3d commit).

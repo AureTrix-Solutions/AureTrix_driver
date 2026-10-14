@@ -866,6 +866,63 @@ class KeyboardService {
     }
   }
 
+  /**
+   * Read all four DKS key codes for one key (sdk-reference-v2.md §6.1 — Verified).
+   * Convenience aggregate: four sequential cmdLayout round-trips; returns raw
+   * Layout_DKS1..4 integers (key codes, not mm depths).
+   */
+  async getDksAll(key: number): Promise<{ dks1: number; dks2: number; dks3: number; dks4: number } | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.ensureKeyboard().getDksAll(key);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to fetch all DKS key codes for key ${key}:`, error);
+      return error as Error;
+    }
+  }
+
+  /**
+   * Read all four TRPS values for one key (sdk-reference-v2.md §6.2 — Verified).
+   * Convenience aggregate: four sequential cmdLayout round-trips; returns raw
+   * Layout_TRPS1..4 integers.
+   */
+  async getTrpsAll(key: number): Promise<{ trps1: number; trps2: number; trps3: number; trps4: number } | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.ensureKeyboard().getTrpsAll(key);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to fetch all TRPS values for key ${key}:`, error);
+      return error as Error;
+    }
+  }
+
+  /**
+   * Read the shared MT/TGL delay for one key (sdk-reference-v2.md §6.3 — Verified).
+   * Returns the delay in milliseconds (decoder scales the raw 16-bit value ×10);
+   * on transport error the SDK returns the Error itself, passed through here.
+   */
+  async getMtorTgl(key: number): Promise<number | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.ensureKeyboard().getMtorTgl(key);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to fetch MT/TGL delay for key ${key}:`, error);
+      return error as Error;
+    }
+  }
+
   async calibrationStart(): Promise<null | Error> {
     try {
       if (!this.connectedDevice) {

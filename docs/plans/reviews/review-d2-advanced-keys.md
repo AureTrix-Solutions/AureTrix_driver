@@ -4,7 +4,7 @@
 **TASK:** D2 group: advanced keys — KS wrappers + canonical export shapes (3a→3d, ONE review over the cumulative diff)  ·  **TAG:** [high-stakes] [hw]
 **DONE WHEN:**
 - 3a: `grep -c "async getDksAll\|async getTrpsAll\|async getMtorTgl" src/services/KeyboardService.ts` = 3; wrappers return `Error` instances, never throw; typecheck 0.
-- 3b: gatherAdvancedKeyData sets `advancedKeys.advancedType` from live `advancedKeyMode` via ADVANCED_KEY_MODE_MAP (sdk-ref §5.2) and `advancedKeys.value` from the mode's primary trigger; no stale "not yet read" comment; typecheck 0, lint 0.
+- 3b (REVISED rev1 2026-10-14, PO-confirmed — the original "value from the mode's primary trigger" clause was wrong vs the SDK contract, see §F1): gatherAdvancedKeyData sets `advancedKeys.advancedType` from live `advancedKeyMode` via ADVANCED_KEY_MODE_MAP (sdk-ref §5.2) and `advancedKeys.value` to the **numeric `advancedKeyMode` id** (SDK setAdvancedKeys resolves the setter via `advancedKeysSdkMap[value]`; per-mode data travels in its sibling field); no `advancedValue`/trigger switch remains; no stale "not yet read" comment; typecheck 0, lint 0. Fix-round greps: `grep -c "advancedValue" src/services/ExportService.ts` = 0; `grep -c "advancedKeys.value = advancedKeyMode" src/services/ExportService.ts` = 1.
 - 3c: canonical dks export shape `{dks:{1,2,3},trps:{1,2,3},db,db2,db3}` from getDksAll/getTrpsAll/getDksTravel(Layout_DB1/2/3); `grep -c "Layout_DB3" src/services/ExportService.ts` ≥ 1; KS get/setDksTravel annotated `number|Error`; typecheck 0, lint 0.
 - 3d: mt export shape `{dksAll:[dks1..4], delay}` with delay = getMtorTgl's ms value stored AS-IS (NO ÷10 — import's mt branch does `delay/10` before cmdMT, which puts the 10ms wire unit on the wire); socd confirmed against sdk-ref §6.8 union (no change expected); tgl/mpt/end stay raw; `grep -c "getMtorTgl" src/services/ExportService.ts` ≥ 1; typecheck 0, lint 0.
 <!-- If a criterion is revised after this file exists, UPDATE it here too — the Reviewer judges
@@ -44,6 +44,7 @@ Fix-round ranges (added on each re-review): —
 ---
 ## ✅ REVIEWER VERDICT
 **Result:** FAIL  ·  **Date:** 2026-10-14  ·  **Fail count:** 1
+rev1 (2026-10-14): Done-when 3b revised per F1, PO-confirmed — `value` = numeric `advancedKeyMode` id, trigger switch deleted. Fix ONLY F1 (3a/3c/3d PASS, untouched); re-review covers ONLY the fix-round range.
 
 3a ✓, 3c ✓, 3d ✓ — all Done-when greps, wrapper shape (return `Error`, never throw), KS `number|Error` annotations, canonical dks `{dks,trps,db,db2,db3}`, mt `{dksAll:[dks1..4],delay}` with delay stored ms AS-IS (import does `delay/10`), socd §6.8 union, typecheck 0 / lint 0 all independently re-run and pass. 3b meets its criterion **as written** but the criterion is factually wrong vs the SDK contract → F1.
 

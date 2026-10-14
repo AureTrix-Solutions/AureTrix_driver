@@ -44,14 +44,22 @@ Fix-round ranges (added on each re-review): F1 → `d54e780..c8fd88e` (3b value=
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** FAIL  ·  **Date:** 2026-10-14  ·  **Fail count:** 1
+**Result:** PASS (pending hw) → **HW-TEST**  ·  **Date:** 2026-10-14  ·  **Fail count:** 0
 rev1 (2026-10-14): Done-when 3b revised per F1, PO-confirmed — `value` = numeric `advancedKeyMode` id, trigger switch deleted. Fix ONLY F1 (3a/3c/3d PASS, untouched); re-review covers ONLY the fix-round range.
+**Fix-round re-review (2026-10-14, range `d54e780..c8fd88e`): F1 FIXED → code verdict PASS (pending hw).** Re-check covered F1 only, per RUN THIS. Evidence:
+- Diff = ExportService.ts (+4/−17) + planning-doc mechanics (current-sprint.md PM touchpoint, this review file). Only source file touched: ExportService.ts.
+- F1 fix confirmed verbatim in diff: whole `let advancedValue = 0; switch (advancedKeyMode) {…}` block replaced by `advancedKeys.value = advancedKeyMode;`; `const advancedKeyMode = keyData.performance?.advancedKeyMode ?? 0;` and `advancedKeys.advancedType = ADVANCED_KEY_MODE_MAP[advancedKeyMode] ?? 'none';` retained. Matches the revised Done-when 3b + the F1 contract (`h=this.advancedKeysSdkMap[n]`, n=value ⇒ value must be the numeric mode id).
+- Comment now states the contract (setter resolved via advancedKeysSdkMap[value]; per-mode data travels in sibling fields); stale "not yet read" comment gone (`grep -c` = 0).
+- Scope addition verified clean: orphaned `const dks = …getDks(keyValue)` + its 50ms delay deleted (the switch was its only consumer; canonical dks shape comes from getDksAll/getTrpsAll). Post-fix `grep -c 'getDks('` = 0 (getDksAll/getDksTravel unaffected); no remaining `dks` local refs — only `advancedKeys.dks = {` (:346, 3c shape, untouched). typecheck 0 + lint 0 confirm no undefined/unused leftovers. No payload shape change.
+- Gates re-run THIS session: `grep -c advancedValue src/services/ExportService.ts` = **0** ✓ · `grep -c 'advancedKeys.value = advancedKeyMode'` = **1** ✓ · `npm run typecheck` exit **0** ✓ · `npm run lint` exit **0** ✓.
+- Design intent untouched (no filters/usagePage/wrapper-error changes; ExportService payload only).
+- §F1 below is retained as the first-pass record; it is now RESOLVED. [hw] task ⇒ status set to **HW-TEST**, not DONE. PO hardware check section (items 1-4) stands unchanged — F1 was import-path-breaking, so the on-device round-trips are the live confirmation.
 
-3a ✓, 3c ✓, 3d ✓ — all Done-when greps, wrapper shape (return `Error`, never throw), KS `number|Error` annotations, canonical dks `{dks,trps,db,db2,db3}`, mt `{dksAll:[dks1..4],delay}` with delay stored ms AS-IS (import does `delay/10`), socd §6.8 union, typecheck 0 / lint 0 all independently re-run and pass. 3b meets its criterion **as written** but the criterion is factually wrong vs the SDK contract → F1.
+3a ✓, 3c ✓, 3d ✓ — all Done-when greps, wrapper shape (return `Error`, never throw), KS `number|Error` annotations, canonical dks `{dks,trps,db,db2,db3}`, mt `{dksAll:[dks1..4],delay}` with delay stored ms AS-IS (import does `delay/10`), socd §6.8 union, typecheck 0 / lint 0 all independently re-run and pass. 3b: first pass FAILED (F1 — criterion factually wrong vs SDK contract); after rev1 + fix-round `c8fd88e`, 3b meets the revised criterion ✓.
 
-### Failed items (FAIL only)
+### Failed items (first pass — RESOLVED)
 
-**F1 — `advancedKeys.value` must be the numeric mode id, not the trigger; SDK import resolves the setter via `advancedKeysSdkMap[value]`, so every advanced key throws on import.** *(root cause = wrong Done-when 3b criterion → PM revision + PO confirmation; Worker followed the criterion faithfully.)*
+**F1 — RESOLVED in fix-round `c8fd88e` (re-review PASS, see verdict above). Original finding retained for the record:** `advancedKeys.value` must be the numeric mode id, not the trigger; SDK import resolves the setter via `advancedKeysSdkMap[value]`, so every advanced key throws on import. *(root cause = wrong Done-when 3b criterion → PM revision + PO confirmation; Worker followed the criterion faithfully.)*
 
 - **Bundle evidence (verbatim, `@sparklinkplayjoy/sdk-keyboard/dist/esm/index.js`, re-extracted this session):**
   - `advancedKeysSdkMap={1:setDks,2:setMpt,3:setMT,4:setTGL,5:setEND,6:setMacro,8:setSocd,9:setRS}` — **keys are mode ids** (matches sdk-ref §5.2 table, Verified).
@@ -79,3 +87,7 @@ rev1 (2026-10-14): Done-when 3b revised per F1, PO-confirmed — `value` = numer
 ---
 **Reviewer cleanup (actual `ls`):** `.scratch/` = pce-test/, pm-notes.md (pre-existing, PO-emptied, gitignored) + `review-getvalues.js` (mine this session — throwaway bundle extractor; PO can delete). `_to_delete/` = .gitkeep + DebugKeyboardService.ts (pre-existing; PO must `git rm`). No tracked repo files deleted or edited beyond this review file + current-sprint.md status lines.
 **Reviewer sign-off:** verdict FAIL, 1 failed item (F1). Never edited source. 3a/3c/3d PASS; F1 = wrong Done-when 3b criterion routed to PM.
+
+---
+**Fix-round re-review (2026-10-14):** Reviewer cleanup (actual `ls`): `.scratch/` = pce-test/, pm-notes.md, review-getvalues.js (pre-existing, PO may delete) + `review-notes.md` (mine this session — working notes; PO may delete). `_to_delete/` = .gitkeep + DebugKeyboardService.ts (PO must `git rm`). No new cleanup otherwise; never edited source.
+**Fix-round sign-off:** verdict PASS (pending hw), 0 failed items. F1 confirmed fixed against the diff; gates re-run (advancedValue 0 · value=advancedKeyMode 1 · typecheck 0 · lint 0). Task → HW-TEST; PO exercises the Hardware check items 1-4 on a real device.

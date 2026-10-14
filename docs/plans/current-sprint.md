@@ -11,7 +11,7 @@
 - PM research base: `.scratch/pm-notes.md` — all line refs below were grep/read-verified THIS PM session (2026-10-13) against ExportService.ts (730 lines), KeyboardService.ts, useBatchProcessing.ts (26 lines), and the SDK bundle. Facts marked "banked" there are confirmed; do not re-derive.
 
 ## ▶ RUN THIS
-Next: WORKER — Task 2, "D1+D3+D4: live-read deadband/polling + lock the identity/polling comments" ([high-stakes] [hw]). Follow its numbered edit list below; Done-whens: `grep -n "sArg\|dpThreshold" src/services/ExportService.ts` → nothing; `grep -c "pressDead" src/services/ExportService.ts` ≥ 1; typecheck 0; lint 0. On completion → IN-REVIEW + write `docs/plans/reviews/review-d1d3d4-live-reads.md` (sprint goal + Done-whens + base = HEAD at your session start (the Task-1-DONE status commit)..head, hw steps: export with non-default polling/deadband → JSON shows real values). ONE task this session.
+Next: REVIEWER — "follow docs/plans/reviews/review-d1d3d4-live-reads.md" (Task 2, base `905eae3`..head `9f7ecfa`). On PASS set HW-TEST (never DONE — [hw]) and record hw steps for the PO; on FAIL put detail in the review file + a "fix ONLY these" checklist here. Task 3 (D2 advanced-key shapes) stays PENDING until Task 2 closes — ONE task at a time.
 
 ## Tasks
 
@@ -25,7 +25,8 @@ Next: WORKER — Task 2, "D1+D3+D4: live-read deadband/polling + lock the identi
      4. Do NOT remove `macro:{list:[],v2list:[]}` from gatherKeyboardSnapshot — omitting macro makes SDK setImportData destructure undefined → TypeError → import reports failure (bundle-verified trap, pm-notes :212).
    - Done when: `grep -c "MacroList" src/services/ExportService.ts` ≥ 3; `npm run typecheck` exit 0; `npm run lint` exit 0. [hw] PO: record a macro, import any profile, macro still there.
 
-2. **D1+D3+D4: live-read deadband/polling + lock the identity/polling comments** — [high-stakes] [hw] — STATUS: PENDING
+2. **D1+D3+D4: live-read deadband/polling + lock the identity/polling comments** — [high-stakes] [hw] — STATUS: IN-REVIEW
+   - Worker checkpoint 2026-10-13: code complete + committed `9f7ecfa` — rateOfReturn (ROES, typeof number, else 3) + topDeadBandSwitch (TOP_DEAD_SWITCH, typeof boolean → Number, else 0) live in gatherDeviceInfo; deadBandPress/ReleaseValue = dpDr.pressDead/releaseDead ?? 0; D3/D4 comments locked per PO. Done-whens all pass: grep sArg|dpThreshold → nothing; grep -c pressDead = 1; typecheck 0; lint 0. Review: `docs/plans/reviews/review-d1d3d4-live-reads.md` (base `905eae3`..head `9f7ecfa`). Awaiting Reviewer.
    - Files: `src/services/ExportService.ts`
    - Edits (gatherDeviceInfo :31-66):
      1. D1: keep both getApi calls (:44/:46) but capture results. Per sdk-ref §3 union (verify before writing): ROES decodes → number, TOP_DEAD_SWITCH → boolean. `rateOfReturn` = ROES value when `typeof === 'number'` else 3; `topDeadBandSwitch` = `Number(bool)` when `typeof === 'boolean'` else 0 (validateConfig requires both numeric — banked :211). instanceof Error → keep literals 3/0. Replace comment :39-43 with one line stating these are now live reads.

@@ -15,7 +15,8 @@ Next: Task 1 — D5 macro no-op (snapshot/restore localStorage MacroList around 
 
 ## Tasks
 
-1. **D5: import must not destroy the local macro library** — [high-stakes] [hw] — STATUS: PENDING
+1. **D5: import must not destroy the local macro library** — [high-stakes] [hw] — STATUS: IN-PROGRESS
+   - Checkpoint (Worker 2026-10-13): first-pass read done, plan line refs confirmed exact (importConfig :684, garbage read :694-695 untouched this task; buildMacroLibrary already documents the stub at :485-492, edit 3 adds only the PO-decision line). Edits 1+2 APPLIED (snapshot before importConfig, restore after result.success check). Banked: grep `MacroList` src-wide → only 2 getItem sites, MacroRecording.vue:121 (page onLoad re-reads storage) + ExportService.ts:687 (new snapshot); no store cache → no invalidation needed. Next: edit 3, then typecheck + Done-whens + commit.
    - Why: SDK `setImportData` unconditionally calls sync `setMacro` → overwrites `localStorage["MacroList"]` with the imported file's (always-empty) list. PO hardware-confirmed the loss and approved this fix (pm-notes "D5-revised").
    - Files: `src/services/ExportService.ts`
    - Edits (importProfile :666-705):

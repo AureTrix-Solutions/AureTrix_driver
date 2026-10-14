@@ -489,7 +489,9 @@ class ExportService {
     // the exported macro list was always empty. Returning the empty library directly
     // preserves the KeyboardConfig schema (caller gatherKeyboardSnapshot) without
     // dead hardware round-trips. A real readback would need raw-HID work — see
-    // backlog `exportservice-review`.
+    // backlog `exportservice-review`. PO decision (2026-10-13, D5): the empty
+    // macro list is accepted for export; importProfile now snapshots/restores
+    // localStorage["MacroList"] around SDK import so it never destroys local macros.
     return { list: [], v2list: [] };
   }
 
@@ -681,6 +683,11 @@ class ExportService {
         }
       }
       
+      // SDK setImportData unconditionally calls sync setMacro, which overwrites
+      // localStorage["MacroList"] with the imported file's (always-empty) list.
+      // Snapshot and restore around the import so the local macro library survives.
+      const macroSnapshot = localStorage.getItem('MacroList');
+
       const result = await KeyboardService.importConfig(file);
       
       if (result instanceof Error) {
@@ -689,6 +696,13 @@ class ExportService {
 
       if (result.success === false) {
         return { success: false, error: result.error || 'Import failed' };
+      }
+
+      // setMacro ran synchronously inside importConfig — no race; safe to restore now.
+      if (macroSnapshot !== null) {
+        localStorage.setItem('MacroList', macroSnapshot);
+      } else {
+        localStorage.removeItem('MacroList');
       }
 
       const text = await file.text();

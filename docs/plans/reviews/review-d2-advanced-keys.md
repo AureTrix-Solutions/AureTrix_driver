@@ -35,15 +35,45 @@ Fix-round ranges (added on each re-review): —
 - Hardware verdict: <pending>
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [ ] meets every "DONE WHEN" criterion above — 3a/3c/3d: YES (all re-run ✓). 3b: met AS WORDED, but the criterion's value clause ("value from the mode's primary trigger") is itself contradicted by the bundle-verified SDK contract → F1; criterion revision routes to PM (PO confirmation).
+- [x] diff scope matches the task (no stray files) — source touched = `ExportService.ts` + `KeyboardService.ts` only; planning-doc commits in range (`current-sprint.md`, `backlog.md`, `review-d1d3d4-live-reads.md`) are PM-touchpoint/handoff mechanics per protocol, not stray source.
+- [x] no design-intent violation — filters:[] untouched, usagePage 65440 untouched, all new wrappers return `Error`, never throw.
+- [x] typecheck/build gate met — `npm run typecheck` exit 0 and `npm run lint` exit 0 re-run independently this session; build N/A (service-code change covered by typecheck+lint).
+- [x] tag is correct — [high-stakes] [hw] appropriate (SDK-correctness, multi-file, device-affecting).
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** <pending>  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** FAIL  ·  **Date:** 2026-10-14  ·  **Fail count:** 1
+
+3a ✓, 3c ✓, 3d ✓ — all Done-when greps, wrapper shape (return `Error`, never throw), KS `number|Error` annotations, canonical dks `{dks,trps,db,db2,db3}`, mt `{dksAll:[dks1..4],delay}` with delay stored ms AS-IS (import does `delay/10`), socd §6.8 union, typecheck 0 / lint 0 all independently re-run and pass. 3b meets its criterion **as written** but the criterion is factually wrong vs the SDK contract → F1.
 
 ### Failed items (FAIL only)
-<!-- none yet -->
+
+**F1 — `advancedKeys.value` must be the numeric mode id, not the trigger; SDK import resolves the setter via `advancedKeysSdkMap[value]`, so every advanced key throws on import.** *(root cause = wrong Done-when 3b criterion → PM revision + PO confirmation; Worker followed the criterion faithfully.)*
+
+- **Bundle evidence (verbatim, `@sparklinkplayjoy/sdk-keyboard/dist/esm/index.js`, re-extracted this session):**
+  - `advancedKeysSdkMap={1:setDks,2:setMpt,3:setMT,4:setTGL,5:setEND,6:setMacro,8:setSocd,9:setRS}` — **keys are mode ids** (matches sdk-ref §5.2 table, Verified).
+  - `async setAdvancedKeys(e,t){try{const{advancedType:r,value:n,dks:s,mpt:i,mt:o,tgl:a,end:c,socd:u,macro:l}=t,h=this.advancedKeysSdkMap[n];let d;if("dks"===r){…d=await h({key:e,dks:o,trps:a,dbs:c})}else if("mt"===r){…d=await h({key:e,dks:n,delay:r/10})}…}catch(e){throw …new Error(`高级键设置失败: ${e.message}`)}}`
+  - ⇒ the **branch** is chosen by `advancedType` (`r`), but the **setter `h`** is `advancedKeysSdkMap[value]` (`n`). If `value` is not a mode id, `h === undefined` and `await h(…)` throws TypeError → caught → `throw new Error("高级键设置失败")`.
+  - Import chain (bundle-verified): app import → SDK `importConfig` → `setImportData` → `setKeyboards` → per-key `setAdvancedKeys(keyValue, advancedKeys)`; `setKeyboards` destructures `advancedKeys` straight from the JSON entry. No app-side remap exists (`grep -rn advancedKeys src/` outside ExportService = 0 hits).
+- **Defect location — `src/services/ExportService.ts:388-399`:**
+  ```
+  let advancedValue = 0;
+  switch (advancedKeyMode) {
+    case 1: … advancedValue = dks.dks; break;      // trigger key code
+    case 2: … advancedValue = mpt.dks[0] ?? 0; break;
+    case 3: … advancedValue = mt.dks1; break;
+    case 4: … advancedValue = tgl.dks; break;
+    case 5: … advancedValue = end.dks; break;
+    case 8: … advancedValue = socd.type; break;    // 0..3 — can even collide with a real mode id → wrong setter
+  }
+  advancedKeys.value = advancedValue;               // ← stores trigger/type, NOT the mode id
+  ```
+- **Consequence:** importing the app's own export feeds `advancedKeysSdkMap[<triggercode>]` = `undefined` for every configured advanced key ⇒ all advanced-key writes throw ⇒ the export→import round-trip (the sprint goal) fails on-device.
+- **Contract (from the consumer, authoritative):** `value` MUST equal the numeric `advancedKeyMode` id already read at `ExportService.ts:386`. `advancedType` = `ADVANCED_KEY_MODE_MAP[advancedKeyMode]` is correct and stays. With `value = advancedKeyMode`, the entire `:388-399` trigger switch becomes unnecessary.
+- **Routing (per CLAUDE.md "wrong done-criterion"):** Done-when 3b's "`value` from the mode's primary trigger" clause is contradicted by the bundle → route to **PM (plan mode)** to revise + log, **on PO confirmation**; the revised criterion **must be written into THIS review file** before the fix Worker opens (the Reviewer judges the review file, not current-sprint.md). Then a new Worker window fixes ONLY this item.
+- **Verify-by (reviewer/worker re-run):** re-extract `setAdvancedKeys` from the bundle (confirm `h=this.advancedKeysSdkMap[n]`, `n=value`) and `advancedKeysSdkMap` keys; `grep -n "advancedKeys.value =" src/services/ExportService.ts`.
+
+---
+**Reviewer cleanup (actual `ls`):** `.scratch/` = pce-test/, pm-notes.md (pre-existing, PO-emptied, gitignored) + `review-getvalues.js` (mine this session — throwaway bundle extractor; PO can delete). `_to_delete/` = .gitkeep + DebugKeyboardService.ts (pre-existing; PO must `git rm`). No tracked repo files deleted or edited beyond this review file + current-sprint.md status lines.
+**Reviewer sign-off:** verdict FAIL, 1 failed item (F1). Never edited source. 3a/3c/3d PASS; F1 = wrong Done-when 3b criterion routed to PM.

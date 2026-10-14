@@ -11,7 +11,7 @@
 - PM research base: `.scratch/pm-notes.md` — all line refs below were grep/read-verified THIS PM session (2026-10-13) against ExportService.ts (730 lines), KeyboardService.ts, useBatchProcessing.ts (26 lines), and the SDK bundle. Facts marked "banked" there are confirmed; do not re-derive.
 
 ## ▶ RUN THIS
-Next: REVIEWER — "follow docs/plans/reviews/review-d1d3d4-live-reads.md" (Task 2, base `905eae3`..head `9f7ecfa`). On PASS set HW-TEST (never DONE — [hw]) and record hw steps for the PO; on FAIL put detail in the review file + a "fix ONLY these" checklist here. Task 3 (D2 advanced-key shapes) stays PENDING until Task 2 closes — ONE task at a time.
+Next: PO HARDWARE CHECK — Task 2 is HW-TEST (Reviewer PASS pending hw, 2026-10-13). Steps in `docs/plans/reviews/review-d1d3d4-live-reads.md` §Hardware check: set non-default polling rate + non-zero deadbands, export, confirm real values in JSON (rateOfReturn ≠ 3, topDeadBandSwitch reflects switch state, deadBandPress/ReleaseValue ≠ 0 on touched keys); import back — polling rate NOT restored is EXPECTED (D4 SDK limitation). PO states verdict in plain words; an agent records it (PASS → DONE + advance to Task 3; FAIL → IN-PROGRESS + "fix ONLY this" checklist). Task 3 (D2 advanced-key shapes) stays PENDING until Task 2 closes.
 
 ## Tasks
 
@@ -25,15 +25,9 @@ Next: REVIEWER — "follow docs/plans/reviews/review-d1d3d4-live-reads.md" (Task
      4. Do NOT remove `macro:{list:[],v2list:[]}` from gatherKeyboardSnapshot — omitting macro makes SDK setImportData destructure undefined → TypeError → import reports failure (bundle-verified trap, pm-notes :212).
    - Done when: `grep -c "MacroList" src/services/ExportService.ts` ≥ 3; `npm run typecheck` exit 0; `npm run lint` exit 0. [hw] PO: record a macro, import any profile, macro still there.
 
-2. **D1+D3+D4: live-read deadband/polling + lock the identity/polling comments** — [high-stakes] [hw] — STATUS: IN-REVIEW
-   - Worker checkpoint 2026-10-13: code complete + committed `9f7ecfa` — rateOfReturn (ROES, typeof number, else 3) + topDeadBandSwitch (TOP_DEAD_SWITCH, typeof boolean → Number, else 0) live in gatherDeviceInfo; deadBandPress/ReleaseValue = dpDr.pressDead/releaseDead ?? 0; D3/D4 comments locked per PO. Done-whens all pass: grep sArg|dpThreshold → nothing; grep -c pressDead = 1; typecheck 0; lint 0. Review: `docs/plans/reviews/review-d1d3d4-live-reads.md` (base `905eae3`..head `9f7ecfa`). Awaiting Reviewer.
+2. **D1+D3+D4: live-read deadband/polling + lock the identity/polling comments** — [high-stakes] [hw] — STATUS: HW-TEST
+   - Reviewer PASS (pending hw) 2026-10-13, `905eae3..9f7ecfa` — all Done-whens independently re-run (sArg/dpThreshold grep 0, pressDead 1, typecheck 0, lint 0); SDK claims grep-verified vs sdk-ref :467/:475/:903 + KS :743/:1100; D3/D4 comments landed :52/:48; scope exact; no Findings. Review: `docs/plans/reviews/review-d1d3d4-live-reads.md`. Awaiting PO hardware verdict.
    - Files: `src/services/ExportService.ts`
-   - Edits (gatherDeviceInfo :31-66):
-     1. D1: keep both getApi calls (:44/:46) but capture results. Per sdk-ref §3 union (verify before writing): ROES decodes → number, TOP_DEAD_SWITCH → boolean. `rateOfReturn` = ROES value when `typeof === 'number'` else 3; `topDeadBandSwitch` = `Number(bool)` when `typeof === 'boolean'` else 0 (validateConfig requires both numeric — banked :211). instanceof Error → keep literals 3/0. Replace comment :39-43 with one line stating these are now live reads.
-     2. D3: identity literals :56-60 STAY 0/''; replace comment :52-55 with: getBaseInfo carries none of these fields; PO decision 2026-10-13 — intentionally static, not revisited.
-     3. D4: add comment at `rateOfReturn` — SDK import's setSystem discards rateOfReturn (bundle-verified); polling rate is NOT restored by import (SDK-side limitation, PO accepted; no setPollingRate bypass).
-   - Edits (gatherPerformanceData :272-280): D1 live deadbands — inside the existing `!(dpDr instanceof Error)` guard set `deadBandPressValue = dpDr.pressDead ?? 0; deadBandReleaseValue = dpDr.releaseDead ?? 0;` (getDpDr verified `Promise<{pressDead;releaseDead}|Error>`, KS :743). Replace comment :273-277 with one line (was dead-shape read, now live per PO D1).
-   - Done when: `grep -n "sArg\|dpThreshold" src/services/ExportService.ts` → nothing; `grep -c "pressDead" src/services/ExportService.ts` ≥ 1; typecheck exit 0; lint exit 0. [hw] PO: export with non-default polling/deadband → JSON shows real values.
 
 3. **D2 group: advanced keys — wrappers + export shapes (3a→3d, ONE review at group end)** — [high-stakes] [hw] — STATUS: PENDING
    - 3a. **New KeyboardService wrappers** (KS has none — grep 0 hits, banked :286). Files: `src/services/KeyboardService.ts`. Add near getDksTravel (:841): `getDksAll(key)` → `{dks1..dks4}|Error`; `getTrpsAll(key)` → `{trps1..trps4}|Error`; `getMtorTgl(key)` → raw int (×10 = ms delay, sdk-ref :145 Verified) `|Error`. All three façade methods exist (bundle-verified: `getDksAll=e=>this.higherKeyController.getDksAll(e)` etc.). Follow the wrapper skill: try/catch → return Error, never throw; JSDoc with sdk-ref §. Done when: `grep -c "async getDksAll\|async getTrpsAll\|async getMtorTgl" src/services/KeyboardService.ts` = 3; typecheck 0.

@@ -28,12 +28,37 @@ Fix-round ranges (added on each re-review): —
 - Hardware verdict: <pending>
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** <pending>  ·  **Date:** <pending>  ·  **Fail count:** <pending>
+**Result:** PASS (pending hw)  ·  **Date:** 2026-10-13  ·  **Fail count:** 0
+
+Independent re-verification (all commands re-run this session, not trusted from Worker notes):
+
+**Done-whens:**
+- `grep -n "sArg\|dpThreshold" src/services/ExportService.ts` → no output (exit 1) ✓
+- `grep -c "pressDead" src/services/ExportService.ts` → 1 ✓ (≥ 1)
+- `npm run typecheck` → exit 0 ✓ · `npm run lint` → exit 0 ✓
+
+**Scope:** `git diff --stat 905eae3..9f7ecfa` → only `src/services/ExportService.ts`, +13/−20. Both hunks match the plan's two edit sites (gatherDeviceInfo, gatherPerformanceData). No stray files.
+
+**SDK correctness (grep-verified against docs/sdk-reference-v2.md this session):**
+- ROES: `:467` — `number`, polling-rate **index** (`:518` — same index, not Hz). Worker's `typeof roes === 'number'` narrowing matches KS `getPollingRate`'s own pattern (`KeyboardService.ts:311`). Fallback 3 preserved on Error/wrong shape.
+- TOP_DEAD_SWITCH: `:475` — `boolean` (`data[2] !== 0`). `typeof === 'boolean'` + `Number()` keeps the exported JSON numeric as before. Fallback 0 preserved.
+- getDpDr: `:903` ✅ Verified — `{pressDead, releaseDead}`, resolves to caught `Error` on failure. Wrapper contract confirmed at `KeyboardService.ts:743` (`Promise<{pressDead; releaseDead} | Error>`). Reads sit inside the pre-existing `!(dpDr instanceof Error)` guard with `?? 0` fallbacks.
+- `getApi` wrapper union (`GetApiResult | Error`, `KeyboardService.ts:1100`, union `:30-40` includes `number`/`boolean`) — narrowing is type-sound; typecheck 0 corroborates.
+
+**D3/D4 lock comments:** present and grep-verified in the file — D4 at `:48` ("SDK-side limitation, PO accepted; no setPollingRate bypass"), D3 at `:52` ("intentionally static, not revisited").
+
+**Design intent:** no throws added; every read checks `instanceof Error`; HID traffic unchanged (both getApi calls kept — results now captured; getDpDr call pre-existing); no device filters touched; wrappers-return-Error contract intact.
+
+**Tag:** [high-stakes] correct (SDK-correctness + export/import behavior); [hw] correct (live device readback cannot be verified off-device).
+
+**Findings:** none — no defects and no out-of-scope observations to route. (Task 1's F-R1 remains open in current-sprint.md §Findings, unrelated to this diff.)
+
+**Status:** → HW-TEST. PO hardware check per §Hardware check above; Reviewer does not write DONE on a [hw] task.

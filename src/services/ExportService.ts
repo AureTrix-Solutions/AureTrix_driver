@@ -329,6 +329,11 @@ class ExportService {
       const mt = await this.retryWithBackoff(() => KeyboardService.getMT(keyValue));
       await new Promise(resolve => setTimeout(resolve, 50));
 
+      // D2: shared MT/TGL delay (ms — getMtorTgl decodes the 10ms wire unit ×10).
+      // Read for every key like the db reads; stored only when mt succeeded.
+      const mtorTglDelay = await this.retryWithBackoff(() => KeyboardService.getMtorTgl(keyValue));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
       const tgl = await this.retryWithBackoff(() => KeyboardService.getTGL(keyValue));
       await new Promise(resolve => setTimeout(resolve, 50));
 
@@ -337,8 +342,9 @@ class ExportService {
       const advancedKeys: Keyboards['advancedKeys'] = {};
 
       // advancedType/value are derived from the live advancedKeyMode read in the
-      // performance pass (D2; sdk-ref §5.2 enum). The dks entry below is the canonical
-      // shape import consumes; mpt/socd/mt/tgl/end store their raw objects verbatim.
+      // performance pass (D2; sdk-ref §5.2 enum). The dks and mt entries below are the
+      // canonical shapes import consumes; mpt/socd/tgl/end store their raw objects
+      // verbatim (their decode shapes match what import's branches expect).
       if (!(dksAll instanceof Error) && dksAll && !(trpsAll instanceof Error) && trpsAll) {
         advancedKeys.dks = {
           dks: { 1: dksAll.dks1, 2: dksAll.dks2, 3: dksAll.dks3 },
@@ -358,7 +364,13 @@ class ExportService {
       }
 
       if (!(mt instanceof Error) && mt) {
-        advancedKeys.mt = mt;
+        // Canonical MT shape import consumes: {dksAll:[dks1..4], delay} — delay in ms
+        // AS-IS (import's mt branch does delay/10 before cmdMT, which puts the 10ms
+        // wire unit on the wire; getMtorTgl's ×10 decode is ms ⇒ storing ms round-trips).
+        advancedKeys.mt = {
+          dksAll: [mt.dks1, mt.dks2, mt.dks3, mt.dks4],
+          delay: mtorTglDelay instanceof Error ? 0 : mtorTglDelay,
+        };
       }
 
       if (!(tgl instanceof Error) && tgl) {

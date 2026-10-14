@@ -15,6 +15,7 @@
 - 3b (`bab76eb`): module-level ADVANCED_KEY_MODE_MAP (§5.2) + value switch (dks.dks/mpt.dks[0]/mt.dks1/tgl.dks/end.dks/socd.type; macro & RS → 0); stale comment replaced.
 - 3c (`b4de552`): canonical dks shape stored; KS get/setDksTravel annotations fixed to `number|Error` (sdk-ref Verified: plain mm); db3 carried (extra props pass SDK validation).
 - 3d (`d54e780`): getMtorTgl read added in gatherAdvancedKeyData (fires for every key like the db reads, stored only when mt non-Error); mt store now `{dksAll:[mt.dks1..dks4], delay: mtorTglDelay ms AS-IS}`; socd CONFIRMED against §6.8 union — existing raw store correct, unchanged; tgl/mpt/end raw stores unchanged; switch case 3/4 read raw local vars, unaffected; comment above the stores updated to name dks+mt as canonical.
+- **3b F1 fix-round (`c8fd88e`)**: `advancedKeys.value` now = numeric `advancedKeyMode` id (SDK setAdvancedKeys resolves the setter via `advancedKeysSdkMap[value]`); trigger switch + `advancedValue` deleted; replacement comment names the sibling-field data path. Scope addition: lint's no-unused-vars caught the `dks` local (old :302, `getDks(keyValue)`) — consumed ONLY by the deleted switch (canonical dks shape uses dksAll/trpsAll; mpt/socd/tgl/end/mt have their own stores) ⇒ its read + 50ms delay removed as dead code; no payload shape change (the switch value never entered the payload otherwise). +4/−17, ExportService.ts only. Gates re-run post-fix: `grep -c "advancedValue"` = 0; `grep -c "advancedKeys.value = advancedKeyMode"` = 1; `grep -c "getDks("` = 0; typecheck exit 0; lint exit 0.
 - Self-check vs sdk-reference-v2.md: §6.2 (getDksAll/getTrpsAll shapes, Verified), §6.3 (getMtorTgl = Layout_MTDelay raw ×10 = ms, Verified — the mt delay round-trip math), §6.6 (TGL delay 10ms wire unit, Verified), §6.8 (getSocd union `{pos1,pos2,key1,key2,type,mode,delay}` v≥1.0.7 | `{pos,key,type,mode}` — matches KS SocdConfig exactly), §5.2 (advancedKeyMode map). Import mt branch (bundle-verified in 3c): `const {dksAll,delay}=o; cmdMT({key,dks:getValues(dksAll),delay:delay/10})`.
 - Design intent preserved: filters:[] ☑ (untouched) · usagePage 65440 ☑ (untouched) · wrappers return Error ☑ (3a wrappers + KS annotations).
 - typecheck/build: `npm run typecheck` 0 errors at each of 3a–3d; `npm run lint` 0 errors/warnings at 3b–3d. Build not run (no build-affecting change beyond service code that typecheck+lint cover).
@@ -24,7 +25,7 @@ Base: `9f7ecfa` (Task 2 / branch-reviewed point)   Head: `d54e780` (Task 3d)
 <!-- Reviewer runs this itself — do NOT paste the diff here:
        git diff --stat 9f7ecfa..d54e780     then      git diff 9f7ecfa..d54e780
      A file touched outside this task's scope is a flag. -->
-Fix-round ranges (added on each re-review): —
+Fix-round ranges (added on each re-review): F1 → `d54e780..c8fd88e` (3b value=mode-id fix + orphan getDks removal; 1 file, +4/−17)
 
 ## 🖥️ Hardware check ([hw] tasks only)
 **Worker fills (what to test):**

@@ -302,6 +302,24 @@ class ExportService {
       const dks = await this.retryWithBackoff(() => KeyboardService.getDks(keyValue));
       await new Promise(resolve => setTimeout(resolve, 50));
 
+      // D2b: canonical DKS export shape — all DKS/TRPS slots plus per-slot DB travel.
+      // Import's dks branch consumes {dks,trps,db,db2}; db3 is carry-only (extra props
+      // pass SDK validation) for the later DB3 restore path.
+      const dksAll = await this.retryWithBackoff(() => KeyboardService.getDksAll(keyValue));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const trpsAll = await this.retryWithBackoff(() => KeyboardService.getTrpsAll(keyValue));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const db1 = await this.retryWithBackoff(() => KeyboardService.getDksTravel(keyValue, 'Layout_DB1'));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const db2 = await this.retryWithBackoff(() => KeyboardService.getDksTravel(keyValue, 'Layout_DB2'));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const db3 = await this.retryWithBackoff(() => KeyboardService.getDksTravel(keyValue, 'Layout_DB3'));
+      await new Promise(resolve => setTimeout(resolve, 50));
+
       const mpt = await this.retryWithBackoff(() => KeyboardService.getMpt(keyValue));
       await new Promise(resolve => setTimeout(resolve, 50));
 
@@ -318,10 +336,17 @@ class ExportService {
 
       const advancedKeys: Keyboards['advancedKeys'] = {};
 
-      // Raw mode objects are stored verbatim below; advancedType/value are derived from
-      // the live advancedKeyMode read in the performance pass (D2; sdk-ref §5.2 enum).
-      if (!(dks instanceof Error) && dks) {
-        advancedKeys.dks = dks;
+      // advancedType/value are derived from the live advancedKeyMode read in the
+      // performance pass (D2; sdk-ref §5.2 enum). The dks entry below is the canonical
+      // shape import consumes; mpt/socd/mt/tgl/end store their raw objects verbatim.
+      if (!(dksAll instanceof Error) && dksAll && !(trpsAll instanceof Error) && trpsAll) {
+        advancedKeys.dks = {
+          dks: { 1: dksAll.dks1, 2: dksAll.dks2, 3: dksAll.dks3 },
+          trps: { 1: trpsAll.trps1, 2: trpsAll.trps2, 3: trpsAll.trps3 },
+          db: db1 instanceof Error ? 0 : db1,
+          db2: db2 instanceof Error ? 0 : db2,
+          db3: db3 instanceof Error ? 0 : db3,
+        };
       }
 
       if (!(mpt instanceof Error) && mpt) {

@@ -838,7 +838,7 @@ class KeyboardService {
     }
   }
 
-  async getDksTravel(key: number, dksLayout: DksLayoutType = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
+  async getDksTravel(key: number, dksLayout: DksLayoutType = 'Layout_DB1'): Promise<number | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');
@@ -852,7 +852,7 @@ class KeyboardService {
     }
   }
 
-  async setDksTravel(key: number, value: number, dksLayout: DksLayoutType = 'Layout_DB1'): Promise<{ travel: number; dbs?: number[] } | Error> {
+  async setDksTravel(key: number, value: number, dksLayout: DksLayoutType = 'Layout_DB1'): Promise<number | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');

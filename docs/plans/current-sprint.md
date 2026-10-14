@@ -11,12 +11,11 @@
 - PM research base: `.scratch/pm-notes.md` — all line refs below were grep/read-verified THIS PM session (2026-10-13) against ExportService.ts (730 lines), KeyboardService.ts, useBatchProcessing.ts (26 lines), and the SDK bundle. Facts marked "banked" there are confirmed; do not re-derive.
 
 ## ▶ RUN THIS
-Next: PO HARDWARE CHECK — Task 1 (HW-TEST, Reviewer PASS pending hw). Steps in `docs/plans/reviews/review-d5-macro-noop.md` §Hardware check: record a macro → import any profile → macro still there; sanity-check normal import still applies. State the verdict in plain words ("hardware passed" / "hardware failed: <symptom>") and an agent records it: PASS → Task 1 DONE (✓), advance to Task 2; FAIL → IN-PROGRESS + F1 block. Task 2 (D1+D3+D4) stays PENDING until then — ONE task at a time.
+Next: WORKER — Task 2, "D1+D3+D4: live-read deadband/polling + lock the identity/polling comments" ([high-stakes] [hw]). Follow its numbered edit list below; Done-whens: `grep -n "sArg\|dpThreshold" src/services/ExportService.ts` → nothing; `grep -c "pressDead" src/services/ExportService.ts` ≥ 1; typecheck 0; lint 0. On completion → IN-REVIEW + write `docs/plans/reviews/review-d1d3d4-live-reads.md` (sprint goal + Done-whens + base = HEAD at your session start (the Task-1-DONE status commit)..head, hw steps: export with non-default polling/deadband → JSON shows real values). ONE task this session.
 
 ## Tasks
 
-1. **D5: import must not destroy the local macro library** — [high-stakes] [hw] — STATUS: HW-TEST
-   - ✓ Reviewer PASS (pending hw) 2026-10-13, `0bc1bb0..235ca55` — all code Done-whens re-run clean (MacroList=5, typecheck 0, lint 0, scope exact); 1 non-blocking finding F-R1 (failed-import restore gap) → Findings. Awaiting PO hardware verdict.
+1. ✓ **D5: import must not destroy the local macro library** — [high-stakes] [hw] — STATUS: DONE (Reviewer PASS + PO hardware PASS 2026-10-13, `0bc1bb0..235ca55`; review file `docs/plans/reviews/review-d5-macro-noop.md`; F-R1 → Findings)
    - Why: SDK `setImportData` unconditionally calls sync `setMacro` → overwrites `localStorage["MacroList"]` with the imported file's (always-empty) list. PO hardware-confirmed the loss and approved this fix (pm-notes "D5-revised").
    - Files: `src/services/ExportService.ts`
    - Edits (importProfile :666-705):

@@ -34,7 +34,7 @@ Fix-round ranges (added on each re-review): —
 - What to verify: Record a macro in the Macro page, export or use any profile file, run Import, then return to the Macro page — the recorded macro should still be there. Also sanity-check a normal import still applies (keys/lighting) as before.
 
 **Hardware verdict (agent records from the PO's plain-language outcome):**
-- Hardware verdict: <pending>
+- Hardware verdict: PASS — 2026-10-13 (PO: recorded macro persisted after profile import)
 
 ## ❓ Reviewer, please confirm
 - [x] meets every "DONE WHEN" criterion above

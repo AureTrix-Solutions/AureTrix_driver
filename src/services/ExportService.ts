@@ -5,6 +5,20 @@ import type { ILightMode, IKey } from '@sparklinkplayjoy/protocol-keyboard';
 import type { LightModeConfigs } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/types/type';
 import type { IDefKeyInfo } from '../types/types';
 
+/** advancedKeyMode id → advancedType string (sdk-reference-v2.md §5.2 enum, Verified:
+ *  0=none … 9=rs; ids 7 and 10-15 have no SDK map entry and fall back to 'none'). */
+const ADVANCED_KEY_MODE_MAP: Record<number, string> = {
+  0: 'none',
+  1: 'dks',
+  2: 'mpt',
+  3: 'mt',
+  4: 'tgl',
+  5: 'end',
+  6: 'macro',
+  8: 'socd',
+  9: 'rs',
+};
+
 class ExportService {
   private processBatches = useBatchProcessing().processBatches;
   private globalTravelCache: number | null = null;
@@ -304,11 +318,8 @@ class ExportService {
 
       const advancedKeys: Keyboards['advancedKeys'] = {};
 
-      // The old per-mode `.enable`/`.keyValue`/`.triggeringPoint` detection read fields
-      // that no SDK getDks/getMpt/getSocd/getMT/getTGL read-back shape has ever had
-      // (verified decoders: {dks}, {dks[],dbs[]}, SocdConfig, {dks1..4}, {dks,delay}),
-      // so advancedType was always 'none'. Kept verbatim; the raw mode objects below
-      // carry the real data.
+      // Raw mode objects are stored verbatim below; advancedType/value are derived from
+      // the live advancedKeyMode read in the performance pass (D2; sdk-ref §5.2 enum).
       if (!(dks instanceof Error) && dks) {
         advancedKeys.dks = dks;
       }
@@ -333,8 +344,22 @@ class ExportService {
         advancedKeys.end = end;
       }
 
-      advancedKeys.advancedType = 'none';
-      advancedKeys.value = 0;
+      // D2: live mode id → advancedType (§5.2); value = the mode's primary trigger
+      // value from the raw object just read (0 when missing/Error or not applicable).
+      const advancedKeyMode = keyData.performance?.advancedKeyMode ?? 0;
+      advancedKeys.advancedType = ADVANCED_KEY_MODE_MAP[advancedKeyMode] ?? 'none';
+      let advancedValue = 0;
+      switch (advancedKeyMode) {
+        case 1: if (!(dks instanceof Error) && dks) advancedValue = dks.dks; break;
+        case 2: if (!(mpt instanceof Error) && mpt) advancedValue = mpt.dks[0] ?? 0; break;
+        case 3: if (!(mt instanceof Error) && mt) advancedValue = mt.dks1; break;
+        case 4: if (!(tgl instanceof Error) && tgl) advancedValue = tgl.dks; break;
+        case 5: if (!(end instanceof Error) && end) advancedValue = end.dks; break;
+        case 6: break; // macro: address is not a trigger value; macro list stays local (D5)
+        case 8: if (!(socd instanceof Error) && socd) advancedValue = socd.type; break;
+        case 9: break; // RS: not gathered in export
+      }
+      advancedKeys.value = advancedValue;
 
       keyData.advancedKeys = advancedKeys;
     } catch (error) {

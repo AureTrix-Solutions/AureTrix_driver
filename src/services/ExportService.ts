@@ -36,23 +36,20 @@ class ExportService {
         return {};
       }
 
-      // getApi's verified §3 union decodes ROES → number and TOP_DEAD_SWITCH → boolean —
-      // neither carries `.sArg`, so the previous `.sArg || 3` / `.sArg || 0` reads were
-      // always-dead (values were always 3 / 0). Kept as literal defaults to preserve the
-      // exported JSON shape; the queries stay so HID traffic is unchanged. Making these
-      // live is a PO call — see sprint Findings / backlog exportservice-review.
-      await KeyboardService.getApi({ type: 'ORDER_TYPE_ROES' });
-      const pollingRate = 3;
-      await KeyboardService.getApi({ type: 'ORDER_TYPE_TOP_DEAD_SWITCH' });
-      const topDeadBand = 0;
+      // Live reads (D1, PO-approved 2026-10-13): §3 decodes ROES → number (rate index) and
+      // TOP_DEAD_SWITCH → boolean; any Error or unexpected shape falls back to literals 3/0.
+      const roes = await KeyboardService.getApi({ type: 'ORDER_TYPE_ROES' });
+      const pollingRate = !(roes instanceof Error) && typeof roes === 'number' ? roes : 3;
+      const topDeadSwitch = await KeyboardService.getApi({ type: 'ORDER_TYPE_TOP_DEAD_SWITCH' });
+      const topDeadBand = !(topDeadSwitch instanceof Error) && typeof topDeadSwitch === 'boolean' ? Number(topDeadSwitch) : 0;
 
       return {
+        // SDK import's setSystem discards rateOfReturn (bundle-verified): polling rate is NOT
+        // restored by import — SDK-side limitation, PO accepted; no setPollingRate bypass (D4).
         rateOfReturn: pollingRate,
         topDeadBandSwitch: topDeadBand,
-        // getBaseInfo returns only the 11 §3 identity fields (getCmdSyncRecdata) — it never
-        // carried productId/vendorId/keyboardName/usage/usagePage, so these reads were always
-        // undefined → defaults. Kept as literal defaults to preserve the exported JSON shape
-        // (removing fields is a PO call — see sprint Findings / backlog exportservice-review).
+        // getBaseInfo carries none of these identity fields; PO decision 2026-10-13 —
+        // intentionally static, not revisited (D3).
         productId: 0,
         vendorId: 0,
         keyboardName: '',
@@ -270,13 +267,9 @@ class ExportService {
       }
 
       if (!(dpDr instanceof Error)) {
-        // WHY literal 0: these reads used dpDr.dpThreshold/drThreshold — fields that never
-        // existed on the verified getDpDr payload ({pressDead, releaseDead}: sdk-reference §5.5
-        // Verified + dist/esm bundle — two cmdLayout reads, getDpDrRecdata u16LE ÷1000 mm), so
-        // the exported dead-band values were ALWAYS 0. Value preserved verbatim; making them
-        // live (real pressDead/releaseDead readback) is a PO call — see current-sprint Findings.
-        keyData.performance!.deadBandPressValue = 0;
-        keyData.performance!.deadBandReleaseValue = 0;
+        // Live deadband readback (D1, PO-approved 2026-10-13): was a dead-shape read pinned to 0.
+        keyData.performance!.deadBandPressValue = dpDr.pressDead ?? 0;
+        keyData.performance!.deadBandReleaseValue = dpDr.releaseDead ?? 0;
       }
 
       if (!(axis instanceof Error)) {

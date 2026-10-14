@@ -37,12 +37,27 @@ Fix-round ranges (added on each re-review): —
 - Hardware verdict: <pending>
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** <pending>  ·  **Date:** <pending>  ·  **Fail count:** <pending>
+**Result:** PASS (pending hw)  ·  **Date:** 2026-10-13  ·  **Fail count:** 0
+
+Independent re-run of every code Done-when (`git diff 0bc1bb0..235ca55` reviewed directly):
+- `grep -c "MacroList" src/services/ExportService.ts` → **5** (≥ 3 ✓)
+- `npm run typecheck` → **exit 0** ✓ · `npm run lint` → **exit 0** ✓
+- Diff scope: `src/services/ExportService.ts` (16 lines, exactly edits 1-3) + `docs/plans/current-sprint.md` (plan mechanics). No stray source files. ✓
+- Ordering verified by grep: snapshot :689 immediately before `importConfig(file)` :691; restore :702-706 after both result guards (:693, :697) and before the file re-read :708 — matches plan edits 1+2. Null-branch restore (`removeItem` when no prior list) correct.
+- Edit 3: comment-only in buildMacroLibrary; return value untouched. ✓
+- Edit 4 constraint: `macro:{list:[],v2list:[]}` in gatherKeyboardSnapshot untouched by the diff. ✓
+- Design intent: filters:[], usagePage 65440, wrapper Error contract all untouched. ✓
+- Tag [high-stakes] [hw] correct (import-path logic change; PO hardware check required).
+
+**Findings (non-blocking, routed to PM):**
+- F-R1: The `result instanceof Error` (:693) and `result.success === false` (:697) early-returns skip the MacroList restore, but SDK `setImportData` may run sync `setMacro` (overwriting MacroList with the file's empty list) *before* reporting failure — a failed import could still wipe local macros. Placement is exactly per plan edit 2, so Task 1 is spec-compliant; where to verify: SDK bundle `setImportData` — ordering of the `setMacro` call vs. the failure return. Worker note :18 asserts "setMacro either didn't run or the import failed" — the second half of that claim is not bundle-verified.
+
+**Hardware check pending** — PO to exercise per §Hardware check above. Reviewer sets HW-TEST, never DONE, on [hw] tasks.

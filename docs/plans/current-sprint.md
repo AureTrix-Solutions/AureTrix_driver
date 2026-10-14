@@ -11,12 +11,12 @@
 - PM research base: `.scratch/pm-notes.md` — all line refs below were grep/read-verified THIS PM session (2026-10-13) against ExportService.ts (730 lines), KeyboardService.ts, useBatchProcessing.ts (26 lines), and the SDK bundle. Facts marked "banked" there are confirmed; do not re-derive.
 
 ## ▶ RUN THIS
-Next: REVIEWER — "follow docs/plans/reviews/review-d5-macro-noop.md" (Task 1, base `0bc1bb0`..head `235ca55`). On PASS set HW-TEST (never DONE — [hw]); on FAIL detail in review file + fix checklist here.
+Next: PO HARDWARE CHECK — Task 1 (HW-TEST, Reviewer PASS pending hw). Steps in `docs/plans/reviews/review-d5-macro-noop.md` §Hardware check: record a macro → import any profile → macro still there; sanity-check normal import still applies. State the verdict in plain words ("hardware passed" / "hardware failed: <symptom>") and an agent records it: PASS → Task 1 DONE (✓), advance to Task 2; FAIL → IN-PROGRESS + F1 block. Task 2 (D1+D3+D4) stays PENDING until then — ONE task at a time.
 
 ## Tasks
 
-1. **D5: import must not destroy the local macro library** — [high-stakes] [hw] — STATUS: IN-REVIEW
-   - Checkpoint: all 3 edits applied + committed `0bc1bb0..235ca55`; Done-whens met (grep MacroList=5 ≥3, typecheck 0, lint 0); review file `docs/plans/reviews/review-d5-macro-noop.md` written with hw steps. Cleanup (actual ls 2026-10-13): `.scratch/` = `pce-test`, `pm-notes.md` (PO may delete); `_to_delete/` = `DebugKeyboardService.ts` (PO must git rm). Awaiting Reviewer.
+1. **D5: import must not destroy the local macro library** — [high-stakes] [hw] — STATUS: HW-TEST
+   - ✓ Reviewer PASS (pending hw) 2026-10-13, `0bc1bb0..235ca55` — all code Done-whens re-run clean (MacroList=5, typecheck 0, lint 0, scope exact); 1 non-blocking finding F-R1 (failed-import restore gap) → Findings. Awaiting PO hardware verdict.
    - Why: SDK `setImportData` unconditionally calls sync `setMacro` → overwrites `localStorage["MacroList"]` with the imported file's (always-empty) list. PO hardware-confirmed the loss and approved this fix (pm-notes "D5-revised").
    - Files: `src/services/ExportService.ts`
    - Edits (importProfile :666-705):
@@ -53,3 +53,4 @@ Next: REVIEWER — "follow docs/plans/reviews/review-d5-macro-noop.md" (Task 1, 
 
 ## Findings
 <!-- one line per out-of-scope defect: what + where to verify. PM routes at next touchpoint. -->
+- F-R1 (Reviewer, Task 1): importProfile's MacroList restore sits AFTER the `result instanceof Error` / `result.success === false` early-returns (ExportService.ts :693/:697), but SDK setImportData may run sync setMacro before reporting failure — a failed import could still wipe local macros. Where to verify: SDK bundle `setImportData` ordering of setMacro vs. failure return. Candidate fold-in: Task 5's importProfile rework. (review-d5-macro-noop.md §Findings)

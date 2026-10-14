@@ -1,8 +1,54 @@
-# No active sprint
+# SPRINT: sprint-12-exportservice-review
 
-COMPLETE — run PM-open for the next sprint.
+**GOAL:** Make export→import a true full-keyboard recovery: live-read the dead-shape fields (D1), fix advanced-key export shapes incl. DB3 carry (D2/D2b), make import macro-safe (D5), repair what SDK import silently drops — DB3 + special lighting — via app-side decrypt (D7), delete the dead code (D6), and fix the exportConfig contract violation.
+**DONE-CRITERIA (sprint):** All tasks DONE (Reviewer PASS + PO hardware ✓ where tagged); export on a configured device carries real topDeadBandSwitch/deadband values, correct advancedType/value, dks{dks,trps,db,db2,db3} + mt{dksAll,delay} shapes; import restores DB3 + special lighting, leaves the macro library untouched; typecheck/lint stay 0.
+**Started:** 2026-10-13  ·  **Status:** IN PROGRESS
+
+## Checkpoint
+- Branch: `sprint-12-exportservice-review`
+- tsc baseline: 0 errors (docs/tsc-baseline.txt line 1 = 0; typecheck exit 0 verified 2026-10-13)
+- Cleanup (actual ls 2026-10-13): `.scratch/` has `pce-test`, `pm-notes.md` (PO may delete); `_to_delete/` has `DebugKeyboardService.ts` (PO must git rm)
+- PM research base: `.scratch/pm-notes.md` — all line refs below were grep/read-verified THIS PM session (2026-10-13) against ExportService.ts (730 lines), KeyboardService.ts, useBatchProcessing.ts (26 lines), and the SDK bundle. Facts marked "banked" there are confirmed; do not re-derive.
 
 ## ▶ RUN THIS
-No active sprint. To start one, open a fresh window and paste:
-  Act as PM per CLAUDE.md. Plan the "<name>" sprint from docs/plans/backlog.md.
-(Or a direct goal: Act as PM per CLAUDE.md. Goal: <...>.)
+Next: Task 1 — D5 macro no-op (snapshot/restore localStorage MacroList around SDK import). Do this task, then stop.
+
+## Tasks
+
+1. **D5: import must not destroy the local macro library** — [high-stakes] [hw] — STATUS: PENDING
+   - Why: SDK `setImportData` unconditionally calls sync `setMacro` → overwrites `localStorage["MacroList"]` with the imported file's (always-empty) list. PO hardware-confirmed the loss and approved this fix (pm-notes "D5-revised").
+   - Files: `src/services/ExportService.ts`
+   - Edits (importProfile :666-705):
+     1. BEFORE `await KeyboardService.importConfig(file)` (:684): `const macroSnapshot = localStorage.getItem('MacroList');`
+     2. AFTER the result checks (:692, before the file.text() block): restore — `if (macroSnapshot !== null) localStorage.setItem('MacroList', macroSnapshot); else localStorage.removeItem('MacroList');` (setMacro is sync ⇒ no race).
+     3. buildMacroLibrary (:484): add 2-3 line comment — SDK has no macro-action readback (getMacroDataRecdata is a stub), so exports intentionally carry empty macro lists; PO decision 2026-10-13. Do NOT change its return.
+     4. Do NOT remove `macro:{list:[],v2list:[]}` from gatherKeyboardSnapshot — omitting macro makes SDK setImportData destructure undefined → TypeError → import reports failure (bundle-verified trap, pm-notes :212).
+   - Done when: `grep -c "MacroList" src/services/ExportService.ts` ≥ 3; `npm run typecheck` exit 0; `npm run lint` exit 0. [hw] PO: record a macro, import any profile, macro still there.
+
+2. **D1+D3+D4: live-read deadband/polling + lock the identity/polling comments** — [high-stakes] [hw] — STATUS: PENDING
+   - Files: `src/services/ExportService.ts`
+   - Edits (gatherDeviceInfo :31-66):
+     1. D1: keep both getApi calls (:44/:46) but capture results. Per sdk-ref §3 union (verify before writing): ROES decodes → number, TOP_DEAD_SWITCH → boolean. `rateOfReturn` = ROES value when `typeof === 'number'` else 3; `topDeadBandSwitch` = `Number(bool)` when `typeof === 'boolean'` else 0 (validateConfig requires both numeric — banked :211). instanceof Error → keep literals 3/0. Replace comment :39-43 with one line stating these are now live reads.
+     2. D3: identity literals :56-60 STAY 0/''; replace comment :52-55 with: getBaseInfo carries none of these fields; PO decision 2026-10-13 — intentionally static, not revisited.
+     3. D4: add comment at `rateOfReturn` — SDK import's setSystem discards rateOfReturn (bundle-verified); polling rate is NOT restored by import (SDK-side limitation, PO accepted; no setPollingRate bypass).
+   - Edits (gatherPerformanceData :272-280): D1 live deadbands — inside the existing `!(dpDr instanceof Error)` guard set `deadBandPressValue = dpDr.pressDead ?? 0; deadBandReleaseValue = dpDr.releaseDead ?? 0;` (getDpDr verified `Promise<{pressDead;releaseDead}|Error>`, KS :743). Replace comment :273-277 with one line (was dead-shape read, now live per PO D1).
+   - Done when: `grep -n "sArg\|dpThreshold" src/services/ExportService.ts` → nothing; `grep -c "pressDead" src/services/ExportService.ts` ≥ 1; typecheck exit 0; lint exit 0. [hw] PO: export with non-default polling/deadband → JSON shows real values.
+
+3. **D2 group: advanced keys — wrappers + export shapes (3a→3d, ONE review at group end)** — [high-stakes] [hw] — STATUS: PENDING
+   - 3a. **New KeyboardService wrappers** (KS has none — grep 0 hits, banked :286). Files: `src/services/KeyboardService.ts`. Add near getDksTravel (:841): `getDksAll(key)` → `{dks1..dks4}|Error`; `getTrpsAll(key)` → `{trps1..trps4}|Error`; `getMtorTgl(key)` → raw int (×10 = ms delay, sdk-ref :145 Verified) `|Error`. All three façade methods exist (bundle-verified: `getDksAll=e=>this.higherKeyController.getDksAll(e)` etc.). Follow the wrapper skill: try/catch → return Error, never throw; JSDoc with sdk-ref §. Done when: `grep -c "async getDksAll\|async getTrpsAll\|async getMtorTgl" src/services/KeyboardService.ts` = 3; typecheck 0.
+   - 3b. **Live advancedType/value** (gatherAdvancedKeyData :290-350). `keyData.performance!.advancedKeyMode` is already populated (processBatches order performance→advanced, :152/:157 — zero new HID). Replace literals :343-344 + comment :314-318: map advancedKeyMode per §5.2 enum (1=dks, 2=mpt, 3=mt, 4=tgl, 5=end, 6=macro, 8=socd; 0/7='none') → `advancedType` string; `value` = the mode's primary trigger value (dks→dks1 slot value… Worker: derive from the raw object just read; keep 0 fallback). Done when: `grep -n "advancedType = 'none'" src/services/ExportService.ts` → nothing; typecheck 0.
+   - 3c. **Canonical dks shape + db3 carry (D2b export half)**. In gatherAdvancedKeyData replace the raw getDks store with: `dks:{1,2,3}` from getDksAll (first 3), `trps:{1,2,3}` from getTrpsAll, `db`/`db2` from getDksTravel(key,'Layout_DB1'/'Layout_DB2'), `db3` from getDksTravel(key,'Layout_DB3') — shape `{dks,trps,db,db2,db3}` matches cmdDKS consumption + import's getValues order (banked :221); extra props pass SDK validation (banked :193). Done when: `grep -c "Layout_DB3" src/services/ExportService.ts` ≥ 1; typecheck 0.
+   - 3d. **mt shape + socd confirm**. mt: `{dksAll:{1..4}}` from getMT + `delay` from getMtorTgl ÷10 (import encodes delay×10 — banked :249). socd: confirm SocdConfig (KS :13) matches cmdSOCD's Sn() input per sdk-ref §6.7; fix stored shape only if mismatched. mpt/tgl/end round-trip as-is (verified). Done when: `grep -c "getMtorTgl" src/services/ExportService.ts` ≥ 1; typecheck 0; lint 0. [hw] PO: configure DKS+MT+SOCD on device → export → wipe → import → modes survive (DB3 verified in Task 4 hw).
+
+4. **D7 group: import-time decrypt + post-import repairs (4a→4b, ONE review at group end)** — [high-stakes] [hw] — STATUS: PENDING
+   - 4a. **crypto-js + decrypt helper + importProfile rewire**. `npm i crypto-js@4.2.0` + `npm i -D @types/crypto-js@^4.2.2` (both already transitive at these versions — banked). New private `decryptSDKConfig(text: string): KeyboardConfig | null` in ExportService: `JSON.parse(text)` → `JSON.parse(CryptoJS.AES.decrypt(parsed.data, 'fDPy6vvnpPsYm2T0g1bh').toString(CryptoJS.enc.Utf8))`; ANY throw → return null (graceful: repairs skipped, SDK import stands). Key is the SDK's hardcoded AES key (bundle-verified; format `{data:"<cipher>"}` = exportEncryptedJSON). importProfile: replace the garbage read (:694-695 `JSON.parse(text)` parses ciphertext today) with `const config = this.decryptSDKConfig(await file.text());` and pass `config` to applyImportedConfig ONLY when non-null (keep the call; Task 5 collapses it). Done when: `grep -c "crypto-js" package.json` ≥ 1; `grep -c "decryptSDKConfig" src/services/ExportService.ts` ≥ 2; `npm run build` exit 0; typecheck 0.
+   - 4b. **Post-import repairs** (importProfile, after SDK import success, before saveCustomLighting): (1) DB3 — for each keyboard entry whose `advancedKeys.dks?.db3` is a number: `KeyboardService.setDksTravel(keyValue, db3, 'Layout_DB3')` (wrapper KS :855); batch via useBatchProcessing if many keys. (2) Special lighting — bundle setLighting destructures ONLY main+logo ⇒ `other` never applied by SDK import (banked :235): `KeyboardService.setSpecialLighting(this.convertLightConfigToSDKFormat(config.light.other))` (converter :585 stays — becomes live; setSpecialLighting takes LightModeConfigs, KS :1012). Both guarded by `config !== null`. Order: SDK import → DB3 → special → existing sleep+saveCustomLighting. Done when: `grep -c "setDksTravel\|setSpecialLighting" src/services/ExportService.ts` ≥ 2; typecheck 0; lint 0. [hw] PO: export with DB3 + special lighting set → factory-reset-ish wipe → import → both restored.
+
+5. **D6: dead-code deletion + applyImportedConfig collapse** — [high-stakes] — STATUS: PENDING
+   - Files: `src/services/ExportService.ts`. DELETE withCustomModeForExport (:352-444, 0 callers), applyLightingZones (:610-650, dead — its closedLighting/setSpecialLighting calls die with it), applyImportedConfig (:652-664) COLLAPSED inline into importProfile (keep its 1s sleep + saveCustomLighting verbatim at the call site). KEEP convertLightConfigToSDKFormat (:585-608 — live via Task 4b) and import line :5 (LightModeConfigs — used by the kept converter). Preserve importProfile's custom-mode switch (:672) behavior verbatim (it destructures out `open` deliberately; hw-tested). Done when: `grep -n "withCustomModeForExport\|applyLightingZones\|applyImportedConfig" src/services/ExportService.ts` → nothing; `grep -c "convertLightConfigToSDKFormat" src/services/ExportService.ts` ≥ 2; `grep -c "saveCustomLighting" src/services/ExportService.ts` ≥ 1; typecheck 0; lint 0 (no-unused-vars is "error" — orphaned imports fail the build; check none left).
+
+6. **exportConfig contract fix (rule 7: wrappers return Error, never throw)** — [high-stakes] — STATUS: PENDING
+   - Files: `src/services/KeyboardService.ts` (:1474-1479), `src/services/ExportService.ts` (exportProfile :574-583). exportConfig is sync `void` and THROWS `new Error('No device connected')` — violates the wrapper contract. Fix: make it `async exportConfig(...): Promise<void | Error>`, return the Error instead of throwing, await the SDK call in try/catch → return Error. exportProfile: await it, `instanceof Error` → return `{success:false, error:err.message}`. Done when: `grep -n "throw new Error" src/services/KeyboardService.ts` shows no hit inside exportConfig (other pre-existing throws out of scope); `grep -c "await KeyboardService.exportConfig\|await this.exportConfig" src/services/ExportService.ts` ≥ 1 (Worker: match actual call text); typecheck 0; lint 0.
+
+## Findings
+<!-- one line per out-of-scope defect: what + where to verify. PM routes at next touchpoint. -->

@@ -12,18 +12,15 @@ never a pre-written solution, never duplicated detail.
 
 ### advanced-key-pages — MPT, MT, TGL, END, SOCD, RS pages
 
-### exportservice-review — full review of src/services/ExportService.ts methods (756 lines)
-- Known issue found sprint-11 Task 4a (PO decision a1, 2026-10-12): the SDK has NO macro-action readback at all — getMacro returns slot metadata only (sdk-reference-v2.md §7, getMacroRecdata) and getMacroDataRecdata is a stub (`return data`, protocol-keyboard src/utils/recdata.ts). buildMacroLibrary's dead `.macros` read was replaced with an always-empty return + comment; whether macro readback via raw HID is feasible/worth building is OPEN — verify against §7 + §10.5 wire-framing.
-- Review scope: every method vs the KeyboardService wrapper contract (returns Error, never throws) + retry-with-backoff + useBatchProcessing consumption; check for other dead-shape reads like `.macros` (silent no-ops that never throw).
-- Dead-shape reads confirmed sprint-11 (values preserved as literals, exports byte-identical; making any of them LIVE changes exported JSON = PO call): (1) gatherDeviceInfo reads `baseInfo.productId/vendorId/keyboardName/usage/usagePage` — none in the §3-verified getBaseInfo shape, so those fields may always carry `|| 0`/`|| ''` defaults (verify vs real device + XDKeyboard.getBaseInfo bundle impl); (2) `rateOfReturn`/`topDeadBandSwitch` read `.sArg` off getApi(ROES)/getApi(TOP_DEAD_SWITCH), but the union decodes ROES→number, TOP_DEAD_SWITCH→boolean — always the 3/0 defaults (4c); (3) `advancedType`/`value` from `.enable`/`.keyValue`/`.triggeringPoint` — no verified advanced-key readback shape has those fields, so always 'none'/0 even with DKS/MPT/SOCD/MT/TGL configured; the raw per-mode objects DID export correctly (4d); (4) `deadBandPressValue`/`deadBandReleaseValue` read phantom `{dpThreshold,drThreshold}` — getDpDr's real payload is `{pressDead,releaseDead}` (mm), KS decl fixed in 6d, export still literal 0. Verify: ExportService.ts gatherDeviceInfo/gatherAdvancedKeyData/gatherPerformanceKeyData comment blocks vs protocol-keyboard src/utils/recdata.ts + sdk-reference-v2.md §3/§5.5. (2026-10-12/13.)
-
 ### macro-page — build the Macro config page (setMacro wrapper + Macro.vue)
 - Pitfall: setMacro without touchMode may reset a key's touch mode to global (sdk-reference-v2.md §7); the wrapper now requires touchMode (Task 4b item G) — the page must pass/preserve it; verify on single + RT keys on hardware.
+- RESOLVED (sprint-12 PM-open, 2026-10-13): macro readback via raw HID is NOT worth building — PO decision ("reassigning them is not hard, no point making development harder"); SDK getMacroDataRecdata is a stub so no native path exists. Export/import intentionally carries empty macro lists; import preserves the local MacroList (sprint-12 Task 1). Do not re-investigate.
 
 ### custom-firmware (long-term) — firmware for an own board (RP2040/STM32)
 - Foundation: docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet reassembly).
 
 ## Code issues
+- [code] KeyboardService.getDksTravel (:841) annotates its return `{travel, dbs?}` but the SDK-verified shape is `Promise<number>` (mm, getDksTravelRecdata u16 ÷1000 — sdk-reference-v2.md :942-943 Verified); getDksTravel ≡ getDbTravel (byte-identical bundle impls). Annotation-vs-truth discrepancy; fix the type decl. Verify: grep `async getDksTravel` src/services/KeyboardService.ts vs sdk-ref DKS section. (sprint-12 PM-open, 2026-10-13.)
 - [code] SingleKeyTravel.vue declares prop `baseLayout` but never reads it (template or setup) — dead prop; KeyTravel still binds `:base-layout` to it. Deletion is a PO/PM call. Verify: `grep -n baseLayout src/components/performance/SingleKeyTravel.vue` (declaration only). (sprint-11 Task 6a, 2026-10-13.)
 - [code] store/connection.ts spreads `getBaseInfo()` results into `deviceInfo` with NO `instanceof Error` check — on hardware failure an Error object's own props pollute deviceInfo silently (typecheck stays clean → latent). Verify: grep `await KeyboardService.getBaseInfo()` src/store/connection.ts. (sprint-11 Task 4a, 2026-10-12.)
 

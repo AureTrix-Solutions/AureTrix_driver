@@ -11,7 +11,7 @@
 - PM research base: `.scratch/pm-notes.md` — all line refs below were grep/read-verified THIS PM session (2026-10-13) against ExportService.ts (730 lines), KeyboardService.ts, useBatchProcessing.ts (26 lines), and the SDK bundle. Facts marked "banked" there are confirmed; do not re-derive.
 
 ## ▶ RUN THIS
-Next: PO HARDWARE CHECK — Task 2 is HW-TEST (Reviewer PASS pending hw, 2026-10-13). Steps in `docs/plans/reviews/review-d1d3d4-live-reads.md` §Hardware check: set non-default polling rate + non-zero deadbands, export, confirm real values in JSON (rateOfReturn ≠ 3, topDeadBandSwitch reflects switch state, deadBandPress/ReleaseValue ≠ 0 on touched keys); import back — polling rate NOT restored is EXPECTED (D4 SDK limitation). PO states verdict in plain words; an agent records it (PASS → DONE + advance to Task 3; FAIL → IN-PROGRESS + "fix ONLY this" checklist). Task 3 (D2 advanced-key shapes) stays PENDING until Task 2 closes.
+Next: WORKER — "go" → Task 3 (D2 group: advanced-key wrappers + export shapes, 3a→3d sequential, ONE review at group end, [high-stakes] [hw]). Start with 3a (new KeyboardService wrappers getDksAll/getTrpsAll/getMtorTgl near KS :841, following the sdk-wrapper skill); each sub-task gets its OWN commit; group stays IN-PROGRESS until 3d, then IN-REVIEW with review file `review-d2-advanced-keys.md` (base = Task 2's `9f7ecfa`..head = 3d commit).
 
 ## Tasks
 
@@ -25,9 +25,7 @@ Next: PO HARDWARE CHECK — Task 2 is HW-TEST (Reviewer PASS pending hw, 2026-10
      4. Do NOT remove `macro:{list:[],v2list:[]}` from gatherKeyboardSnapshot — omitting macro makes SDK setImportData destructure undefined → TypeError → import reports failure (bundle-verified trap, pm-notes :212).
    - Done when: `grep -c "MacroList" src/services/ExportService.ts` ≥ 3; `npm run typecheck` exit 0; `npm run lint` exit 0. [hw] PO: record a macro, import any profile, macro still there.
 
-2. **D1+D3+D4: live-read deadband/polling + lock the identity/polling comments** — [high-stakes] [hw] — STATUS: HW-TEST
-   - Reviewer PASS (pending hw) 2026-10-13, `905eae3..9f7ecfa` — all Done-whens independently re-run (sArg/dpThreshold grep 0, pressDead 1, typecheck 0, lint 0); SDK claims grep-verified vs sdk-ref :467/:475/:903 + KS :743/:1100; D3/D4 comments landed :52/:48; scope exact; no Findings. Review: `docs/plans/reviews/review-d1d3d4-live-reads.md`. Awaiting PO hardware verdict.
-   - Files: `src/services/ExportService.ts`
+2. ✓ **D1+D3+D4: live-read deadband/polling + lock the identity/polling comments** — [high-stakes] [hw] — STATUS: DONE (Reviewer PASS + PO hardware PASS 2026-10-13, `905eae3..9f7ecfa`; review file `docs/plans/reviews/review-d1d3d4-live-reads.md`)
 
 3. **D2 group: advanced keys — wrappers + export shapes (3a→3d, ONE review at group end)** — [high-stakes] [hw] — STATUS: PENDING
    - 3a. **New KeyboardService wrappers** (KS has none — grep 0 hits, banked :286). Files: `src/services/KeyboardService.ts`. Add near getDksTravel (:841): `getDksAll(key)` → `{dks1..dks4}|Error`; `getTrpsAll(key)` → `{trps1..trps4}|Error`; `getMtorTgl(key)` → raw int (×10 = ms delay, sdk-ref :145 Verified) `|Error`. All three façade methods exist (bundle-verified: `getDksAll=e=>this.higherKeyController.getDksAll(e)` etc.). Follow the wrapper skill: try/catch → return Error, never throw; JSDoc with sdk-ref §. Done when: `grep -c "async getDksAll\|async getTrpsAll\|async getMtorTgl" src/services/KeyboardService.ts` = 3; typecheck 0.

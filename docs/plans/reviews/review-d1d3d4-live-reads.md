@@ -25,7 +25,7 @@ Fix-round ranges (added on each re-review): —
 - What to verify: With the keyboard connected, set a NON-default polling rate in the Performance page and non-zero deadband on a few keys, then Export. Open the JSON and confirm `system.rateOfReturn` equals the index you set (not 3), `system.topDeadBandSwitch` reflects the top deadband switch state (1/0, not always 0), and the keys you touched show real `deadBandPressValue`/`deadBandReleaseValue` in their `performance` blocks (not 0). Then Import the same file back and confirm nothing about polling rate changes on the device (that is the known SDK limitation — import does not restore rateOfReturn; this is expected, not a failure).
 
 **Hardware verdict (agent records from the PO's plain-language outcome):**
-- Hardware verdict: <pending>
+- Hardware verdict: PASS — 2026-10-13. PO: "exported values show actual selected values" (rateOfReturn, topDeadBandSwitch, deadBandPress/ReleaseValue all live in the JSON).
 
 ## ❓ Reviewer, please confirm
 - [x] meets every "DONE WHEN" criterion above

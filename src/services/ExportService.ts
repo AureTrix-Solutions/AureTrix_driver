@@ -299,9 +299,6 @@ class ExportService {
     if (!keyData) return;
 
     try {
-      const dks = await this.retryWithBackoff(() => KeyboardService.getDks(keyValue));
-      await new Promise(resolve => setTimeout(resolve, 50));
-
       // D2b: canonical DKS export shape — all DKS/TRPS slots plus per-slot DB travel.
       // Import's dks branch consumes {dks,trps,db,db2}; db3 is carry-only (extra props
       // pass SDK validation) for the later DB3 restore path.
@@ -381,22 +378,12 @@ class ExportService {
         advancedKeys.end = end;
       }
 
-      // D2: live mode id → advancedType (§5.2); value = the mode's primary trigger
-      // value from the raw object just read (0 when missing/Error or not applicable).
+      // D2: live mode id → advancedType (§5.2). value MUST be the numeric mode id:
+      // SDK setAdvancedKeys resolves the setter via advancedKeysSdkMap[value]; the
+      // per-mode data (dks/mpt/mt/tgl/end/socd) travels in its own sibling field.
       const advancedKeyMode = keyData.performance?.advancedKeyMode ?? 0;
       advancedKeys.advancedType = ADVANCED_KEY_MODE_MAP[advancedKeyMode] ?? 'none';
-      let advancedValue = 0;
-      switch (advancedKeyMode) {
-        case 1: if (!(dks instanceof Error) && dks) advancedValue = dks.dks; break;
-        case 2: if (!(mpt instanceof Error) && mpt) advancedValue = mpt.dks[0] ?? 0; break;
-        case 3: if (!(mt instanceof Error) && mt) advancedValue = mt.dks1; break;
-        case 4: if (!(tgl instanceof Error) && tgl) advancedValue = tgl.dks; break;
-        case 5: if (!(end instanceof Error) && end) advancedValue = end.dks; break;
-        case 6: break; // macro: address is not a trigger value; macro list stays local (D5)
-        case 8: if (!(socd instanceof Error) && socd) advancedValue = socd.type; break;
-        case 9: break; // RS: not gathered in export
-      }
-      advancedKeys.value = advancedValue;
+      advancedKeys.value = advancedKeyMode;
 
       keyData.advancedKeys = advancedKeys;
     } catch (error) {

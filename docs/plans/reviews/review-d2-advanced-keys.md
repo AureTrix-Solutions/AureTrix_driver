@@ -7,6 +7,7 @@
 - 3b (REVISED rev1 2026-10-14, PO-confirmed — the original "value from the mode's primary trigger" clause was wrong vs the SDK contract, see §F1): gatherAdvancedKeyData sets `advancedKeys.advancedType` from live `advancedKeyMode` via ADVANCED_KEY_MODE_MAP (sdk-ref §5.2) and `advancedKeys.value` to the **numeric `advancedKeyMode` id** (SDK setAdvancedKeys resolves the setter via `advancedKeysSdkMap[value]`; per-mode data travels in its sibling field); no `advancedValue`/trigger switch remains; no stale "not yet read" comment; typecheck 0, lint 0. Fix-round greps: `grep -c "advancedValue" src/services/ExportService.ts` = 0; `grep -c "advancedKeys.value = advancedKeyMode" src/services/ExportService.ts` = 1.
 - 3c: canonical dks export shape `{dks:{1,2,3},trps:{1,2,3},db,db2,db3}` from getDksAll/getTrpsAll/getDksTravel(Layout_DB1/2/3); `grep -c "Layout_DB3" src/services/ExportService.ts` ≥ 1; KS get/setDksTravel annotated `number|Error`; typecheck 0, lint 0.
 - 3d: mt export shape `{dksAll:[dks1..4], delay}` with delay = getMtorTgl's ms value stored AS-IS (NO ÷10 — import's mt branch does `delay/10` before cmdMT, which puts the 10ms wire unit on the wire); socd confirmed against sdk-ref §6.8 union (no change expected); tgl/mpt/end stay raw; `grep -c "getMtorTgl" src/services/ExportService.ts` ≥ 1; typecheck 0, lint 0.
+- **rev2 (2026-10-15, PO-approved):** the §F3 import-side delay-survival criterion is VOID for this task — re-routed to Task 4c (see §F3 PM DISPOSITION below). Task 3's hw criterion as closed = the export JSON carries correct shapes/values (DKS 4-point, SOCD 7-field, mt/tgl/mpt/end raw, delays present in the export) — verified ✓ on the PO's device 2026-10-15. Code criteria 3a–3d unchanged (PASS, fix-round range `223be41..b1e7423`).
 <!-- If a criterion is revised after this file exists, UPDATE it here too — the Reviewer judges
      this file, not current-sprint.md. -->
 
@@ -41,6 +42,7 @@ Fix-round ranges (added on each re-review): F1 → `d54e780..c8fd88e` (3b value=
 **Hardware verdict (agent records from the PO's plain-language outcome):**
 - Hardware verdict: FAIL — 2026-10-15 → see F2 (partial: MPT+MT+TGL+END round-trip ✓, DKS+SOCD ✗)
 - F2 fix-round re-test: **Hardware verdict: FAIL — 2026-10-15 → see F3** (DKS ✓ fully operational + SOCD core ✓ — both F2 fixes confirmed on hardware; remaining defect: `socd.delay` + `end.delay` dropped on import, cross-cutting). Task 3 → IN-PROGRESS; Worker fix-round = import side only.
+- **PM disposition (2026-10-15, PO-approved): F3 re-routed OUT of Task 3 → Task 4c.** Root cause sealed = SDK import-side wire-version default (`setAdvancedKeys` calls `setEND`/`setSocd` with ONE arg → v defaults `'1.0.5'` → packers omit delay bytes); no export-side edit can fix it, and the only fix (post-import re-write at v`'1.0.7'`) requires 4a's `decryptSDKConfig` + lands in 4b's repair region. Task 3's export work stands hw-verified ✓ → Task 3 = DONE (rev2); F3 closure = Task 4c's Reviewer pass + PO hw test (see §F3 disposition below). Detail: review-d2-advanced-keys.md §F3 PM disposition.
 
 ### F2 — DKS (and SOCD) corrupted on import; MPT/MT/TGL/END round-trip correctly (hardware FAIL, 2026-10-15)
 
@@ -168,3 +170,22 @@ Both F2 fixes confirmed against the diff and independently re-verified end-to-en
 
 ---
 **F3 record (2026-10-15):** agent file mechanics complete — verdict line updated, §F3 written, Task 3 → IN-PROGRESS, ▶ RUN THIS → Worker fix-ONLY-F3 (checklist cites this §F3). Evidence banked pre-record in `.scratch/review-notes.md` (PO may delete after fix-round). Never edited source.
+
+---
+## §F3 PM DISPOSITION — re-routed to Task 4c (2026-10-15, PO-approved)
+
+**Ruling: F3 does NOT belong in Task 3. Task 3 → DONE (rev2); the delay-drop defect becomes Task 4c** [high-stakes][hw], grouped with 4a/4b under ONE Reviewer pass at group end. Not backlog — F3 is a hw-confirmed FAIL of the sprint goal and its fix lands in the code region Task 4 already owns (it *requires* 4a's `decryptSDKConfig`; the config object never leaves SDK import until 4a builds it).
+
+**Root cause SEALED this session (grep-verified; do not re-derive — grep targets in each line):**
+1. **Export is correct — Task 3 stands hw-verified.** `ExportService.ts` reads socd at `'1.0.7'` (grep `getSocd(keyValue, '1.0.7')` → :327) and stores end verbatim (grep `advancedKeys.end = end` → :385); PO's re-test confirmed the JSON carries real `socd.delay`/`end.delay`. Nothing in Task 3's export-side scope can fix an import-side wire drop.
+2. **SDK import hard-calls the setters at the version DEFAULT, which omits delay.** bundle `setAdvancedKeys` (grep `async setAdvancedKeys(e,t)` in sdk-keyboard/dist/esm/index.js): end branch `const{dks:t,delay:r}=c; d=await h({key:e,dks:t,delay:r})` — **one arg to h=setEND**; socd branch `d=await h(u)` — **one arg to h=setSocd**. Facade: `setEND=(e,t="1.0.5")=>…`, `setSocd=(e,t="1.0.5")=>…` (grep `setEND=`/`setSocd=`) ⇒ both default to `'1.0.5'`.
+3. **`'1.0.5'` packs no delay bytes.** protocol-keyboard `src/utils/pack.ts`: `ENDDataPack` (grep `export const ENDDataPack`) — delay only in the v≥'1.0.7' branch `[key,...dksbits,...delaybits]`; the 1.0.5/1.0.6 branch is `[key,...dksbits]`, NO delay. `SOCDPack` (grep `export const SOCDPack`) — same v≥1.0.7 gate; 1.0.5/1.0.6 returns `[pos1,pos2,...key1V,...key2V,type,mode]`, NO delay. sdk-reference-v2 §6.7 (:149) / §6.8 (:150) rows — Verified — state this verbatim ("delay silently dropped unless v ≥ 1.0.7").
+4. **mt/tgl delay audit CLOSED — they survive by construction.** `MTDataPack` (grep `export const MTDataPack`) returns `[key,...dks,delay]` and `TGLDataPack` (grep `export const TGLDataPack`) returns `[key,...dksbits,delay/10]` — delay packed at ALL versions, no gate. This explains the PO's observation (mt/tgl 170 survived) and retires the "audit ALL delay-carrying setters" item — only socd + end are gated.
+
+**Why the earlier §F3 "cross-cutting zeroing on dks/socd-branch keys" was a red herring:** the Worker's F3-2 lead (setKeyboards prime suspect / rogue end-write) is disproved — the end.delay 146→0 seen on SOCD-mode keys is simply that *every* key's END record is written at v'1.0.5' with no delay bytes whenever setAdvancedKeys runs the end branch, and where it doesn't run the end branch the pre-existing end.delay was already 0/garbage. There is no cross-cutting writer; there is one version-gated packer used by two branches.
+
+**Fix (Task 4c) = post-import re-write at v'1.0.7'**, structurally identical to 4b's repair items. The app CAN pass the version: sdk-ref :1150 "v is settable on exactly three methods — setEND, setSocd, getSocd"; the SDK import path just never does. Full edit spec handed over in current-sprint.md Task 4c (grep-verified anchors: KS `async getSocd(key: number, version?: string)` :1215 / `async getEND(key: number)` :1257; ES importProfile :717-768, batcher already present `processBatches` :23).
+
+**Closure test for §F3 = Task 4c's hw gate:** configure SOCD + END with non-zero delays → export → wipe → import → delays survive readback + behavior; no regression of the ✓ items above (DKS 4-point, SOCD core pos/mode). Reviewer re-checks 4a→4c cumulative diff ONCE at group end.
+
+**Residual risk (flagged to PO, accepted):** the 1.0.7 *write* packets are longer than any the app has sent; the device demonstrably speaks ≥1.0.7 (the 1.0.7 *read* is hw-verified ✓), but firmware acceptance of the longer write is exactly what 4c's hw gate confirms.

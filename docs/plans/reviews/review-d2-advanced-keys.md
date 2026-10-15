@@ -40,7 +40,7 @@ Fix-round ranges (added on each re-review): F1 → `d54e780..c8fd88e` (3b value=
 
 **Hardware verdict (agent records from the PO's plain-language outcome):**
 - Hardware verdict: FAIL — 2026-10-15 → see F2 (partial: MPT+MT+TGL+END round-trip ✓, DKS+SOCD ✗)
-- F2 fix-round re-test PENDING (code PASS 2026-10-15) — scope: DKS + SOCD only, per the "F2 fix-round" block above.
+- F2 fix-round re-test: **Hardware verdict: FAIL — 2026-10-15 → see F3** (DKS ✓ fully operational + SOCD core ✓ — both F2 fixes confirmed on hardware; remaining defect: `socd.delay` + `end.delay` dropped on import, cross-cutting). Task 3 → IN-PROGRESS; Worker fix-round = import side only.
 
 ### F2 — DKS (and SOCD) corrupted on import; MPT/MT/TGL/END round-trip correctly (hardware FAIL, 2026-10-15)
 
@@ -140,3 +140,31 @@ Both F2 fixes confirmed against the diff and independently re-verified end-to-en
 ---
 **F2 fix-round re-review (2026-10-15):** Reviewer cleanup (actual `ls`): `.scratch/` = pm-notes.md, review-notes.md (mine — banked verification notes; PO may delete). `_to_delete/` = .gitkeep only — no cleanup needed. Never edited source; edits this session = this review file + current-sprint.md status/RUN THIS lines.
 **F2 fix-round sign-off:** verdict PASS (pending hw), 0 failed items. Both fixes confirmed against the diff + re-verified at protocol/bundle level; gates re-run clean. Task → HW-TEST; PO exercises the F2 hardware re-test (DKS + SOCD only).
+
+---
+## §F3 — Hardware verdict: FAIL — 2026-10-15 (PO; recorded by agent per Hardware gate)
+
+**What PO did:** full F2 re-test on device — DKS round-trip (key col1/row1, kv30, mode 1), SOCD round-trip (pair col2/row4 kv29 + col3/row4 kv27, mode 8), END round-trip (mode 5, end.delay 1015 set deliberately — first-round test had no distinct delay). Export → import → re-export debug JSON compared field-by-field (pre/post blocks banked in `.scratch/review-notes.md`).
+
+**Expected:** all configured fields survive the round-trip (db3 = 0 after import was the ONLY pre-registered expected gap, Task 4b).
+
+**Actual — PASSED (F2 fixes confirmed on hardware, do NOT re-fix):**
+- DKS ✓ operational: `dks` {22,4,9,8} identical incl. point 4 — no byte-shift, no 7171-type garbage; `trps` {1,4,32,128} identical in order (was corrupted {96,231,1} pre-fix); `db` 1.5 / `db2` 2.9 identical (was 0.011). Fix (1) verified.
+- SOCD ✓ core working: `socd.pos1` 29 / `pos2` 27 / `mode` 2 survived on BOTH pair keys (was 41→32 + dead keys + 8996 garbage siblings pre-fix); keys fire normally. Fix (2) verified.
+- END ✓ function (advancedType "end", value 5 stable; end.dks stable).
+
+**Actual — FAILED (the F3 defect, ONE symptom class): delay fields dropped on import.**
+- `socd.delay` 146 → 0 on both SOCD pair keys (post-import re-export).
+- `end.delay` 1015 → 0 (END-mode key) AND 146 → 0 on both SOCD-mode keys — i.e. end.delay zeroes even when the import ran ONLY the dks branch (mode 1) or ONLY the socd branch (mode 8). The drop is **cross-cutting across import branches, not per-branch**.
+- mt.delay/tgl.delay were 0 in the PO's SOCD-pair config (not exercised there); the earlier END-key block showed mt.delay 170/tgl.delay 170 surviving — mt/tgl delays appear to survive, but F3 must audit ALL delay-carrying setters, not assume.
+- Not part of F3 (already routed, don't double-count): `performance.deadBandPressValue/ReleaseValue` 0→0.2 = F-2b-1 (Task 4b repair item 3); db3 never written by SDK dks branch = Task 4b repair item 1.
+
+**Scope statement for the fix-round (PO decision 2026-10-15):** ONE consolidated fix task — `socd.delay` + `end.delay` + audit of other delay-carrying setters together. This is **import-side** (the F2 export fix stands untouched). Leads already banked (grep-verified this Reviewer session):
+- SOCD: bundle import writes via `setSocd` default `t="1.0.5"` → protocol `SOCDPack` (pack.ts:228) 1.0.5 branch omits `delay` from the wire (delay only packed ≥1.0.7). Exported object DOES carry delay (7-field '1.0.7' read). Where to verify: bundle `"socd"===r)d=await h(u)` — does `h`/setSocd accept a version param the app can pass ('1.0.7'), or must the app re-write SOCD post-import (Task-4b-style repair)?
+- END: where to verify: bundle import branches for `end` / any setEND write path + version gating — the cross-cutting zeroing on dks/socd-branch keys suggests an unconditional end-record write (or firmware-wide delay reset) during setKeyboards/setImportData, not the end branch itself.
+- General: grep every delay-carrying pack/setter in protocol-keyboard/src/utils/pack.ts + recdata.ts for version gates; list which wire formats drop delay at the bundle's default versions.
+
+**Fix-round rules:** Worker fixes ONLY this (§F3) — import-side delay preservation + audit; must NOT touch the F2 export fixes (they are hw-verified) or F-2b-1/db3 (Task 4b). Then Reviewer re-check + PO hardware re-test (DKS/SOCD/END delays survive; no regression of the ✓ items above).
+
+---
+**F3 record (2026-10-15):** agent file mechanics complete — verdict line updated, §F3 written, Task 3 → IN-PROGRESS, ▶ RUN THIS → Worker fix-ONLY-F3 (checklist cites this §F3). Evidence banked pre-record in `.scratch/review-notes.md` (PO may delete after fix-round). Never edited source.

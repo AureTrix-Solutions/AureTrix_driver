@@ -320,7 +320,11 @@ class ExportService {
       const mpt = await this.retryWithBackoff(() => KeyboardService.getMpt(keyValue));
       await new Promise(resolve => setTimeout(resolve, 50));
 
-      const socd = await this.retryWithBackoff(() => KeyboardService.getSocd(keyValue));
+      // F2: read SOCD with '1.0.7' so the decode yields the 7-field
+      // {pos1,pos2,key1,key2,type,mode,delay} shape import's SOCDPack consumes;
+      // the default '1.0.5' decode is lossy ({pos,key,type,mode}) and wrote
+      // undefined wire bytes (dead keys after import).
+      const socd = await this.retryWithBackoff(() => KeyboardService.getSocd(keyValue, '1.0.7'));
       await new Promise(resolve => setTimeout(resolve, 50));
 
       const mt = await this.retryWithBackoff(() => KeyboardService.getMT(keyValue));
@@ -343,9 +347,12 @@ class ExportService {
       // canonical shapes import consumes; mpt/socd/tgl/end store their raw objects
       // verbatim (their decode shapes match what import's branches expect).
       if (!(dksAll instanceof Error) && dksAll && !(trpsAll instanceof Error) && trpsAll) {
+        // F2: all 4 dks/trps points — the firmware wire (DKSDataPack) expects 4+4;
+        // a 3-point payload byte-shifts everything after dks3 and corrupts the
+        // trps/db read-back on import.
         advancedKeys.dks = {
-          dks: { 1: dksAll.dks1, 2: dksAll.dks2, 3: dksAll.dks3 },
-          trps: { 1: trpsAll.trps1, 2: trpsAll.trps2, 3: trpsAll.trps3 },
+          dks: { 1: dksAll.dks1, 2: dksAll.dks2, 3: dksAll.dks3, 4: dksAll.dks4 },
+          trps: { 1: trpsAll.trps1, 2: trpsAll.trps2, 3: trpsAll.trps3, 4: trpsAll.trps4 },
           db: db1 instanceof Error ? 0 : db1,
           db2: db2 instanceof Error ? 0 : db2,
           db3: db3 instanceof Error ? 0 : db3,

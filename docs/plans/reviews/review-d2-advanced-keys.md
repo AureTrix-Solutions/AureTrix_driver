@@ -40,6 +40,7 @@ Fix-round ranges (added on each re-review): F1 → `d54e780..c8fd88e` (3b value=
 
 **Hardware verdict (agent records from the PO's plain-language outcome):**
 - Hardware verdict: FAIL — 2026-10-15 → see F2 (partial: MPT+MT+TGL+END round-trip ✓, DKS+SOCD ✗)
+- F2 fix-round re-test PENDING (code PASS 2026-10-15) — scope: DKS + SOCD only, per the "F2 fix-round" block above.
 
 ### F2 — DKS (and SOCD) corrupted on import; MPT/MT/TGL/END round-trip correctly (hardware FAIL, 2026-10-15)
 
@@ -119,3 +120,23 @@ rev1 (2026-10-14): Done-when 3b revised per F1, PO-confirmed — `value` = numer
 ---
 **Fix-round re-review (2026-10-14):** Reviewer cleanup (actual `ls`): `.scratch/` = pce-test/, pm-notes.md, review-getvalues.js (pre-existing, PO may delete) + `review-notes.md` (mine this session — working notes; PO may delete). `_to_delete/` = .gitkeep + DebugKeyboardService.ts (PO must `git rm`). No new cleanup otherwise; never edited source.
 **Fix-round sign-off:** verdict PASS (pending hw), 0 failed items. F1 confirmed fixed against the diff; gates re-run (advancedValue 0 · value=advancedKeyMode 1 · typecheck 0 · lint 0). Task → HW-TEST; PO exercises the Hardware check items 1-4 on a real device.
+
+---
+## ✅ REVIEWER VERDICT — F2 fix-round re-review
+**Result:** PASS (pending hw) → **HW-TEST**  ·  **Date:** 2026-10-15  ·  **Fail count:** 0  ·  **Range:** `223be41..b1e7423` (F2 fix ONLY; F1 code PASS + MPT/MT/TGL/END hw PASS stand, not re-reviewed)
+
+Both F2 fixes confirmed against the diff and independently re-verified end-to-end at protocol + bundle level this session:
+
+- **Scope clean:** `git diff --stat 223be41..b1e7423` = ExportService.ts (+10/−3) + current-sprint.md (checkpoint/handoff mechanics). No stray source; mpt/mt/tgl/end branches, KeyboardService wrappers, and the import side all untouched in the diff.
+- **Fix (1) DKS 4-point payload — VERIFIED.** Diff changes the canonical store at ExportService.ts:353 to `dks:{1,2,3,4: dksAll.dks4}` and `trps:{1,2,3,4: trpsAll.trps4}`; db/db2/db3 lines unchanged. Chain re-verified: KS getDksAll (:874) / getTrpsAll (:893) return dks1..4/trps1..4 → bundle `"dks"===r` branch `getValues` converts the point maps to arrays verbatim → protocol `DKSDataPack` (pack.ts:153) wire = `[key, ...dks 2B-LE each, ...trps 1B raw each, ...dbs 2B-LE each]`, length driven by the arrays passed → 4+4 now matches the read-back's 4-point decode (getDksRecdata/getTrpsRecdata, recdata.ts:404, ×4 per bundle getDksAll/getTrpsAll). The 3-point byte-shift that reproduced PO's corruption (7171 = (28<<8)|3, trps {96,231,1}, db→0.011) is eliminated. `db3` still dropped by the SDK dks branch (`dbs:[1e3*n,1e3*i]`) — known, Task 4b scope, NOT a regression of this fix.
+- **Fix (2) SOCD '1.0.7' read — VERIFIED.** Diff changes ExportService.ts:327 to `getSocd(keyValue, '1.0.7')`. Chain re-verified: KS `getSocd(key, version?)` (:1215) forwards version to bundle `getSocd(e,t="1.0.5")` → `xs.getSocdData(e,t)`; protocol `getSocdRecdata` (recdata.ts:449) with v≥1.0.7 returns the 7-field `{pos1,pos2,key1,key2,type,mode,delay}` — exactly what `SOCDPack` (pack.ts:228) destructures on the import write (`"socd"===r)d=await h(u)` passes the stored object verbatim). The old default-'1.0.5' 4-field `{pos,key,type,mode}` store left pos1/pos2/key1/key2 undefined → the malformed wire write behind PO's dead keys / 8996 siblings.
+- **Gates re-run THIS session:** `npm run typecheck` exit 0 ✓ · `npm run lint` exit 0 ✓.
+- **Design intent untouched:** no filters/usagePage/wrapper-error changes; ExportService payload only.
+
+**Non-defect observation (NOT a failed item, no action this round):** import writes SOCD via `setSocd` default v='1.0.5', so `SOCDPack`'s 1.0.5 branch emits the wire WITHOUT the delay field even though the exported object now carries `delay`. Pre-existing import-side SDK behavior, unchanged by this diff; if PO's hw re-test shows a SOCD delay mismatch, it becomes a new finding for the PM.
+
+**[hw] task ⇒ status set to HW-TEST, not DONE.** PO re-test scope per the Hardware check section above: **DKS + SOCD round-trip only** (MPT/MT/TGL/END already hw-passed and are untouched). db3 = 0 after import is expected until Task 4b.
+
+---
+**F2 fix-round re-review (2026-10-15):** Reviewer cleanup (actual `ls`): `.scratch/` = pm-notes.md, review-notes.md (mine — banked verification notes; PO may delete). `_to_delete/` = .gitkeep only — no cleanup needed. Never edited source; edits this session = this review file + current-sprint.md status/RUN THIS lines.
+**F2 fix-round sign-off:** verdict PASS (pending hw), 0 failed items. Both fixes confirmed against the diff + re-verified at protocol/bundle level; gates re-run clean. Task → HW-TEST; PO exercises the F2 hardware re-test (DKS + SOCD only).

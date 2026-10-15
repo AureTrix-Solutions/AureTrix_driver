@@ -33,7 +33,29 @@ Fix-round ranges (added on each re-review): F1 → `d54e780..c8fd88e` (3b value=
 - What to verify: on a real device — (1) export a keyboard that has MT configured on at least one key, then import that JSON back: the MT key keeps its 4 dks codes and its delay (delay should survive in ms — e.g. a 30ms MT delay exports as 30 and re-imports as 30, not 3 or 300); (2) same round-trip for a DKS key (4-point curve + trps + dead bands db/db2/db3) and a SOCD key (config survives verbatim); (3) exported JSON shows advancedType matching the key's actual mode (e.g. "mt", "dks") instead of "none"; (4) export still completes without device errors/timeouts (the 3 extra reads per key lengthen the pass).
 
 **Hardware verdict (agent records from the PO's plain-language outcome):**
-- Hardware verdict: <pending>
+- Hardware verdict: FAIL — 2026-10-15 → see F2 (partial: MPT+MT+TGL+END round-trip ✓, DKS+SOCD ✗; SOCD symptom detail pending PO follow-up)
+
+### F2 — DKS (and SOCD) corrupted on import; MPT/MT/TGL/END round-trip correctly (hardware FAIL, 2026-10-15)
+
+**What the PO did:** configured DKS+MPT+MT+TGL+END+SOCD on profile 1; verified all six behave correctly on p1. Exported p1 → imported into profile 4. On p4: MPT, MT, TGL, END all worked as expected. DKS and SOCD did not match p1.
+
+**Expected:** p4 DKS behaves identically to p1 (key "3": fire A at start point, B at bottom, C on release-from-bottom, D on full release).
+
+**Actual (PO):** on p4 the key fired "C" at a much shallower depth than configured; the other points were wrong; the last DKS point ("D") was dropped and replaced with **7171**.
+
+**Export read-back comparison (PO debug exports, same key col3/row1/keyValue32; block A = post-import p4 read-back, block B = original p1):**
+- `dks.trps`: B `{3, 28, 96}` → A `{96, 231, 1}` — values shuffled/corrupted (note A.trps1 = 96 = B.trps3).
+- `dks.db`: B `0.487` → A `0.011`. `db2`/`db3` unchanged (2.9/3).
+- `mt.dksAll[4]`: B `7` → A `7171`. (7171 = 0x1C03 = (28<<8)|3 = B.trps2/trps1 — byte-misalignment signature, observation only.)
+- `performance.deadBandPressValue`/`deadBandReleaseValue`: B `0.2/0.2` → A `0/0`.
+- `advancedType`/`value` both correct (`"dks"`/`1`) in A ⇒ the F1 fix (setter resolution) works; the failure is in the dks branch's **payload consumption**, not setter lookup. MPT/MT/TGL/END hardware ✓ confirms their branches consume correctly.
+
+**Where to verify (leads, not a fix):**
+1. SDK bundle `setAdvancedKeys` `"dks"===r` branch (grep `"dks"===r` in node_modules/@sparklinkplayjoy/sdk-keyboard/dist/esm/index.js, 1 hit): the F1 verbatim quote shows it calls the setter with `{key:e, dks:o, trps:a, dbs:c}` where, per the destructure `{advancedType:r,value:n,dks:s,mpt:i,mt:o,tgl:a,end:c,socd:u,macro:l}`, `o`=**mt**, `a`=**tgl**, `c`=**end** — i.e. the dks branch may consume the mt/tgl/end sibling fields, NOT our exported `dks:{dks,trps,db,db2,db3}` object (`s`). Verify whether that quote is complete/current and what shape setDks actually expects (also check protocol-keyboard/src if the bundle is ambiguous).
+2. What our import path hands `setAdvancedKeys` for a dks key: `advancedKeys.dks` assembly at src/services/ExportService.ts:346 (grep `advancedKeys.dks = {`) and the SDK `setImportData`/`importConfig` chain's getValues order for dks.
+3. SOCD: PO to supply the symptom detail (configured mode vs p4 behavior); verify the bundle's `"socd"===r` branch consumption the same way.
+
+**Routing:** Task 3 → IN-PROGRESS. Next Worker fixes ONLY F2 (see this block) after research — likely an export-shape and/or import-payload change in ExportService.ts, pending the bundle verification above. Re-check by Reviewer + a new PO hardware round-trip afterwards.
 
 ## ❓ Reviewer, please confirm
 - [ ] meets every "DONE WHEN" criterion above — 3a/3c/3d: YES (all re-run ✓). 3b: met AS WORDED, but the criterion's value clause ("value from the mode's primary trigger") is itself contradicted by the bundle-verified SDK contract → F1; criterion revision routes to PM (PO confirmation).

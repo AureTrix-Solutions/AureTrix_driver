@@ -701,6 +701,76 @@ class ExportService {
     }
   }
 
+  /**
+   * Post-import repair (1): the SDK import never writes the per-slot DB3
+   * travel value, so re-write it from the stored config (mm, round-trip of
+   * getDksTravel 'Layout_DB3').
+   */
+  private async repairDksDb3(config: KeyboardConfig): Promise<void> {
+    const db3ByKey = new Map<number, number>();
+    for (const entry of config.keyboards ?? []) {
+      const db3 = entry.advancedKeys?.dks?.db3;
+      if (typeof db3 === 'number') {
+        db3ByKey.set(entry.keyValue, db3);
+      }
+    }
+    await this.processBatches([...db3ByKey.keys()], async (keyValue) => {
+      const db3 = db3ByKey.get(keyValue);
+      if (db3 === undefined) return;
+      const result = await KeyboardService.setDksTravel(keyValue, db3, 'Layout_DB3');
+      if (result instanceof Error) {
+        console.error(`Failed to restore DB3 travel for key ${keyValue}:`, result.message);
+      }
+    }, 80, 100);
+  }
+
+  /**
+   * Post-import repair (3, F-2b-1): SDK setPerformance routes global-mode
+   * deadband to the global DB register, but the app's canonical storage is
+   * per-key Layout_DP/DR in all modes — re-write both per key. Values of 0
+   * are applied too (they clear stale device values).
+   */
+  private async repairGlobalDeadband(config: KeyboardConfig): Promise<void> {
+    const deadbandByKey = new Map<number, { press: number; release: number }>();
+    for (const entry of config.keyboards ?? []) {
+      const perf = entry.performance;
+      if (perf?.isGlobalTriggering && typeof perf.deadBandPressValue === 'number') {
+        deadbandByKey.set(entry.keyValue, {
+          press: perf.deadBandPressValue,
+          release: perf.deadBandReleaseValue,
+        });
+      }
+    }
+    await this.processBatches([...deadbandByKey.keys()], async (keyValue) => {
+      const deadband = deadbandByKey.get(keyValue);
+      if (!deadband) return;
+      const pressResult = await KeyboardService.setDp(keyValue, deadband.press);
+      if (pressResult instanceof Error) {
+        console.error(`Failed to restore press deadband for key ${keyValue}:`, pressResult.message);
+      }
+      const releaseResult = await KeyboardService.setDr(keyValue, deadband.release);
+      if (releaseResult instanceof Error) {
+        console.error(`Failed to restore release deadband for key ${keyValue}:`, releaseResult.message);
+      }
+    }, 80, 100);
+  }
+
+  /**
+   * Post-import repair (2): the bundle's setLighting destructures only
+   * main+logo, so the special ("other") zone is never applied by the SDK
+   * import — write it here. LightModeConfigs carries no `open` flag; the
+   * stored mode/luminance already reflect the saved on/off state.
+   */
+  private async repairSpecialLighting(config: KeyboardConfig): Promise<void> {
+    if (!config.light?.other) return;
+    const result = await KeyboardService.setSpecialLighting(
+      this.convertLightConfigToSDKFormat(config.light.other)
+    );
+    if (result instanceof Error) {
+      console.error('Failed to restore special lighting:', result.message);
+    }
+  }
+
   async applyImportedConfig(_config: KeyboardConfig): Promise<void> {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -780,6 +850,10 @@ class ExportService {
       // skipped — the SDK import above already stands on its own.
       const config = this.decryptSDKConfig(await file.text());
       if (config) {
+        // Post-import repairs: things the SDK import silently drops.
+        await this.repairDksDb3(config);
+        await this.repairGlobalDeadband(config);
+        await this.repairSpecialLighting(config);
         // Wait for SDK import to complete, then save custom RGB to flash
         await this.applyImportedConfig(config);
       }

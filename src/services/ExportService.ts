@@ -1,4 +1,5 @@
 import KeyboardService from './KeyboardService';
+import CryptoJS from 'crypto-js';
 import { useBatchProcessing } from '../composables/useBatchProcessing';
 import type { KeyboardConfig, Keyboards } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
 import type { ILightMode, IKey } from '@sparklinkplayjoy/protocol-keyboard';
@@ -714,6 +715,26 @@ class ExportService {
     }
   }
 
+  /**
+   * Decrypt an SDK export file into its KeyboardConfig.
+   *
+   * The SDK's exportEncryptedJSON writes `{data:"<AES ciphertext>"}` using its
+   * hardcoded passphrase key (bundle-verified). Returns null if the file is not
+   * in that format or decryption fails — callers skip repairs in that case and
+   * the SDK import itself still stands.
+   */
+  private decryptSDKConfig(text: string): KeyboardConfig | null {
+    try {
+      const parsed = JSON.parse(text);
+      const plaintext = CryptoJS.AES.decrypt(parsed.data, 'fDPy6vvnpPsYm2T0g1bh').toString(CryptoJS.enc.Utf8);
+      if (!plaintext) return null;
+      return JSON.parse(plaintext) as KeyboardConfig;
+    } catch (error) {
+      console.error('Failed to decrypt SDK export:', error);
+      return null;
+    }
+  }
+
   async importProfile(file: File): Promise<{ success: boolean; error?: string }> {
     try {
       // Switch to custom mode before import to ensure RGB data loads correctly
@@ -754,11 +775,14 @@ class ExportService {
         localStorage.removeItem('MacroList');
       }
 
-      const text = await file.text();
-      const config: KeyboardConfig = JSON.parse(text);
-      
-      // Wait for SDK import to complete, then save custom RGB to flash
-      await this.applyImportedConfig(config);
+      // Read the encrypted SDK export and decrypt it to the real KeyboardConfig.
+      // Best-effort: if it fails (not an SDK export / bad cipher), repairs are
+      // skipped — the SDK import above already stands on its own.
+      const config = this.decryptSDKConfig(await file.text());
+      if (config) {
+        // Wait for SDK import to complete, then save custom RGB to flash
+        await this.applyImportedConfig(config);
+      }
       
       return { success: true };
     } catch (error) {

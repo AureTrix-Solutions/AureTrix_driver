@@ -45,7 +45,30 @@ Fix-round ranges (added on each re-review): —
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** PASS / PASS (pending hw) / FAIL  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** PASS (pending hw) → **HW-TEST**  ·  **Date:** 2026-10-17  ·  **Fail count:** 0
+
+### Confirmation checklist
+- [x] meets every "DONE WHEN" criterion above — Reviewer re-ran all greps: 4a crypto-js=2, decryptSDKConfig=2; 4b setDksTravel|setSpecialLighting=5, setDp|setDr=2; 4c async setSocd|setEND=2, ES setSocd|setEND=4, ES `'1.0.7'`=7 (≥4). Gates re-run by Reviewer: `npm run typecheck` 0 errors, `npm run lint` exit 0, `npm run build` ✓ (1.78s).
+- [x] diff scope matches the task — `git diff --stat 304620f..b8eb0bc` = exactly package.json, package-lock.json, src/services/ExportService.ts, src/services/KeyboardService.ts, docs/plans/current-sprint.md. No stray files.
+- [x] no design-intent violation — new wrappers `setSocd` (KS:1238) / `setEND` (KS:1260) are canonical 4-part (connectedDevice guard → ensureKeyboard() → instanceof passthrough → catch console.error + return error as Error); never throw. No device filters touched; usagePage 65440 untouched. Repairs keyed on `physicalKeyValue`-equivalent `entry.keyValue` — bundle-verified this is the SAME id SDK import's setKeyboards/setAdvancedKeys uses (grep `setKeyboards(e){try{`).
+- [x] typecheck/build gate met — baseline 0, current 0; no unmasked errors.
+- [x] tag correct — [high-stakes][hw] as required (multi-file, SDK-correctness, device-affecting).
+
+### Reviewer verification highlights (all grep-verified against bundle/dist, not memory)
+- **4a decrypt fidelity:** app `decryptSDKConfig` (ES:846) is a faithful port of the SDK's own import path — bundle `importEncryptedJSON` does exactly `JSON.parse(AES.decrypt(s.data, rt).toString(Utf8))` with `rt="fDPy6vvnpPsYm2T0g1bh"`, and `exportEncryptedJSON` writes `{data: encryptData(e, rt)}`. Key, wrapper shape, and decrypt sequence all match. Null-on-any-failure keeps the SDK import standing (best-effort per spec).
+- **4c wire-version mechanism:** bundle facade `setSocd(e,t="1.0.5")`/`setEND(e,t="1.0.5")` (2-arg, key inside param); minified `SOCDPack` (`Sn`) appends delay hi/lo only at v≥1.0.7; `ENDDataPack` (`Tn`) same. SDK import's `setAdvancedKeys` calls both with ONE arg → default '1.0.5' → delay bytes omitted. Repairs re-write at explicit `'1.0.7'` → delay bytes reach the device. Corroborated by sdk-reference-v2.md §6.7/§6.8 (both status **Verified**, lines 149-150).
+- **4c param shapes:** `repairSocdDelay` passes the stored socd object VERBATIM (Sn destructures {pos1,pos2,key1,key2,type,mode,delay} — matches export-side getSocd(key,'1.0.7') 7-field readback); `repairEndDelay` builds `{key: entry.keyValue, dks, delay}` (Tn destructures {key,dks,delay}) — matches bundle end branch `h({key:e,dks:t,delay:r})`. Delay as-is, no scaling (unit unverified per §6.7; round-trip fidelity is unit-agnostic — correct call).
+- **4b deadband:** `deadBandPressValue`/`deadBandReleaseValue` are BOTH required `number` in PerformanceConfig (validate.d.ts:22-23) — press-gate + release-passthrough is type-safe; 0 applied (clears stale). DB3 round-trip verified: export ES:318/:359 stores raw getDksTravel value (Error→0), repair writes it back via setDksTravel — units match. 'Layout_DB3' is a valid DksLayoutType member (sdk type.d.ts).
+- **4b special lighting:** bundle setLighting destructures ONLY {main, logo} → `other` zone never applied by SDK import (gap real); repair routes config.light.other through convertLightConfigToSDKFormat (ES:637, arg type = KeyboardConfig['light']['main'] — same LightConfig shape as `other` per validate.d.ts:76) into setSpecialLighting (KS:1069, takes LightModeConfigs). Worker's no-open-gate deviation is sound: LightModeConfigs omits `open`, and validate.d.ts shows `open` cannot ride the payload.
+- **Error contract:** every SDK result in all five repairs checked `instanceof Error` → console.error, never thrown; repairs cannot fail a successful SDK import. processBatches 80/100 everywhere; empty maps = zero batches (no guard needed).
+- **MUST-NOT-TOUCH respected:** F2 export fixes, Task 1 macro guard (macroSnapshot/restore), and 4b items (1)-(3) untouched by 4c (diff-verified).
+
+### Findings (non-defect observations; PASS unaffected)
+1. **Nested-keyboards flatten gap (low):** bundle `importEncryptedJSON` runs `Array.isArray(i.keyboards) && (i.keyboards = i.keyboards.flat())` before consuming the config; app `decryptSDKConfig` does not flatten. If an SDK export ever contains nested `keyboards` arrays, the SDK import still applies them (it flattens), but ALL five app-side repairs silently skip (`entry.advancedKeys` undefined on array-typed entries → maps stay empty → processBatches([]) = no-op). Failure mode is safe (silent skip, import stands) and current exports are flat. Where to verify: bundle `grep "keyboards=i.keyboards.flat()"` vs ES `decryptSDKConfig`. → Findings line added for PM routing.
+2. **Pre-existing, out of scope:** sdk-reference §6.8 flags a SOCD read/write shape mismatch at v='1.0.5' (write {pos1,pos2,key1,key2,type,mode} vs read {pos,key,type,mode}). Not introduced by this diff; repairs run at '1.0.7' where the version-aware readback is consistent. No action.
 
 ### Failed items (FAIL only)
-_(none yet)_
+_(none)_
+
+### Hardware gate (PO — group 4b+4c, per the Hardware check section above)
+Code is PASS (pending hw). Task 4 set to **HW-TEST**. PO: exercise the device per the Hardware check section (configure DKS+MPT+MT+TGL+END+SOCD incl. DB3 + special lighting + distinct global-mode deadband → export → wipe → import → confirm restoration incl. F3 closure: non-zero SOCD/END delays survive readback AND behavior; deadband by actual key behavior; no F2 regression). Then state the verdict in plain words; an agent records it here (PASS → DONE + advance ▶ RUN THIS to Task 5; FAIL → F1 block + IN-PROGRESS). Reviewer never writes DONE on a [hw] task.

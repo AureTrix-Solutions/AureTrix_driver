@@ -2,7 +2,7 @@ import XDKeyboard from '@sparklinkplayjoy/sdk-keyboard';
 import type { Device, HIDDevice } from '@sparklinkplayjoy/hid';
 import type { IDB, ILightMode, ILoGoLightMode, IMacroMode, IKey } from '@sparklinkplayjoy/protocol-keyboard';
 import type { ICmd, LightModeConfigs, MacroType } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/types/type';
-import type { ImportResult, KeyboardConfig } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
+import type { ImportResult, KeyboardConfig, Keyboards } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
 import { IDefKeyInfo, DksLayoutType, DksType } from '../types/types';
 import { useConnectionStore } from '../store/connection';
 
@@ -1222,6 +1222,51 @@ class KeyboardService {
       return result;
     } catch (error) {
       console.error(`Failed to get SOCD for key ${key}:`, error);
+      return error as Error;
+    }
+  }
+
+  /**
+   * SOCD write (sdk-reference-v2.md §6.7/§6.8 — Verified). The version is real
+   * plumbing: the facade forwards it to cmdSOCD/SOCDPack, which omit the delay
+   * hi/lo bytes unless v ≥ '1.0.7' (the wire-version default is '1.0.5').
+   * param is the 7-field object itself ({pos1,pos2,key1,key2,type,mode,delay},
+   * ISOCDModeV3) — the facade is setSocd(param, v); the key is not a separate
+   * argument and pos1/pos2 identify the slots. Bundle setSocd reads back after
+   * write and returns the version-aware getSocdData decode.
+   */
+  async setSocd(param: Keyboards['advancedKeys']['socd'], v: string = '1.0.7'): Promise<SocdConfig | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.ensureKeyboard().setSocd(param, v);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to set SOCD for key ${param?.key1}:`, error);
+      return error as Error;
+    }
+  }
+
+  /**
+   * END write (sdk-reference-v2.md §6.7/§6.8 — Verified). The version is real
+   * plumbing: the facade forwards it to cmdEND/ENDDataPack, which omit the
+   * delay hi/lo bytes unless v ≥ '1.0.7' (the wire-version default is '1.0.5').
+   * param carries the key ({key, dks, delay}, IEndMode) — the facade is
+   * setEND(param, v). Bundle setEND reads back after write and returns
+   * getEndData's {dks, delay} decode.
+   */
+  async setEND(param: { key: number; dks: number; delay: number }, v: string = '1.0.7'): Promise<{ dks: number; delay: number } | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result = await this.ensureKeyboard().setEND(param, v);
+      if (result instanceof Error) return result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to set END for key ${param?.key}:`, error);
       return error as Error;
     }
   }

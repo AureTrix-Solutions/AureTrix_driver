@@ -771,6 +771,56 @@ class ExportService {
     }
   }
 
+  /**
+   * Post-import repair (4, F3): SDK setAdvancedKeys calls setSocd with ONE arg,
+   * so the wire-version default '1.0.5' drops socd.delay (SOCDPack emits no
+   * delay bytes below '1.0.7'). Re-write the stored 7-field socd config
+   * ({pos1,pos2,key1,key2,type,mode,delay} — no key field; pos1/pos2 identify)
+   * through the version-plumbed wrapper at wire v'1.0.7'.
+   */
+  private async repairSocdDelay(config: KeyboardConfig): Promise<void> {
+    const socdByKey = new Map<number, Keyboards['advancedKeys']['socd']>();
+    for (const entry of config.keyboards ?? []) {
+      const socd = entry.advancedKeys?.socd;
+      if (socd && typeof socd.delay === 'number') {
+        socdByKey.set(entry.keyValue, socd);
+      }
+    }
+    await this.processBatches([...socdByKey.keys()], async (keyValue) => {
+      const socd = socdByKey.get(keyValue);
+      if (socd === undefined) return;
+      const result = await KeyboardService.setSocd(socd, '1.0.7');
+      if (result instanceof Error) {
+        console.error(`Failed to restore SOCD for key ${keyValue}:`, result.message);
+      }
+    }, 80, 100);
+  }
+
+  /**
+   * Post-import repair (5, F3): SDK setAdvancedKeys calls setEND with ONE arg,
+   * so the wire-version default '1.0.5' drops end.delay (ENDDataPack emits no
+   * delay bytes below '1.0.7'). Stored end is {dks, delay}; the key comes from
+   * the entry (same id SDK import passes). Delay is re-written AS-IS, no
+   * scaling (round-trip fidelity is unit-agnostic).
+   */
+  private async repairEndDelay(config: KeyboardConfig): Promise<void> {
+    const endByKey = new Map<number, { key: number; dks: number; delay: number }>();
+    for (const entry of config.keyboards ?? []) {
+      const end = entry.advancedKeys?.end;
+      if (end && typeof end.delay === 'number') {
+        endByKey.set(entry.keyValue, { key: entry.keyValue, dks: end.dks, delay: end.delay });
+      }
+    }
+    await this.processBatches([...endByKey.keys()], async (keyValue) => {
+      const end = endByKey.get(keyValue);
+      if (end === undefined) return;
+      const result = await KeyboardService.setEND(end, '1.0.7');
+      if (result instanceof Error) {
+        console.error(`Failed to restore END for key ${keyValue}:`, result.message);
+      }
+    }, 80, 100);
+  }
+
   async applyImportedConfig(_config: KeyboardConfig): Promise<void> {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -854,6 +904,8 @@ class ExportService {
         await this.repairDksDb3(config);
         await this.repairGlobalDeadband(config);
         await this.repairSpecialLighting(config);
+        await this.repairSocdDelay(config);
+        await this.repairEndDelay(config);
         // Wait for SDK import to complete, then save custom RGB to flash
         await this.applyImportedConfig(config);
       }

@@ -45,7 +45,9 @@ Fix-round ranges (added on each re-review): —
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** PASS (pending hw) → **HW-TEST**  ·  **Date:** 2026-10-17  ·  **Fail count:** 0
+**Result:** **FAIL** (hardware)  ·  **Date:** 2026-10-17  ·  **Fail count:** 1
+
+Hardware verdict: **FAIL — 2026-10-17 → see F1**. Code review remains PASS (pending hw); the failure is a device-behaviour defect found only by the PO's hardware check. Task 4 → **IN-PROGRESS**; a new Worker window fixes ONLY F1.
 
 ### Confirmation checklist
 - [x] meets every "DONE WHEN" criterion above — Reviewer re-ran all greps: 4a crypto-js=2, decryptSDKConfig=2; 4b setDksTravel|setSpecialLighting=5, setDp|setDr=2; 4c async setSocd|setEND=2, ES setSocd|setEND=4, ES `'1.0.7'`=7 (≥4). Gates re-run by Reviewer: `npm run typecheck` 0 errors, `npm run lint` exit 0, `npm run build` ✓ (1.78s).
@@ -68,7 +70,38 @@ Fix-round ranges (added on each re-review): —
 2. **Pre-existing, out of scope:** sdk-reference §6.8 flags a SOCD read/write shape mismatch at v='1.0.5' (write {pos1,pos2,key1,key2,type,mode} vs read {pos,key,type,mode}). Not introduced by this diff; repairs run at '1.0.7' where the version-aware readback is consistent. No action.
 
 ### Failed items (FAIL only)
-_(none)_
+
+#### F1 — every key's advanced type is forced to END on import (D7-introduced, 4c)
+
+**What the PO did:** exported profile 2 (key 41 had `advancedType: "none"`, `performance.advancedKeyMode: 0`), imported that file into profile 3, then read the post-import debug snapshot.
+
+**Expected:** keys with no advanced type keep `advancedType: "none"` / `advancedKeyMode: 0`. Only keys that genuinely had SOCD or END configured should have those re-written (that is the point of the F3 delay repair).
+
+**Actual:** every key comes back as END. Verbatim from the PO's debug export for `keyValue: 41`:
+- `performance.advancedKeyMode`: `0` → **`5`**
+- `advancedKeys.advancedType`: `"none"` → **`"end"`**
+- `advancedKeys.value`: `0` → **`5`**
+(The same snapshot also shows `light.custom` RGB `255,255,255` → `0,0,0`, but that is the separate **pre-existing** F-D7-3, not this failure.)
+
+**Mechanism — every step grep/bundle-verified, none from memory:**
+
+1. **Export writes `end`/`socd` for EVERY key, unconditionally on success.** `ExportService.ts:367-369` (`if (!(socd instanceof Error) && socd) advancedKeys.socd = socd;`) and `:385-387` (same for `end`). There is **no `advancedType` filter**. So a key whose type is `"none"` still gets the raw uninitialized readback stored: `end: {dks:0, delay:65535}` and `socd: {pos1:0,pos2:0,key1:0,key2:0,type:0,mode:0,delay:0}` — exactly what the PO's export shows.
+2. **Both repair gates are therefore always-true.** `repairSocdDelay` gates on `socd && typeof socd.delay === 'number'` (`ExportService.ts:785`) — `0` IS a number → true for all 88 keys. `repairEndDelay` gates on `end && typeof end.delay === 'number'` (`:810`) — `65535` IS a number → true for all 88 keys. Neither gate consults `entry.advancedKeys.advancedType`.
+3. **The SDK itself branches on `advancedType` and the repairs bypass that.** Bundle `setAdvancedKeys(e,t)` destructures `const{advancedType:r,...}=t` and dispatches only on `r` — `"dks"`/`"mpt"`/`"mt"`/`"tgl"`/`"end"`/`"socd"`/`"macro"`. For `"none"` **no setter runs at all**. The repairs call `KeyboardService.setSocd(...)` / `setEND(...)` directly, so they write registers the SDK import deliberately skipped.
+4. **Writing the END register changes the key's active advanced type on the device**, which is why the readback returns `advancedKeyMode: 5`. `ADVANCED_KEY_MODE_MAP` (`ExportService.ts:11-21`) confirms `5: 'end'`, `8: 'socd'`, `0: 'none'`.
+5. **Order explains why END wins rather than SOCD.** `ExportService.ts:907` `await this.repairSocdDelay(config)` then `:908` `await this.repairEndDelay(config)` — END is the last writer, so `'end'` is what survives on every key. Matches the PO's debug exactly.
+
+**Attribution — D7-introduced, NOT pre-existing (contrast F-D7-2/F-D7-3):**
+- `git show 304620f:src/services/ExportService.ts | grep -c "repairEndDelay\|repairSocdDelay"` → **0**
+- `git show 304620f:src/services/KeyboardService.ts | grep -c "async setSocd\|async setEND"` → **0**
+- `git log --oneline -S "repairEndDelay" -- src/services/ExportService.ts` → added by **`b8eb0bc`** (Task 4c).
+So this regression is inside the D7 group's own diff and fails the group gate outright, regardless of how the PM rules on F-D7-4.
+
+**Reviewer miss, recorded honestly:** this session's `.scratch/review-notes.md` line 38 flagged the exact risk — *"repairs write socd/end for ANY entry with stored numeric-delay data regardless of active type … hw behavior is PO gate"* — and I ruled it acceptable because it matched the task's spec and I could not test device behaviour. The gate was seen and mis-judged: the numeric-delay gate is unconditionally true precisely because the fields are always populated. Hardware disproved it. Flagged here so the PM can weigh it against the PASS verdict.
+
+**Fix direction (diagnosis, not a patch — the Worker owns the implementation):** gate each repair on the entry's **own** active type, mirroring the SDK's branching — i.e. only collect a key into `socdByKey` when `entry.advancedKeys?.advancedType === 'socd'`, and into `endByKey` only when `=== 'end'`. That keeps the F3 delay repair working for keys that genuinely had SOCD/END, and stops touching every other key. Also worth a PM/PO decision: whether `end.delay === 65535` (the uninitialized sentinel seen in this export) should be skipped even on a real END key.
+
+**Re-check scope:** the Reviewer re-checks ONLY this fix — the two gates in `repairSocdDelay`/`repairEndDelay`, plus re-confirmation that F3 closure still works for a key that genuinely has END/SOCD set (non-zero delay survives readback AND behaviour). Gates re-run: `npm run typecheck`, `npm run lint`, `npm run build`.
 
 ### Hardware gate (PO — group 4b+4c, per the Hardware check section above)
 Code is PASS (pending hw). Task 4 set to **HW-TEST**. PO: exercise the device per the Hardware check section (configure DKS+MPT+MT+TGL+END+SOCD incl. DB3 + special lighting + distinct global-mode deadband → export → wipe → import → confirm restoration incl. F3 closure: non-zero SOCD/END delays survive readback AND behavior; deadband by actual key behavior; no F2 regression). Then state the verdict in plain words; an agent records it here (PASS → DONE + advance ▶ RUN THIS to Task 5; FAIL → F1 block + IN-PROGRESS). Reviewer never writes DONE on a [hw] task.

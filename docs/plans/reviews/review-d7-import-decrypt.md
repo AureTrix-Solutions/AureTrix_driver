@@ -31,7 +31,9 @@ Fix-round ranges (added on each re-review): —
 - What to verify (group gate, 4b+4c together): on a real device configure DKS+MPT+MT+TGL+END+SOCD (incl. DB3) + special lighting + a distinct global-mode deadband; export; wipe; import; confirm all six advanced modes + DB3 + special lighting + global-mode deadband are restored. Verify deadband by ACTUAL KEY BEHAVIOR, not just UI readback. F3 closure: SOCD + END configured with non-zero delays survive export→wipe→import in readback AND behavior. topDeadBandSwitch also restored (D1 add-on — if ✗ it is a NEW finding routed to PM, not a 4b fix item). No regression of the ✓ F2 items (DKS 4-point, SOCD core pos/mode). Residual risk accepted by PO: '1.0.7' WRITE packets are longer than any the app has sent before (the READ at '1.0.7' is hw-verified ✓; this gate confirms firmware write acceptance).
 
 **Hardware verdict (agent records from the PO's plain-language outcome):**
-- Hardware verdict: _(pending — Reviewer sets HW-TEST first; PO then exercises the device)_
+- Hardware verdict: **FAIL — 2026-10-17 → see F1**. PO's plain-language outcome: on profile import every key's advanced type is being set to END even though it was not set to END on the original export. Code review stays PASS (pending hw); Task 4 → **IN-PROGRESS**.
+- Partial results from the same session: global-mode deadband **✓ survives import** (by actual key behaviour). Lighting modes 1–21 **✗**, recorded as **pre-existing** F-D7-2 + F-D7-3 (not D7; PM routing under F-D7-4).
+- Advanced-key behaviour + DB3 + F3 closure: **deferred, neither pass nor fail** — unobservable while F1 stands (F-D7-6). Special lighting: **not UI-testable** (F-D7-7).
 
 ## ❓ Reviewer, please confirm
 - [ ] meets every "DONE WHEN" criterion above
@@ -104,4 +106,21 @@ So this regression is inside the D7 group's own diff and fails the group gate ou
 **Re-check scope:** the Reviewer re-checks ONLY this fix — the two gates in `repairSocdDelay`/`repairEndDelay`, plus re-confirmation that F3 closure still works for a key that genuinely has END/SOCD set (non-zero delay survives readback AND behaviour). Gates re-run: `npm run typecheck`, `npm run lint`, `npm run build`.
 
 ### Hardware gate (PO — group 4b+4c, per the Hardware check section above)
-Code is PASS (pending hw). Task 4 set to **HW-TEST**. PO: exercise the device per the Hardware check section (configure DKS+MPT+MT+TGL+END+SOCD incl. DB3 + special lighting + distinct global-mode deadband → export → wipe → import → confirm restoration incl. F3 closure: non-zero SOCD/END delays survive readback AND behavior; deadband by actual key behavior; no F2 regression). Then state the verdict in plain words; an agent records it here (PASS → DONE + advance ▶ RUN THIS to Task 5; FAIL → F1 block + IN-PROGRESS). Reviewer never writes DONE on a [hw] task.
+
+Verdict is recorded once, in the Hardware verdict slot above (§Hardware check) — **FAIL 2026-10-17 → see F1**. What follows is the detail behind that verdict.
+
+Results recorded as the PO reported them:
+
+| Item | Result |
+| --- | --- |
+| Global-mode deadband (`repairGlobalDeadband`) | **✓ SURVIVES import** — confirmed by actual key behaviour. Stands. |
+| Advanced keys: every key forced to `advancedType:"end"` | **✗ FAIL — §F1** (D7-introduced, `b8eb0bc`) |
+| Lighting mode 1–21 round trip | ✗ — **pre-existing**, F-D7-2 (export never captures the mode) + F-D7-3 (per-key RGB zeroed). Not D7; routing under F-D7-4. |
+
+**Deferred — NOT a pass and NOT a fail (F-D7-6):** DKS / MPT / MT / TGL / END / SOCD behaviour, DB3 point-3 travel, and F3 closure (SOCD/END non-zero delay readback + behaviour) **cannot be observed while §F1 stands**. Import overwrites every key's active type to END, so a key configured as DKS reads back `advancedType:"end"` and its behaviour is that of END. Stored *values* do survive in the readback (`dks.db3: 3` intact), but behaviour is unjudgeable. These items must be re-run **after** the §F1 fix and re-review; the Reviewer's re-check of §F1 should explicitly confirm F3 closure works on a key that genuinely has SOCD/END set.
+
+**Special lighting is not UI-testable (F-D7-7).** Verified this session: `KeyboardConfig.light` models three separate hardware zones `{main, logo, other}` (validate.d.ts; sdk-reference §8, status **Verified**). Modes 0–21 belong to the **main** zone (`cmdPRGB`; 0=static, 1–20=dynamic, 21=custom — `getPRGBRecdata` type derivation, `Lighting.vue:754`). `other` is the "special" zone driven by `cmdSRGB` via `getSpecialLighting`/`setSpecialLighting`. Grepping src/ outside services for `SpecialLighting|light.other` returns **nothing**, and `Lighting.vue` calls only `getLighting`/`setLighting` (main zone) — `getLogoLighting`/`setLogoLighting` are likewise never called from any page. So no UI can configure the special zone: export captures whatever factory/default state the device holds, and `repairSpecialLighting` re-writes that same untested state. The gap it fixes is real and bundle-verified (`setLighting` destructures `{main, logo}` only, never applying `other`), but the item cannot be hardware-verified through the app. PM to rule whether it stays a hardware gate item or is judged code-only.
+
+Still untested and **not** blocked by §F1: no F2 regression, `topDeadBandSwitch`.
+
+Reviewer never writes DONE on a [hw] task. On the §F1 fix + re-check, the PO re-runs the deferred items and states a fresh verdict; an agent records it here.

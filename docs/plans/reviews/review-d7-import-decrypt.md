@@ -116,11 +116,42 @@ Results recorded as the PO reported them:
 | Global-mode deadband (`repairGlobalDeadband`) | **✓ SURVIVES import** — confirmed by actual key behaviour. Stands. |
 | Advanced keys: every key forced to `advancedType:"end"` | **✗ FAIL — §F1** (D7-introduced, `b8eb0bc`) |
 | Lighting mode 1–21 round trip | ✗ — **pre-existing**, F-D7-2 (export never captures the mode) + F-D7-3 (per-key RGB zeroed). Not D7; routing under F-D7-4. |
+| Special lighting (`light.other`) | **PASS — code-only** per PO ruling 2026-10-17 (no UI setting exists). Detail below. |
+| Logo lighting (`light.logo`) | **PASS — code-only** per PO ruling. Applied by the SDK's own import path; unaffected by F-D7-2. Detail below. |
+| `topDeadBandSwitch` | **PASS — code-only** per PO ruling. Live-read on export, validated as number, applied by SDK `setSystem`. Detail below. |
+| DKS/MPT/MT/TGL/END/SOCD behaviour, DB3, F3 closure | **Deferred — neither pass nor fail** (F-D7-6). Unobservable while §F1 stands; re-run after the fix + re-review. |
 
 **Deferred — NOT a pass and NOT a fail (F-D7-6):** DKS / MPT / MT / TGL / END / SOCD behaviour, DB3 point-3 travel, and F3 closure (SOCD/END non-zero delay readback + behaviour) **cannot be observed while §F1 stands**. Import overwrites every key's active type to END, so a key configured as DKS reads back `advancedType:"end"` and its behaviour is that of END. Stored *values* do survive in the readback (`dks.db3: 3` intact), but behaviour is unjudgeable. These items must be re-run **after** the §F1 fix and re-review; the Reviewer's re-check of §F1 should explicitly confirm F3 closure works on a key that genuinely has SOCD/END set.
 
-**Special lighting is not UI-testable (F-D7-7).** Verified this session: `KeyboardConfig.light` models three separate hardware zones `{main, logo, other}` (validate.d.ts; sdk-reference §8, status **Verified**). Modes 0–21 belong to the **main** zone (`cmdPRGB`; 0=static, 1–20=dynamic, 21=custom — `getPRGBRecdata` type derivation, `Lighting.vue:754`). `other` is the "special" zone driven by `cmdSRGB` via `getSpecialLighting`/`setSpecialLighting`. Grepping src/ outside services for `SpecialLighting|light.other` returns **nothing**, and `Lighting.vue` calls only `getLighting`/`setLighting` (main zone) — `getLogoLighting`/`setLogoLighting` are likewise never called from any page. So no UI can configure the special zone: export captures whatever factory/default state the device holds, and `repairSpecialLighting` re-writes that same untested state. The gap it fixes is real and bundle-verified (`setLighting` destructures `{main, logo}` only, never applying `other`), but the item cannot be hardware-verified through the app. PM to rule whether it stays a hardware gate item or is judged code-only.
+**Special lighting is not UI-testable (F-D7-7) → RESOLVED by PO ruling.** Verified this session: `KeyboardConfig.light` models three separate hardware zones `{main, logo, other}` (validate.d.ts; sdk-reference §8, status **Verified**). Modes 0–21 belong to the **main** zone (`cmdPRGB`; 0=static, 1–20=dynamic, 21=custom — `getPRGBRecdata` type derivation, `Lighting.vue:754`). `other` is the "special" zone driven by `cmdSRGB` via `getSpecialLighting`/`setSpecialLighting`. Grepping src/ outside services for `SpecialLighting|light.other` returns **nothing**, and `Lighting.vue` calls only `getLighting`/`setLighting` (main zone) — `getLogoLighting`/`setLogoLighting` are likewise never called from any page. So no UI can configure the special zone: export captures whatever factory/default state the device holds, and `repairSpecialLighting` re-writes that same untested state. The gap it fixes is real and bundle-verified (`setLighting` destructures `{main, logo}` only, never applying `other`), but the item cannot be hardware-verified through the app.
 
-Still untested and **not** blocked by §F1: no F2 regression, `topDeadBandSwitch`.
+**PO ruling (2026-10-17):** special lighting, logo lighting, and `topDeadBandSwitch` are **judged code-only** — no UI setting exists for any of them, so no hardware test is required or possible. Verdicts below, each grep/bundle-verified this session (no claim taken from memory or from the Worker's notes).
+
+#### Code-only verdicts (PO ruling 2026-10-17)
+
+**Special lighting (`light.other`) — PASS.**
+- The converter supplies every field the facade needs. `convertLightConfigToSDKFormat` (ES:637-660) returns `{direction, speed, colors, luminance, sleepDelay, staticColor, type, mode, superResponse:false}`; bundle `async setSpecialLighting(e)` destructures exactly `{direction, superResponse, speed, colors, mode, luminance, sleepDelay, staticColor}` — all 8 present, the extra `type` is ignored harmlessly.
+- The Worker's deviation (a) — no `open` gate — is **validated**: the facade itself forces `open:!0` into the payload (`u = {...{...}, open:!0}`), so `LightModeConfigs` omitting `open` cannot lose the on-state. Not a defect.
+- The gap the repair fixes is real: SDK-level `setLighting` destructures `{main, logo}` only, so `other` is never applied by SDK import.
+- Incidental on-device corroboration: the P2 export vs P3-after-import deep-diff showed `light.other` **identical**. Since SDK import alone would never write that zone, identical readback indicates `repairSpecialLighting` did apply it.
+
+**Logo lighting (`light.logo`) — PASS.**
+- Applied by the **SDK's own** import path: bundle `setLighting(e){const{main:t,logo:r}=e; await this.setMainLighting(t), await this.setLogoLighting(r)}`. No app-side repair needed and none exists — correctly.
+- **Not clobbered by the export temp-switch** (this was the risk worth checking): `KeyboardService.setLighting` → `XDKeyboard` facade `setLighting=e=>this.lightingController.setLighting(e)`, which is the **main zone only** (the facade exposes `setLogoLighting` separately). So `tempCustomParams` (mode 21) touches main and leaves logo/other untouched — both are captured truthfully at export.
+- Consequently **F-D7-2 does not affect the logo zone** (it forces only `main` to custom/21).
+- Incidental on-device corroboration: `light.logo` **identical** P2 vs P3-after-import.
+
+**`topDeadBandSwitch` — PASS.**
+- Export live-reads it: `getApi({type:'ORDER_TYPE_TOP_DEAD_SWITCH'})` → boolean → `Number()` → 0/1 (ES:60-65).
+- The `Number()` conversion is **load-bearing**: bundle `validateConfig` rejects the file unless `"number" == typeof e.system.topDeadBandSwitch` (error "Invalid system configuration"). Passing the raw boolean would fail SDK validation.
+- SDK import applies it: `async setSystem(e){const{rateOfReturn:t, topDeadBandSwitch:r}=e; await this.keyBoard.setTopDeadSwitch(r)}`, and `setTopDeadSwitch(e)` packs `hArgs:[e]` — numeric 0/1 is the correct wire value.
+- `rateOfReturn` is destructured but unused by `setSystem` (polling rate genuinely not restored) — already documented and PO-accepted as **D4**; no new finding.
+- Incidental on-device corroboration: the `system` section was **identical** P2 vs P3-after-import. (`topDeadBandSwitch` is live-read there, unlike the intentionally static `productId`/`vendorId`/`keyboardName` fields per D3.)
+
+**Minor observation (not a fail, pre-existing, out of D7 scope):** `convertLightConfigToSDKFormat` hardcodes `superResponse: false`, so a non-default `superResponse` on the special/logo zones is not preserved across import. The converter is pre-existing — a KEEP-verbatim anchor identical at base `304620f`, and live for the main zone too. Noted for the PM, no action here.
+
+**Also confirmed dead:** `applyLightingZones` (ES:662-701) has **0 call sites** and is already scheduled for deletion in Task 5 (D6). Its presence does not affect these verdicts — `repairSpecialLighting` is the live path.
+
+Still outstanding after this ruling: **no F2 regression** (not blocked by §F1) and the deferred advanced-key items (F-D7-6). `topDeadBandSwitch`, special lighting and logo lighting are closed by the PO ruling above — code-only PASS, no hardware test required.
 
 Reviewer never writes DONE on a [hw] task. On the §F1 fix + re-check, the PO re-runs the deferred items and states a fresh verdict; an agent records it here.

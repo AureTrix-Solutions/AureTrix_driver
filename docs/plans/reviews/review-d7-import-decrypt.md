@@ -23,10 +23,11 @@ Sub-commits: 4a `f8fb312` · 4b `077ac89` · 4c `b8eb0bc`
      A file touched outside this task's scope is a flag. Expected scope:
      package.json + package-lock.json (4a deps), src/services/ExportService.ts,
      src/services/KeyboardService.ts, docs/plans/current-sprint.md. -->
-Fix-round ranges (added on each re-review): —
+Fix-round ranges (added on each re-review): F1-fix `8277f8e..ab3cdcd`
 
 ## 🖥️ Hardware check ([hw] tasks only)
 **Worker fills (what to test):**
+- **F1 re-check (after commit `ab3cdcd`):** what changed — the SOCD/END delay repairs now fire ONLY for keys whose exported `advancedType` is genuinely 'socd'/'end'; every other key is left to the SDK import. What to verify: (1) export a profile where a key (e.g. key 41) has NO advanced type → import into another profile → that key must read back `advancedType: "none"` / `advancedKeyMode: 0` (the original FAIL symptom was every key returning END); (2) a key that genuinely HAS END or SOCD set (with a non-zero delay) still round-trips — delay survives readback and behaviour (F3 closure unchanged).
 - What changed: import now decrypts the SDK export locally and, after the SDK's own import runs, re-writes the things the SDK import silently drops: DKS point-3 travel (DB3), global-mode per-key deadbands (DP/DR), special (non-main/logo) lighting, SOCD configs with their delay, and END configs with their delay — SOCD/END re-written at wire version '1.0.7' so the delay bytes actually reach the device.
 - What to verify (group gate, 4b+4c together): on a real device configure DKS+MPT+MT+TGL+END+SOCD (incl. DB3) + special lighting + a distinct global-mode deadband; export; wipe; import; confirm all six advanced modes + DB3 + special lighting + global-mode deadband are restored. Verify deadband by ACTUAL KEY BEHAVIOR, not just UI readback. F3 closure: SOCD + END configured with non-zero delays survive export→wipe→import in readback AND behavior. topDeadBandSwitch also restored (D1 add-on — if ✗ it is a NEW finding routed to PM, not a 4b fix item). No regression of the ✓ F2 items (DKS 4-point, SOCD core pos/mode). Residual risk accepted by PO: '1.0.7' WRITE packets are longer than any the app has sent before (the READ at '1.0.7' is hw-verified ✓; this gate confirms firmware write acceptance).
 
@@ -104,6 +105,14 @@ So this regression is inside the D7 group's own diff and fails the group gate ou
 **Fix direction (diagnosis, not a patch — the Worker owns the implementation):** gate each repair on the entry's **own** active type, mirroring the SDK's branching — i.e. only collect a key into `socdByKey` when `entry.advancedKeys?.advancedType === 'socd'`, and into `endByKey` only when `=== 'end'`. That keeps the F3 delay repair working for keys that genuinely had SOCD/END, and stops touching every other key. Also worth a PM/PO decision: whether `end.delay === 65535` (the uninitialized sentinel seen in this export) should be skipped even on a real END key.
 
 **Re-check scope:** the Reviewer re-checks ONLY this fix — the two gates in `repairSocdDelay`/`repairEndDelay`, plus re-confirmation that F3 closure still works for a key that genuinely has END/SOCD set (non-zero delay survives readback AND behaviour). Gates re-run: `npm run typecheck`, `npm run lint`, `npm run build`.
+
+#### F1-FIX (Worker 2026-10-20, commit `ab3cdcd`) — gate-only, per the PM ruling recorded in current-sprint.md Task 4 ▶ RUN THIS
+Both collection loops now require the entry's OWN active type before the numeric-delay gate (grep targets — line numbers drift):
+- `repairSocdDelay`: gate is now `entry.advancedKeys?.advancedType === 'socd' && socd && typeof socd.delay === 'number'` (grep `"advancedType === 'socd'"` → exactly 1). A 'none' key's always-stored `{pos1:0,…,delay:0}` block is no longer collected, so `setSocd` is never issued for it.
+- `repairEndDelay`: gate is now `entry.advancedKeys?.advancedType === 'end' && end && typeof end.delay === 'number'` (grep `"advancedType === 'end'"` → exactly 1). A 'none' key's `{dks:0,delay:65535}` readback is no longer collected, so `setEND` is never issued for it — the forced-END symptom's direct cause removed.
+- **NO 65535 sentinel filter added** (explicit PM ruling: gate-only; a genuine END key that uses max delay must still round-trip). A genuine END/SOCD key keeps its stored non-zero delay — F3 closure is unchanged for the keys it targets.
+- Export side untouched (`ExportService.ts` export loop still stores socd/end for every key — that asymmetry vs the SDK's type-filtered import is F-D7-4, backlog item, not this fix).
+- Worker self-check: `grep -c "advancedType === 'socd'"` = 1; `grep -c "advancedType === 'end'"` = 1; `npm run typecheck` clean (exit 0, no output); `npm run lint` exit 0. Baselines before fix: both gate greps = 0, `grep -c advancedType` = 5 (export-side only).
 
 ### Hardware gate (PO — group 4b+4c, per the Hardware check section above)
 

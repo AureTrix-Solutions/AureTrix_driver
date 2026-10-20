@@ -578,6 +578,12 @@ class ExportService {
 
       const system = await this.gatherDeviceInfo();
       const light = await this.gatherLightingConfig();
+      // F-D7-2: gatherLightingConfig re-reads AFTER the temp custom-mode switch, so
+      // light.main always reports custom/21 regardless of the device's real mode.
+      // The pre-switch snapshot holds the true mode — use it for the exported main zone.
+      if (originalLighting) {
+        light.main = this.convertLightingToConfig(originalLighting);
+      }
       const keyboards = await this.gatherKeyboardsConfig();
       const macro = await this.buildMacroLibrary();
 
@@ -840,6 +846,32 @@ class ExportService {
     }, 80, 100);
   }
 
+  /**
+   * F-D7-3: SDK import zeroes the per-key custom RGB buffer (setKeyboards
+   * writes it, then setLighting(main) clears it). Re-write each key's stored
+   * color via setCustomLighting before applyImportedConfig commits.
+   * Export stores UPPERCASE {R,G,B,key}; the wrapper takes lowercase {key,r,g,b}.
+   * ALL entries are written, including 0:0:0, so intentionally-black keys are
+   * restored too. Best-effort: errors are logged per key, never thrown.
+   */
+  private async repairCustomRgb(config: KeyboardConfig): Promise<void> {
+    const rgbMap = new Map<number, { r: number; g: number; b: number }>();
+    for (const entry of config.keyboards ?? []) {
+      const custom = entry.light?.custom;
+      if (!custom || typeof custom.R !== 'number') continue;
+      const key = custom.key ?? entry.keyValue;
+      rgbMap.set(key, { r: custom.R, g: custom.G, b: custom.B });
+    }
+    if (rgbMap.size === 0) return;
+    await this.processBatches([...rgbMap.keys()], async (key) => {
+      const rgb = rgbMap.get(key)!;
+      const result = await KeyboardService.setCustomLighting({ key, r: rgb.r, g: rgb.g, b: rgb.b });
+      if (result instanceof Error) {
+        console.error(`Failed to restore custom RGB for key ${key}:`, result.message);
+      }
+    }, 80, 100);
+  }
+
   async applyImportedConfig(_config: KeyboardConfig): Promise<void> {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -925,6 +957,7 @@ class ExportService {
         await this.repairSpecialLighting(config);
         await this.repairSocdDelay(config);
         await this.repairEndDelay(config);
+        await this.repairCustomRgb(config);
         // Wait for SDK import to complete, then save custom RGB to flash
         await this.applyImportedConfig(config);
       }

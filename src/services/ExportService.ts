@@ -777,12 +777,21 @@ class ExportService {
    * delay bytes below '1.0.7'). Re-write the stored 7-field socd config
    * ({pos1,pos2,key1,key2,type,mode,delay} — no key field; pos1/pos2 identify)
    * through the version-plumbed wrapper at wire v'1.0.7'.
+   *
+   * F1: only keys whose OWN active type is 'socd' are collected. Export stores a
+   * socd/end block for EVERY key (no advancedType filter), so a numeric-delay
+   * gate alone is always-true and would write registers the SDK import
+   * deliberately skips for 'none' keys — changing their active type on device.
    */
   private async repairSocdDelay(config: KeyboardConfig): Promise<void> {
     const socdByKey = new Map<number, Keyboards['advancedKeys']['socd']>();
     for (const entry of config.keyboards ?? []) {
       const socd = entry.advancedKeys?.socd;
-      if (socd && typeof socd.delay === 'number') {
+      if (
+        entry.advancedKeys?.advancedType === 'socd' &&
+        socd &&
+        typeof socd.delay === 'number'
+      ) {
         socdByKey.set(entry.keyValue, socd);
       }
     }
@@ -802,12 +811,22 @@ class ExportService {
    * delay bytes below '1.0.7'). Stored end is {dks, delay}; the key comes from
    * the entry (same id SDK import passes). Delay is re-written AS-IS, no
    * scaling (round-trip fidelity is unit-agnostic).
+   *
+   * F1: only keys whose OWN active type is 'end' are collected — see
+   * repairSocdDelay for the always-true numeric-gate mechanism. A genuine END
+   * key still holding the 65535 firmware-default delay merely re-writes the
+   * value it already holds (PM ruling 2026-10-20: gate only, NO sentinel filter
+   * — filtering would wrongly drop a real END key that uses max delay).
    */
   private async repairEndDelay(config: KeyboardConfig): Promise<void> {
     const endByKey = new Map<number, { key: number; dks: number; delay: number }>();
     for (const entry of config.keyboards ?? []) {
       const end = entry.advancedKeys?.end;
-      if (end && typeof end.delay === 'number') {
+      if (
+        entry.advancedKeys?.advancedType === 'end' &&
+        end &&
+        typeof end.delay === 'number'
+      ) {
         endByKey.set(entry.keyValue, { key: entry.keyValue, dks: end.dks, delay: end.delay });
       }
     }

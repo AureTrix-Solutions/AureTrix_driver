@@ -55,7 +55,7 @@ Fix-round ranges (added on each re-review): F1-fix `8277f8e..ab3cdcd` · 4d `ab3
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** **FAIL (hardware)** — deferred hw gate run 2026-10-21: F1 re-check ✓ · F-D7-6 ✓ · 4d(a) F-D7-2 ✓ · **4d(b) F-D7-3 ✗ → see F2**. Code review (2026-10-20, §RE-REVIEW VERDICT) is NOT reopened — this is a device-behaviour failure.  ·  **Date:** 2026-10-21  ·  **Open fail count:** 1 (F2)
+**Result:** **PASS (pending hw)** — F2-FIX re-review 2026-10-21 (§F2-FIX RE-REVIEW VERDICT): F2-1 `repairMainLighting` + F2-2 sequential RGB writes verified at head `155726c`; group D7 → **HW-TEST** for the F2-only re-check.  ·  **Date:** 2026-10-21  ·  **Open fail count:** 0. Previous verdicts kept for history: **FAIL (hardware)** 2026-10-21 → §F2 (fixed `155726c`) · **FAIL (hardware)** 2026-10-17 → §F1 (fixed `ab3cdcd`, re-verified on device ✓ 2026-10-21). Code review (2026-10-20, §RE-REVIEW VERDICT) never reopened.
 
 Hardware verdict: **FAIL — 2026-10-21 → see F2** (import never restores the exported lighting mode — always static/0 — and 32 of 88 painted per-key RGB entries are zeroed on import; the first three gate items F1/F-D7-6/4d(a) all PASSED and are closed). Previous verdict line kept for history: **FAIL — 2026-10-17 → see F1** (fixed at `ab3cdcd`, re-verified on device 2026-10-21 ✓).
 
@@ -165,6 +165,31 @@ Both collection loops now require the entry's OWN active type before the numeric
 **F2-2 — first-32 RGB loss (`repairCustomRgb` throttling).** 32 zeroed = a CONTIGUOUS PREFIX (positions 0–31) of batch 1's **80 concurrent** `Promise.all` writes (`processBatches(…, 80, 100)`; useBatchProcessing re-read: keys within a batch concurrent, batches sequential); batch 2's 8 writes and the rest of batch 1 (32–79) all survived. A clean prefix cut points at device input-queue overflow under burst (earliest writes dropped), not a processBatches boundary (the §F2 script already ruled that out). **Fix:** `(80, 100)` → `(1, 0)` = strictly sequential single-flight writes (each awaited to the device round-trip; 88 keys ≈ sub-2s; the composable still owns the loop — no reimplementation). Documented deviation from the skill's 80/100 default per its "hardware-tested reason" clause: the PO probe IS the reason (exact 32-of-80 prefix loss).
 **Self-check:** typecheck exit 0 · lint exit 0 · build ✓ (4.37s). Done-when greps: `repairMainLighting` = 2 (def+call) · `}, 1, 0);` in repairCustomRgb = 1 · F1/4b/4c guards intact (`advancedType === 'socd'` = 1, `advancedType === 'end'` = 1, macroSnapshot restore present) · no KeyboardService/design-intent changes.
 **Honest residual (for the Reviewer/PO):** the runtime cause was narrowed from bundle+probe evidence, not device-observed; the fix re-applies main LAST (wins under both hypotheses) and removes burst concurrency entirely. If the hardware re-check still shows static/0 or zeroed RGB, next where-to-verify: the console for per-key `Failed to restore custom RGB` logs (the repair logs every Error) and whether the Lighting page can set custom/21 on profile 2 at all.
+
+#### F2-FIX RE-REVIEW VERDICT (Reviewer, 2026-10-21) — fix-round `cdae37c..155726c`: **PASS (pending hw)**
+
+Scope per ▶ RUN THIS: ONLY the F2 items; F1 ✓ / F-D7-6 ✓ / 4d(a) ✓ stay closed (regression-checked by grep, all intact). Every quote below grep-verified at head `155726c` in this session — nothing taken from the Worker's notes or memory.
+
+**Diff scope:** `git diff --stat af5d82a..155726c` = ExportService.ts +31/−1 (source) + docs only. No KeyboardService, no design-intent surface, no stray files. ✓
+
+**F2-1 verified:**
+- `private async repairMainLighting(config)` defined at ExportService.ts:893; guard `if (!config.light?.main) return;` present; calls `KeyboardService.setLighting(this.convertLightConfigToSDKFormat(config.light.main))`; `instanceof Error` → console.error, never throws. ✓
+- Call site :992 is the LAST step in `importProfile`'s `if (config)` block — after `repairSpecialLighting` :985, after `repairCustomRgb` :988, after `applyImportedConfig` :990. Ordering rationale holds: RGB restore/commit need custom/21 active (per `repairCustomRgb`'s own comment: SDK `setLighting(main)` clears the buffer), so the mode re-apply must follow them. ✓
+- Bundle claim re-verified independently: `KB2_CMD_LOGORGB:ts,KB2_CMD_PRGB:rs` destructured in dist/esm/index.js; `SRGB(e,t,r=rs)` — cmdSRGB defaults to the SAME `rs` = KB2_CMD_PRGB zone constant; full `KB2_CMD_*` enumeration contains NO SRGB command. So the special-zone repair physically sends a PRGB frame that clobbers main — the Worker's evidence is correct, and last-write-wins via the app's proven setLighting path (wrapper :1041 is a straight passthrough, re-verified) neutralizes it regardless of cause. ✓
+- `convertLightConfigToSDKFormat` maps static→0/dynamic→dynamic#/custom→21 — re-confirmed against the earlier §Code-only verdicts analysis of the same converter (ES:637-660). ✓
+
+**F2-2 verified:**
+- `repairCustomRgb` now `}, 1, 0);` at :876 — the ONLY `(1, 0)` call in the file; all seven other `processBatches` sites keep `80, 100` (:166/:171/:176/:730/:761/:811/:846 — untouched, as required). ✓
+- `useBatchProcessing.processBatches` re-read: with batchSize 1 each `Promise.all` has one member awaited to completion before the next iteration → strictly sequential single-flight writes; delayMs 0 harmless. The composable still owns the loop — no reimplementation. ✓
+- Deviation from the 80/100 default is justified per the skill's hardware-tested-reason clause: the PO probe evidence (§F2: exactly `keyboards` positions 0–31 zeroed = contiguous prefix of batch 1's 80 concurrent writes, script-verified) points at device-side burst drop; sequential writes remove the contention. Whether the device truly overflows is a runtime question — properly routed to the hw gate, not more static analysis. ✓
+
+**Regression guard (closed items):** `advancedType === 'socd'` = 1, `advancedType === 'end'` = 1 (F1 gates intact, no 65535 filter added); `macroSnapshot` = 3 (snapshot/restore/remove intact); `repairCustomRgb` = 2 (def+call); `repairMainLighting` = 3 (def+call+comment). ✓
+
+**Gates (Reviewer-run):** `npm run typecheck` exit 0 · `npm run lint` exit 0 · `npm run build` exit 0 (✓ built in 1.75s). ✓
+
+**Confirmation checklist:** meets done-when greps ✓ · diff scope matches ✓ · no design-intent violation ✓ · gates met ✓ · tag correct ([high-stakes] [hw]) ✓.
+
+**Ruling:** code **PASS (pending hw)**. Per [hw] protocol this Reviewer sets HW-TEST and stops — it does NOT write DONE. The PO now re-runs ONLY the F2 items on device (Hardware check §"F2-FIX [hw] re-check"): (F2-1) mode-1 and custom probes must read back dynamic/1 and custom/21 respectively, and the keyboard must visibly RUN the imported mode; (F2-2) test 1 repeated — all 88 painted keys must survive (nonZero=88, no 0:0:0 prefix; sequential writes may take a couple of seconds longer — expected). If any RGB key is still zeroed, capture console `Failed to restore custom RGB` lines (§F2-FIX residual). A quick glance that F1/F-D7-6/4d(a) didn't regress suffices — no re-run.
 
 ### Hardware gate (PO — group 4b+4c, per the Hardware check section above)
 

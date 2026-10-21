@@ -869,7 +869,35 @@ class ExportService {
       if (result instanceof Error) {
         console.error(`Failed to restore custom RGB for key ${key}:`, result.message);
       }
-    }, 80, 100);
+      // F2-2: batchSize 1, delay 0 = strictly sequential single-flight writes.
+      // The hardware check lost exactly the first 32 of batch 1's 80 concurrent
+      // Promise.all writes (device drops under burst); one report in flight at a
+      // time, each awaited to the device round-trip, removes the contention.
+    }, 1, 0);
+  }
+
+  /**
+   * Post-import repair (F2-1): restore the exported MAIN lighting mode.
+   *
+   * The SDK import's own main-lighting write does not survive: hardware checks
+   * read back static/0 after importing files exported in custom/21 and
+   * dynamic/1. Two verified contributing causes — repairSpecialLighting sends
+   * the logo/other zone through cmdSRGB, which defaults to the SAME KB2_CMD_PRGB
+   * zone constant as the main-lighting command (bundle-verified: no SRGB command
+   * exists), clobbering main to the converted `other` config; and the SDK's
+   * setMainLighting failure would be silent (device methods return Error, the
+   * controller doesn't check). Re-applying config.light.main LAST — after
+   * repairSpecialLighting and after the per-key RGB restore (which needs custom
+   * mode active) — wins the last write regardless of which cause applies.
+   */
+  private async repairMainLighting(config: KeyboardConfig): Promise<void> {
+    if (!config.light?.main) return;
+    const result = await KeyboardService.setLighting(
+      this.convertLightConfigToSDKFormat(config.light.main)
+    );
+    if (result instanceof Error) {
+      console.error('Failed to restore main lighting mode:', result.message);
+    }
   }
 
   async applyImportedConfig(_config: KeyboardConfig): Promise<void> {
@@ -960,6 +988,8 @@ class ExportService {
         await this.repairCustomRgb(config);
         // Wait for SDK import to complete, then save custom RGB to flash
         await this.applyImportedConfig(config);
+        // F2-1: restore the exported main lighting mode LAST — see repairMainLighting.
+        await this.repairMainLighting(config);
       }
       
       return { success: true };

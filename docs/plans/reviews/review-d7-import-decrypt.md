@@ -52,9 +52,9 @@ Fix-round ranges (added on each re-review): F1-fix `8277f8e..ab3cdcd` · 4d `ab3
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** **PASS (pending hw)** — re-review 2026-10-20 of fix-round `8277f8e..e8c9310` (F1-fix + 4d); see §RE-REVIEW VERDICT below  ·  **Date:** 2026-10-20  ·  **Open fail count:** 0 (F1 fixed + code-verified; group → **HW-TEST**)
+**Result:** **FAIL (hardware)** — deferred hw gate run 2026-10-21: F1 re-check ✓ · F-D7-6 ✓ · 4d(a) F-D7-2 ✓ · **4d(b) F-D7-3 ✗ → see F2**. Code review (2026-10-20, §RE-REVIEW VERDICT) is NOT reopened — this is a device-behaviour failure.  ·  **Date:** 2026-10-21  ·  **Open fail count:** 1 (F2)
 
-Hardware verdict: **FAIL — 2026-10-17 → see F1**. *(Superseded on the CODE side by the 2026-10-20 re-review below: F1-fix + 4d PASS pending hw; the hardware verdict slot stays FAIL until the PO re-runs the device gate — it is the PO's to update.)*
+Hardware verdict: **FAIL — 2026-10-21 → see F2** (import never restores the exported lighting mode — always static/0 — and 32 of 88 painted per-key RGB entries are zeroed on import; the first three gate items F1/F-D7-6/4d(a) all PASSED and are closed). Previous verdict line kept for history: **FAIL — 2026-10-17 → see F1** (fixed at `ab3cdcd`, re-verified on device 2026-10-21 ✓).
 
 ### Confirmation checklist
 - [x] meets every "DONE WHEN" criterion above — Reviewer re-ran all greps: 4a crypto-js=2, decryptSDKConfig=2; 4b setDksTravel|setSpecialLighting=5, setDp|setDr=2; 4c async setSocd|setEND=2, ES setSocd|setEND=4, ES `'1.0.7'`=7 (≥4). Gates re-run by Reviewer: `npm run typecheck` 0 errors, `npm run lint` exit 0, `npm run build` ✓ (1.78s).
@@ -138,6 +138,23 @@ Both collection loops now require the entry's OWN active type before the numeric
 - **NO 65535 sentinel filter added** (explicit PM ruling: gate-only; a genuine END key that uses max delay must still round-trip). A genuine END/SOCD key keeps its stored non-zero delay — F3 closure is unchanged for the keys it targets.
 - Export side untouched (`ExportService.ts` export loop still stores socd/end for every key — that asymmetry vs the SDK's type-filtered import is F-D7-4, backlog item, not this fix).
 - Worker self-check: `grep -c "advancedType === 'socd'"` = 1; `grep -c "advancedType === 'end'"` = 1; `npm run typecheck` clean (exit 0, no output); `npm run lint` exit 0. Baselines before fix: both gate greps = 0, `grep -c advancedType` = 5 (export-side only).
+
+#### F2 — import never restores the exported lighting mode (always static/0), and 32 of 88 painted RGB entries are zeroed (PO hardware gate 2026-10-21; gate item 4d(b)/F-D7-3 ✗ — the same gate's F1 ✓, F-D7-6 ✓, 4d(a) ✓ are CLOSED)
+
+**What the PO did:** two on-device tests with debug-export probes (all four JSONs in `.scratch/`, Reviewer-analysed with a tally script — counts below are script-verified, not transcribed by eye):
+
+*Test 1 — custom mode, per-key RGB:* profile 1 in custom mode (set in app), rows painted per-row colors (row0 `172:32:32` ×17, row1 `146:42:113` ×17, row2 `90:21:126` ×17, row3 `41:28:141` ×13, row4 `25:94:128` ×13, row5 `34:185:115` ×11). Export profile 1 (`profile1_custom_after_export.json`), import into profile 2 (`Import Profile` button), debug-export profile 2 (`profile2_custom_after_import.json`).
+
+*Test 2 — dynamic mode 1:* profile 1 set to dynamic mode 1, exported (`profile1_mode1_after_export.json`), imported into profile 2, debug-exported (`profile2_mode1_after_import.json`).
+
+**Expected (4d(a) + 4d(b) criteria):** (a) export reports the true mode — **PASSED**: `profile1_mode1_after_export.json` shows `"mode": "dynamic", "dynamic": 1` and `profile1_custom_after_export.json` shows `"custom"/21` with all 88/88 painted colors correct (script: nonZero=88). (b) after import, profile 2's readback shows the IMPORTED mode and the painted RGB restored.
+
+**Actual (both imports):**
+1. **Mode never restored — new symptom, both tests identical:** `profile2_*_after_import.json` both show `light.main` = `"mode": "static", "dynamic": 0` regardless of the source file's mode (custom/21 in test 1, dynamic/1 in test 2). The PO's words: "on import the mode is always set to static never the imported mode." Note this is the IMPORT side — 4d's fix was EXPORT-side only (F-D7-2), so nothing in the fix round claimed to restore the mode on import; whether the SDK's `importEncryptedJSON` applies `light.main`, or whether the import path never calls `setLighting` with the file's mode, is the question the fix session must verify (where to verify: `ExportService.importProfile` :909-947 — it deliberately switches to custom mode 21 BEFORE the SDK import, and nothing after the import re-applies `config.light.main`; and the SDK bundle's `setImportData`/`importEncryptedJSON` lighting handling).
+2. **RGB partially zeroed:** script tally of `profile2_custom_after_import.json`: per-color counts `90:21:126`=17/17, `41:28:141`=13/13, `25:94:128`=13/13, `34:185:115`=11/11 (rows 2-5 fully survive), `146:42:113`=2/17, `172:32:32`=0/17, `0:0:0`=32. PO's per-row counts match exactly (row0 0/17, row1 2/17, rows2-5 full).
+3. **Objective pattern (Reviewer script, grep-reproducible):** the 32 zeroed entries are EXACTLY array positions 0–31 of `keyboards` (keyValues 41,58,59,…,73; script check `[...Array(32).keys()]` === zeroed-position list → `true`); positions 32–87 all survive. Export and import files have identical key ordering (positions 0-2 = keyValues 41,58,59 in both). So the loss is a contiguous prefix of the key array, not a color/row property — where to verify: what runs over the key list in the FIRST batch(es) around import (`repairCustomRgb` batches 80/100 via `processBatches` — batch 1 = positions 0–79, so a batch boundary at 32 is NOT `processBatches`; candidates to check: the SDK import's own per-key write loop being interrupted/overwritten partway, the pre-import mode-21 switch racing the SDK's own RGB restore, or `setCustomLighting` writes for the first 32 keys being silently dropped/overwritten — the repair logs `instanceof Error` per key, so the fix session should first re-run with the console open and check whether those 32 logged errors).
+
+**Ruling mechanics:** verdict recorded by the Reviewer on the PO's plain-words ruling (2026-10-21); task 4 → IN-PROGRESS; ▶ RUN THIS = "fix ONLY this — see §F2". The next Worker fixes ONLY F2; the three ✓ items (F1, F-D7-6, 4d(a)) are closed and must not regress. Runtime root-cause is NOT re-analysed here — the pointers above are where-to-verify, not a prescribed fix.
 
 ### Hardware gate (PO — group 4b+4c, per the Hardware check section above)
 

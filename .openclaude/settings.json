@@ -1,6 +1,26 @@
 {
   "modelLimits": { "qwen/qwen3.8-max-0902": { "contextWindow": 256000 } },
   "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm test:*)",
+      "Bash(npx vitest:*)"
+    ],
     "deny": [
       "Bash(rm:*)",
       "Bash(git push:*)",

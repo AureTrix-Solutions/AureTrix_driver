@@ -8,12 +8,12 @@ rev1 (2026-10-22): PO reviewed the plan and accepted all PM calls (vue-tsc ^3.3.
 
 ## Checkpoint
 - Branch: `sprint-13-vue-tsc`
-- tsc baseline: 101 errors (docs/tsc-baseline.txt) — Task 1 re-based 0→101 (sanctioned unmasking, Reviewer-verified); Tasks 2a→2f ratchet to 0.
+- tsc baseline: 60 errors (docs/tsc-baseline.txt) — Task 1 re-based 0→101; Task 2a ratcheted 101→60 (committed 57793da); Tasks 2b→2f continue to 0.
 - Cleanup (Reviewer ls, 2026-10-22): `.scratch/` = handoff.md, pm-notes.md, review-notes.md, rv-typecheck.txt, vue-tsc-dryrun.txt, vue-tsc-files.txt, vue-tsc-run.txt (PO may delete); `_to_delete/` = vue-shim.d.ts (PO must `git rm`).
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: Worker — Task 2a IN-PROGRESS. Edits applied: all 3 spec'd + 1 spec-defect fix (getKeyStyle annotated `CSSProperties & { 'data-overlay'?: string }` — spec's plain `CSSProperties` caused new TS2353 at MappedKeyboard:64 on the pre-existing `'data-overlay': ''` return prop; intersection keeps runtime attr, grep-count of CSSProperties lines still 3). vue-tsc = **60** not ≤58: delta fully reconciled = 58 + 2 Performance TS7053(:134,:142) that index `positionToRemap {}` not keyMap — spec's "Performance 8 keyMap-sites" miscount; 2d edit 3 clears them. Edited files have 0 errors. Running Done-when gates + lint now.
+Next: PM (plan mode, PO confirms) — revise Task 2a-2c count criteria per Findings [plan] line (2a landed at 60 not ≤58; +2 are Performance positionToRemap TS7053 that 2d edit-3 clears). Work itself is committed: 57793da "task 2a". All mechanical gates pass: 3 anchor greps ✓, baseline head-1=60=live count ✓, lint exit 0 ✓, edited files 0 errors ✓, no `!`/`as any`/`@ts-ignore` used (fix incl: `CSSProperties & { 'data-overlay'?: string }` intersection). Cleanup: `.scratch/` has handoff.md, pm-notes.md, review-notes.md, rv-2a-typecheck.txt, rv-typecheck.txt, vue-tsc-dryrun.txt, vue-tsc-files.txt, vue-tsc-run.txt (PO can delete; vue-tsc-run.txt is referenced by tsc-baseline.txt but gitignored — regenerate via npm run typecheck). `_to_delete/` has vue-shim.d.ts (PO must git rm; tracked since Task 1). Then Worker — Task 2b.
 
 ## Tasks
 
@@ -25,7 +25,7 @@ Next: Worker — Task 2a IN-PROGRESS. Edits applied: all 3 spec'd + 1 spec-defec
    - Universal rule: fixes are TYPE-LEVEL. No `!`, no `as any`, no `@ts-ignore`, no suppressing a real error — narrow it properly (`instanceof Error`, `typeof`, `v-if`). Design intent untouched: wrappers still RETURN `Error` (never throw), so call sites must narrow `Error | T` unions rather than cast them away.
    - Expected counts assume Task 1 produced N=101 (adjust by the delta if not):
 
-   **2a — shared root fixes (clears 43 → 58).** Files: `src/utils/keyMap.ts`, `src/utils/MappedKeyboard.ts`, `src/services/KeyboardService.ts`
+   **2a — ✓ committed 57793da (101→60; count criterion revision routed to PM — see Findings [plan]).** Files: `src/utils/keyMap.ts`, `src/utils/MappedKeyboard.ts`, `src/services/KeyboardService.ts`
    - Done when: `grep -c "^export const keyMap: Record<number, string> = {" src/utils/keyMap.ts` → `1`
    - Done when: `grep -c "CSSProperties" src/utils/MappedKeyboard.ts` → `3` (import + 2 annotations)
    - Done when: `grep -n "async getRm6X21Calibration" src/services/KeyboardService.ts` shows `calibrations: number[][]; travels: number[][]`

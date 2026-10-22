@@ -1,8 +1,112 @@
-# No active sprint
+# SPRINT: sprint-13-vue-tsc
 
-COMPLETE — run PM-open for the next sprint.
+**GOAL:** Give `.vue` files a real automated type/undefined-reference gate — install vue-tsc, make `npm run typecheck` use it, and clear every error it unmasks so the gate lands at zero.
+**DONE-CRITERIA (sprint):** `ls node_modules/.bin | grep vue-tsc` is non-empty AND `npm run typecheck` (= `vue-tsc --noEmit`) exits 0 with `grep -c "error TS"` → 0 AND `docs/tsc-baseline.txt` first line is `0` AND `src/types/vue-shim.d.ts` now lives in `_to_delete/` AND `npm run lint` + `npm run build` pass AND the PO's device smoke check (Task 3) is ✓.
+**Started:** 2026-10-22  ·  **Status:** IN PROGRESS
+<!-- revN (YYYY-MM-DD): <what changed>   ← log revisions here, newest last -->
+
+## Checkpoint
+- Branch: `sprint-13-vue-tsc`
+- tsc baseline: 0 errors (docs/tsc-baseline.txt) — Task 1 RE-BASES this to the vue-tsc count (sanctioned unmasking; ~101 expected, see Task 1), then Tasks 2a→2f ratchet it to 0.
+- Cleanup: `.scratch/` has `pm-notes.md` + `vue-tsc-dryrun.txt` (PO may delete); `_to_delete/` exists and is empty — Task 1 moves the shim into it (PO must then `git rm`).
+<!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-No active sprint. To start one, open a fresh window and paste:
-  Act as PM per CLAUDE.md. Plan the "<name>" sprint from docs/plans/backlog.md.
-(Or a direct goal: Act as PM per CLAUDE.md. Goal: <...>.)
+Next: Task 1 — Install vue-tsc, flip the typecheck script, retire the `*.vue` shim, re-base the baseline. Do this task, then stop.
+
+## Tasks
+
+1. **Install vue-tsc + make it the typecheck gate** — [high-stakes] — STATUS: PENDING
+   - Done when: `ls node_modules/.bin | grep -c vue-tsc` → `1`
+   - Done when: `grep -n '"typecheck"' package.json` → `"typecheck": "vue-tsc --noEmit",`
+   - Done when: `ls src/types/vue-shim.d.ts` → No such file; `ls _to_delete/vue-shim.d.ts` → exists
+   - Done when: `npm run typecheck 2>&1 | grep -c "error TS"` → N (N ≥ 101), and `head -1 docs/tsc-baseline.txt` → that same N
+   - Done when: `npm run lint` exit 0 AND `npm run build` exit 0
+   - Files: `package.json`, `package-lock.json`, `docs/tsc-baseline.txt`, `src/types/vue-shim.d.ts` → `_to_delete/`
+   - Edits (all values grep-verified this session):
+     1. `npm install -D vue-tsc@^3.3.13` — 3.3.13 is npm `latest`; its peerDep is `typescript >=5.0.0` and the repo pins `typescript@^5.9.2`. **HAZARD:** vue-tsc 3.3.13 BREAKS under TypeScript 7 (`npx vue-tsc` with a TS-7 resolution dies `ERR_PACKAGE_PATH_NOT_EXPORTED './lib/tsc'`) — never let a transitive TS 7 satisfy it. Commits `package.json` + `package-lock.json`.
+     2. `package.json`: current `"typecheck": "tsc --noEmit",` → `"typecheck": "vue-tsc --noEmit",`. vue-tsc checks `.ts` too, so nothing is lost; do NOT keep a second script.
+     3. Move the shim: `mkdir -p _to_delete && git mv src/types/vue-shim.d.ts _to_delete/vue-shim.d.ts`. Why it must go: it declares `module '*.vue'` as `DefineComponent<{}, {}, any>`, which would SHADOW real `.vue` resolution and hide the very errors this gate exists to catch. Nothing else breaks — `.vue` imports from `.ts` (`main.ts:4`, `router/index.ts` ×17) resolve natively under vue-tsc; `eslint.config.mjs` has no `project`/type-aware rules (only `parserOptions.parser` at line 13) so lint is unaffected; `vite build` never used it.
+     4. Run `npm run typecheck 2>&1 | grep -c "error TS"` → write that number as the FIRST line of `docs/tsc-baseline.txt`, keeping the existing history lines below it and appending one history line: `2026-10-22 sprint-13 Task 1: gate switched tsc→vue-tsc; .vue errors unmasked (0→N). Ratchet down from here.` This is the sanctioned unmasking re-base (CLAUDE.md self-check gate), NOT a ratchet-up violation — N is the real count and every later task only lowers it.
+     5. ALSO record in the review file: `npm run typecheck 2>&1 | grep "error TS" | grep -c "main.ts\|router/index.ts"`. Expected 0. If >0, those are real `.ts`-side errors unmasked by the shim removal — sub-task 2a absorbs them (note the count in the checkpoint so 2a's expected total is adjusted).
+   - Note for Task 2: the dryrun count (101, `.scratch/vue-tsc-dryrun.txt`) was measured WITH the shim present. If your N > 101, add the delta to every expected count in Task 2 and say so in the checkpoint. The compiler — not this plan — is the authoritative site list; re-run `npm run typecheck` to get it.
+   - On finish: STATUS → IN-REVIEW, write `docs/plans/reviews/review-vue-tsc-gate.md` (sprint goal + these Done-whens + Base/Head hashes), advance ▶ RUN THIS to Task 2a.
+
+2. **Clear every vue-tsc error to zero** — [high-stakes] — STATUS: PENDING
+   - Sequential sub-tasks 2a→2f, ONE session each, OWN commit each (`sprint-13-vue-tsc: task 2X`). Parent stays IN-PROGRESS until 2f, then → IN-REVIEW; the Reviewer runs ONCE over the cumulative base..head diff.
+   - Universal Done-when for EVERY sub-task: `npm run typecheck 2>&1 | grep -c "error TS"` → the expected number below; `head -1 docs/tsc-baseline.txt` → that same number (ratchet down, rewrite the first line each time); `npm run lint` exit 0. Plus the per-sub-task anchor greps.
+   - Universal rule: fixes are TYPE-LEVEL. No `!`, no `as any`, no `@ts-ignore`, no suppressing a real error — narrow it properly (`instanceof Error`, `typeof`, `v-if`). Design intent untouched: wrappers still RETURN `Error` (never throw), so call sites must narrow `Error | T` unions rather than cast them away.
+   - Expected counts assume Task 1 produced N=101 (adjust by the delta if not):
+
+   **2a — shared root fixes (clears 43 → 58).** Files: `src/utils/keyMap.ts`, `src/utils/MappedKeyboard.ts`, `src/services/KeyboardService.ts`
+   - Done when: `grep -c "^export const keyMap: Record<number, string> = {" src/utils/keyMap.ts` → `1`
+   - Done when: `grep -c "CSSProperties" src/utils/MappedKeyboard.ts` → `3` (import + 2 annotations)
+   - Done when: `grep -n "async getRm6X21Calibration" src/services/KeyboardService.ts` shows `calibrations: number[][]; travels: number[][]`
+   - Edits:
+     1. `keyMap.ts:1` `export const keyMap = {` → `export const keyMap: Record<number, string> = {` — ONE edit clears all 26 TS7053 (implicit-any indexing) across 8 files: Performance 8, RapidTrigger 6, Lighting 4, Calibration 2, Debug 2, MacroRecording 2, KeyMapping 1, SwitchProfiles 1. Sole other consumer `keyCategories.ts` uses `Object.entries(keyMap)` → unaffected.
+     2. `MappedKeyboard.ts:1` `import { ref, computed, Ref, watch } from 'vue';` → add `import type { CSSProperties } from 'vue';`. Then `:22` `const gridStyle = computed(() => {` → `const gridStyle = computed<CSSProperties>(() => {`; `:41` `const getKeyStyle = (rowIdx: number, colIdx: number) => {` → `... ): CSSProperties => {`. Clears the 14 shared `:style`-binding TS2345 (2 each in Calibration, Debug, KeyMapping, Lighting, MacroRecording, Performance, RapidTrigger) — the un-annotated union of object literals widens `height`/`width` to `string`.
+     3. `KeyboardService.ts:954` `async getRm6X21Calibration(): Promise<{ calibrations: number[]; travels: number[] } | Error> {` → `number[][]` for BOTH fields. Annotation-only: the body already passes the SDK result through unchanged (`if (result instanceof Error) return result; return result;`), so no behavior change. Ground truth: `docs/sdk-reference-v2.md` §4 (row = **Verified**) states returns `{travels: number[][]; calibrations: number[][]}` (6×21 rows) and explicitly notes "This repo's wrapper narrows the fields to `number[]` — the SDK fields are `number[][]`". The SDK's own `performance.d.ts:30` says `Promise<any>`, so this wrapper annotation is the only type source. Clears Calibration TS2322(119) + TS2339(111,127) — that call site's loop already assumes rows.
+
+   **2b — layout pages + Lighting (clears 6 → 52).** Files: `src/pages/LayoutPreview.vue`, `src/pages/LayoutCreator.vue`, `src/pages/Lighting.vue`
+   - Done when: `grep -c "computed<CSSProperties>" src/pages/LayoutPreview.vue` → `1`
+   - Done when: `grep -c "instanceof Error" src/pages/LayoutCreator.vue` → ≥ `1` (the new defKey narrow)
+   - Done when: `grep -c "currentState.open === 1" src/pages/Lighting.vue` → `0`
+   - Edits:
+     1. `LayoutPreview.vue` has its OWN local `gridStyle` (line 45, `computed(() => {`, early-returns `{ height: '0px', width: '0px' }`) — NOT the shared one. Add `CSSProperties` to its vue import (line 30 `import { defineComponent, ref, computed, onMounted } from 'vue';`) and annotate `computed<CSSProperties>(`. Clears its 2 TS2345.
+     2. `LayoutCreator.vue`: `baseLayout` is `Error | IDefKeyInfo[][]` (from `KeyboardService.defKey()`) and never narrowed → TS2339(195,42)(203,40) `.length` + TS2345(204,54) passing it to `getPaddedKeySizes(baseLayout: unknown[][] | null)`. File has NO `IDefKeyInfo` import today. Add `import type { IDefKeyInfo } from '@types/types';` (match the alias style used by sibling pages), type the declaration `let baseLayout: IDefKeyInfo[][] | null = null;`, and narrow at the assignment: `const result = await KeyboardService.defKey(); baseLayout = result instanceof Error ? null : result;`. Clears all 3.
+     3. `Lighting.vue:799` `lightingEnabled.value = currentState.open === true || currentState.open === 1;` → drop the dead arm: `lightingEnabled.value = currentState.open === true;`. `ILightMode.open` is `boolean` (`protocol-keyboard/src/types/interface.ts:49`, sdk-ref line 2047) so `=== 1` can never be true (TS2367).
+
+   **2c — App.vue menu union + connection store `isConnecting` + MacroRecording ref (clears 9 → 43).** Files: `src/App.vue`, `src/store/connection.ts`, `src/pages/MacroRecording.vue`
+   - Done when: `grep -c "isConnecting" src/store/connection.ts` → `3` (state + set true + finally)
+   - Done when: `grep -c "type MenuItem" src/App.vue` → `1` and `grep -c "interface MenuCategory" src/App.vue` → `0`
+   - Done when: `grep -c '\$refs.importFile' src/pages/MacroRecording.vue` → `0`
+   - Edits:
+     1. **`src/store/connection.ts` — REAL BUG, [high-stakes] file.** `Connect.vue:4-5` reads `connectionStore.isConnecting` (button `:disabled` + "Connecting..." label) but the store NEVER declares it — state is `isConnected / isInitializing / isInitialized / isPostReconnectionSuppression / status / deviceInfo / initializationError`. So the label never shows and the button never disables during connect. Add `isConnecting: false,` to the state block (lines 8-16, after `isConnected`); in `connectDevice()` (line 49) set `this.isConnecting = true;` right after the existing `this.status = ...` line, and add a `finally { this.isConnecting = false; }` to its `try` (there is no finally today — verify the try/catch shape at 49-80 before editing). `Connect.vue` itself needs NO edit. Clears Connect's 2 TS2551.
+     2. `App.vue` — replace `interface MenuCategory` (lines 177-181: `name: string; items: {name;path;tooltip?}[]; isCategory: boolean;`) with a discriminated union so `v-if="!item.isCategory"` actually narrows: `type MenuItem = { name: string; path: string; isCategory: false; tooltip?: string } | { name: string; items: { name: string; path: string; tooltip?: string }[]; isCategory: true };`. Then retype `openCategory: null as MenuCategory | null` (line 260) → `null as Extract<MenuItem, { isCategory: true }> | null`, and `handleCategoryClick(item: MenuCategory, ...)` (line 322) → the same `Extract<...>` branch. Type `menuItems` as `MenuItem[]` ONLY if inference against the union fails. Clears TS2322(35,51 `:to="item.path"` — `path` is undefined on the category branch) + TS2345(38,86).
+     3. `App.vue` `isStatusReady` — current text: `return info && typeof info.KeyboardSN !== 'undefined' && (typeof info.KeyboardSN === 'string' || (info.KeyboardSN instanceof Uint8Array && info.KeyboardSN.length > 0)) && typeof info.appVersion !== 'undefined' && (typeof info.appVersion === 'string' || (info.appVersion instanceof Uint8Array && info.appVersion.length > 0));` → `return info && typeof info.KeyboardSN === 'string' && info.KeyboardSN.length > 0 && typeof info.appVersion === 'string' && info.appVersion.length > 0;`. The `Uint8Array` arms are dead: `KeyboardSN` and `appVersion` are decoded **strings** in `KeyboardBaseInfo` (KeyboardService.ts:64-66; sdk-ref lines 425,427) — after the `typeof === 'string'` narrowing the RHS is `never`, which is what produces TS2358(284,286) + the two TS2339 `.length` on `never`. Clears 4 of App's 6.
+     4. `MacroRecording.vue:36` `<button @click="$refs.importFile?.click()" ...>` → `@click="importFile?.click()"`. `$refs` is untyped (`{}`) in this Options-API `<script lang="ts">` + `setup()` hybrid → TS2339(36,41) `'click' does not exist on {}`. The ref already exists (`const importFile = ref<HTMLInputElement | null>(null);` ~line 112) — verify `setup()`'s return list includes `importFile` and add it if missing.
+
+   **2d — Performance + RapidTrigger (clears 22 → 21).** Files: `src/pages/Performance.vue`, `src/pages/RapidTrigger.vue`. 11 errors each, near-identical shapes.
+   - Done when: `grep -c "item is IKey" src/pages/Performance.vue src/pages/RapidTrigger.vue` → `1` each
+   - Done when: `grep -c "baseLayout?.value" src/pages/Performance.vue src/pages/RapidTrigger.vue` → `0` each
+   - Done when: `grep -c "const positionToRemap: Record<number, number> = {};" src/pages/Performance.vue` → `1`
+   - Edits (per file unless noted):
+     1. Add `import type { IKey } from '@sparklinkplayjoy/protocol-keyboard';` — path confirmed public: `KeyboardService.ts:3` already imports `IKey` from there, and `getLayoutKeyInfo` is typed `Promise<IKey[] | Error>` at KeyboardService.ts:550. Neither page imports it today.
+     2. Predicate — Performance line 131 / RapidTrigger line 312, IDENTICAL text `.filter((item): item is { key: number; value: number } => item !== null)` → `.filter((item): item is IKey => item !== null && !(item instanceof Error))`. Root cause: `getLayoutKeyInfo` returns `IKey[] | Error`; the batch `.map` yields `IKey[] | Error | null` per key so `.flat()` is `IKey | Error | null`, and the old predicate's `{key; value}` is missing `layout` → not assignable to the parameter type (TS2677) so NO narrowing happens → the 4 TS18047 (`item` possibly null) + 4 TS2339 (`item.key`/`item.value`) that follow. `IKey = {key: number; layout: number; value?: number}` (sdk-ref line 352) — note `value` is OPTIONAL, and the existing `item.value !== 0` test passes for `undefined`, so the following `positionToRemap[item.key] = item.value;` needs `value` guarded (e.g. `item.value !== undefined && item.value !== 0`) or the Record type will reject `number | undefined`.
+     3. `positionToRemap` — Performance:117 is `const positionToRemap = {};` → `const positionToRemap: Record<number, number> = {};`. RapidTrigger:298 is ALREADY `{ [key: number]: number }` → no edit.
+     4. Debug template line — Performance:35 / RapidTrigger:37: `baseLayout?.value ? 'defined' : 'null'` → `baseLayout ? 'defined' : 'null'`. In a template refs auto-unwrap, so `.value` is a property of the array (`IDefKeyInfo[][]`) and does not exist (TS2551, compiler suggests `values`) — the line currently always renders `null`.
+     5. Performance only — line 326-327 inside `processBatches`: `const mode = await KeyboardService.getPerformanceMode(keyId); newKeyModeMap[keyId] = mode.touchMode as 'global' | 'single';` → narrow first (`mode` is `Error | {...}`) and keep the existing catch's default-to-global fallback semantics; TS2339(327,41).
+     6. RapidTrigger only — lines 693-700: the block ALREADY early-returns on `initialActuationResult instanceof Error || rtResult instanceof Error || dzResult instanceof Error`, then re-tests `if (!(initialActuationResult instanceof Error))` before `Number(initialActuationResult)`. The 2nd test's LHS is already `number` → TS2358(699,19). Drop the redundant `if` wrapper, assign directly.
+
+   **2e — performance components (clears 10 → 11).** Files: `src/components/performance/GlobalTravel.vue`, `SwitchProfiles.vue`, `SingleKeyTravel.vue`
+   - Done when: `grep -c "const globalModeKeys: number\[\] = \[\];" src/components/performance/GlobalTravel.vue` → `1`
+   - Done when: `grep -c "NodeJS" src/components/performance/SwitchProfiles.vue` → `0`
+   - Done when: `grep -c "processBatches(keyIds" src/components/performance/SingleKeyTravel.vue` → `1`
+   - Edits:
+     1. `GlobalTravel.vue` — 3 un-narrowed `getPerformanceMode` call sites (lines ~126, ~177, ~337), all the shape `const mode = await KeyboardService.getPerformanceMode(keyId); if (mode.touchMode === 'global') {` → `if (!(mode instanceof Error) && mode.touchMode === 'global') {` (clears TS2339 ×3). At line ~177 the sibling `getDpDr` result IS already narrowed — only `mode` is not; don't touch the `dpdr` check. Also line ~174 `const globalModeKeys = [];` → `const globalModeKeys: number[] = [];` (clears TS7034 at 174 + TS7005 at 182 where it is read).
+     2. `SwitchProfiles.vue` — browser code using Node types: lines 123, 124, 134 `let captureInterval / countdownInterval / keyTestInterval: NodeJS.Timeout | null = null;` → `ReturnType<typeof setTimeout> | null` (TS2503 ×3). That also clears TS2322(270,32), which assigns a `ReturnType<typeof setTimeout>` into the `NodeJS.Timeout` variable.
+     3. `SingleKeyTravel.vue:164` — `processBatches(keys, ...)` where `keys = props.selectedKeys.map(key => ({ physicalKeyValue: key.physicalKeyValue || key.keyValue }))` lacks the required `keyValue` field → TS2345. `processBatches` (useBatchProcessing.ts:3) accepts `{physicalKeyValue; keyValue}[] | number[]` and maps `physicalKeyValue` itself, so pass the already-computed `const keyIds = keys.map(k => k.physicalKeyValue)` (line 162): `processBatches(keyIds, ...)`. Same batch size/order → no behavior change. Do NOT reimplement the loop (CLAUDE.md batch rule).
+
+   **2f — Calibration + KeyMapping (clears 11 → 0).** Files: `src/pages/Calibration.vue`, `src/pages/KeyMapping.vue`
+   - Done when: `npm run typecheck 2>&1 | grep -c "error TS"` → `0` AND `head -1 docs/tsc-baseline.txt` → `0`
+   - Done when: `grep -c 'v-if="calibrating && keyInfo.location"' src/pages/Calibration.vue` → `1`
+   - Done when: `grep -c "layout.value?.flat()" src/pages/KeyMapping.vue` → `0` and `grep -c "Number(keyValue)" src/pages/KeyMapping.vue` → `2`
+   - Edits:
+     1. `Calibration.vue` line 33-42 span: `v-if="calibrating"` → `v-if="calibrating && keyInfo.location"` — ONE edit clears all 6 TS18048 at lines 37, 38, 41 (three `keyInfo.location.row/.col` uses in the `:class` red/green tests plus the interpolation); `IDefKeyInfo.location` is optional.
+     2. `Calibration.vue:82` `let pollInterval: NodeJS.Timeout | null = null;` → `ReturnType<typeof setTimeout> | null` (TS2503).
+     3. `KeyMapping.vue:25` `{{ selectedKeys.length === (layout.value?.flat().length || 0) ? 'Select All' : 'Deselect All' }}` → drop `.value` (`layout?.flat().length || 0`). Template auto-unwrap again: `layout` is `IDefKeyInfo[][]`, `.value` doesn't exist (TS2551) so the Select-All label comparison is always against `undefined`.
+     4. `KeyMapping.vue:59` `:class="{ 'key-selected': selectedKeyValue === keyValue }"` → `selectedKeyValue === Number(keyValue)`, and `:62` `@click="selectKeyValue(keyValue)"` → `selectKeyValue(Number(keyValue))`. In `v-for="(label, keyValue) in filteredKeyMap"` the key is typed `` `${number}` `` (string-like) while `selectedKeyValue` is `number | null` (ref at line 88) and `selectKeyValue(keyValue: number)` (line 144) — so the strict `===` can never be true (TS2367: the selected-key highlight never renders) and the click passes a string to a number param (TS2345 at 62).
+     5. `KeyMapping.vue:166-177` `applyBulkRemap` builds `{ key: targetKey.keyValue, layout: selectedLayer.value, value: selectedKeyValue.value }` but `batchSetKey` wants `value: number` and `selectedKeyValue` is `number | null` → TS2345(177,29). Add an early-return guard `if (selectedKeyValue.value === null) return;` BEFORE the `.map` so narrowing flows into the literal (no `!`).
+   - On finish (2f): parent Task 2 → IN-REVIEW, write `docs/plans/reviews/review-vue-tsc-zero.md` (sprint goal + Task 2's Done-whens incl. every sub-task's + cumulative Base/Head hashes for 2a..2f), advance ▶ RUN THIS to Task 3.
+
+3. **PO device smoke check of the behavior-visible fixes** — [hw] — STATUS: PENDING
+   - No code in this task. Most Task-2 fixes are type-level, but four change what the user sees/does; the PO confirms them on a real device.
+   - Flow: the Worker writes the Hardware check section into `docs/plans/reviews/review-vue-tsc-hw.md` (plain language: what changed, what to look for) and sets STATUS → HW-TEST — there is no diff for a Reviewer to judge, so no review window. The PO exercises it and states the verdict in plain words; an agent does ALL the file mechanics per CLAUDE.md's Hardware gate (PASS → "Hardware verdict: PASS — <date>", task → DONE collapsed to ✓, advance ▶ RUN THIS, commit; FAIL → symptom once in an F1 block, task → IN-PROGRESS, "fix ONLY this" in ▶ RUN THIS, commit).
+   - What to check: (a) Connect page — while a connect is in flight the button is disabled and reads "Connecting..." (new `isConnecting` store field; previously always undefined → never showed); (b) KeyMapping — clicking a virtual key in the category list highlights it as selected (`Number(keyValue)` fix; previously never highlighted) and Select All/Deselect All reflects the real key count; (c) Calibration — the per-key travel overlay still renders its red/green numbers during calibration (new `keyInfo.location` guard must not hide it for normal keys); (d) Rapid Trigger / Performance single-key travel — applying travel to a selected key still reaches the intended keys (`processBatches(keyIds)` change).
+   - Done when: the PO's verdict is recorded on disk in `review-vue-tsc-hw.md` and STATUS is DONE (✓) or IN-PROGRESS (✗).
+
+## Findings (raw — PM routes at close)
+- [code] `getRm6X21Travel` wrapper annotation is wrong the same way `getRm6X21Calibration` was: `src/services/KeyboardService.ts:982` declares `travels: number[]` but docs/sdk-reference-v2.md (line 626, §4 row = Verified) says the SDK returns `{status: number[][]; travels: number[][]}`. Latent only because today's consumers (`SwitchProfiles.vue:190,302`) never index `travels` as rows — it produced NO vue-tsc error, so the new gate does not catch it. Verify: `grep -n "async getRm6X21Travel" src/services/KeyboardService.ts` vs the sdk-ref §4 `getRm6X21Travel` Returns row. (PM-open, 2026-10-22.)
+- [deps] vue-tsc 3.x is incompatible with TypeScript 7 — `npx vue-tsc` resolving TS 7.0.2 dies with `ERR_PACKAGE_PATH_NOT_EXPORTED './lib/tsc'` before checking anything, i.e. a silent-looking gate failure. Verify: `npm view vue-tsc@3.3.13 peerDependencies` (`typescript >=5.0.0`) and `grep '"typescript"' package.json` (must stay 5.x). (PM-open, 2026-10-22.)
+
+<!-- Keep this file under ~150 lines. It is a SNAPSHOT, not a log. Overwrite, don't append. -->

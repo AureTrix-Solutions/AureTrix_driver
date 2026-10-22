@@ -13,12 +13,12 @@ rev1 (2026-10-22): PO reviewed the plan and accepted all PM calls (vue-tsc ^3.3.
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: Task 1 — Install vue-tsc, flip the typecheck script, retire the `*.vue` shim, re-base the baseline. Do this task, then stop.
+Next: Task 1 is IN-REVIEW — Reviewer: "follow docs/plans/reviews/review-vue-tsc-gate.md". On PASS → DONE, then Worker: Task 2a (shared root fixes; expected 101 → 58).
 
 ## Tasks
 
-1. **Install vue-tsc + make it the typecheck gate** — [high-stakes] — STATUS: IN-PROGRESS
-   - Checkpoint (Worker, Task 1): pre-state verified — package.json:11 `"typecheck": "tsc --noEmit",`, typescript ^5.9.2, `src/types/vue-shim.d.ts` exists, `_to_delete/` empty, baseline first line `0`. Executing spec edits 1–5.
+1. **Install vue-tsc + make it the typecheck gate** — [high-stakes] — STATUS: IN-REVIEW
+   - Checkpoint (Worker, done): vue-tsc@3.3.13 + TS 5.9.3 installed; typecheck flipped; shim → `_to_delete/`; N=**101** across 14 files = exact dryrun match (no Task-2 delta); spec-edit-5 count (main.ts/router .ts-side unmask) = **0**; lint/build exit 0; committed base `8c79c16` → head `65b0b3e`; review file `docs/plans/reviews/review-vue-tsc-gate.md`. Cleanup (actual ls): `.scratch/` = handoff.md, pm-notes.md, vue-tsc-dryrun.txt, vue-tsc-files.txt, vue-tsc-run.txt (PO may delete); `_to_delete/` = vue-shim.d.ts (PO must `git rm`).
    - Done when: `ls node_modules/.bin | grep -c vue-tsc` → `1`
    - Done when: `grep -n '"typecheck"' package.json` → `"typecheck": "vue-tsc --noEmit",`
    - Done when: `ls src/types/vue-shim.d.ts` → No such file; `ls _to_delete/vue-shim.d.ts` → exists

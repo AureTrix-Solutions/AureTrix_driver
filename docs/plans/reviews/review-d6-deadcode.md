@@ -19,7 +19,7 @@
 - typecheck/build: `npm run typecheck` exit 0 (0 errors, baseline 0 — unchanged). `npm run lint` exit 0, zero warnings (confirms no orphaned imports/vars). Build not run — source-only deletion/relocation, no dependency or asset change (matches the gate's "ONLY when the change could affect the build").
 
 ## 🔍 Commits to review
-Base: `fdfb693` (branch head before this task)   Head: <this commit — see git log; single commit `sprint-12-exportservice-review: Task 5 ...`>
+Base: `fdfb693` (branch head before this task)   Head: `67fbf53` (this task's commit)
 <!-- Reviewer runs this itself:
        git diff --stat fdfb693..<head>     then      git diff fdfb693..<head>
      A file touched outside this task's scope is a flag. Expected: src/services/ExportService.ts ONLY (+ docs/plans/* planning files). -->

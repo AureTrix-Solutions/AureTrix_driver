@@ -17,7 +17,8 @@ Next: Task 1 — Install vue-tsc, flip the typecheck script, retire the `*.vue` 
 
 ## Tasks
 
-1. **Install vue-tsc + make it the typecheck gate** — [high-stakes] — STATUS: PENDING
+1. **Install vue-tsc + make it the typecheck gate** — [high-stakes] — STATUS: IN-PROGRESS
+   - Checkpoint (Worker, Task 1): pre-state verified — package.json:11 `"typecheck": "tsc --noEmit",`, typescript ^5.9.2, `src/types/vue-shim.d.ts` exists, `_to_delete/` empty, baseline first line `0`. Executing spec edits 1–5.
    - Done when: `ls node_modules/.bin | grep -c vue-tsc` → `1`
    - Done when: `grep -n '"typecheck"' package.json` → `"typecheck": "vue-tsc --noEmit",`
    - Done when: `ls src/types/vue-shim.d.ts` → No such file; `ls _to_delete/vue-shim.d.ts` → exists

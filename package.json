@@ -8,7 +8,7 @@
     "build": "vite build",
     "test": "vitest",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "vue-tsc --noEmit",
     "lint": "eslint ."
   },
   "keywords": [],
@@ -35,6 +35,7 @@
     "typescript-eslint": "^8.71.1",
     "vite": "^7.1.6",
     "vitest": "^5.0.3",
-    "vue-eslint-parser": "^10.4.1"
+    "vue-eslint-parser": "^10.4.1",
+    "vue-tsc": "^3.3.13"
   }
 }

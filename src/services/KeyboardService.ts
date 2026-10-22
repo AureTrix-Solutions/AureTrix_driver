@@ -1573,11 +1573,17 @@ class KeyboardService {
     }
   }
 
-  exportConfig(data: KeyboardConfig, filename: string): void {
-    if (!this.connectedDevice) {
-      throw new Error('No device connected');
+  async exportConfig(data: KeyboardConfig, filename: string): Promise<void | Error> {
+    try {
+      if (!this.connectedDevice) {
+        return new Error('No device connected');
+      }
+      const result: unknown = await this.ensureKeyboard().exportConfig(data, filename);
+      if (result instanceof Error) return result;
+    } catch (error) {
+      console.error('Failed to export config:', error);
+      return error as Error;
     }
-    this.ensureKeyboard().exportConfig(data, filename);
   }
 
   async importConfig(file: File): Promise<ImportResult | Error> {

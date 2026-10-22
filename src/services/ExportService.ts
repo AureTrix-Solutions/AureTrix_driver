@@ -538,7 +538,10 @@ class ExportService {
   async exportProfile(filename: string): Promise<{ success: boolean; error?: string }> {
     try {
       const config = await this.gatherKeyboardSnapshot();
-      KeyboardService.exportConfig(config, filename);
+      const exportResult = await KeyboardService.exportConfig(config, filename);
+      if (exportResult instanceof Error) {
+        return { success: false, error: exportResult.message };
+      }
       return { success: true };
     } catch (error) {
       console.error('Failed to export profile:', error);

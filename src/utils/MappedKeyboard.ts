@@ -1,4 +1,5 @@
 import { ref, computed, Ref, watch } from 'vue';
+import type { CSSProperties } from 'vue';
 import KeyboardService from '@services/KeyboardService';
 import { getLayoutConfig } from '@utils/layoutConfigs';
 import type { IDefKeyInfo } from '../types/types';
@@ -19,7 +20,7 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
   const error = ref<string | null>(null);
   const hasFetchedOnce = ref(false);
 
-  const gridStyle = computed(() => {
+  const gridStyle = computed<CSSProperties>(() => {
     if (!baseLayout.value) {
       return {};
     }
@@ -39,7 +40,7 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
     };
   });
 
-  const getKeyStyle = (rowIdx: number, colIdx: number) => {
+  const getKeyStyle = (rowIdx: number, colIdx: number): CSSProperties & { 'data-overlay'?: string } => {
     if (!baseLayout.value) {
       return {};
     }

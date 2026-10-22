@@ -951,7 +951,7 @@ class KeyboardService {
     }
   }
 
-  async getRm6X21Calibration(): Promise<{ calibrations: number[]; travels: number[] } | Error> {
+  async getRm6X21Calibration(): Promise<{ calibrations: number[][]; travels: number[][] } | Error> {
     try {
       if (!this.connectedDevice) {
         return new Error('No device connected');

@@ -1,4 +1,4 @@
-export const keyMap = {
+export const keyMap: Record<number, string> = {
   // ── Special ────────────────────────────────────────────
   0: ' ',
   1: 'Fn',

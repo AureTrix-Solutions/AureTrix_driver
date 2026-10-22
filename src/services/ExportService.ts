@@ -847,12 +847,91 @@ class ExportService {
   }
 
   /**
+   * F2-R2: confirm the device is actually in custom mode (21) before any
+   * per-key RGB write. The SDK import's per-key processing is still settling
+   * when the repairs start and silently drops writes aimed at it; the
+   * pre-import custom switch is not proof either (repairSpecialLighting's
+   * cmdSRGB shares the main zone constant, so the mode here is whatever that
+   * left behind). A setLighting aimed at a busy device can itself be silently
+   * dropped — only the getLighting READBACK proves the mode took. Probe, and
+   * on any non-custom readback re-command custom/21 and re-probe with growing
+   * backoff (waits out the busy window). Best-effort: on exhaustion, log and
+   * let the caller proceed — the per-key read-back verify still catches and
+   * retries the writes.
+   */
+  private async ensureCustomModeReady(maxAttempts = 5, settleMs = 400): Promise<boolean> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const state = await KeyboardService.getLighting();
+      if (!(state instanceof Error) && state.mode === 21) return true;
+      if (attempt === maxAttempts) break;
+      // Mode not confirmed: (re-)command custom/21 (pre-import-switch pattern)
+      // — the switch itself may be silently dropped while the device settles,
+      // so the next loop's readback is the only arbiter.
+      if (!(state instanceof Error)) {
+        const { open, dynamicColorId, ...filteredParams } = state;
+        filteredParams.mode = 21;
+        filteredParams.type = 'custom';
+        const switchResult = await KeyboardService.setLighting(filteredParams);
+        if (switchResult instanceof Error) {
+          console.error('Failed to switch to custom mode for RGB repair:', switchResult.message);
+        }
+      }
+      await new Promise(resolve => setTimeout(resolve, settleMs * attempt));
+    }
+    console.error('Custom mode not confirmed after import settle window; RGB writes proceed best-effort');
+    return false;
+  }
+
+  /**
+   * F2-R2: write one key's RGB, then PROVE it landed via readback. Hardware
+   * re-check confirmed silent drops: all 88 setCustomLighting calls resolved
+   * non-Error while the first rows' writes were lost (variable boundary, loss
+   * always at the sequence start). retry-on-Error cannot detect that, so:
+   * setCustomLighting → getCustomLighting(key) → compare (readback shape is
+   * uppercase {R,G,B}, per gatherLightingData). Mismatch or readback Error ⇒
+   * rewrite with growing delay; attempts exhausted ⇒ grep-able console.error.
+   * Never throws (best-effort repair contract).
+   */
+  private async writeVerifiedCustomRgb(
+    key: number,
+    rgb: { r: number; g: number; b: number },
+    maxAttempts = 3,
+    delayMs = 200
+  ): Promise<void> {
+    let actual = 'unverified';
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const result = await KeyboardService.setCustomLighting({ key, r: rgb.r, g: rgb.g, b: rgb.b });
+      if (result instanceof Error) {
+        console.error(`Failed to restore custom RGB for key ${key}:`, result.message);
+      }
+      const readback = await KeyboardService.getCustomLighting(key);
+      if (!(readback instanceof Error)
+        && readback.R === rgb.r && readback.G === rgb.g && readback.B === rgb.b) {
+        return;
+      }
+      actual = readback instanceof Error
+        ? `readback error: ${readback.message}`
+        : `read back ${readback.R}:${readback.G}:${readback.B}`;
+      if (attempt < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, delayMs * attempt));
+      }
+    }
+    console.error(
+      `Custom RGB verify failed for key ${key}: expected ${rgb.r}:${rgb.g}:${rgb.b}, ${actual}`
+    );
+  }
+
+  /**
    * F-D7-3: SDK import zeroes the per-key custom RGB buffer (setKeyboards
    * writes it, then setLighting(main) clears it). Re-write each key's stored
    * color via setCustomLighting before applyImportedConfig commits.
    * Export stores UPPERCASE {R,G,B,key}; the wrapper takes lowercase {key,r,g,b}.
    * ALL entries are written, including 0:0:0, so intentionally-black keys are
    * restored too. Best-effort: errors are logged per key, never thrown.
+   * F2-R2: writes are closed-loop — a mode-settle guard runs first, and every
+   * key is read-back verified and rewritten on mismatch (the device drops
+   * writes silently at the start of the sequence while post-import processing
+   * settles).
    */
   private async repairCustomRgb(config: KeyboardConfig): Promise<void> {
     const rgbMap = new Map<number, { r: number; g: number; b: number }>();
@@ -863,12 +942,9 @@ class ExportService {
       rgbMap.set(key, { r: custom.R, g: custom.G, b: custom.B });
     }
     if (rgbMap.size === 0) return;
+    await this.ensureCustomModeReady();
     await this.processBatches([...rgbMap.keys()], async (key) => {
-      const rgb = rgbMap.get(key)!;
-      const result = await KeyboardService.setCustomLighting({ key, r: rgb.r, g: rgb.g, b: rgb.b });
-      if (result instanceof Error) {
-        console.error(`Failed to restore custom RGB for key ${key}:`, result.message);
-      }
+      await this.writeVerifiedCustomRgb(key, rgbMap.get(key)!);
       // F2-2: batchSize 1, delay 0 = strictly sequential single-flight writes.
       // The hardware check lost exactly the first 32 of batch 1's 80 concurrent
       // Promise.all writes (device drops under burst); one report in flight at a

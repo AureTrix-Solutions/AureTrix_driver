@@ -161,7 +161,7 @@ export default defineComponent({
       }));
       const keyIds = keys.map(k => k.physicalKeyValue);
       try {
-        await processBatches(keys, async (physicalKeyValue) => {
+        await processBatches(keyIds, async (physicalKeyValue) => {
           await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);
           if (travelChanged) {
             await KeyboardService.setSingleTravel(physicalKeyValue, singleKeyTravel.value);

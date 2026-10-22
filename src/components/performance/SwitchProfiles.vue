@@ -120,8 +120,8 @@ export default defineComponent({
     const isCapturing = ref(false);
     const capturedTravel = ref(0);
     const countdown = ref(5);
-    let captureInterval: NodeJS.Timeout | null = null;
-    let countdownInterval: NodeJS.Timeout | null = null;
+    let captureInterval: ReturnType<typeof setTimeout> | null = null;
+    let countdownInterval: ReturnType<typeof setTimeout> | null = null;
     let maxObservedTravel = 0;
 
     // Key Test Refs
@@ -131,7 +131,7 @@ export default defineComponent({
     const travelValue = ref('0.00');
     const triggerValue = ref('0.00');
     const triggered = ref(false);
-    let keyTestInterval: NodeJS.Timeout | null = null;
+    let keyTestInterval: ReturnType<typeof setTimeout> | null = null;
     const keydownListener = ref<((event: KeyboardEvent) => void) | null>(null);
     const pendingTriggerCapture = ref(false);
     const triggerCaptured = ref(false);
@@ -267,7 +267,7 @@ export default defineComponent({
       try {
         const originalResult = await KeyboardService.getLayoutKeyInfo([{ key: physicalKey, layout: 0 }]);
         if (originalResult instanceof Error) throw originalResult;
-        originalKeyMapping.value = originalResult[0].value;
+        originalKeyMapping.value = originalResult[0].value ?? null;
         await KeyboardService.setKey([{ key: physicalKey, value: 4, layout: 0 }]);
       } catch (error) {
         keyTestEnabled.value = false;

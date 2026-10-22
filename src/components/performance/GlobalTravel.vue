@@ -123,7 +123,7 @@ export default defineComponent({
         for (const keyId of keyIds) {
           try {
             const mode = await KeyboardService.getPerformanceMode(keyId);
-            if (mode.touchMode === 'global') {
+            if (!(mode instanceof Error) && mode.touchMode === 'global') {
               const dpdr = await KeyboardService.getDpDr(keyId);
               if (!(dpdr instanceof Error) &&
                   typeof dpdr.pressDead === 'number' && !isNaN(dpdr.pressDead) &&
@@ -171,10 +171,10 @@ export default defineComponent({
     const updateGlobalDeadZones = async () => {
       try {
         const keyIds = props.layout.flat().map(keyInfo => keyInfo.physicalKeyValue || keyInfo.keyValue);
-        const globalModeKeys = [];
+        const globalModeKeys: number[] = [];
         await processBatches(keyIds, async (keyId) => {
           const mode = await KeyboardService.getPerformanceMode(keyId);
-          if (mode.touchMode === 'global') {
+          if (!(mode instanceof Error) && mode.touchMode === 'global') {
             globalModeKeys.push(keyId);
           }
         });
@@ -334,7 +334,7 @@ export default defineComponent({
         for (const keyId of keyIds) {
           try {
             const mode = await KeyboardService.getPerformanceMode(keyId);
-            if (mode.touchMode === 'global') {
+            if (!(mode instanceof Error) && mode.touchMode === 'global') {
               const dpdr = await KeyboardService.getDpDr(keyId);
               if (!(dpdr instanceof Error) && 
                   typeof dpdr.pressDead === 'number' && !isNaN(dpdr.pressDead) &&

@@ -112,6 +112,7 @@ import LayoutStorageService, { type CustomLayoutConfig } from '@/services/Layout
 import KeyboardService from '@/services/KeyboardService';
 import { uToMm, KEY_SIZES, mmToPx } from '@/utils/keyUnits';
 import { sharedLayoutMap } from '@/utils/sharedLayout';
+import type { IDefKeyInfo } from '@/types/types';
 import { refreshCustomLayouts, getPaddedKeySizes } from '@/utils/layoutConfigs';
 
 interface VirtualKey {
@@ -188,10 +189,11 @@ export default defineComponent({
           // Retry logic to handle delayed SDK responses
           const maxRetries = 5;
           let attempt = 0;
-          let baseLayout = null;
+          let baseLayout: IDefKeyInfo[][] | null = null;
           
           while (attempt < maxRetries && !baseLayout && !hasLoadedHardwareLayout.value) {
-            baseLayout = await KeyboardService.defKey();
+            const result = await KeyboardService.defKey();
+            baseLayout = result instanceof Error ? null : result;
             if (baseLayout && baseLayout.length > 0) {
               break; // Got valid layout
             }

@@ -796,7 +796,7 @@ export default defineComponent({
           return;
         }
 
-        lightingEnabled.value = currentState.open === true || currentState.open === 1;
+        lightingEnabled.value = currentState.open === true;
         masterLuminance.value = currentState.luminance ?? 4;
         masterSpeed.value = currentState.speed ?? 3;
         masterSleepDelay.value = currentState.sleepDelay ?? 0;

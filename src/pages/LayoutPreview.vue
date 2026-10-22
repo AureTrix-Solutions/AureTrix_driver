@@ -27,7 +27,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
+import { defineComponent, ref, computed, onMounted, type CSSProperties } from 'vue';
 import { getLayoutConfig, refreshCustomLayouts } from '@utils/layoutConfigs';
 import LayoutStorageService, { type CustomLayoutConfig } from '@/services/LayoutStorageService';
 
@@ -42,10 +42,10 @@ export default defineComponent({
     const layoutData = ref<ReturnType<typeof getLayoutConfig>>({ rows: 0, cols: 0, keyPositions: [], gaps: [] });
 
     // Grid computation
-    const gridStyle = computed(() => {
+    const gridStyle = computed<CSSProperties>(() => {
       const { keyPositions, gaps } = layoutData.value;
       if (!keyPositions || keyPositions.length === 0) {
-        return { height: '0px', width: '0px' };
+        return { height: '0px', width: '0px' } as CSSProperties;
       }
       const containerHeight = keyPositions.reduce((max: number, row: number[][], i: number) => max + Math.max(...row.map((pos: number[]) => pos[1] + pos[3])) + (gaps[i] || 0), 0);
       const maxRowWidth = Math.max(...keyPositions.map((row: number[][]) => row.reduce((sum: number, pos: number[]) => sum + pos[2], 0)));
@@ -57,11 +57,11 @@ export default defineComponent({
       };
     });
 
-    const getKeyStyle = (rowIdx: number, colIdx: number) => {
+    const getKeyStyle = (rowIdx: number, colIdx: number): CSSProperties => {
       const { keyPositions, gaps } = layoutData.value;
       const rowLength = keyPositions[rowIdx]?.length || 0;
       if (!keyPositions || !keyPositions[rowIdx] || !Array.isArray(keyPositions[rowIdx]) || colIdx >= rowLength) {
-        return { width: '0px', height: '0px', left: '0px', top: '0px' };
+        return { width: '0px', height: '0px', left: '0px', top: '0px' } as CSSProperties;
       }
       const [left, top, width, height] = keyPositions[rowIdx][colIdx];
       const topGapPx = gaps[rowIdx] || 0;

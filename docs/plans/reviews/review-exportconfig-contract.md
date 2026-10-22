@@ -33,17 +33,33 @@ Fix-round ranges (added on each re-review): —
 N/A — task is NOT tagged [hw]. No hardware behavior changes: success path calls the same SDK exportConfig with the same args; only the failure path (no device / SDK throw) changes from throw to returned Error. PO sign-off note: export-on-connected-device behavior is byte-identical.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — typecheck 0; build N/A (service-layer plumbing, no import/config/build-pipeline impact)
+- [x] tag is correct (high-stakes where required) — touches KeyboardService, always high-stakes per CLAUDE.md
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** —  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-10-22  ·  **Fail count:** 0
+
+All four DONE WHEN criteria re-run independently at head `35dda4f` (verified against the real file, not the Worker's notes):
+
+1. `grep -n "throw new Error" src/services/KeyboardService.ts` → 9 hits (:185, :189, :211, :299, :349, :355, :1330, :1452, :1456). **None inside exportConfig** (:1576–1586). :349 is a different method (connect-path), pre-existing, correctly out of scope.
+2. `grep -c "await KeyboardService.exportConfig" src/services/ExportService.ts` → **1** (≥ 1 ✓), at :541.
+3. `npm run typecheck` → **exit 0**, zero output.
+4. `npm run lint` → **exit 0**, zero warnings.
+
+**Diff scope** (`git diff --stat 39d0520..35dda4f`): exactly the 4 expected files — KeyboardService.ts (14 lines, exportConfig only), ExportService.ts (5 lines, exportProfile only), current-sprint.md (7), this review file (49). **No stray files.**
+
+**Rule 7 / design intent:** exportConfig no longer throws — it returns `Error` on both failure paths (no-device guard `return new Error('No device connected')`; SDK throw → caught, logged, `return error as Error`). The SDK call is awaited inside try/catch, matching the canonical wrapper shape (`return error as Error` occurs 20+ times in KS at :508–:767+). `ensureKeyboard()` still used; no filter or usagePage change; `filters:[]` and `usagePage 65440` untouched.
+
+**Sole call site confirmed:** `grep -rn "exportConfig" src/` → exactly 3 hits (KS def :1576, KS→SDK call :1581, ES await :541). No unawaited caller anywhere — the async signature change is fully consumed. ES.exportProfile maps `instanceof Error` → `{ success: false, error: exportResult.message }`; outer try/catch untouched (still covers gatherKeyboardSnapshot).
+
+**Defensive `unknown` cast** (`const result: unknown = await this.ensureKeyboard().exportConfig(...)` then `if (result instanceof Error)`) is justified: the SDK d.ts types exportConfig as `(data: any, filename?: string) => void`, so capturing via `unknown` keeps the runtime instanceof check type-safe without `as any`. Not a defect.
 
 ### Failed items (FAIL only)
+None.

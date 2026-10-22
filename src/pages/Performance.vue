@@ -32,7 +32,7 @@
       </div>
       <div v-else class="no-layout">
         <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
-        <p>Debug: layout.length={{ layout.length }}, loaded={{ loaded }}, baseLayout={{ baseLayout?.value ? 'defined' : 'null' }}</p>
+        <p>Debug: layout.length={{ layout.length }}, loaded={{ loaded }}, baseLayout={{ baseLayout ? 'defined' : 'null' }}</p>
       </div>
       <div class="bottom-section">
         <div class="selection-buttons">
@@ -67,6 +67,7 @@ import { keyMap } from '@utils/keyMap';
 import KeyboardService from '@services/KeyboardService';
 import { useBatchProcessing } from '@/composables/useBatchProcessing'; // New import for batch fetching
 import type { IDefKeyInfo } from '../types/types';
+import type { IKey } from '@sparklinkplayjoy/protocol-keyboard';
 import KeyTravel from '../components/performance/KeyTravel.vue';
 
 export default defineComponent({
@@ -114,7 +115,7 @@ export default defineComponent({
           batches.push(keyIds.slice(i, i + BATCH_SIZE));
         }
 
-        const positionToRemap = {};
+        const positionToRemap: Record<number, number> = {};
         for (const batch of batches) {
           const currentLayer = await Promise.all(
             batch.map(async (keyId) => {
@@ -128,9 +129,9 @@ export default defineComponent({
           );
           currentLayer
             .flat()
-            .filter((item): item is { key: number; value: number } => item !== null)
+            .filter((item): item is IKey => item !== null && !(item instanceof Error))
             .forEach(item => {
-              if (item.key && item.value !== 0) {
+              if (item.key && item.value !== undefined && item.value !== 0) {
                 positionToRemap[item.key] = item.value;
               }
             });
@@ -324,7 +325,12 @@ export default defineComponent({
         await processBatches(keyIds, async (keyId) => {
           try {
             const mode = await KeyboardService.getPerformanceMode(keyId);
-            newKeyModeMap[keyId] = mode.touchMode as 'global' | 'single';
+            if (mode instanceof Error) {
+              // Default to global if fetch fails
+              newKeyModeMap[keyId] = 'global';
+            } else {
+              newKeyModeMap[keyId] = mode.touchMode as 'global' | 'single';
+            }
           } catch {
             // Default to global if fetch fails
             newKeyModeMap[keyId] = 'global';

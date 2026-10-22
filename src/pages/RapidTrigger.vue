@@ -34,7 +34,7 @@
       </div>
       <div v-else class="no-layout">
         <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
-        <p>Debug: layout.length={{ layout.length }}, loaded={{ loaded }}, baseLayout={{ baseLayout?.value ? 'defined' : 'null' }}</p>
+        <p>Debug: layout.length={{ layout.length }}, loaded={{ loaded }}, baseLayout={{ baseLayout ? 'defined' : 'null' }}</p>
       </div>
       <div class="bottom-section">
         <div class="selection-buttons">
@@ -235,6 +235,7 @@ import { keyMap } from '@utils/keyMap';
 import KeyboardService from '@services/KeyboardService';
 import { useBatchProcessing } from '@/composables/useBatchProcessing';
 import type { IDefKeyInfo } from '../types/types';
+import type { IKey } from '@sparklinkplayjoy/protocol-keyboard';
 
 export default defineComponent({
   name: 'RapidTrigger',
@@ -309,9 +310,9 @@ export default defineComponent({
           );
           currentLayer
             .flat()
-            .filter((item): item is { key: number; value: number } => item !== null)
+            .filter((item): item is IKey => item !== null && !(item instanceof Error))
             .forEach(item => {
-              if (item.key && item.value !== 0) {
+              if (item.key && item.value !== undefined && item.value !== 0) {
                 positionToRemap[item.key] = item.value;
               }
             });
@@ -695,10 +696,8 @@ export default defineComponent({
               return;
             }
 
-            let initialActuationValue = 0.00;
-            if (!(initialActuationResult instanceof Error)) {
-              initialActuationValue = Number(initialActuationResult);
-            }
+            // Early return at the combined check above guarantees these are not Error.
+            let initialActuationValue = Number(initialActuationResult);
 
             let pressValue = 0.00;
             let releaseValue = 0.00;

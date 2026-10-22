@@ -399,100 +399,6 @@ class ExportService {
     }
   }
 
-  private async withCustomModeForExport<T>(callback: () => Promise<T>): Promise<T> {
-    interface LightingSnapshot {
-      main: ILightMode & { dynamicColorId: number };
-      logo: (ILightMode & { dynamicColorId: number }) | null;
-      other: ILightMode | null;
-    }
-
-    let snapshot: LightingSnapshot | null = null;
-    let wasAlreadyCustom = false;
-
-    try {
-      const mainLighting = await KeyboardService.getLighting();
-      const logoLighting = await KeyboardService.getLogoLighting();
-      const otherLighting = await KeyboardService.getSpecialLighting();
-
-      if (mainLighting instanceof Error) {
-        throw new Error('Failed to get current main lighting state');
-      }
-
-      snapshot = {
-        main: mainLighting,
-        logo: logoLighting instanceof Error ? null : logoLighting,
-        other: otherLighting instanceof Error ? null : otherLighting,
-      };
-
-      wasAlreadyCustom = mainLighting.mode === 21 && mainLighting.open === true;
-
-      if (!wasAlreadyCustom) {
-        const { dynamicColorId, ...filteredParams } = mainLighting;
-        filteredParams.mode = 21;
-        filteredParams.type = 'custom';
-        filteredParams.open = true;
-
-        const switchResult = await KeyboardService.setLighting(filteredParams);
-        if (switchResult instanceof Error) {
-          throw new Error(`Failed to switch to custom mode: ${switchResult.message}`);
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 300));
-      }
-
-      const result = await callback();
-      return result;
-
-    } finally {
-      if (snapshot && !wasAlreadyCustom) {
-        try {
-          const mainWasOff = snapshot.main.open === false;
-          
-          if (mainWasOff) {
-            const { dynamicColorId, ...mainParams } = snapshot.main;
-            mainParams.open = false;
-            const mainResult = await KeyboardService.setLighting(mainParams);
-            if (mainResult instanceof Error) {
-              console.error('Failed to restore main zone OFF:', mainResult.message);
-            }
-          } else {
-            const { dynamicColorId, ...mainParams } = snapshot.main;
-            const mainResult = await KeyboardService.setLighting(mainParams);
-            if (mainResult instanceof Error) {
-              console.error('Failed to restore main lighting:', mainResult.message);
-            }
-          }
-
-          if (snapshot.logo) {
-            const logoWasOn = snapshot.logo.open === true;
-            if (logoWasOn) {
-              const { dynamicColorId, ...logoParams } = snapshot.logo;
-              const logoResult = await KeyboardService.setLogoLighting({
-                ...logoParams,
-                type: logoParams.type === 'dynamic' ? 'dynamic' : 'static',
-              });
-              if (logoResult instanceof Error) {
-                console.error('Failed to restore logo lighting:', logoResult.message);
-              }
-            }
-          }
-
-          if (snapshot.other) {
-            const otherWasOn = snapshot.other.open === true;
-            if (otherWasOn) {
-              const otherResult = await KeyboardService.setSpecialLighting(snapshot.other);
-              if (otherResult instanceof Error) {
-                console.error('Failed to restore special lighting:', otherResult.message);
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error restoring lighting state:', error);
-        }
-      }
-    }
-  }
-
   private async gatherLightingData(keyValue: number, dataMap: Map<number, Partial<Keyboards>>): Promise<void> {
     const keyData = dataMap.get(keyValue);
     if (!keyData) return;
@@ -663,48 +569,6 @@ class ExportService {
     };
 
     return sdkFormat;
-  }
-
-  private async applyLightingZones(config: KeyboardConfig): Promise<void> {
-    const anyZoneOff = 
-      (config.light?.main && !config.light.main.open) ||
-      (config.light?.logo && !config.light.logo.open) ||
-      (config.light?.other && !config.light.other.open);
-
-    if (anyZoneOff) {
-      const closeResult = await KeyboardService.closedLighting();
-      if (closeResult instanceof Error) {
-        console.error('Failed to turn off lighting:', closeResult.message);
-      }
-    }
-
-    if (config.light?.main && config.light.main.open) {
-      const mainLighting = this.convertLightConfigToSDKFormat(config.light.main);
-      const result = await KeyboardService.setLighting(mainLighting);
-      if (result instanceof Error) {
-        console.error('Failed to apply main lighting:', result.message);
-      }
-    }
-
-    if (config.light?.logo && config.light.logo.open) {
-      const logoLighting = this.convertLightConfigToSDKFormat(config.light.logo);
-      const result = await KeyboardService.setLogoLighting({
-        ...logoLighting,
-        open: true,
-        type: logoLighting.type === 'dynamic' ? 'dynamic' : 'static',
-      });
-      if (result instanceof Error) {
-        console.error('Failed to apply logo lighting:', result.message);
-      }
-    }
-
-    if (config.light?.other && config.light.other.open) {
-      const otherLighting = this.convertLightConfigToSDKFormat(config.light.other);
-      const result = await KeyboardService.setSpecialLighting(otherLighting);
-      if (result instanceof Error) {
-        console.error('Failed to apply special lighting:', result.message);
-      }
-    }
   }
 
   /**
@@ -924,7 +788,7 @@ class ExportService {
   /**
    * F-D7-3: SDK import zeroes the per-key custom RGB buffer (setKeyboards
    * writes it, then setLighting(main) clears it). Re-write each key's stored
-   * color via setCustomLighting before applyImportedConfig commits.
+   * color via setCustomLighting before importProfile's saveCustomLighting commit.
    * Export stores UPPERCASE {R,G,B,key}; the wrapper takes lowercase {key,r,g,b}.
    * ALL entries are written, including 0:0:0, so intentionally-black keys are
    * restored too. Best-effort: errors are logged per key, never thrown.
@@ -976,20 +840,6 @@ class ExportService {
     }
   }
 
-  async applyImportedConfig(_config: KeyboardConfig): Promise<void> {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const saveResult = await KeyboardService.saveCustomLighting();
-      if (saveResult instanceof Error) {
-        console.error('Failed to save custom lighting:', saveResult.message);
-      }
-    } catch (error) {
-      console.error('Failed to apply imported configuration:', error);
-      throw error;
-    }
-  }
-
   /**
    * Decrypt an SDK export file into its KeyboardConfig.
    *
@@ -1033,21 +883,25 @@ class ExportService {
       // Snapshot and restore around the import so the local macro library survives.
       const macroSnapshot = localStorage.getItem('MacroList');
 
-      const result = await KeyboardService.importConfig(file);
-      
-      if (result instanceof Error) {
-        return { success: false, error: result.message };
-      }
+      try {
+        const result = await KeyboardService.importConfig(file);
 
-      if (result.success === false) {
-        return { success: false, error: result.error || 'Import failed' };
-      }
+        if (result instanceof Error) {
+          return { success: false, error: result.message };
+        }
 
-      // setMacro ran synchronously inside importConfig — no race; safe to restore now.
-      if (macroSnapshot !== null) {
-        localStorage.setItem('MacroList', macroSnapshot);
-      } else {
-        localStorage.removeItem('MacroList');
+        if (result.success === false) {
+          return { success: false, error: result.error || 'Import failed' };
+        }
+      } finally {
+        // setMacro ran synchronously inside importConfig — no race; safe to restore now.
+        // F-R1: restore in a finally so the local macro library survives EVERY exit
+        // path — the two failure returns above included — not just the success path.
+        if (macroSnapshot !== null) {
+          localStorage.setItem('MacroList', macroSnapshot);
+        } else {
+          localStorage.removeItem('MacroList');
+        }
       }
 
       // Read the encrypted SDK export and decrypt it to the real KeyboardConfig.
@@ -1063,7 +917,12 @@ class ExportService {
         await this.repairEndDelay(config);
         await this.repairCustomRgb(config);
         // Wait for SDK import to complete, then save custom RGB to flash
-        await this.applyImportedConfig(config);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const saveResult = await KeyboardService.saveCustomLighting();
+        if (saveResult instanceof Error) {
+          console.error('Failed to save custom lighting:', saveResult.message);
+        }
         // F2-1: restore the exported main lighting mode LAST — see repairMainLighting.
         await this.repairMainLighting(config);
       }

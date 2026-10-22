@@ -32,15 +32,30 @@ Not tagged [hw] in the task list — Task 5 is a pure dead-code deletion + mecha
 - (n/a unless the Reviewer requests the sanity pass above)
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** —  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-10-21  ·  **Fail count:** 0
+
+Reviewed fdfb693..67fbf53 (full ExportService.ts diff read; handoff e12bed6 confirmed docs-only). All five DONE-WHEN criteria re-run at head and PASS: (1) grep for the three symbols → nothing (exit 1); (2) `finally` count = 3; (3) `convertLightConfigToSDKFormat` count = 3; (4) `saveCustomLighting` count = 2; (5) typecheck exit 0, lint exit 0 (no orphaned imports/vars — confirms clean deletion). File is 960 lines as claimed.
+
+**Deletions provably dead:** `git grep` at base fdfb693 shows `withCustomModeForExport` and `applyLightingZones` matched only their own definitions — zero call sites. `applyImportedConfig` had exactly one call site (inside `importProfile`) — the collapse target.
+
+**Collapse is behavior-preserving:** the inlined block (1s sleep → `saveCustomLighting` → `instanceof Error` → console.error) is the deleted method's body verbatim minus its try/catch. The removed catch only logged and **re-threw**; any throw from `saveCustomLighting` now lands in `importProfile`'s outer catch (confirmed at head :931–934) which logs and returns `{success:false}` — identical net outcome. The dropped `_config` param was underscore-prefixed/unused and `saveCustomLighting()` takes no args. `convertLightConfigToSDKFormat` correctly kept (still live); its `closedLighting`/`setSpecialLighting` call sites died with the dead `applyLightingZones` — the live special-zone path (`repairSpecialLighting`) is untouched. Repair call order verified unchanged in context (…repairEndDelay → repairCustomRgb → inlined sleep+save → repairMainLighting LAST).
+
+**F-R1 hardening correct:** MacroList restore moved into a `finally` wrapping `importConfig` + both failure-return checks, so it now runs on every exit path (intended); `return` inside `try` triggers `finally`. Success path is byte-identical. Marked with the `F-R1:` comment as specified.
+
+**Design intent preserved:** diff touches ExportService.ts only (KeyboardService.ts untouched → filters:[] / usagePage 65440 intact); wrappers-return-Error honored (inlined save-check uses `instanceof Error` → console.error, never throws; failures surface as `{success:false}`).
+
+**Tag/hw:** [high-stakes] correct. No [hw] tag; agree no hardware sanity pass is required — this is pure dead-code deletion plus a behavior-preserving collapse on a path already hardware-verified in group D7 (PASS 2026-10-21); F-R1 only changes failure-path restore timing, which the spec ruled needs no hw test. Not writing HW-TEST; task → DONE.
 
 ### Failed items (FAIL only)
-(none yet)
+(none)
+
+### Findings (non-defect observations → routed to current-sprint.md `## Findings`)
+(none — no out-of-scope observations raised this pass)

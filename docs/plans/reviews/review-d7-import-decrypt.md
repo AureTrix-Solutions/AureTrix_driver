@@ -55,9 +55,9 @@ Fix-round ranges (added on each re-review): F1-fix `8277f8e..ab3cdcd` · 4d `ab3
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** **FAIL (hardware) — 2026-10-21 → see F2-R2** (PO F2 re-check: F2-1 mode restore ✓ CLOSED; F2-2 RGB writes fail variably at the start of the sequence — race-condition symptom; group D7 → IN-PROGRESS, fix ONLY F2-R2). Code review of `155726c` (§F2-FIX RE-REVIEW VERDICT, PASS pending hw) is NOT reopened — device-behaviour failure.  ·  **Date:** 2026-10-21  ·  **Open fail count:** 1 (F2-R2). Previous verdicts kept for history: **PASS (pending hw)** 2026-10-21 F2-fix code re-review · **FAIL (hardware)** 2026-10-21 → §F2 (F2-1 half fixed ✓; F2-2 symptom changed) · **FAIL (hardware)** 2026-10-17 → §F1 (fixed `ab3cdcd`, re-verified on device ✓ 2026-10-21). Code review (2026-10-20, §RE-REVIEW VERDICT) never reopened.
+**Result:** **PASS (pending hw) — 2026-10-21, §F2-R2-FIX RE-REVIEW VERDICT** (F2-R2 fix `1ca81f0` re-checked: settle guard + per-key write-then-read-back-verify verified at head, all untouched-code confirmations hold, gates rerun clean; group D7 → HW-TEST — PO re-runs ONLY the F2-2 round-trip ≥3–5×).  ·  **Date:** 2026-10-21  ·  **Open fail count:** 0 pending hw (F2-R2 code fixed; hw verdict outstanding). Previous verdicts kept for history: **FAIL (hardware)** 2026-10-21 → §F2-R2 (F2-1 mode restore ✓ CLOSED; F2-2 variable RGB loss at write onset) · **PASS (pending hw)** 2026-10-21 F2-fix code re-review · **FAIL (hardware)** 2026-10-21 → §F2 (F2-1 half fixed ✓; F2-2 symptom changed) · **FAIL (hardware)** 2026-10-17 → §F1 (fixed `ab3cdcd`, re-verified on device ✓ 2026-10-21). Code review (2026-10-20, §RE-REVIEW VERDICT) never reopened.
 
-Hardware verdict: **FAIL — 2026-10-21 → see F2-R2** (F2 re-check after fix `155726c`: **F2-1 ✓ CLOSED — the mode is correctly set on import**; **F2-2 ✗ — per-key RGB writes now fail VARIABLY at the start of the sequence**, different key count correct on each import; the code review PASS stands, this is a device-behaviour failure). Previous verdict lines kept for history: **FAIL — 2026-10-21 → see F2** (mode never restored + exactly 32 of 88 RGB zeroed — F2-1 half fixed ✓, F2-2 half changed symptom) · **FAIL — 2026-10-17 → see F1** (fixed at `ab3cdcd`, re-verified on device 2026-10-21 ✓).
+Hardware verdict: **pending — F2-R2 fix passed code re-review 2026-10-21; PO to re-run the F2-2 round-trip (≥3–5 imports) per §F2-R2-FIX Hardware check.** Previous: **FAIL — 2026-10-21 → see F2-R2** (F2 re-check after fix `155726c`: **F2-1 ✓ CLOSED — the mode is correctly set on import**; **F2-2 ✗ — per-key RGB writes now fail VARIABLY at the start of the sequence**, different key count correct on each import; the code review PASS stands, this is a device-behaviour failure). Previous verdict lines kept for history: **FAIL — 2026-10-21 → see F2** (mode never restored + exactly 32 of 88 RGB zeroed — F2-1 half fixed ✓, F2-2 half changed symptom) · **FAIL — 2026-10-17 → see F1** (fixed at `ab3cdcd`, re-verified on device 2026-10-21 ✓).
 
 ### Confirmation checklist
 - [x] meets every "DONE WHEN" criterion above — Reviewer re-ran all greps: 4a crypto-js=2, decryptSDKConfig=2; 4b setDksTravel|setSpecialLighting=5, setDp|setDr=2; 4c async setSocd|setEND=2, ES setSocd|setEND=4, ES `'1.0.7'`=7 (≥4). Gates re-run by Reviewer: `npm run typecheck` 0 errors, `npm run lint` exit 0, `npm run build` ✓ (1.78s).
@@ -218,6 +218,25 @@ Fix for §F2-R2 (silent drops at write onset). ExportService.ts only; call order
 **Self-check (Worker):** `npm run typecheck` exit 0; `npm run lint` exit 0; `npm run build` exit 0 (✓ built in 1.91s). No baseline change (0 errors). Commit `1ca81f0`.
 
 **Hardware check (PO, after Reviewer PASS):** re-run ONLY the F2-2 round-trip: paint RGB on all keys of profile 1 (incl. rows 0–1), export, import into profile 2 — REPEATEDLY (≥3–5 imports; the defect was variable run-to-run). All painted keys must survive every import. Watch the console: a healthy run should show NO `Custom RGB verify failed` / `Failed to restore custom RGB` / `Custom mode not confirmed` lines; if any appear, capture the console log (like `.scratch/localhost.log`) — the verify lines name the exact key and expected/actual values.
+
+### F2-R2-FIX RE-REVIEW VERDICT — PASS (pending hw) 2026-10-21
+
+Independent Reviewer session re-checked ONLY the F2-R2 fix (fix-round `7480cd1..1ca81f0`), per ▶ RUN THIS. F2-1/F1/F-D7-6/4d(a) (all ✓ CLOSED) and the sealed root causes were NOT re-litigated.
+
+**Diff scope:** `git diff --stat 7480cd1..1ca81f0` → only `src/services/ExportService.ts` (+86/-5) and the review file; the settings.json/WORKFLOW.md in the range is the PO's own commit `ec9c170`. No other source touched.
+
+**Checklist verified at head (all anchors grep-confirmed this session):**
+1. `ensureCustomModeReady` (:862) — readback-probes `getLighting()`, returns `true` only on proven `mode === 21`; re-commands custom/21 via the pre-import-switch destructure pattern (:871-874, cf. :430-433); growing backoff `settleMs * attempt` (:879, ≤ ~4s total); on exhaustion one grep-able `Custom mode not confirmed after import settle window…` (:881) and returns `false` — caller proceeds best-effort. Matches §F2-R2-FIX item 1.
+2. `writeVerifiedCustomRgb` (:895) — `setCustomLighting` → `getCustomLighting(key)` → strict compare of uppercase `R/G/B` against the stored `r/g/b` (:907-909); readback shape confirmed against the export consumer (:504-510) and the `KeyboardService` wrapper signature (`Promise<CustomLightColor | Error>`, KS :1097/:1111); set-Error keeps the existing `Failed to restore custom RGB for key X` log (:905); mismatch/readback-Error ⇒ bounded rewrites with growing delay (:915-917); exhaustion ⇒ grep-able `Custom RGB verify failed for key ${key}: expected r:g:b, …` (:919-921); never throws. Matches item 2.
+3. `repairCustomRgb` (:936) — rgbMap build unchanged (all entries incl. 0:0:0); guard at :945 runs before the single-flight loop; `processBatches(…, 1, 0)` kept verbatim (:946-952). Matches item 3.
+
+**Untouched-code confirmations:** the `(1, 0)` site is the file's only one (`grep -n ", 1, 0"` → :952 only); the seven `80, 100` sites all still present (:166/:171/:176/:730/:761/:811/:846); call order `repairCustomRgb` (:1064) → `applyImportedConfig` (:1066) → `repairMainLighting` LAST (:1068); `repairMainLighting` body unchanged (diff touches nothing in it).
+
+**Gates (rerun by Reviewer):** `npm run typecheck` exit 0, no output (baseline 0) · `npm run lint` exit 0, no warnings · `npm run build` ✓ built in 1.75s. No new errors introduced; baseline unchanged at 0.
+
+**Non-defect observation (no action):** the guard's re-command destructures `open` out of the probe result (:871) rather than forcing `open: true` like the pre-import switch (:433). End state stays correct because `repairMainLighting` restores the exported main config (incl. `open`) LAST; per the RULE-after-one-pass rule, any runtime subtlety here belongs to the PO hardware check, not more static analysis.
+
+**Verdict:** code PASS (pending hw). Task → HW-TEST; PO re-runs ONLY the F2-2 round-trip ≥3–5× per the Hardware check above.
 
 ### Hardware gate (PO — group 4b+4c, per the Hardware check section above)
 

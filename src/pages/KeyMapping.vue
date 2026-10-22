@@ -22,7 +22,7 @@
         {{ isMultiSelect ? 'Stop Multi-Select' : 'Select Multi' }}
       </button>
       <button @click="toggleSelectAll" class="action-btn secondary">
-        {{ selectedKeys.length === (layout.value?.flat().length || 0) ? 'Select All' : 'Deselect All' }}
+        {{ selectedKeys.length === (layout?.flat().length || 0) ? 'Select All' : 'Deselect All' }}
       </button>
       <button @click="setDefaultLayer" class="action-btn">Reset Mapping</button>
     </div>
@@ -56,10 +56,10 @@
               v-for="(label, keyValue) in filteredKeyMap"
               :key="keyValue"
               class="virtual-key"
-              :class="{ 'key-selected': selectedKeyValue === keyValue }"
+              :class="{ 'key-selected': selectedKeyValue === Number(keyValue) }"
               draggable="true"
               :data-key-value="keyValue"
-              @click="selectKeyValue(keyValue)"
+              @click="selectKeyValue(Number(keyValue))"
             >
               {{ label }}
             </div>
@@ -163,12 +163,13 @@ export default defineComponent({
       if (selectedKeyValue.value === null || !selectedKeys.value.length) {
         return;
       }
+      const newKeyValue: number = selectedKeyValue.value;
       try {
         const config = selectedKeys.value
           .map(({ rowIdx, colIdx }) => {
             if (!baseLayout.value || !baseLayout.value[rowIdx][colIdx]) return null;
             const targetKey = baseLayout.value[rowIdx][colIdx];
-            return { key: targetKey.keyValue, layout: selectedLayer.value, value: selectedKeyValue.value };
+            return { key: targetKey.keyValue, layout: selectedLayer.value, value: newKeyValue };
           })
           .filter((item): item is NonNullable<typeof item> => item !== null);
 

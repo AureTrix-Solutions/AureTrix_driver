@@ -31,7 +31,7 @@
               {{ getKeyLabel(keyInfo.keyValue) }}
             </div>
             <span
-              v-if="calibrating"
+              v-if="calibrating && keyInfo.location"
               class="travel-overlay"
               :class="{
                 red: getTravelValue(keyInfo.location.row, keyInfo.location.col) === 0,
@@ -79,7 +79,7 @@ const calibrating = ref(false);
 const calibrated = ref(new Set<number>());
 const travels = ref<number[][]>([]);
 const maxTravels = ref<number[][]>([]);
-let pollInterval: NodeJS.Timeout | null = null;
+let pollInterval: ReturnType<typeof setTimeout> | null = null;
 
 const getKeyLabel = (keyValue: number): string => {
   return keyMap[keyValue] || `Key ${keyValue}`;

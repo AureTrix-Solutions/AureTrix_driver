@@ -28,7 +28,8 @@
       "Bash(npx vitest:*)",
       "Bash(npx vue-tsc:*)",
       "Bash(awk:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(tee:*)"
     ],
     "deny": [
       "Bash(rm:*)",

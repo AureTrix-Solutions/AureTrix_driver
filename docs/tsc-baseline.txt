@@ -1,9 +1,10 @@
-54
+45
 # Baseline recorded 2026-10-08 (sprint-01-code-fixes, Task 1) via `npm run typecheck` (tsc --noEmit, typescript ^5.9.2).
 # Ratcheted to 23 on 2026-10-09 (Task 4b, commit fb20895): services to zero, 60 -> 36 -> 23.
 # Landed at 0 on 2026-10-11 (sprint-07-tsc-errors, Task 2): *.vue shim (23 -> 5) + persist.paths -> persist.pick in both stores (5 -> 0).
 # RE-BASED 0 -> 101 on 2026-10-22 (sprint-13-vue-tsc, Task 1): typecheck flipped to `vue-tsc --noEmit`; the *.vue shim retired to _to_delete/, so .vue files are type-checked for the first time. 101 errors across 14 files = sanctioned unmasking, Tasks 2a-2f ratchet to 0.
 # Ratcheted to 60 on 2026-10-22 (sprint-13-vue-tsc, Task 2a): keyMap Record<number,string> (-26 TS7053), MappedKeyboard CSSProperties gridStyle/getKeyStyle, KeyboardService getRm6X21Calibration number[][] (-15 TS2551/TS2339/TS18047 across Calibration/SwitchProfiles/Lighting/MacroRecording/KeyMapping/Debug/Performance/RapidTrigger). 60 vs spec'd 58: the 2 residual Performance TS7053 (:134,:142) index positionToRemap {}, cleared by Task 2d edit 3. Spec-defect fix in 2a: getKeyStyle annotated `CSSProperties & { 'data-overlay'?: string }` (spec's plain CSSProperties caused a new TS2353 on the pre-existing 'data-overlay' return prop).
 # Ratcheted to 54 on 2026-10-22 (sprint-13-vue-tsc, Task 2b): LayoutPreview gridStyle/getKeyStyle computed<CSSProperties> (-2 TS2345), LayoutCreator baseLayout IDefKeyInfo[][]|null + instanceof-Error narrow of defKey() (-3 TS2339/TS2345), Lighting.vue dead `open === 1` arm dropped per spec (-1 TS2367).
+# Ratcheted to 45 on 2026-10-22 (sprint-13-vue-tsc, Task 2c): connection.ts isConnecting state+set+finally (REAL BUG fix; -2 TS2551 in Connect.vue), App.vue MenuCategory -> MenuItem discriminated union + openCategory/handleCategoryClick Extract<> + isStatusReady string-narrow (-6 TS2322/TS2345/TS2358/TS2339), MacroRecording $refs.importFile -> importFile?.click() (-1 TS2339). 54 -> 45 = exact spec count.
 # Gate: error count <= first line; no new errors in touched files. Ratchet DOWN only.
 # Per-file list: .scratch/vue-tsc-run.txt (refreshed at Task 2a).

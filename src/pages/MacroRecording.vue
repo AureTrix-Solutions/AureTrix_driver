@@ -33,7 +33,7 @@
         @change="importMacros"
         style="display: none;"
       />
-      <button @click="$refs.importFile?.click()" class="action-btn secondary">Import Macros</button>
+      <button @click="importFile?.click()" class="action-btn secondary">Import Macros</button>
     </div>
     <div v-if="notification" class="notification" :class="{ error: notification.isError }">
       <span>{{ notification.message }}</span>

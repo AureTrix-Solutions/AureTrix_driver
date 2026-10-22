@@ -7,6 +7,7 @@ export const useConnectionStore = defineStore('connection', {
   // State
   state: () => ({
     isConnected: false,
+    isConnecting: false,
     isInitializing: false,
     isInitialized: false,
     isPostReconnectionSuppression: false,
@@ -48,6 +49,7 @@ export const useConnectionStore = defineStore('connection', {
     // Manual device connection via WebHID
     async connectDevice() {
       this.status = 'Requesting device via WebHID...';
+      this.isConnecting = true;
       try {
         const device = await KeyboardService.requestDevice();
         if (device && device.id) {
@@ -71,6 +73,8 @@ export const useConnectionStore = defineStore('connection', {
         }
       } catch (error) {
         this.status = `Error: ${(error as Error).message}`;
+      } finally {
+        this.isConnecting = false;
       }
     },
 

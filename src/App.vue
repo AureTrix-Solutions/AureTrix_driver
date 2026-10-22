@@ -174,11 +174,74 @@ const SYSTEM_MODE_OPTIONS = [
   { value: 'mac', label: 'Mac' },
 ];
 
-interface MenuCategory {
-  name: string;
-  items: { name: string; path: string; tooltip?: string }[];
-  isCategory: boolean;
-}
+type MenuItem =
+  | { name: string; path: string; isCategory: false; tooltip?: string }
+  | { name: string; items: { name: string; path: string; tooltip?: string }[]; isCategory: true };
+
+const menuItems: MenuItem[] = [
+  { name: 'Connect', path: '/', isCategory: false },
+  { name: 'Keyboard Creator', path: '/layout-creator', isCategory: false },
+  {
+    name: 'Basic Settings',
+    items: [
+      { name: 'Calibration', path: '/calibration' },
+      { name: 'Key Travels', path: '/performance' },
+      { name: 'Rapid Trigger', path: '/rapid-trigger' }
+    ],
+    isCategory: true
+  },
+  {
+    name: 'Customization',
+    items: [
+      { name: 'Macro Recording', path: '/macros' },
+      { name: 'Key Mapping', path: '/key-mapping' },
+      { name: 'Lighting', path: '/lighting' }
+    ],
+    isCategory: true
+  },
+  {
+    name: 'Advanced',
+    items: [
+      {
+        name: 'Dynamic Key Stroke',
+        path: '/dks',
+        tooltip: 'Enables a single key to trigger up to four distinct actions based on actuation and release points during the full travel of the keypress. For example, light press for walking, deep press for sprinting, partial release for a third action, and full release for a fourth.'
+      },
+      {
+        name: 'Multi-Point Trigger',
+        path: '/mpt',
+        tooltip: 'Assigns up to three independent actions to one key, each triggered at a user-defined actuation depth. Example: halfway press activates one function, full press activates another, and release from a specific depth triggers a third.'
+      },
+      {
+        name: 'Mod Tap',
+        path: '/mt',
+        tooltip: 'Dual-function behavior: a quick tap sends one keycode (e.g., Shift), while pressing and holding sends a different modifier or layer key (e.g., Ctrl) that remains active for as long as the key is held.'
+      },
+      {
+        name: 'Toggle',
+        path: '/tgl',
+        tooltip: 'Converts a momentary action into a latching one. A short tap toggles the function on or off permanently until tapped again (e.g., toggle run mode), while holding the key still performs the original held behavior.'
+      },
+      {
+        name: 'End',
+        path: '/end',
+        tooltip: 'Delays the specified keycode or action until the physical key is released, rather than triggering on press. Ideal for precise timing, movement cancels, or release-based commands in gaming.'
+      },
+      {
+        name: 'SOCD',
+        path: '/socd',
+        tooltip: 'Resolves conflicting directional inputs (e.g., Left + Right simultaneously) according to selected rules (Last Input Priority, Neutral, or First Input Priority), preventing invalid or locked movement states—commonly used in fighting games.'
+      },
+      {
+        name: 'Macro',
+        path: '/macro',
+        tooltip: 'Records and plays back a custom sequence of keystrokes, mouse actions, delays, and triggers on a single keypress. Supports complex combos, rapid commands, or repetitive tasks with precise timing control.'
+      }
+    ],
+    isCategory: true
+  },
+  { name: 'Debug', path: '/debug', isCategory: false }
+];
 
 export default defineComponent({
   name: 'App',
@@ -193,71 +256,8 @@ export default defineComponent({
   },
   data() {
     return {
-      menuItems: [
-        { name: 'Connect', path: '/', isCategory: false },
-        { name: 'Keyboard Creator', path: '/layout-creator', isCategory: false },
-        {
-          name: 'Basic Settings',
-          items: [
-            { name: 'Calibration', path: '/calibration' },
-            { name: 'Key Travels', path: '/performance' },
-            { name: 'Rapid Trigger', path: '/rapid-trigger' }
-          ],
-          isCategory: true
-        },
-        {
-          name: 'Customization',
-          items: [
-            { name: 'Macro Recording', path: '/macros' },
-            { name: 'Key Mapping', path: '/key-mapping' },
-            { name: 'Lighting', path: '/lighting' }
-          ],
-          isCategory: true
-        },
-        {
-          name: 'Advanced',
-          items: [
-            { 
-              name: 'Dynamic Key Stroke', 
-              path: '/dks',
-              tooltip: 'Enables a single key to trigger up to four distinct actions based on actuation and release points during the full travel of the keypress. For example, light press for walking, deep press for sprinting, partial release for a third action, and full release for a fourth.'
-            },
-            { 
-              name: 'Multi-Point Trigger', 
-              path: '/mpt',
-              tooltip: 'Assigns up to three independent actions to one key, each triggered at a user-defined actuation depth. Example: halfway press activates one function, full press activates another, and release from a specific depth triggers a third.'
-            },
-            { 
-              name: 'Mod Tap', 
-              path: '/mt',
-              tooltip: 'Dual-function behavior: a quick tap sends one keycode (e.g., Shift), while pressing and holding sends a different modifier or layer key (e.g., Ctrl) that remains active for as long as the key is held.'
-            },
-            { 
-              name: 'Toggle', 
-              path: '/tgl',
-              tooltip: 'Converts a momentary action into a latching one. A short tap toggles the function on or off permanently until tapped again (e.g., toggle run mode), while holding the key still performs the original held behavior.'
-            },
-            { 
-              name: 'End', 
-              path: '/end',
-              tooltip: 'Delays the specified keycode or action until the physical key is released, rather than triggering on press. Ideal for precise timing, movement cancels, or release-based commands in gaming.'
-            },
-            { 
-              name: 'SOCD', 
-              path: '/socd',
-              tooltip: 'Resolves conflicting directional inputs (e.g., Left + Right simultaneously) according to selected rules (Last Input Priority, Neutral, or First Input Priority), preventing invalid or locked movement states—commonly used in fighting games.'
-            },
-            { 
-              name: 'Macro', 
-              path: '/macro',
-              tooltip: 'Records and plays back a custom sequence of keystrokes, mouse actions, delays, and triggers on a single keypress. Supports complex combos, rapid commands, or repetitive tasks with precise timing control.'
-            }
-          ],
-          isCategory: true
-        },
-        { name: 'Debug', path: '/debug', isCategory: false }
-      ],
-      openCategory: null as MenuCategory | null,
+      menuItems,
+      openCategory: null as Extract<MenuItem, { isCategory: true }> | null,
       flyoutTop: 0,
       editingProfileId: null as number | null,
       editingProfileName: '',
@@ -280,10 +280,8 @@ export default defineComponent({
     isStatusReady() {
       const info = this.connectionStore.deviceInfo;
       return info &&
-        typeof info.KeyboardSN !== 'undefined' &&
-        (typeof info.KeyboardSN === 'string' || (info.KeyboardSN instanceof Uint8Array && info.KeyboardSN.length > 0)) &&
-        typeof info.appVersion !== 'undefined' &&
-        (typeof info.appVersion === 'string' || (info.appVersion instanceof Uint8Array && info.appVersion.length > 0));
+        typeof info.KeyboardSN === 'string' && info.KeyboardSN.length > 0 &&
+        typeof info.appVersion === 'string' && info.appVersion.length > 0;
     },
   },
   watch: {
@@ -319,7 +317,7 @@ export default defineComponent({
       }
       return String(value);
     },
-    handleCategoryClick(item: MenuCategory, event: MouseEvent) {
+    handleCategoryClick(item: Extract<MenuItem, { isCategory: true }>, event: MouseEvent) {
       if (this.openCategory === item) {
         this.closeCategory();
         return;

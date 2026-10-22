@@ -27,15 +27,33 @@ Fix-round ranges (added on each re-review): —
 N/A — Task 1 is not [hw] (no device behavior touched).
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred)
-- [ ] tag is correct (high-stakes where required)
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred)
+- [x] tag is correct (high-stakes where required)
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** (pending)  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-10-22  ·  **Fail count:** 0
+
+Verified independently (all commands rerun this session against head `93ab32b`, tree clean, branch `sprint-13-vue-tsc`):
+
+| Criterion | Result | Evidence |
+|---|---|---|
+| vue-tsc binary installed | PASS (see obs O1) | `ls node_modules/.bin \| grep vue-tsc` → 3 entries (`vue-tsc`, `.cmd`, `.ps1`) — the Windows npm shim triple; binary present |
+| `"typecheck": "vue-tsc --noEmit",` | PASS | package.json line 11; diff shows exactly this flip, nothing else in scripts |
+| shim retired | PASS | `src/types/vue-shim.d.ts` → No such file; `_to_delete/vue-shim.d.ts` exists AND is tracked (`git ls-files` returns it); rename is content-identical (`git diff --stat` shows 0 changes) |
+| N errors, baseline head-1 = N | PASS | `npm run typecheck` → 101 `error TS` lines across 14 distinct files; `head -1 docs/tsc-baseline.txt` → `101`; per-file list byte-identical to Worker's `.scratch/vue-tsc-files.txt`; per-code breakdown in baseline line 7 exactly matches fresh `uniq -c` (TS7053×26 … TS7005×1, sums to 101) |
+| lint exit 0, build exit 0 | PASS | both rerun this session: `lint exit=0`, `build exit=0` |
+
+Diff-scope audit: `8c79c16..65b0b3e` touches only the 5 spec'd files (shim rename, current-sprint.md, tsc-baseline.txt, package-lock.json, package.json); `65b0b3e..93ab32b` is the Worker's status/review-file commit. No stray files, no source changes. package.json diff = exactly 2 hunks (typecheck flip + `"vue-tsc": "^3.3.13"` devDep). Resolved versions match Worker notes: typescript 5.9.3, vue-tsc 3.3.13 — the TS-7 `ERR_PACKAGE_PATH_NOT_EXPORTED` hazard did not occur. Baseline history lines preserved byte-identical; re-base 0→101 is the sanctioned unmasking per CLAUDE.md self-check gate (shim removal makes .vue errors visible for the first time), not a ratchet-up violation. Spec-edit-5 rerun: 0 `.ts`-side errors unmasked → Task 2a needs no delta. Design intent untouched (no filters/usagePage/wrapper changes in diff). Tag [high-stakes] correct — infrastructure/tooling change.
 
 ### Failed items (FAIL only)
 —
+
+### Reviewer observations (non-defect; PASS stands)
+- **O1** — Done-when bullet 1 (`grep -c vue-tsc` → `1`) is Windows-fragile: npm writes three shim files per bin (`vue-tsc`, `.cmd`, `.ps1`), so the literal count is 3 on this platform. Intent (binary installed) unambiguously met; no action needed for this task. Routed as a Findings line so future Done-when criteria use `grep -q`/non-empty instead of `grep -c` → 1 for bin checks.
+- **O2** — Baseline line 7 points the per-file list at `.scratch/vue-tsc-run.txt`; `.scratch/` is gitignored and PO-emptied, so that pointer dies at next cleanup. The file exists now and holds all 101 errors (verified), and the review file + commit message carry the durable record — acceptable, no fix required.
+
+Reviewer status mechanics (this session): Task 1 → DONE (collapsed to ✓ in current-sprint.md), ▶ RUN THIS advanced to Task 2a, Findings line added for O1, all committed.

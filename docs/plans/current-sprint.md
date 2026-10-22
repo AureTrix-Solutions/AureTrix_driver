@@ -8,31 +8,16 @@ rev1 (2026-10-22): PO reviewed the plan and accepted all PM calls (vue-tsc ^3.3.
 
 ## Checkpoint
 - Branch: `sprint-13-vue-tsc`
-- tsc baseline: 0 errors (docs/tsc-baseline.txt) — Task 1 RE-BASES this to the vue-tsc count (sanctioned unmasking; ~101 expected, see Task 1), then Tasks 2a→2f ratchet it to 0.
-- Cleanup: `.scratch/` has `pm-notes.md` + `vue-tsc-dryrun.txt` (PO may delete); `_to_delete/` exists and is empty — Task 1 moves the shim into it (PO must then `git rm`).
+- tsc baseline: 101 errors (docs/tsc-baseline.txt) — Task 1 re-based 0→101 (sanctioned unmasking, Reviewer-verified); Tasks 2a→2f ratchet to 0.
+- Cleanup (Reviewer ls, 2026-10-22): `.scratch/` = handoff.md, pm-notes.md, review-notes.md, rv-typecheck.txt, vue-tsc-dryrun.txt, vue-tsc-files.txt, vue-tsc-run.txt (PO may delete); `_to_delete/` = vue-shim.d.ts (PO must `git rm`).
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: Task 1 is IN-REVIEW — Reviewer: "follow docs/plans/reviews/review-vue-tsc-gate.md". On PASS → DONE, then Worker: Task 2a (shared root fixes; expected 101 → 58).
+Next: Worker — Task 2a (shared root fixes; expected 101 → 58). Task 1 closed: Reviewer PASS 2026-10-22 (review-vue-tsc-gate.md).
 
 ## Tasks
 
-1. **Install vue-tsc + make it the typecheck gate** — [high-stakes] — STATUS: IN-REVIEW
-   - Checkpoint (Worker, done): vue-tsc@3.3.13 + TS 5.9.3 installed; typecheck flipped; shim → `_to_delete/`; N=**101** across 14 files = exact dryrun match (no Task-2 delta); spec-edit-5 count (main.ts/router .ts-side unmask) = **0**; lint/build exit 0; committed base `8c79c16` → head `65b0b3e`; review file `docs/plans/reviews/review-vue-tsc-gate.md`. Cleanup (actual ls): `.scratch/` = handoff.md, pm-notes.md, vue-tsc-dryrun.txt, vue-tsc-files.txt, vue-tsc-run.txt (PO may delete); `_to_delete/` = vue-shim.d.ts (PO must `git rm`).
-   - Done when: `ls node_modules/.bin | grep -c vue-tsc` → `1`
-   - Done when: `grep -n '"typecheck"' package.json` → `"typecheck": "vue-tsc --noEmit",`
-   - Done when: `ls src/types/vue-shim.d.ts` → No such file; `ls _to_delete/vue-shim.d.ts` → exists
-   - Done when: `npm run typecheck 2>&1 | grep -c "error TS"` → N (N ≥ 101), and `head -1 docs/tsc-baseline.txt` → that same N
-   - Done when: `npm run lint` exit 0 AND `npm run build` exit 0
-   - Files: `package.json`, `package-lock.json`, `docs/tsc-baseline.txt`, `src/types/vue-shim.d.ts` → `_to_delete/`
-   - Edits (all values grep-verified this session):
-     1. `npm install -D vue-tsc@^3.3.13` — 3.3.13 is npm `latest`; its peerDep is `typescript >=5.0.0` and the repo pins `typescript@^5.9.2`. **HAZARD:** vue-tsc 3.3.13 BREAKS under TypeScript 7 (`npx vue-tsc` with a TS-7 resolution dies `ERR_PACKAGE_PATH_NOT_EXPORTED './lib/tsc'`) — never let a transitive TS 7 satisfy it. Commits `package.json` + `package-lock.json`.
-     2. `package.json`: current `"typecheck": "tsc --noEmit",` → `"typecheck": "vue-tsc --noEmit",`. vue-tsc checks `.ts` too, so nothing is lost; do NOT keep a second script.
-     3. Move the shim: `mkdir -p _to_delete && git mv src/types/vue-shim.d.ts _to_delete/vue-shim.d.ts`. Why it must go: it declares `module '*.vue'` as `DefineComponent<{}, {}, any>`, which would SHADOW real `.vue` resolution and hide the very errors this gate exists to catch. Nothing else breaks — `.vue` imports from `.ts` (`main.ts:4`, `router/index.ts` ×17) resolve natively under vue-tsc; `eslint.config.mjs` has no `project`/type-aware rules (only `parserOptions.parser` at line 13) so lint is unaffected; `vite build` never used it.
-     4. Run `npm run typecheck 2>&1 | grep -c "error TS"` → write that number as the FIRST line of `docs/tsc-baseline.txt`, keeping the existing history lines below it and appending one history line: `2026-10-22 sprint-13 Task 1: gate switched tsc→vue-tsc; .vue errors unmasked (0→N). Ratchet down from here.` This is the sanctioned unmasking re-base (CLAUDE.md self-check gate), NOT a ratchet-up violation — N is the real count and every later task only lowers it.
-     5. ALSO record in the review file: `npm run typecheck 2>&1 | grep "error TS" | grep -c "main.ts\|router/index.ts"`. Expected 0. If >0, those are real `.ts`-side errors unmasked by the shim removal — sub-task 2a absorbs them (note the count in the checkpoint so 2a's expected total is adjusted).
-   - Note for Task 2: the dryrun count (101, `.scratch/vue-tsc-dryrun.txt`) was measured WITH the shim present. If your N > 101, add the delta to every expected count in Task 2 and say so in the checkpoint. The compiler — not this plan — is the authoritative site list; re-run `npm run typecheck` to get it.
-   - On finish: STATUS → IN-REVIEW, write `docs/plans/reviews/review-vue-tsc-gate.md` (sprint goal + these Done-whens + Base/Head hashes), advance ▶ RUN THIS to Task 2a.
+1. **Install vue-tsc + make it the typecheck gate** — [high-stakes] — ✓ DONE (Reviewer PASS 2026-10-22, 0 fails; N=101/14 files = exact dryrun match; baseline re-based 0→101; base `8c79c16` → head `65b0b3e`; detail in docs/plans/reviews/review-vue-tsc-gate.md)
 
 2. **Clear every vue-tsc error to zero** — [high-stakes] — STATUS: PENDING
    - Sequential sub-tasks 2a→2f, ONE session each, OWN commit each (`sprint-13-vue-tsc: task 2X`). Parent stays IN-PROGRESS until 2f, then → IN-REVIEW; the Reviewer runs ONCE over the cumulative base..head diff.
@@ -110,5 +95,6 @@ Next: Task 1 is IN-REVIEW — Reviewer: "follow docs/plans/reviews/review-vue-ts
 ## Findings (raw — PM routes at close)
 - [code] `getRm6X21Travel` wrapper annotation is wrong the same way `getRm6X21Calibration` was: `src/services/KeyboardService.ts:982` declares `travels: number[]` but docs/sdk-reference-v2.md (line 626, §4 row = Verified) says the SDK returns `{status: number[][]; travels: number[][]}`. Latent only because today's consumers (`SwitchProfiles.vue:190,302`) never index `travels` as rows — it produced NO vue-tsc error, so the new gate does not catch it. Verify: `grep -n "async getRm6X21Travel" src/services/KeyboardService.ts` vs the sdk-ref §4 `getRm6X21Travel` Returns row. (PM-open, 2026-10-22.)
 - ROUTED at PM-open (2026-10-22, this session) → `backlog.md ## Constraints` as the `[deps] vue-tsc 3.x requires TypeScript 5.x` guardrail. **Do not re-route at PM-close** (would duplicate). Wording corrected there: the TS-7 failure is a loud module-resolution throw (nonzero exit), not a silent gate failure — `typescript@latest` is 7.0.2, so it only bites a deliberate major bump or a tool resolving TS outside the lockfile.
+- [process] Done-when criteria of the form `ls node_modules/.bin | grep -c <pkg>` → `1` are wrong on Windows: npm writes 3 shims per bin (`<pkg>`, `.cmd`, `.ps1`) so the count is 3 — verify where PM authors bin-presence criteria (this sprint's Task 1 review, obs O1); use `grep -q`/non-empty instead. (Reviewer, 2026-10-22)
 
 <!-- Keep this file under ~150 lines. It is a SNAPSHOT, not a log. Overwrite, don't append. -->

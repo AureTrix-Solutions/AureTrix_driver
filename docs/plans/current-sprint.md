@@ -4,6 +4,7 @@
 **DONE-CRITERIA (sprint):** `ls node_modules/.bin | grep vue-tsc` is non-empty AND `npm run typecheck` (= `vue-tsc --noEmit`) exits 0 with `grep -c "error TS"` → 0 AND `docs/tsc-baseline.txt` first line is `0` AND `src/types/vue-shim.d.ts` now lives in `_to_delete/` AND `npm run lint` + `npm run build` pass AND the PO's device smoke check (Task 3) is ✓.
 **Started:** 2026-10-22  ·  **Status:** IN PROGRESS
 <!-- revN (YYYY-MM-DD): <what changed>   ← log revisions here, newest last -->
+rev1 (2026-10-22): PO reviewed the plan and accepted all PM calls (vue-tsc ^3.3.13 + TS stays 5.x; shim → _to_delete/; isConnecting fixed forward in the store; baseline 0→N re-base; getRm6X21Calibration annotation fix). PO also directed a new `## Constraints` section in backlog.md for standing guardrails (vs the work-queue issue sections); the vue-tsc/TS Finding was routed there at PM-open and marked ROUTED below so PM-close does not duplicate it. No task specs changed.
 
 ## Checkpoint
 - Branch: `sprint-13-vue-tsc`
@@ -107,6 +108,6 @@ Next: Task 1 — Install vue-tsc, flip the typecheck script, retire the `*.vue` 
 
 ## Findings (raw — PM routes at close)
 - [code] `getRm6X21Travel` wrapper annotation is wrong the same way `getRm6X21Calibration` was: `src/services/KeyboardService.ts:982` declares `travels: number[]` but docs/sdk-reference-v2.md (line 626, §4 row = Verified) says the SDK returns `{status: number[][]; travels: number[][]}`. Latent only because today's consumers (`SwitchProfiles.vue:190,302`) never index `travels` as rows — it produced NO vue-tsc error, so the new gate does not catch it. Verify: `grep -n "async getRm6X21Travel" src/services/KeyboardService.ts` vs the sdk-ref §4 `getRm6X21Travel` Returns row. (PM-open, 2026-10-22.)
-- [deps] vue-tsc 3.x is incompatible with TypeScript 7 — `npx vue-tsc` resolving TS 7.0.2 dies with `ERR_PACKAGE_PATH_NOT_EXPORTED './lib/tsc'` before checking anything, i.e. a silent-looking gate failure. Verify: `npm view vue-tsc@3.3.13 peerDependencies` (`typescript >=5.0.0`) and `grep '"typescript"' package.json` (must stay 5.x). (PM-open, 2026-10-22.)
+- ROUTED at PM-open (2026-10-22, this session) → `backlog.md ## Constraints` as the `[deps] vue-tsc 3.x requires TypeScript 5.x` guardrail. **Do not re-route at PM-close** (would duplicate). Wording corrected there: the TS-7 failure is a loud module-resolution throw (nonzero exit), not a silent gate failure — `typescript@latest` is 7.0.2, so it only bites a deliberate major bump or a tool resolving TS outside the lockfile.
 
 <!-- Keep this file under ~150 lines. It is a SNAPSHOT, not a log. Overwrite, don't append. -->

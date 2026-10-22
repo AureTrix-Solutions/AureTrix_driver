@@ -22,7 +22,7 @@
 - Gates re-run at head (all 4): grep "throw new Error" KS → 9 hits, NONE inside exportConfig (:185/:189/:211/:299/:349/:355/:1330/:1452/:1456 — all pre-existing, other methods); grep -c "await KeyboardService.exportConfig" ES → 1; typecheck 0; lint 0.
 
 ## 🔍 Commits to review
-Base: `39d0520` (Task 5 Reviewer PASS — branch head at task start)   Head: `<filled at commit — see current-sprint.md checkpoint>`
+Base: `39d0520` (Task 5 Reviewer PASS — branch head at task start)   Head: `35dda4f` (this task)
 <!-- Reviewer runs this itself — do NOT paste the diff here:
        git diff --stat 39d0520..<head>     then      git diff 39d0520..<head>
      A file touched outside this task's scope is a flag. -->

@@ -36,7 +36,7 @@
 
 5. ✓ **D6: dead-code deletion + applyImportedConfig collapse** — [high-stakes] — DONE (Reviewer PASS 2026-10-21, non-hw; `fdfb693..67fbf53`; review-d6-deadcode.md; all done-whens re-run by Reviewer)
 
-6. **exportConfig contract fix (rule 7: wrappers return Error, never throw)** — [high-stakes] — STATUS: IN-REVIEW (Worker code-complete 2026-10-21; review-exportconfig-contract.md; base `39d0520`)
+6. **exportConfig contract fix (rule 7: wrappers return Error, never throw)** — [high-stakes] — STATUS: IN-REVIEW (Worker code-complete 2026-10-21; review-exportconfig-contract.md; base `39d0520` head `35dda4f`)
    - Files: `src/services/KeyboardService.ts` (exportConfig :1531-1535 — sync void, `throw new Error('No device connected')` :1533, SDK call :1535; anchors corrected 2026-10-15, were ":1474-1479"; other throw at :349 OUT of scope), `src/services/ExportService.ts` (exportProfile :625-633; call site :628 `KeyboardService.exportConfig(config, filename);` — sync, no await; corrected from ":574-583"). Fix: make it `async exportConfig(...): Promise<void | Error>`, return the Error instead of throwing, await the SDK call in try/catch → return Error. exportProfile: await it, `instanceof Error` → return `{success:false, error:err.message}`. Done when: `grep -n "throw new Error" src/services/KeyboardService.ts` shows no hit inside exportConfig; `grep -c "await KeyboardService.exportConfig" src/services/ExportService.ts` ≥ 1; typecheck 0; lint 0.
 
 ## Findings

@@ -1,8 +1,76 @@
-# No active sprint
+# SPRINT: sprint-15-ci
 
-COMPLETE — run PM-open for the next sprint.
+**GOAL:** Add a GitHub Actions CI workflow (npm ci → typecheck → lint → build, Node 22, informational only) and align commit-message conventions across CLAUDE.md and .github/CONTRIBUTING.md.
+**DONE-CRITERIA (sprint):** `.github/workflows/ci.yml` exists with the 4 commands pinned to Node 22 on push + pull_request; CONTRIBUTING.md PR checklist carries the CI line; CLAUDE.md :82 speaks Conventional Commits (with `<sprint>: <task>` note kept).
+**Started:** 2026-10-23  ·  **Status:** IN PROGRESS
+
+## Checkpoint
+- Branch: `sprint-15-ci`
+- tsc baseline: 0 errors (docs/tsc-baseline.txt) — this sprint touches no .ts/.vue; self-check gate stays at 0, no re-baseline expected.
+- Cleanup: (Worker updates from an actual `ls` at commit time)
 
 ## ▶ RUN THIS
-No active sprint. To start one, open a fresh window and paste:
-  Act as PM per CLAUDE.md. Plan the "<name>" sprint from docs/plans/backlog.md.
-(Or a direct goal: Act as PM per CLAUDE.md. Goal: <...>.)
+Next: Task 1 — create .github/workflows/ci.yml. Do this task, then stop.
+
+## Tasks
+
+1. **Create .github/workflows/ci.yml** — [high-stakes] — STATUS: PENDING
+   - Done when: `ls .github/workflows/ci.yml` exists (dir is NEW — grep-confirmed absent today).
+   - Done when: each of `grep -F "node-version: 22"`, `grep -F "npm ci"`, `grep -F "npm run typecheck"`, `grep -F "npm run lint"`, `grep -F "npm run build"`, `grep "push:"`, `grep "pull_request:"` against the file returns ≥1 hit.
+   - Done when: file content matches the spec below EXACTLY (verbatim transcription; Reviewer diffs against this spec — YAML indentation is the failure mode grep can't catch).
+   - Files: `.github/workflows/ci.yml` (create)
+   - Spec — write EXACTLY this (2-space indentation as shown):
+     ```yaml
+     name: CI
+
+     on:
+       push:
+       pull_request:
+
+     jobs:
+       build:
+         runs-on: ubuntu-latest
+         steps:
+           - uses: actions/checkout@v4
+           - uses: actions/setup-node@v4
+             with:
+               node-version: 22
+               cache: npm
+           - run: npm ci
+           - run: npm run typecheck
+           - run: npm run lint
+           - run: npm run build
+     ```
+   - PM-verified facts (Worker applies, never re-derives):
+     - package.json scripts grep-confirmed: `typecheck` = "vue-tsc --noEmit", `lint` = "eslint .", `build` = "vite build" — all three names verbatim in the workflow are correct.
+     - `package-lock.json` exists at root → `npm ci` and `cache: npm` are valid.
+     - `.github/workflows` does NOT exist yet; path is not gitignored (`git check-ignore` exit 1).
+     - Local dev node is v22.23.2 — the Node 22 pin matches the environment.
+     - Scope: informational only — NO branch-protection changes, no other workflow files.
+   - Self-check gate: SKIPPED (no .ts/.vue touched). Still run `npm run typecheck` once and record exit 0 in the checkpoint (baseline sanity, expected 0).
+   - Commit: `sprint-15-ci: task 1 — add CI workflow (.github/workflows/ci.yml)`; then IN-REVIEW: write docs/plans/reviews/review-ci-workflow.md (goal line + the 3 Done-when criteria + base/head hashes + note to Reviewer: diff the file against the Task 1 spec block above verbatim).
+
+2. **Add CI line to CONTRIBUTING.md PR checklist** — [trivial] — STATUS: PENDING
+   - Done when: `grep -c "^- \[ \] " .github/CONTRIBUTING.md` returns 7 (was 6).
+   - Done when: `grep -nF "CI checks" .github/CONTRIBUTING.md` hits inside the PR Checklist section, and `grep -nF "v18 or higher" .github/CONTRIBUTING.md` still hits (prerequisite untouched).
+   - Files: `.github/CONTRIBUTING.md` (ONE edit-site; do NOT rewrite the file)
+   - Spec: after the EXACT line (grep-confirmed, last checkbox of "### PR Checklist"):
+     `- [ ] PR description explains the changes and motivation`
+     insert one line:
+     `- [ ] CI checks (typecheck, lint, build) pass before review`
+   - PM-verified: commit-message section already Conventional Commits — leave unchanged (PO directive). Node "v18 or higher" — leave unchanged (PO directive).
+   - Commit: `sprint-15-ci: task 2 — CONTRIBUTING PR checklist gains CI-pass line`; collapse to ✓.
+
+3. **CLAUDE.md :82 → Conventional Commits vocabulary** — [trivial] — STATUS: PENDING
+   - Done when: `grep -cF "Add: ..." CLAUDE.md` returns 0 AND `grep -cF "Conventional Commits" CLAUDE.md` returns 1.
+   - Done when: `grep -cF "<sprint>: <task>" CLAUDE.md` still returns ≥1 (note kept) and the replaced line still ends with `see Git & commits).`
+   - Files: `CLAUDE.md` (ONE edit-site at :82)
+   - Spec — replace the EXACT current line (grep-confirmed):
+     `- Commit style: \`Add: ...\`, \`Fix: ...\`, \`Update: ...\`, \`Remove: ...\` (sprint work also uses \`<sprint>: <task>\` — see Git & commits).`
+     with:
+     `- Commit style: Conventional Commits — \`feat:\`, \`fix:\`, \`docs:\`, \`refactor:\`, \`chore:\` (sprint work also uses \`<sprint>: <task>\` — see Git & commits).`
+   - PM-verified: `Add: ...` appears exactly once in CLAUDE.md (grep `Commit style|Add: \.\.\.` → only :82); CONTRIBUTING.md's Commit Messages section already lists feat/fix/docs/refactor/style/test/chore — this aligns CLAUDE.md to it.
+   - Commit: `sprint-15-ci: task 3 — CLAUDE.md commit style → Conventional Commits`; collapse to ✓. Then flag "ALL TASKS DONE — awaiting PO sign-off" (after Task 1's review closes) and stop.
+
+## Findings (raw — PM routes at close)
+- <none yet>

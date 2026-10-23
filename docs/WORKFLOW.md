@@ -87,6 +87,37 @@ git branch -d sprint-01-code-fixes
 
 ---
 
+## Commit messages (Conventional Commits)
+
+For **your own** hand-written commits (the CLAUDE.md fix, a quick doc tweak, anything you commit
+directly). Agents' sprint commits use `<sprint>: <task>` and are already done for you — this is for
+the ones you type.
+
+Format: `type: short description` — imperative ("add", not "added"), lowercase, no period.
+
+| type        | use for                          | example                               |
+|-------------|----------------------------------|---------------------------------------|
+| `feat:`     | a new feature                    | `feat: add DKS config page`           |
+| `fix:`      | a bug fix                        | `fix: correct Select-to-Global value` |
+| `docs:`     | docs only                        | `docs: reconcile RapidTrigger page`   |
+| `refactor:` | restructure, no behavior change  | `refactor: extract batch loop`        |
+| `style:`    | formatting only, no logic change | `style: apply eslint --fix`           |
+| `test:`     | add/update tests                 | `test: add ExportService round-trip`  |
+| `chore:`    | build, deps, config, tooling     | `chore: bump vite to 5.4.2`           |
+
+Bigger change? Add a blank line then a body:
+```
+fix: GlobalTravel writes UI settings not DB register
+
+Was writing the Global-DB register value; now writes the current
+global travel + DpDr per selected key.
+```
+
+Picking a type: `feat` adds capability · `fix` corrects wrong behavior · `chore` is plumbing ·
+`docs`/`style`/`refactor`/`test` change no runtime behavior.
+
+---
+
 ## Status meanings (in current-sprint.md)
 
 - **PENDING** → not started (PM set it).

@@ -36,18 +36,28 @@ Fix-round ranges (added on each re-review): <none yet>
 - Hardware verdict: <pending — PO to exercise on device>
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above — C1 `getGlobalTouchTravel` 3→2, both survivors inside `loadGlobalSettings` (the UI-load path); C2 dead-string grep → nothing; C3 `const globalTravelValue = globalTravel.value` present at :265; C4 typecheck 0 errors + lint exit 0.
+- [x] diff scope matches the task (no stray files) — `git diff --stat aa621e7..0121da8` → only GlobalTravel.vue, +6/-20.
+- [x] no design-intent violation — filters:[] / usagePage 65440 / KeyboardService wrappers all untouched; no new throwing; Step-2 batch + `emit('mode-changed')` unchanged.
+- [x] typecheck/build gate met where it applies — typecheck clean (baseline 0 held, no unmasking); build not required for a single-component value-source swap.
+- [x] tag is correct (high-stakes where required) — [high-stakes][hw] correct (device-affecting value source). PASS pending hw → HW-TEST, not DONE.
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** <pending>  ·  **Date:** <pending>  ·  **Fail count:** <pending>
+**Result:** PASS (pending hw) → **HW-TEST**  ·  **Date:** 2026-10-23  ·  **Fail count:** 0
+
+Code passes review. This is a [hw] task, so per CLAUDE.md I set **HW-TEST** and stop — I do NOT write DONE. The PO exercises it on a real device and states the verdict; an agent records it here.
+
+### Verification summary (one pass, ruled)
+- Diff (`git diff aa621e7..0121da8`): Step-1 device re-fetch (`getGlobalTouchTravel()` + `instanceof Error` throw + `Number()` conversions + `isNaN` throw) replaced with direct reads of the authoritative UI refs — `globalTravelValue = globalTravel.value`, `globalPressDead = pressDead.value`, `globalReleaseDead = releaseDead.value`. The now-dead "Sync UI state" self-assign block correctly removed (no-ops once values ARE the refs). Step-2 `processBatches` body and `emit('mode-changed', keys, 'global')` untouched.
+- isNaN-guard removal is **justified**: refs declared `ref(2.0)` / `ref(0.2)` / `ref(0.2)` — always numbers, no NaN source remains.
+- All four Done-when criteria met (see confirm checklist). typecheck 0 errors, lint exit 0.
+
+### Non-blocking nit (no action; not a source defect)
+- The Done-when text names the surviving caller `loadGlobalTravel`; the actual function is `loadGlobalSettings` (grep `const loadGlobalSettings = async`). Intent holds — both remaining `getGlobalTouchTravel` usages are in the legitimate UI-load path. Doc-wording only; nothing to fix in source or route to backlog.
 
 ### Failed items (FAIL only)
 <none>

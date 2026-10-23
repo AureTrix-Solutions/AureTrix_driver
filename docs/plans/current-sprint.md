@@ -10,11 +10,11 @@
 - Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ holds only .gitkeep (from actual `ls`, task-1 close 2026-10-23)
 
 ## ▶ RUN THIS
-Next: REVIEWER — follow docs/plans/reviews/review-globaltravel-select-to-global.md (Task 1 is [high-stakes][hw], IN-REVIEW; base `aa621e7`..head `0121da8`). On PASS it flips to HW-TEST (never DONE) → PO hardware ✓ → DONE, THEN advance to Task 2. Do not start Task 2 until Task 1 is DONE.
+Next: PO HARDWARE CHECK — Task 1 passed code review (PASS pending hw, 0 fails) and is now HW-TEST. Steps are in review-globaltravel-select-to-global.md §Hardware check: set Global Travel/DpDr to distinct values (e.g. 3.50 / 0.40 / 0.30), select keys, press "Select to Global", confirm selected keys actuate at the UI values (not a stale device register). Then STATE the verdict in plain words ("hardware passed" / "hardware failed: <symptom>") — an agent records it in the review file, flips Task 1 DONE (✓) or IN-PROGRESS (✗ → F1), and on DONE advances ▶ RUN THIS to Task 2. Do not start Task 2 until Task 1 is DONE.
 
 ## Tasks
-1. **GlobalTravel Select-to-Global writes UI settings instead of Global-DB register** — [high-stakes][hw] — STATUS: IN-REVIEW
-   - Checkpoint: Edits 1–2 applied + committed (`0121da8`, base `aa621e7`); all 4 Done-whens pass (getGlobalTouchTravel→2, dead-symbol grep→nothing, `const globalTravelValue = globalTravel.value`→1, typecheck 0 / lint exit 0). Review file written: docs/plans/reviews/review-globaltravel-select-to-global.md. Awaiting Reviewer → HW-TEST → PO hardware ✓.
+1. **GlobalTravel Select-to-Global writes UI settings instead of Global-DB register** — [high-stakes][hw] — STATUS: HW-TEST
+   - Checkpoint: Reviewer PASS (pending hw) 2026-10-23, 0 fails — all 4 Done-whens rerun ✓ (getGlobalTouchTravel 3→2, both survivors in loadGlobalSettings; dead-string grep → nothing; `const globalTravelValue = globalTravel.value` @ setKeyToGlobalMode; typecheck 0 / lint 0); diff scope clean (+6/-20, GlobalTravel.vue only); verdict + details in review-globaltravel-select-to-global.md. Awaiting PO hardware verdict.
    - Files: `src/components/performance/GlobalTravel.vue`
    - Defect (backlog, PO finding 2026-10-23): `setKeyToGlobalMode` re-fetches `getGlobalTouchTravel()` (the device Global-DB register) and applies THAT to selected keys — ignoring the current UI state in the `globalTravel`/`pressDead`/`releaseDead` refs (which `updateGlobalSettings` persists on every @change, so the refs are the authoritative "current global travel + DpDr UI settings").
    - Units confirmed both sides (sdk-ref §5.1 Verified): refs are mm; `setSingleTravel`/`setDp`/`setDr` take mm; no scaling at this layer. Refs are always numbers (init 2.0/0.2/0.2) → the NaN guard dies with step 1.

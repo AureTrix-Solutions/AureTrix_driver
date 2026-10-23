@@ -7,32 +7,13 @@
 ## Checkpoint
 - Branch: `sprint-14-code-hygiene`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt; gate ACTIVE — every task must keep typecheck at 0)
-- Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ holds only .gitkeep (from actual `ls`, task-1 close 2026-10-23)
+- Cleanup: .scratch/ has pm-notes.md + review-notes.md (PO may delete); _to_delete/ holds only .gitkeep (from actual `ls`, task-1 hw close 2026-10-23)
 
 ## ▶ RUN THIS
-Next: PO HARDWARE CHECK — Task 1 passed code review (PASS pending hw, 0 fails) and is now HW-TEST. Steps are in review-globaltravel-select-to-global.md §Hardware check: set Global Travel/DpDr to distinct values (e.g. 3.50 / 0.40 / 0.30), select keys, press "Select to Global", confirm selected keys actuate at the UI values (not a stale device register). Then STATE the verdict in plain words ("hardware passed" / "hardware failed: <symptom>") — an agent records it in the review file, flips Task 1 DONE (✓) or IN-PROGRESS (✗ → F1), and on DONE advances ▶ RUN THIS to Task 2. Do not start Task 2 until Task 1 is DONE.
+Next: WORKER — "go" → Task 2: `getBaseInfo()` instanceof Error guards at all 3 call sites in src/store/connection.ts ([high-stakes], PENDING; full edit spec in Tasks below). Self-check → commit `sprint-14-code-hygiene: task 2` → write review-connection-getbaseinfo.md → IN-REVIEW. Task 3 (baseLayout prop deletions) stays queued until Task 2 closes.
 
 ## Tasks
-1. **GlobalTravel Select-to-Global writes UI settings instead of Global-DB register** — [high-stakes][hw] — STATUS: HW-TEST
-   - Checkpoint: Reviewer PASS (pending hw) 2026-10-23, 0 fails — all 4 Done-whens rerun ✓ (getGlobalTouchTravel 3→2, both survivors in loadGlobalSettings; dead-string grep → nothing; `const globalTravelValue = globalTravel.value` @ setKeyToGlobalMode; typecheck 0 / lint 0); diff scope clean (+6/-20, GlobalTravel.vue only); verdict + details in review-globaltravel-select-to-global.md. Awaiting PO hardware verdict.
-   - Files: `src/components/performance/GlobalTravel.vue`
-   - Defect (backlog, PO finding 2026-10-23): `setKeyToGlobalMode` re-fetches `getGlobalTouchTravel()` (the device Global-DB register) and applies THAT to selected keys — ignoring the current UI state in the `globalTravel`/`pressDead`/`releaseDead` refs (which `updateGlobalSettings` persists on every @change, so the refs are the authoritative "current global travel + DpDr UI settings").
-   - Units confirmed both sides (sdk-ref §5.1 Verified): refs are mm; `setSingleTravel`/`setDp`/`setDr` take mm; no scaling at this layer. Refs are always numbers (init 2.0/0.2/0.2) → the NaN guard dies with step 1.
-   - **Edit 1** — replace the whole step-1 block (grep `Step 1: Fetch current global settings`; current text runs from that comment through `// Step 2: Apply global values to each key before switching mode`, i.e. the fetch, the `instanceof Error` throw, the three `Number(globalSettingsResult.X)` reads, and the `isNaN(...)` throw) with:
-     ```ts
-        // Step 1: Source values from the current UI settings (refs), not the Global-DB register
-        const globalTravelValue = globalTravel.value;
-        const globalPressDead = pressDead.value;
-        const globalReleaseDead = releaseDead.value;
-        
-        // Step 2: Apply global values to each key before switching mode
-     ```
-   - **Edit 2** — delete the now-dead self-assign sync block (grep `Sync UI state with the values we just applied`): that comment + the 3 lines `globalTravel.value = globalTravelValue;` / `pressDead.value = globalPressDead;` / `releaseDead.value = globalReleaseDead;`. Leave the surrounding blank lines tidy. Step 2's processBatches body and the `emit('update-overlay', ...)` block are UNCHANGED (they consume the same three locals).
-   - Done when: `grep -c "getGlobalTouchTravel" src/components/performance/GlobalTravel.vue` → 2 (loadGlobalSettings comment + call only)
-   - Done when: `grep -n "globalSettingsResult\|Invalid global settings\|Failed to fetch global settings\|Sync UI state" src/components/performance/GlobalTravel.vue` → nothing
-   - Done when: `grep -c "const globalTravelValue = globalTravel.value" src/components/performance/GlobalTravel.vue` → 1
-   - Done when: `npm run typecheck` → 0 errors (baseline stays 0); `npm run lint` exit 0
-   - Self-check: run typecheck; commit `sprint-14-code-hygiene: task 1`; write review-globaltravel-select.md (goal + Done-whens + Base/Head) and set IN-REVIEW. [hw]: in the review file's Hardware check section note in plain language — select keys, set global travel/DpDr values in the UI, press "Select to Global", confirm the selected keys actuate at the UI values (not a stale device register).
+1. **GlobalTravel Select-to-Global writes UI settings instead of Global-DB register** — [high-stakes][hw] — ✓ DONE 2026-10-23 (Worker `0121da8`; Reviewer PASS 0 fails; Hardware verdict PASS) — details: review-globaltravel-select-to-global.md
 
 2. **connection.ts getBaseInfo() missing instanceof Error check** — [high-stakes] — STATUS: PENDING
    - Files: `src/store/connection.ts` (touches store/connection.ts → always high-stakes per CLAUDE.md)

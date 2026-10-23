@@ -33,7 +33,7 @@ Fix-round ranges (added on each re-review): <none yet>
 - What to verify: with a keyboard connected, set the Global Travel slider (and Top/Bottom Dead Zone) to a distinct value — e.g. travel 3.50mm, top DZ 0.40mm, bottom DZ 0.30mm — so it visibly differs from the device's stored global register, select a few keys on the Performance page, then click "Select to Global". Confirm the selected keys end up in Global mode AND their per-key travel/dead-zone values match what the UI showed (3.50 / 0.40 / 0.30), not some other previously-stored global value. Also sanity-check the button is still disabled with no keys selected, and that the "Global Settings Applied to Selected Keys" success message still appears.
 
 **Hardware verdict (agent records from the PO's plain-language outcome):**
-- Hardware verdict: <pending — PO to exercise on device>
+- Hardware verdict: PASS — 2026-10-23 (PO: "HW test passed.")
 
 ## ❓ Reviewer, please confirm
 - [x] meets every "DONE WHEN" criterion above — C1 `getGlobalTouchTravel` 3→2, both survivors inside `loadGlobalSettings` (the UI-load path); C2 dead-string grep → nothing; C3 `const globalTravelValue = globalTravel.value` present at :265; C4 typecheck 0 errors + lint exit 0.

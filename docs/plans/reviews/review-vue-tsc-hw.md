@@ -13,9 +13,9 @@
 - typecheck/build: N/A (no source changed in this task; gate last ran at Task 2f: typecheck 0, lint 0, build 0).
 
 ## 🔍 Commits to review
-Base: `61cae73` (Task 2 head — current branch tip)   Head: `61cae73` (no code in this task; nothing to diff)
+Base: `61cae73` (Task 2 head)   Head: `ed7de1f` (F1 fix)
 No Reviewer window: there is no diff to judge. The behavior under test was introduced by Task 2 commits `57793da`/`0079fa2`/`e1dc70b`/`ea5567d`/`6f44057`/`61cae73` (reviewed and PASSed in `review-vue-tsc-zero.md`).
-Fix-round ranges (added on each re-review): —
+Fix-round ranges (added on each re-review): Round 1 = `61cae73..ed7de1f` — F1 fix only: one-line label-ternary literal swap in `src/pages/KeyMapping.vue:25` (handler `toggleSelectAll` untouched; it was already correct). Worker self-check: typecheck 0 / lint 0 / build 0. No Reviewer pass needed for a label-literal swap on an already-reviewed handler — the PO re-check below is the gate.
 
 ## 🖥️ Hardware check ([hw] tasks only)
 **Worker fills (what to test):**
@@ -29,7 +29,7 @@ Fix-round ranges (added on each re-review): —
   - **(f) Sanity glance — device status display.** After connecting, the app's device-status indicator should reach its ready state as before (two `Uint8Array` fallback arms were removed as dead code).
 
 **Hardware verdict (agent records from the PO's plain-language outcome):**
-- Hardware verdict: **FAIL — 2026-10-23 → see F1**
+- Hardware verdict: **FAIL — 2026-10-23 → see F1** (round 1; F1 FIXED in `ed7de1f` — re-check of items (b)+(f) PENDING)
 - PO results by item: (a) pass — connection operating normally · (b) **FAIL** (see F1) · (c) pass — calibration operating normally · (d) pass — process batches working normally · (e) pass — lighting operating normally · (f) not reported by the PO in this round — re-check it together with (b) after the fix.
 
 ## 🔍 Reviewer verification (code review of the hw handoff)
@@ -51,3 +51,4 @@ No new Findings. Task 3 stays **HW-TEST**; per CLAUDE.md Hardware gate a Reviewe
 - **Actual (PO's words):** "keymapping select all and deselect all tags are reversed last intended functionality in commit 61cae73b."
 - Items (a), (c), (d), (e) passed on hardware; (f) was not reported — re-check (b) and (f) after the fix.
 - **Fix scope: ONLY this.** Investigate the label/branch logic in `src/pages/KeyMapping.vue` (the Select All/Deselect All ternary + `selectAll`/`deselectAll` handlers and how they read `selectedKeys` vs the real key count) against the intended behavior at commit `61cae73`; do not touch the other verified items. After the fix, self-check (typecheck 0 / lint / build if affected), set Task 3 back to HW-TEST, and hand off for PO re-check of (b) + (f).
+- **FIXED (Worker, 2026-10-23, commit `ed7de1f`):** No separate `selectAll`/`deselectAll` handlers exist — there is one `toggleSelectAll`, and its logic is CORRECT (all-selected → clears; not-all → selects all). The defect was purely the label ternary at `KeyMapping.vue:25`: it read `'Select All'` when everything was already selected (click deselects) and `'Deselect All'` otherwise (click selects) — tags reversed vs the action. Fix = swap the two string literals; handler untouched. Self-check: typecheck 0, lint 0, build 0. Task 3 → HW-TEST; PO re-check items (b) + (f).

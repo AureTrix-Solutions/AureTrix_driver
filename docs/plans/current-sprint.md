@@ -7,15 +7,16 @@
 ## Checkpoint
 - Branch: `sprint-14-code-hygiene`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt; gate ACTIVE — every task must keep typecheck at 0)
-- Cleanup: .scratch/ has pm-notes.md + review-notes.md (PO may delete); _to_delete/ holds only .gitkeep (from actual `ls`, task-1 hw close 2026-10-23)
+- Cleanup: .scratch/ has pm-notes.md + review-notes.md (PO may delete); _to_delete/ holds only .gitkeep (from actual `ls`, task-2 close 2026-10-23)
 
 ## ▶ RUN THIS
-Next: WORKER — "go" → Task 2: `getBaseInfo()` instanceof Error guards at all 3 call sites in src/store/connection.ts ([high-stakes], PENDING; full edit spec in Tasks below). Self-check → commit `sprint-14-code-hygiene: task 2` → write review-connection-getbaseinfo.md → IN-REVIEW. Task 3 (baseLayout prop deletions) stays queued until Task 2 closes.
+Next: REVIEWER — "follow docs/plans/reviews/review-connection-getbaseinfo.md" (Task 2, [high-stakes], IN-REVIEW; base `7785a4c`..head `bf12edc`; rule on the flagged `?.` discrepancy in the Worker notes). On PASS → DONE, then advance to Task 3 (baseLayout prop deletions — full spec in Tasks below). Do not start Task 3 until Task 2 is DONE.
 
 ## Tasks
 1. **GlobalTravel Select-to-Global writes UI settings instead of Global-DB register** — [high-stakes][hw] — ✓ DONE 2026-10-23 (Worker `0121da8`; Reviewer PASS 0 fails; Hardware verdict PASS) — details: review-globaltravel-select-to-global.md
 
-2. **connection.ts getBaseInfo() missing instanceof Error check** — [high-stakes] — STATUS: PENDING
+2. **connection.ts getBaseInfo() missing instanceof Error check** — [high-stakes] — STATUS: IN-REVIEW
+   - Checkpoint: 3 guards applied + committed (`bf12edc`, base `7785a4c`); all Done-whens pass (guard count 3, console.log kept 3, typecheck 0 / lint exit 0). One plan discrepancy flagged for Reviewer (connectDevice degraded string uses `?.`, its catch does not — applied plan's literal). Review file: docs/plans/reviews/review-connection-getbaseinfo.md.
    - Files: `src/store/connection.ts` (touches store/connection.ts → always high-stakes per CLAUDE.md)
    - Defect: `KeyboardService.getBaseInfo()` RETURNS `Error` (never throws — wrapper convention). All 3 call sites spread it straight into `deviceInfo` (an Error's own props are non-enumerable → spreads as `{}`), so on failure deviceInfo silently lacks base fields and the status line reports the SUCCESS string. The surrounding try/catch never fires for this path; it STAYS for real throws.
    - Apply the same shape at all 3 sites — `autoConnect()`, `connectDevice()`, `onAutoConnectSuccess()`. Each currently reads (grep `await KeyboardService.getBaseInfo()`):

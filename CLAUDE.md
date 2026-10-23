@@ -79,7 +79,7 @@ Vite + TS aliases: `@` → src, plus `@components`, `@pages`, `@services`, `@sty
 
 - Use `<script setup lang="ts">` for new components; Composition API only.
 - Use Pinia stores for shared state; no direct DOM manipulation for state changes.
-- Commit style: `Add: ...`, `Fix: ...`, `Update: ...`, `Remove: ...` (sprint work also uses `<sprint>: <task>` — see Git & commits).
+- Commit style: Conventional Commits — `feat:`, `fix:`, `docs:`, `refactor:`, `chore:` (sprint work also uses `<sprint>: <task>` — see Git & commits).
 - New keyboard layout contributions go in `src/utils/sharedLayout.ts` with precise mm-level measurements (1u = 19.05mm).
 - When a feature is complete, update this file with any new conventions (1-3 lines).
 

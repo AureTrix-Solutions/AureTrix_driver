@@ -11,7 +11,7 @@
 - Cleanup (from actual `ls`, 2026-10-23, post-Task-2): `.scratch/` contains pm-notes.md + review-notes.md (PM/Reviewer's own; PO may delete) · `_to_delete/` empty. Nothing for PO to `git rm`.
 
 ## ▶ RUN THIS
-Next: Task 3 — align commit-message conventions in CLAUDE.md :82 (3 edit-sites; spec is grep-verified current text + exact replacements). Do this task, then stop.
+ALL TASKS DONE — awaiting PO sign-off. Tasks 1 (CI workflow, Reviewer PASS), 2 (CONTRIBUTING CI line), 3 (CLAUDE.md commit style) all complete. Route to PM-close for PO sign-off. Stop.
 
 ## Tasks
 
@@ -66,16 +66,8 @@ Next: Task 3 — align commit-message conventions in CLAUDE.md :82 (3 edit-sites
    - PM-verified: commit-message section already Conventional Commits — leave unchanged (PO directive). Node "v18 or higher" — leave unchanged (PO directive).
    - Commit: `sprint-15-ci: task 2 — CONTRIBUTING PR checklist gains CI-pass line`; collapse to ✓.
 
-3. **CLAUDE.md :82 → Conventional Commits vocabulary** — [trivial] — STATUS: PENDING
-   - Done when: `grep -cF "Add: ..." CLAUDE.md` returns 0 AND `grep -cF "Conventional Commits" CLAUDE.md` returns 1.
-   - Done when: `grep -cF "<sprint>: <task>" CLAUDE.md` still returns ≥1 (note kept) and the replaced line still ends with `see Git & commits).`
-   - Files: `CLAUDE.md` (ONE edit-site at :82)
-   - Spec — replace the EXACT current line (grep-confirmed):
-     `- Commit style: \`Add: ...\`, \`Fix: ...\`, \`Update: ...\`, \`Remove: ...\` (sprint work also uses \`<sprint>: <task>\` — see Git & commits).`
-     with:
-     `- Commit style: Conventional Commits — \`feat:\`, \`fix:\`, \`docs:\`, \`refactor:\`, \`chore:\` (sprint work also uses \`<sprint>: <task>\` — see Git & commits).`
-   - PM-verified: `Add: ...` appears exactly once in CLAUDE.md (grep `Commit style|Add: \.\.\.` → only :82); CONTRIBUTING.md's Commit Messages section already lists feat/fix/docs/refactor/style/test/chore — this aligns CLAUDE.md to it.
-   - Commit: `sprint-15-ci: task 3 — CLAUDE.md commit style → Conventional Commits`; collapse to ✓. Then flag "ALL TASKS DONE — awaiting PO sign-off" (after Task 1's review closes) and stop.
+3. **CLAUDE.md :82 → Conventional Commits vocabulary** — [trivial] — STATUS: DONE
+   - ✓ 2026-10-23 — one edit-site at :82; all Done-when pass: `Add: ...`=0, `Conventional Commits`=1, `<sprint>: <task>`=2, line ends `see Git & commits).`.
 
 ## Findings (raw — PM routes at close)
 - ci.yml pins actions/checkout@v4 + actions/setup-node@v4 by tag, not commit SHA — fine for informational CI; verify in .github/workflows/ci.yml if a SHA-pinning policy is ever adopted. (Reviewer task 1, non-defect)

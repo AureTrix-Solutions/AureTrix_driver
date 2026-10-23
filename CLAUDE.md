@@ -13,13 +13,13 @@ npm install           # install dependencies (npm is the package manager; packag
 npm run dev           # dev server on http://localhost:5000 (strictPort)
 npm run build         # production build to dist/
 npm run preview       # serve the production build
-npm run typecheck     # tsc --noEmit (no emit; reports type errors only)
-npm run lint          # ESLint flat config (eslint.config.mjs); exit 0 = clean, warnings tolerated
+npm run typecheck     # vue-tsc --noEmit (type-checks .ts AND .vue; no emit, reports type errors only)
+npm run lint          # ESLint flat config (eslint.config.mjs); exit 0 = clean (0 warnings)
 npm test              # vitest (watch mode by default)
 npx vitest run path/to/file.test.ts   # run a single test file
 ```
 
-Lint runs via ESLint 10 flat config (`eslint.config.mjs`); warnings were ratcheted to 0 (sprint-11) and `no-explicit-any` / `no-unused-vars` / `preserve-caught-error` are enforced at `"error"`. There are currently no test files, despite vitest/@vue/test-utils being installed.
+Lint runs via ESLint 10 flat config (`eslint.config.mjs`); warnings were ratcheted to 0 (sprint-11). Which rules are enforced at `"error"` lives in `eslint.config.mjs` — treat that file as the source of truth, not this line. There are currently no test files, despite vitest/@vue/test-utils being installed.
 
 ## Architecture
 

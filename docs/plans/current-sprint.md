@@ -1,6 +1,6 @@
 # SPRINT: sprint-14-code-hygiene
 
-**GOAL:** Clear three routed hygiene items: fix the real functional bug — GlobalTravel "Select to Global" must write the current UI settings (global travel + DpDr), not the re-fetched Global-DB register; add the missing `instanceof Error` guard at all three `getBaseInfo()` call sites in store/connection.ts; delete the dead `baseLayout` prop from SingleKeyTravel.vue (and its parent binding).
+**GOAL:** Clear three routed hygiene items: fix the real functional bug — GlobalTravel "Select to Global" must write the current UI settings (global travel + DpDr), not the re-fetched Global-DB register; add the missing `instanceof Error` guard at all three `getBaseInfo()` call sites in store/connection.ts; delete the dead `baseLayout` props from SingleKeyTravel.vue and SwitchProfiles.vue (and both KeyTravel bindings).
 **DONE-CRITERIA (sprint):** All 3 tasks DONE (Task 1: Reviewer PASS + PO hardware ✓; Tasks 2–3: Reviewer PASS), `npm run typecheck` stays at 0 errors, `npm run lint` exit 0, Findings routed at close.
 **Started:** 2026-10-23  ·  **Status:** IN PROGRESS
 
@@ -61,9 +61,10 @@ Next: Task 1 — GlobalTravel Select-to-Global value source. Do this task, then 
    - Done when: `npm run typecheck` → 0 errors; `npm run lint` exit 0
    - Self-check: run typecheck; commit `sprint-14-code-hygiene: task 2`; write review-connection-getbaseinfo.md; set IN-REVIEW.
 
-3. **Delete dead baseLayout prop (SingleKeyTravel.vue + parent binding)** — [high-stakes] — STATUS: PENDING
-   - Files: `src/components/performance/SingleKeyTravel.vue`, `src/components/performance/KeyTravel.vue` (multi-file → high-stakes; pure deletion, no device behavior → no [hw])
-   - Verified dead: `baseLayout` in SingleKeyTravel.vue appears ONLY in its prop declaration — never in template or setup. `import type { IDefKeyInfo }` STAYS (still used by `layout` and `selectedKeys` props). KeyTravel's OWN `baseLayout` prop STAYS — `<SwitchProfiles>` still binds it (that separate dead-prop question is in Findings, out of scope here).
+3. **Delete dead baseLayout props (SingleKeyTravel + SwitchProfiles + both parent bindings)** — [high-stakes] — STATUS: PENDING
+   - Files: `src/components/performance/SingleKeyTravel.vue`, `src/components/performance/SwitchProfiles.vue`, `src/components/performance/KeyTravel.vue` (multi-file → high-stakes; pure deletion, no device behavior → no [hw])
+   - Verified dead in BOTH children: `baseLayout` appears ONLY in each child's prop declaration — never in template or setup (grep `baseLayout` in each → declaration block only). `import type { IDefKeyInfo }` STAYS in both files (still used by `layout` and `selectedKeys` props — grep `PropType<IDefKeyInfo` → 2 other uses each).
+   - SCOPE CAP (PO decision 2026-10-23): prop + binding deletions ONLY. Removing both children's props leaves KeyTravel's OWN `baseLayout` prop with no consumer → that becomes dead, and the cascade up to Performance.vue / useMappedKeyboard is a SEPARATE multi-file change — do NOT touch it here (it's a backlog line). KeyTravel keeps its own `baseLayout` prop this sprint.
    - **Edit 1** — SingleKeyTravel.vue: delete the prop block (grep `baseLayout: {`):
      ```ts
     baseLayout: {
@@ -71,12 +72,21 @@ Next: Task 1 — GlobalTravel Select-to-Global value source. Do this task, then 
       default: null,
     },
      ```
-   - **Edit 2** — KeyTravel.vue: delete ONLY the `:base-layout="baseLayout"` line inside the `<SingleKeyTravel ...>` element (grep `:base-layout="baseLayout"` → 2 hits; the one between `:layout="layout"` and `:profile-max-travel` in `<SingleKeyTravel>` goes; the one in `<SwitchProfiles>` STAYS).
+   - **Edit 2** — SwitchProfiles.vue: delete the IDENTICAL prop block (grep `baseLayout: {`):
+     ```ts
+    baseLayout: {
+      type: Object as PropType<IDefKeyInfo[][] | null>,
+      default: null,
+    },
+     ```
+   - **Edit 3** — KeyTravel.vue: delete BOTH `:base-layout="baseLayout"` lines (grep `:base-layout="baseLayout"` → 2 hits): the one in `<SingleKeyTravel ...>` AND the one in `<SwitchProfiles ...>`. Both children now lack the prop, so both bindings go. KeyTravel's own `baseLayout` prop declaration STAYS (scope cap above).
    - Done when: `grep -n "baseLayout" src/components/performance/SingleKeyTravel.vue` → nothing
-   - Done when: `grep -c ':base-layout="baseLayout"' src/components/performance/KeyTravel.vue` → 1
+   - Done when: `grep -n "baseLayout" src/components/performance/SwitchProfiles.vue` → nothing
+   - Done when: `grep -c ':base-layout="baseLayout"' src/components/performance/KeyTravel.vue` → 0
+   - Done when: `grep -c "baseLayout: {" src/components/performance/KeyTravel.vue` → 1 (KeyTravel's OWN prop untouched)
    - Done when: `npm run typecheck` → 0 errors; `npm run lint` exit 0
    - Self-check: run typecheck; commit `sprint-14-code-hygiene: task 3`; write review-baselayout-prop.md; set IN-REVIEW.
 
 ## Findings
 <!-- One line per out-of-scope defect: DEFECT + WHERE TO VERIFY. PM routes at close. -->
-- <none yet — the SwitchProfiles dead-baseLayout item found at PM-open was routed straight to backlog.md (future-sprint); do not re-file it>
+- <none yet — the SwitchProfiles dead-baseLayout item was folded into task 3 (PO decision 2026-10-23); the KeyTravel dead-prop cascade it creates is already a backlog line; do not re-file either>

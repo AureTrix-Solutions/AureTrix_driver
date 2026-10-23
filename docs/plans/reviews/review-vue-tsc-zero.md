@@ -42,9 +42,27 @@ Fix-round ranges (added on each re-review): <base2>..<head2>, ...
 <!-- One block per finding. Include exact file:line, expected vs actual, and the fix needed.
      Non-defect observations (out-of-scope improvements) go under Findings, not here. -->
 
+No defects found. Non-defect observations (routed to ## Findings in current-sprint.md):
+
+- O1 — Worker scope summary (this file, "Commits to review" section) lists `src/pages/Debug.vue` among touched files, but Debug.vue has zero commits and zero net diff in 65b0b3e..61cae73 (`git log --oneline 65b0b3e..61cae73 -- src/pages/Debug.vue` → empty). Documentation inaccuracy only; no code impact.
+- O2 — Two dead-arm removals are behavior-visible IF runtime data ever diverges from declared types: Lighting.vue dropped `|| currentState.open === 1` and App.vue `isStatusReady` dropped the `Uint8Array` arms for KeyboardSN/appVersion. Both removals were mandated by the spec/anchors (declared types make the arms unreachable), but the PO may want a sanity glance at lighting-enable and device-status display during Task 3 [hw] regardless.
+
+Verification evidence (rerun at review time, all on head 61cae73 tree):
+- `npm run typecheck 2>&1 | grep -c "error TS"` → 0; `head -1 docs/tsc-baseline.txt` → 0 (identical, sprint gate AT ZERO).
+- `npm run lint` → exit 0, no output beyond the npm banner.
+- `npm run build` → exit 0 (see checkpoint).
+- All 2a–2f anchors rerun verbatim → every expected value matched (details in the verdict rationale below).
+- Suppression scan of added diff lines (`as any`, `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, non-null `!` assertions) → zero hits. Added `as` casts limited to 2 CSSProperties zero-size returns in LayoutPreview.vue (type-level, correct).
+- Design intent intact: KeyboardService.ts change is the single `getRm6X21Calibration` return-type widening `number[]`→`number[][]`; `| Error` preserved everywhere; no wrapper now throws.
+
 ## ✅ Verdict (REVIEWER fills)
-**VERDICT:** PENDING
-**Reviewed by:** —
-**Date:** —
+**VERDICT:** PASS
+**Reviewed by:** Reviewer session (fresh window, 2026-10-22)
+**Date:** 2026-10-22
 **Re-review scope (fix rounds only):** —
-**Findings (1 line each):** —
+**Findings (1 line each):**
+- O1 (observation): review-file scope summary mislists Debug.vue as touched; zero diff in range. Doc-only.
+- O2 (observation): Lighting `open === 1` and App.vue Uint8Array arms dropped as spec-mandated dead code; PO sanity glance during Task 3 [hw] suggested.
+
+Rationale: cumulative base 65b0b3e → head 61cae73 clears vue-tsc from 101 to 0 errors across 2a–2f with exact ratchet matches at every stage; lint and build clean; every Done-when anchor reproduces; fixes are type-level only (no suppressions, no non-null assertions); the three behavior-visible real-bug fixes (connection.isConnecting, KeyMapping Number(keyValue)/template unwrap, SingleKeyTravel processBatches keyIds) are type-correct and already routed to Task 3 [hw]. The 15-commit range contains no stray source files (settings.json commits are PO's; review-vue-tsc-gate.md is the Task-1 verdict write).
+

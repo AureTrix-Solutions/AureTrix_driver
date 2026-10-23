@@ -28,8 +28,12 @@ export const useConnectionStore = defineStore('connection', {
           try {
             const info = await KeyboardService.getBaseInfo();
             console.log('Base info:', info); // Essential for debugging device details
-            this.deviceInfo = { ...this.deviceInfo, ...info };
-            this.status = `Auto-connected to ${this.deviceInfo.productName} with ID ${this.deviceInfo.id}`;
+            if (info instanceof Error) {
+              this.status = `Auto-connected to ${this.deviceInfo.productName}, but failed to load details.`;
+            } else {
+              this.deviceInfo = { ...this.deviceInfo, ...info };
+              this.status = `Auto-connected to ${this.deviceInfo.productName} with ID ${this.deviceInfo.id}`;
+            }
           } catch (baseError) {
             console.error('Failed to load base info:', baseError);
             this.status = `Auto-connected to ${this.deviceInfo.productName}, but failed to load details.`;
@@ -57,8 +61,12 @@ export const useConnectionStore = defineStore('connection', {
           try {
             const info = await KeyboardService.getBaseInfo();
             console.log('Base info:', info); // Essential for debugging device details
-            this.deviceInfo = { ...this.deviceInfo, ...info };
-            this.status = `Connected to ${this.deviceInfo.productName} with ID ${this.deviceInfo.id}`;
+            if (info instanceof Error) {
+              this.status = `Connected to ${this.deviceInfo?.productName}, but failed to load details.`;
+            } else {
+              this.deviceInfo = { ...this.deviceInfo, ...info };
+              this.status = `Connected to ${this.deviceInfo.productName} with ID ${this.deviceInfo.id}`;
+            }
           } catch (baseError) {
             console.error('Failed to load base info:', baseError);
             this.status = `Connected to ${this.deviceInfo.productName}, but failed to load details.`;
@@ -130,8 +138,12 @@ export const useConnectionStore = defineStore('connection', {
       try {
         const info = await KeyboardService.getBaseInfo();
         console.log('Base info:', info); // Essential for debugging device details
-        this.deviceInfo = { ...this.deviceInfo, ...info };
-        this.status = `Auto-connected to ${this.deviceInfo.productName} with ID ${this.deviceInfo.id}`;
+        if (info instanceof Error) {
+          this.status = `Auto-connected to ${this.deviceInfo.productName}, but failed to load details.`;
+        } else {
+          this.deviceInfo = { ...this.deviceInfo, ...info };
+          this.status = `Auto-connected to ${this.deviceInfo.productName} with ID ${this.deviceInfo.id}`;
+        }
       } catch (baseError) {
         console.error('Failed to load base info:', baseError);
         this.status = `Auto-connected to ${this.deviceInfo.productName}, but failed to load details.`;

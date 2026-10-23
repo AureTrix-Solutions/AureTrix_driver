@@ -28,17 +28,29 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task. Dead-prop deletion; no runtime/device behavior changed.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** ___  ·  **Date:** ___  ·  **Fail count:** ___
+**Result:** PASS  ·  **Date:** 2026-10-23  ·  **Fail count:** 0
 
 ### Failed items (FAIL only)
+None.
+
+### Evidence (all rerun by Reviewer)
+- `git diff --stat 7ce699f..b8ca878` → exactly the 3 named files, 10 deletions, 0 insertions — deletions-only, no stray whitespace edits (Worker's pre-commit restore claim verified against the actual diff).
+- `grep -rn "baseLayout" src/components/performance/` → exactly 1 hit: KeyTravel.vue:49 `baseLayout: {` (its own retained prop) ✓
+- `grep -n ":base-layout" src/components/performance/KeyTravel.vue` → nothing (exit 1) ✓
+- `grep -c "baseLayout: {" src/components/performance/KeyTravel.vue` → 1 ✓
+- `npm run typecheck` → exit 0 (baseline 0 held); `npm run lint` → exit 0 ✓
+- Design intent: untouched (props/templates only — no SDK, filters:[], usagePage 65440, or wrapper surface). Tag [high-stakes] correct (multi-file). No inline-fixable defects reached review.
+
+### Reviewer Findings
+- None new. KeyTravel.vue's own `baseLayout` prop is now consumerless (children's props gone) — already a backlog line per the PO's scope-cap decision (2026-10-23); not re-filed.

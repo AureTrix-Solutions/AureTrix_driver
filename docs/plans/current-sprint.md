@@ -54,7 +54,8 @@ Next: Task 2 — add CI line to .github/CONTRIBUTING.md PR checklist (ONE edit-s
    - Self-check gate: SKIPPED (no .ts/.vue touched). Still run `npm run typecheck` once and record exit 0 in the checkpoint (baseline sanity, expected 0).
    - Commit: `sprint-15-ci: task 1 — add CI workflow (.github/workflows/ci.yml)`; then IN-REVIEW: write docs/plans/reviews/review-ci-workflow.md (goal line + the 3 Done-when criteria + base/head hashes + note to Reviewer: diff the file against the Task 1 spec block above verbatim).
 
-2. **Add CI line to CONTRIBUTING.md PR checklist** — [trivial] — STATUS: PENDING
+2. **Add CI line to CONTRIBUTING.md PR checklist** — [trivial] — STATUS: IN-PROGRESS
+   - Checkpoint (2026-10-23): read .github/CONTRIBUTING.md — PR Checklist = 6 checkboxes (currently); exact insert-after line `- [ ] PR description explains the changes and motivation` is the last one, immediately before blank line + `### Review Process`. Prerequisite `v18 or higher` present (Prerequisites section) — untouched per spec. Commit Messages section already Conventional Commits (feat/fix/docs/refactor/style/test/chore) — untouched. Applying the ONE edit next.
    - Done when: `grep -c "^- \[ \] " .github/CONTRIBUTING.md` returns 7 (was 6).
    - Done when: `grep -nF "CI checks" .github/CONTRIBUTING.md` hits inside the PR Checklist section, and `grep -nF "v18 or higher" .github/CONTRIBUTING.md` still hits (prerequisite untouched).
    - Files: `.github/CONTRIBUTING.md` (ONE edit-site; do NOT rewrite the file)

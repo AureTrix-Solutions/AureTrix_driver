@@ -227,6 +227,7 @@ Before submitting a PR, ensure:
 - [ ] Documentation is updated if needed
 - [ ] Commit messages are clear and descriptive
 - [ ] PR description explains the changes and motivation
+- [ ] CI checks (typecheck, lint, build) pass before review
 
 ### Review Process
 

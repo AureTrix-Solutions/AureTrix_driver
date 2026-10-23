@@ -10,7 +10,6 @@
     <SingleKeyTravel 
       :selected-keys="selectedKeys" 
       :layout="layout" 
-      :base-layout="baseLayout" 
       :profile-max-travel="profileMaxTravel"
       @update-single-overlay="setSingleOverlay" 
       @mode-changed="handleModeChange"
@@ -18,7 +17,6 @@
     <SwitchProfiles 
       :selected-keys="selectedKeys" 
       :layout="layout" 
-      :base-layout="baseLayout"
       :profile-max-travel="profileMaxTravel"
     />
   </div>

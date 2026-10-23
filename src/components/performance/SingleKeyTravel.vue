@@ -123,10 +123,6 @@ export default defineComponent({
       type: Array as PropType<IDefKeyInfo[][]>,
       required: true,
     },
-    baseLayout: {
-      type: Object as PropType<IDefKeyInfo[][] | null>,
-      default: null,
-    },
     profileMaxTravel: {
       type: Number,
       default: 4.0,

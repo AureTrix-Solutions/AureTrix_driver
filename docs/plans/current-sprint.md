@@ -7,13 +7,14 @@
 ## Checkpoint
 - Branch: `sprint-14-code-hygiene`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt; gate ACTIVE — every task must keep typecheck at 0)
-- Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty (from actual `ls`, PM-open 2026-10-23)
+- Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ holds only .gitkeep (from actual `ls`, task-1 close 2026-10-23)
 
 ## ▶ RUN THIS
-Next: Task 1 — GlobalTravel Select-to-Global value source. Do this task, then stop.
+Next: REVIEWER — follow docs/plans/reviews/review-globaltravel-select-to-global.md (Task 1 is [high-stakes][hw], IN-REVIEW; base `aa621e7`..head `0121da8`). On PASS it flips to HW-TEST (never DONE) → PO hardware ✓ → DONE, THEN advance to Task 2. Do not start Task 2 until Task 1 is DONE.
 
 ## Tasks
-1. **GlobalTravel Select-to-Global writes UI settings instead of Global-DB register** — [high-stakes][hw] — STATUS: PENDING
+1. **GlobalTravel Select-to-Global writes UI settings instead of Global-DB register** — [high-stakes][hw] — STATUS: IN-REVIEW
+   - Checkpoint: Edits 1–2 applied + committed (`0121da8`, base `aa621e7`); all 4 Done-whens pass (getGlobalTouchTravel→2, dead-symbol grep→nothing, `const globalTravelValue = globalTravel.value`→1, typecheck 0 / lint exit 0). Review file written: docs/plans/reviews/review-globaltravel-select-to-global.md. Awaiting Reviewer → HW-TEST → PO hardware ✓.
    - Files: `src/components/performance/GlobalTravel.vue`
    - Defect (backlog, PO finding 2026-10-23): `setKeyToGlobalMode` re-fetches `getGlobalTouchTravel()` (the device Global-DB register) and applies THAT to selected keys — ignoring the current UI state in the `globalTravel`/`pressDead`/`releaseDead` refs (which `updateGlobalSettings` persists on every @change, so the refs are the authoritative "current global travel + DpDr UI settings").
    - Units confirmed both sides (sdk-ref §5.1 Verified): refs are mm; `setSingleTravel`/`setDp`/`setDr` take mm; no scaling at this layer. Refs are always numbers (init 2.0/0.2/0.2) → the NaN guard dies with step 1.

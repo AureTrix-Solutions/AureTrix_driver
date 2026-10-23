@@ -15,7 +15,8 @@ Next: Task 1 — create .github/workflows/ci.yml. Do this task, then stop.
 
 ## Tasks
 
-1. **Create .github/workflows/ci.yml** — [high-stakes] — STATUS: PENDING
+1. **Create .github/workflows/ci.yml** — [high-stakes] — STATUS: IN-REVIEW
+   - Checkpoint (2026-10-23): ci.yml created verbatim from spec (cat -A confirms 2-space indent, no tabs); all 8 Done-when greps hit (each ×1); `npm run typecheck` exit 0 (baseline sanity, gate SKIPPED — no .ts/.vue). Review file: docs/plans/reviews/review-ci-workflow.md.
    - Done when: `ls .github/workflows/ci.yml` exists (dir is NEW — grep-confirmed absent today).
    - Done when: each of `grep -F "node-version: 22"`, `grep -F "npm ci"`, `grep -F "npm run typecheck"`, `grep -F "npm run lint"`, `grep -F "npm run build"`, `grep "push:"`, `grep -F "branches: [main]"`, `grep "pull_request:"` against the file returns ≥1 hit.
    - Done when: file content matches the spec below EXACTLY (verbatim transcription; Reviewer diffs against this spec — YAML indentation is the failure mode grep can't catch).

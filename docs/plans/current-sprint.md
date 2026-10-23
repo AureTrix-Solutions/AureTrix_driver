@@ -11,12 +11,12 @@
 - Cleanup (from actual `ls`, 2026-10-23): `.scratch/` contains pm-notes.md (PM's own; PO may delete) · `_to_delete/` empty. Nothing for PO to `git rm`.
 
 ## ▶ RUN THIS
-Next: Task 1 — create .github/workflows/ci.yml. Do this task, then stop.
+Next: Task 2 — add CI line to .github/CONTRIBUTING.md PR checklist (ONE edit-site; exact insert-after line in spec). Do this task, then stop.
 
 ## Tasks
 
-1. **Create .github/workflows/ci.yml** — [high-stakes] — STATUS: IN-REVIEW
-   - Checkpoint (2026-10-23): ci.yml created verbatim from spec (cat -A confirms 2-space indent, no tabs); all 8 Done-when greps hit (each ×1); `npm run typecheck` exit 0 (baseline sanity, gate SKIPPED — no .ts/.vue). Review file: docs/plans/reviews/review-ci-workflow.md.
+1. **Create .github/workflows/ci.yml** — [high-stakes] — STATUS: DONE
+   - ✓ 2026-10-23 Reviewer PASS (0 fails; verbatim vs spec confirmed, all 8 greps ×1, typecheck exit 0) — docs/plans/reviews/review-ci-workflow.md
    - Done when: `ls .github/workflows/ci.yml` exists (dir is NEW — grep-confirmed absent today).
    - Done when: each of `grep -F "node-version: 22"`, `grep -F "npm ci"`, `grep -F "npm run typecheck"`, `grep -F "npm run lint"`, `grep -F "npm run build"`, `grep "push:"`, `grep -F "branches: [main]"`, `grep "pull_request:"` against the file returns ≥1 hit.
    - Done when: file content matches the spec below EXACTLY (verbatim transcription; Reviewer diffs against this spec — YAML indentation is the failure mode grep can't catch).
@@ -77,4 +77,4 @@ Next: Task 1 — create .github/workflows/ci.yml. Do this task, then stop.
    - Commit: `sprint-15-ci: task 3 — CLAUDE.md commit style → Conventional Commits`; collapse to ✓. Then flag "ALL TASKS DONE — awaiting PO sign-off" (after Task 1's review closes) and stop.
 
 ## Findings (raw — PM routes at close)
-- <none yet>
+- ci.yml pins actions/checkout@v4 + actions/setup-node@v4 by tag, not commit SHA — fine for informational CI; verify in .github/workflows/ci.yml if a SHA-pinning policy is ever adopted. (Reviewer task 1, non-defect)

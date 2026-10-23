@@ -52,3 +52,16 @@ No new Findings. Task 3 stays **HW-TEST**; per CLAUDE.md Hardware gate a Reviewe
 - Items (a), (c), (d), (e) passed on hardware; (f) was not reported — re-check (b) and (f) after the fix.
 - **Fix scope: ONLY this.** Investigate the label/branch logic in `src/pages/KeyMapping.vue` (the Select All/Deselect All ternary + `selectAll`/`deselectAll` handlers and how they read `selectedKeys` vs the real key count) against the intended behavior at commit `61cae73`; do not touch the other verified items. After the fix, self-check (typecheck 0 / lint / build if affected), set Task 3 back to HW-TEST, and hand off for PO re-check of (b) + (f).
 - **FIXED (Worker, 2026-10-23, commit `ed7de1f`):** No separate `selectAll`/`deselectAll` handlers exist — there is one `toggleSelectAll`, and its logic is CORRECT (all-selected → clears; not-all → selects all). The defect was purely the label ternary at `KeyMapping.vue:25`: it read `'Select All'` when everything was already selected (click deselects) and `'Deselect All'` otherwise (click selects) — tags reversed vs the action. Fix = swap the two string literals; handler untouched. Self-check: typecheck 0, lint 0, build 0. Task 3 → HW-TEST; PO re-check items (b) + (f).
+
+## 🔍 Reviewer verification — fix-round 1 (`61cae73..ed7de1f`)
+**Verdict: PASS (pending hw)** — 2026-10-23.
+
+Scope: the F1 fix only (items (a)/(c)/(d)/(e) passed hardware in round 1 and were not modified; (f) awaits the PO re-check).
+
+- **Diff scope grep-confirmed:** `git diff 61cae73..HEAD --stat -- src` → `src/pages/KeyMapping.vue | 2 +-` — ONE line (`:25` label ternary literal swap), nothing else in src across the fix range (HEAD `64e1bd9` is docs-only mechanics). ✓
+- **Handler untouched and correct:** `toggleSelectAll` (`KeyMapping.vue:133-141`): all-selected (`layout.value && selectedKeys.value.length === layout.value.flat().length`) → clears; else if layout → selects every coordinate via `flatMap`. ✓
+- **Label now matches action:** `:25` uses the SAME condition — all-selected → reads "Deselect All" (a click clears) ✓; not-all-selected → reads "Select All" (a click selects all) ✓. This is exactly F1's complaint ("tags are reversed") resolved; intended behavior per the last-intended functionality is restored.
+- **Gates rerun at HEAD by the Reviewer:** `npm run typecheck` (vue-tsc --noEmit) exit 0, `grep -c "error TS"` → 0; `docs/tsc-baseline.txt` first line `0`; shim confirmed at `_to_delete/vue-shim.d.ts` (absent from `src/types/`); `npm run lint` exit 0; `npm run build` exit 0. All match the Worker's self-check claims. ✓
+- **Observation O1 (non-defect, no fix needed):** if `layout` is null/empty the condition degenerates to `0 === 0` and the button reads "Deselect All" while the handler is a no-op (`layout.value` guard). Pre-existing cosmetic edge, unreachable once a keyboard layout loads; noted only.
+
+Per CLAUDE.md Hardware gate a Reviewer never writes DONE for a [hw] task — Task 3 stays **HW-TEST**; the PO's device re-check of items **(b) + (f)** closes it. No new Findings from this pass.

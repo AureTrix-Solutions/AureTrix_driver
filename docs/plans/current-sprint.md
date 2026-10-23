@@ -8,7 +8,7 @@
 ## Checkpoint
 - Branch: `sprint-15-ci`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — this sprint touches no .ts/.vue; self-check gate stays at 0, no re-baseline expected.
-- Cleanup: (Worker updates from an actual `ls` at commit time)
+- Cleanup (from actual `ls`, 2026-10-23): `.scratch/` contains pm-notes.md (PM's own; PO may delete) · `_to_delete/` empty. Nothing for PO to `git rm`.
 
 ## ▶ RUN THIS
 Next: Task 1 — create .github/workflows/ci.yml. Do this task, then stop.

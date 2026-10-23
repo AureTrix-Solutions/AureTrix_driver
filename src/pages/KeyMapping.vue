@@ -22,7 +22,7 @@
         {{ isMultiSelect ? 'Stop Multi-Select' : 'Select Multi' }}
       </button>
       <button @click="toggleSelectAll" class="action-btn secondary">
-        {{ selectedKeys.length === (layout?.flat().length || 0) ? 'Select All' : 'Deselect All' }}
+        {{ selectedKeys.length === (layout?.flat().length || 0) ? 'Deselect All' : 'Select All' }}
       </button>
       <button @click="setDefaultLayer" class="action-btn">Reset Mapping</button>
     </div>

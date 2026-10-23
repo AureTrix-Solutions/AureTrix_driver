@@ -40,6 +40,15 @@ N/A — not a [hw] task.
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** PASS / PASS (pending hw) / FAIL  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** PASS  ·  **Date:** 2026-10-23  ·  **Fail count:** 0
+
+**Evidence (all rerun by Reviewer, base `7785a4c`..head `bf12edc`):**
+- Diff scope: `git diff --stat 7785a4c..bf12edc` → ONLY `src/store/connection.ts`, +18/-6. No stray files.
+- All 3 hunks (autoConnect, connectDevice, onAutoConnectSuccess) match the plan shape exactly: `console.log('Base info:', info)` kept before the branch; `if (info instanceof Error)` → degraded status only, no spread into `deviceInfo`; else → spread + success status; outer try/catch kept; success strings unchanged.
+- Done-whens: `grep -c "if (info instanceof Error)" src/store/connection.ts` → 3 ✓; `grep -c "console.log('Base info:', info)" src/store/connection.ts` → 3 ✓; `npm run typecheck` → 0 errors ✓; `npm run lint` → exit 0 ✓.
+- Design intent: filters:[] / usagePage 65440 / wrappers-return-Error surfaces untouched — the change *implements* the return-Error convention.
+
+**Ruling on the flagged `?.` discrepancy (Worker note):** NOT a defect. `deviceInfo`'s declared state type (connection.ts, grep `deviceInfo:`) is `null as ({ productName: string; id: string } & Partial<KeyboardBaseInfo>) | null` — nullable. The guard's `this.deviceInfo?.productName` is therefore the type-safe form, and it is the plan's literal applied verbatim. The plan's aside ("matches this site's catch") is loosely worded: this site's catch uses bare `this.deviceInfo.productName` (pre-existing, unchanged, compiles via prior-assignment narrowing). Worker correctly followed the plan and flagged; no fix required.
 
 ### Failed items (FAIL only)
+None.

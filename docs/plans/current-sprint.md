@@ -10,39 +10,12 @@
 - Cleanup: .scratch/ has pm-notes.md + review-notes.md (PO may delete); _to_delete/ holds only .gitkeep (from actual `ls`, task-2 close 2026-10-23)
 
 ## ▶ RUN THIS
-Next: REVIEWER — "follow docs/plans/reviews/review-connection-getbaseinfo.md" (Task 2, [high-stakes], IN-REVIEW; base `7785a4c`..head `bf12edc`; rule on the flagged `?.` discrepancy in the Worker notes). On PASS → DONE, then advance to Task 3 (baseLayout prop deletions — full spec in Tasks below). Do not start Task 3 until Task 2 is DONE.
+Next: WORKER — "go" → Task 3: delete dead `baseLayout` props (SingleKeyTravel + SwitchProfiles + both parent bindings) ([high-stakes], PENDING; full edit spec in Tasks below). Self-check → commit `sprint-14-code-hygiene: task 3` → write review-baselayout-prop.md → IN-REVIEW. Task 2 is DONE (Reviewer PASS, 0 fails) — nothing outstanding on it.
 
 ## Tasks
 1. **GlobalTravel Select-to-Global writes UI settings instead of Global-DB register** — [high-stakes][hw] — ✓ DONE 2026-10-23 (Worker `0121da8`; Reviewer PASS 0 fails; Hardware verdict PASS) — details: review-globaltravel-select-to-global.md
 
-2. **connection.ts getBaseInfo() missing instanceof Error check** — [high-stakes] — STATUS: IN-REVIEW
-   - Checkpoint: 3 guards applied + committed (`bf12edc`, base `7785a4c`); all Done-whens pass (guard count 3, console.log kept 3, typecheck 0 / lint exit 0). One plan discrepancy flagged for Reviewer (connectDevice degraded string uses `?.`, its catch does not — applied plan's literal). Review file: docs/plans/reviews/review-connection-getbaseinfo.md.
-   - Files: `src/store/connection.ts` (touches store/connection.ts → always high-stakes per CLAUDE.md)
-   - Defect: `KeyboardService.getBaseInfo()` RETURNS `Error` (never throws — wrapper convention). All 3 call sites spread it straight into `deviceInfo` (an Error's own props are non-enumerable → spreads as `{}`), so on failure deviceInfo silently lacks base fields and the status line reports the SUCCESS string. The surrounding try/catch never fires for this path; it STAYS for real throws.
-   - Apply the same shape at all 3 sites — `autoConnect()`, `connectDevice()`, `onAutoConnectSuccess()`. Each currently reads (grep `await KeyboardService.getBaseInfo()`):
-     ```ts
-     const info = await KeyboardService.getBaseInfo();
-     console.log('Base info:', info); // Essential for debugging device details
-     this.deviceInfo = { ...this.deviceInfo, ...info };
-     this.status = `<success string>`;
-     ```
-     Replace the last two lines at each site with:
-     ```ts
-     if (info instanceof Error) {
-       this.status = `<degraded string>`;
-     } else {
-       this.deviceInfo = { ...this.deviceInfo, ...info };
-       this.status = `<success string>`;
-     }
-     ```
-     Keep the `console.log` line as-is. Strings per site (grep-verified, reuse verbatim — the degraded string is the one already in that site's catch):
-     - `autoConnect()` — success `` `Auto-connected to ${this.deviceInfo.productName} with ID ${this.deviceInfo.id}` `` / degraded `` `Auto-connected to ${this.deviceInfo.productName}, but failed to load details.` ``
-     - `connectDevice()` — success `` `Connected to ${this.deviceInfo.productName} with ID ${this.deviceInfo.id}` `` / degraded `` `Connected to ${this.deviceInfo?.productName}, but failed to load details.` `` (keep the `?.` — matches this site's catch)
-     - `onAutoConnectSuccess()` — success `` `Auto-connected to ${this.deviceInfo.productName} with ID ${this.deviceInfo.id}` `` / degraded `` `Auto-connected to ${this.deviceInfo.productName}, but failed to load details.` ``
-   - Done when: `grep -c "if (info instanceof Error)" src/store/connection.ts` → 3
-   - Done when: `grep -c "console.log('Base info:', info)" src/store/connection.ts` → 3 (kept)
-   - Done when: `npm run typecheck` → 0 errors; `npm run lint` exit 0
-   - Self-check: run typecheck; commit `sprint-14-code-hygiene: task 2`; write review-connection-getbaseinfo.md; set IN-REVIEW.
+2. **connection.ts getBaseInfo() missing instanceof Error check** — [high-stakes] — ✓ DONE 2026-10-23 (Worker `bf12edc`, base `7785a4c`; Reviewer PASS 0 fails — all 3 Done-whens rerun ✓, `?.` ruled non-defect) — details: review-connection-getbaseinfo.md
 
 3. **Delete dead baseLayout props (SingleKeyTravel + SwitchProfiles + both parent bindings)** — [high-stakes] — STATUS: PENDING
    - Files: `src/components/performance/SingleKeyTravel.vue`, `src/components/performance/SwitchProfiles.vue`, `src/components/performance/KeyTravel.vue` (multi-file → high-stakes; pure deletion, no device behavior → no [hw])

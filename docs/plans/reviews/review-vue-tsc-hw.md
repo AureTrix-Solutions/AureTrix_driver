@@ -29,7 +29,8 @@ Fix-round ranges (added on each re-review): —
   - **(f) Sanity glance — device status display.** After connecting, the app's device-status indicator should reach its ready state as before (two `Uint8Array` fallback arms were removed as dead code).
 
 **Hardware verdict (agent records from the PO's plain-language outcome):**
-- Hardware verdict: PENDING — PO to exercise items (a)–(f) on a real device.
+- Hardware verdict: **FAIL — 2026-10-23 → see F1**
+- PO results by item: (a) pass — connection operating normally · (b) **FAIL** (see F1) · (c) pass — calibration operating normally · (d) pass — process batches working normally · (e) pass — lighting operating normally · (f) not reported by the PO in this round — re-check it together with (b) after the fix.
 
 ## 🔍 Reviewer verification (code review of the hw handoff)
 **Verdict: PASS (pending hw)** — 2026-10-22. This task has no code diff to judge (git diff 61cae73..HEAD is docs-only: current-sprint.md + both review files). Reviewer scope reduced to confirming the Hardware check items the Worker wrote are accurate against head `61cae73`, so the PO tests the real code.
@@ -43,3 +44,10 @@ Grep-confirmed every item matches the code at head:
 - **(f)** Device-status validity (App.vue): arms now `typeof info.KeyboardSN === 'string' && length > 0` (same for appVersion) — the two `instanceof Uint8Array` fallbacks removed. ✓
 
 No new Findings. Task 3 stays **HW-TEST**; per CLAUDE.md Hardware gate a Reviewer never writes DONE for a [hw] task — the PO's device verdict on items (a)–(f) closes it.
+
+## F1 — Hardware verdict FAIL (2026-10-23): KeyMapping Select All / Deselect All tags reversed
+- **What was done:** PO connected a real device, opened KeyMapping, and exercised item (b) — clicking virtual keys in the category list and using the Select All / Deselect All controls (behavior as introduced by Task 2, commit `61cae73`).
+- **Expected:** the Select All and Deselect All tags/labels follow the last intended functionality (commit `61cae73`) — each control reads and acts as its label says.
+- **Actual (PO's words):** "keymapping select all and deselect all tags are reversed last intended functionality in commit 61cae73b."
+- Items (a), (c), (d), (e) passed on hardware; (f) was not reported — re-check (b) and (f) after the fix.
+- **Fix scope: ONLY this.** Investigate the label/branch logic in `src/pages/KeyMapping.vue` (the Select All/Deselect All ternary + `selectAll`/`deselectAll` handlers and how they read `selectedKeys` vs the real key count) against the intended behavior at commit `61cae73`; do not touch the other verified items. After the fix, self-check (typecheck 0 / lint / build if affected), set Task 3 back to HW-TEST, and hand off for PO re-check of (b) + (f).

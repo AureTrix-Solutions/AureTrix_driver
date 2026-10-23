@@ -29,7 +29,7 @@ Base: `65b0b3e` (Task 1 head — vue-tsc gate installed, 101 errors re-based)   
 <!-- Reviewer runs this itself — do NOT paste the diff here:
        git diff --stat <base>..<head>     then      git diff <base>..<head>
      A file touched outside this task's scope is a flag. -->
-20 files changed, 217 insertions(+), 151 deletions(-) across 15 commits (6 sub-task commits + 3 checkpoint/plan commits + PO's settings.json). Files: src/App.vue, src/store/connection.ts, src/services/KeyboardService.ts, src/utils/{keyMap.ts,MappedKeyboard.ts}, src/pages/{Calibration,Debug,KeyMapping,LayoutCreator,LayoutPreview,Lighting,MacroRecording,Performance,RapidTrigger}.vue, src/components/performance/{GlobalTravel,SingleKeyTravel,SwitchProfiles}.vue (+ Connect.vue consumers unchanged, docs/tsc-baseline.txt, docs/plans/*).
+20 files changed, 217 insertions(+), 151 deletions(-) across 15 commits (6 sub-task commits + 3 checkpoint/plan commits + PO's settings.json). Files: src/App.vue, src/store/connection.ts, src/services/KeyboardService.ts, src/utils/{keyMap.ts,MappedKeyboard.ts}, src/pages/{Calibration,KeyMapping,LayoutCreator,LayoutPreview,Lighting,MacroRecording,Performance,RapidTrigger}.vue, src/components/performance/{GlobalTravel,SingleKeyTravel,SwitchProfiles}.vue (+ Connect.vue consumers unchanged, docs/tsc-baseline.txt, docs/plans/*).
 Fix-round ranges (added on each re-review): <base2>..<head2>, ...
 
 ## 🖥️ Hardware check ([hw] tasks only)
@@ -44,7 +44,7 @@ Fix-round ranges (added on each re-review): <base2>..<head2>, ...
 
 No defects found. Non-defect observations (routed to ## Findings in current-sprint.md):
 
-- O1 — Worker scope summary (this file, "Commits to review" section) lists `src/pages/Debug.vue` among touched files, but Debug.vue has zero commits and zero net diff in 65b0b3e..61cae73 (`git log --oneline 65b0b3e..61cae73 -- src/pages/Debug.vue` → empty). Documentation inaccuracy only; no code impact.
+- O1 — Worker scope summary (this file, "Commits to review" section) lists `src/pages/Debug.vue` among touched files, but Debug.vue has zero commits and zero net diff in 65b0b3e..61cae73 (`git log --oneline 65b0b3e..61cae73 -- src/pages/Debug.vue` → empty). Documentation inaccuracy only; no code impact. (Fixed inline at PM-close 2026-10-23 — Debug.vue removed from the scope line.)
 - O2 — Two dead-arm removals are behavior-visible IF runtime data ever diverges from declared types: Lighting.vue dropped `|| currentState.open === 1` and App.vue `isStatusReady` dropped the `Uint8Array` arms for KeyboardSN/appVersion. Both removals were mandated by the spec/anchors (declared types make the arms unreachable), but the PO may want a sanity glance at lighting-enable and device-status display during Task 3 [hw] regardless.
 
 Verification evidence (rerun at review time, all on head 61cae73 tree):

@@ -1,0 +1,49 @@
+# Archived sprint snapshot — sprint-13-vue-tsc
+
+- **Goal:** Give `.vue` files a real automated type/undefined-reference gate — install vue-tsc, make `npm run typecheck` use it, and clear every error it unmasks so the gate lands at zero.
+- **Started:** 2026-10-22  ·  **Closed:** 2026-10-23
+- **Tasks:** 3 (all DONE — Tasks 1 & 2 Reviewer PASS; Task 3 PO hardware PASS round 2)
+- **Signed off by:** PO, 2026-10-23
+
+---
+
+# SPRINT: sprint-13-vue-tsc
+
+**GOAL:** Give `.vue` files a real automated type/undefined-reference gate — install vue-tsc, make `npm run typecheck` use it, and clear every error it unmasks so the gate lands at zero.
+**DONE-CRITERIA (sprint):** `ls node_modules/.bin | grep vue-tsc` is non-empty AND `npm run typecheck` (= `vue-tsc --noEmit`) exits 0 with `grep -c "error TS"` → 0 AND `docs/tsc-baseline.txt` first line is `0` AND `src/types/vue-shim.d.ts` now lives in `_to_delete/` AND `npm run lint` + `npm run build` pass AND the PO's device smoke check (Task 3) is ✓.
+**Started:** 2026-10-22  ·  **Status:** IN PROGRESS
+<!-- revN (YYYY-MM-DD): <what changed>   ← log revisions here, newest last -->
+rev1 (2026-10-22): PO reviewed the plan and accepted all PM calls (vue-tsc ^3.3.13 + TS stays 5.x; shim → _to_delete/; isConnecting fixed forward in the store; baseline 0→N re-base; getRm6X21Calibration annotation fix). PO also directed a new `## Constraints` section in backlog.md for standing guardrails (vs the work-queue issue sections); the vue-tsc/TS Finding was routed there at PM-open and marked ROUTED below so PM-close does not duplicate it. No task specs changed.
+rev2 (2026-10-22): PO confirmed the Findings [plan] count revision. Re-derived ALL sub-task counts from the live post-2a typecheck (60 errors; output in `.scratch/pm-typecheck-rev2.txt`) instead of applying the Finding's parenthetical ENDs — those were themselves arithmetically wrong (it said "2b 45, 2c 32; 2d END 16"). Corrected headers: 2a lands 60 (not 58 — 2 of the 8 Performance TS7053 are `positionToRemap` sites, not keyMap); 2b → 54 (not 52); 2c → 45 (not 43); 2d clears 24 → 21 (not 22 — the +2 TS7053 are in Performance and 2d edit-3 clears them); 2e → 11 and 2f → 0 unchanged. Per-task clear lists re-verified against live per-file residuals (sum 6+9+24+10+11 = 60 ✓). No edit specs changed — only the expected-count text.
+
+## Checkpoint
+- Branch: `sprint-13-vue-tsc`
+- tsc baseline: `0` (docs/tsc-baseline.txt head) — ratchet 101→60→54→45→21→11→0 complete (Task 2f, 61cae73). Reviewer reran at PASS: typecheck 0 / lint exit 0 / build exit 0 / all 2a-2f anchors match / zero suppressions added. SPRINT GATE AT ZERO — Task 2 DONE (Reviewer PASS 2026-10-22).
+- Cleanup (Worker ls, 2026-10-22, Task 3): `.scratch/` = build-2f.txt, handoff.md, lint-2f.txt, pm-notes.md, pm-typecheck-rev2.txt, review-notes.md, rv-2a-typecheck.txt, rv-typecheck.txt, typecheck-2d.txt, typecheck-2e.txt, typecheck-2f-post.txt, typecheck-2f-pre.txt, vue-tsc-dryrun.txt, vue-tsc-files.txt, vue-tsc-run.txt (PO may delete); `_to_delete/` = vue-shim.d.ts (PO must `git rm`).
+<!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
+
+## ▶ RUN THIS
+**ALL TASKS DONE — awaiting PO sign-off → PM-close.** Tasks 1-3 all ✓ DONE (1 & 2 Reviewer PASS; 3 PO hardware verdict PASS 2026-10-23 after F1 fix `ed7de1f`). Sprint gate AT ZERO: baseline 0, typecheck/lint/build 0. When the PO signs off, open a PM-close session ("Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise.") — PM routes the Findings section (incl. the GlobalTravel "Select to Global" defect) to backlog and runs the close checklist. Cleanup: PO to `git rm _to_delete/vue-shim.d.ts` at close; `.scratch/` freely deletable.
+
+## Tasks
+
+1. **Install vue-tsc + make it the typecheck gate** — [high-stakes] — ✓ DONE (Reviewer PASS 2026-10-22, 0 fails; N=101/14 files = exact dryrun match; baseline re-based 0→101; base `8c79c16` → head `65b0b3e`; detail in review-vue-tsc-gate.md)
+
+2. **Clear every vue-tsc error to zero** — [high-stakes] — ✓ DONE (Reviewer PASS 2026-10-22, 0 defects + 2 observations; 2a-2f = 57793da/0079fa2/e1dc70b/ea5567d/6f44057/61cae73; 101→60→54→45→21→11→0 exact ratchet; typecheck 0, lint 0, build 0, all anchors match, no suppressions/non-null assertions added; base `65b0b3e` → head `61cae73`; detail in review-vue-tsc-zero.md)
+
+3. **PO device smoke check of the behavior-visible fixes** — [hw] — ✓ DONE (PO hardware verdict PASS 2026-10-23, round 2 after F1 fix `ed7de1f`; Reviewer PASS pending-hw fix-round 1; detail in review-vue-tsc-hw.md)
+   - No code in this task. Most Task-2 fixes are type-level, but four change what the user sees/does; the PO confirms them on a real device.
+   - Flow: the Worker writes the Hardware check section into `docs/plans/reviews/review-vue-tsc-hw.md` (plain language: what changed, what to look for) and sets STATUS → HW-TEST — there is no diff for a Reviewer to judge, so no review window. The PO exercises it and states the verdict in plain words; an agent does ALL the file mechanics per CLAUDE.md's Hardware gate (PASS → "Hardware verdict: PASS — <date>", task → DONE collapsed to ✓, advance ▶ RUN THIS, commit; FAIL → symptom once in an F1 block, task → IN-PROGRESS, "fix ONLY this" in ▶ RUN THIS, commit).
+   - What to check: (a) Connect page — while a connect is in flight the button is disabled and reads "Connecting..." (new `isConnecting` store field; previously always undefined → never showed); (b) KeyMapping — clicking a virtual key in the category list highlights it as selected (`Number(keyValue)` fix; previously never highlighted) and Select All/Deselect All reflects the real key count; (c) Calibration — the per-key travel overlay still renders its red/green numbers during calibration (new `keyInfo.location` guard must not hide it for normal keys); (d) Rapid Trigger / Performance single-key travel — applying travel to a selected key still reaches the intended keys (`processBatches(keyIds)` change).
+   - Done when: the PO's verdict is recorded on disk in `review-vue-tsc-hw.md` and STATUS is DONE (✓) or IN-PROGRESS (✗).
+
+## Findings (raw — PM routes at close)
+- [code] `getRm6X21Travel` wrapper annotation is wrong the same way `getRm6X21Calibration` was: `src/services/KeyboardService.ts:982` declares `travels: number[]` but docs/sdk-reference-v2.md (line 626, §4 row = Verified) says the SDK returns `{status: number[][]; travels: number[][]}`. Latent only because today's consumers (`SwitchProfiles.vue:190,302`) never index `travels` as rows — it produced NO vue-tsc error, so the new gate does not catch it. Verify: `grep -n "async getRm6X21Travel" src/services/KeyboardService.ts` vs the sdk-ref §4 `getRm6X21Travel` Returns row. (PM-open, 2026-10-22.)
+- ROUTED at PM-open (2026-10-22, this session) → `backlog.md ## Constraints` as the `[deps] vue-tsc 3.x requires TypeScript 5.x` guardrail. **Do not re-route at PM-close** (would duplicate). Wording corrected there: the TS-7 failure is a loud module-resolution throw (nonzero exit), not a silent gate failure — `typescript@latest` is 7.0.2, so it only bites a deliberate major bump or a tool resolving TS outside the lockfile.
+- [process] Done-when criteria of the form `ls node_modules/.bin | grep -c <pkg>` → `1` are wrong on Windows: npm writes 3 shims per bin (`<pkg>`, `.cmd`, `.ps1`) so the count is 3 — verify where PM authors bin-presence criteria (this sprint's Task 1 review, obs O1); use `grep -q`/non-empty instead. (Reviewer, 2026-10-22)
+- RESOLVED rev2 (2026-10-22): [plan] Task 2a-2f count criteria revised from live post-2a data (60 errors) — headers now 2a→60 ✓, 2b→54, 2c→45, 2d clears 24→21, 2e→11, 2f→0. NOTE: the original Finding's own parenthetical downstream ENDs ("2b 45, 2c 32; 2d END 16") were also wrong; rev2 re-derived all counts from `.scratch/pm-typecheck-rev2.txt` instead. The 2a edit-2 `CSSProperties & { 'data-overlay'?: string }` intersection fix was verified correct as applied. Verify: `grep "error TS" .scratch/pm-typecheck-rev2.txt | sed 's/(.*//' | sort | uniq -c`. (Worker finding, PM-resolved)
+- [docs] review-vue-tsc-zero.md "Commits to review" scope line lists `src/pages/Debug.vue` as touched, but Debug.vue has zero commits/net-diff in 65b0b3e..61cae73 — doc inaccuracy only, no code impact. Verify: `git log --oneline 65b0b3e..61cae73 -- src/pages/Debug.vue` → empty. (Reviewer obs O1, 2026-10-22)
+- [hw-glance] Two spec-mandated dead-arm drops are behavior-visible IF runtime data diverges from declared types: Lighting.vue dropped `|| currentState.open === 1` and App.vue isStatusReady dropped the `Uint8Array` arms. Declared types make both unreachable; PO sanity glance at lighting-enable + device-status display during Task 3 anyway. (Reviewer obs O2, 2026-10-22) — PO glance done 2026-10-23: (e) lighting pass; (f) not reported during the FAIL round.
+- [hw] GlobalTravel page: "Select to Global" button not operating as intended — intended: selected keys get set to global using the CURRENT global travel + DpDr settings; actual: selected keys get set to the value already in the Global DB register. Pre-dates sprint-01 (noticed by PO during sprint-13 hw check, 2026-10-23). Verify: GlobalTravel.vue "Select to Global" handler — what value source it writes per selected key vs the current global travel/DpDr UI state. (PO finding, 2026-10-23)
+
+<!-- Keep this file under ~150 lines. It is a SNAPSHOT, not a log. Overwrite, don't append. -->

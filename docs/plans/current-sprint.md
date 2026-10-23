@@ -8,10 +8,10 @@
 ## Checkpoint
 - Branch: `sprint-15-ci`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — this sprint touches no .ts/.vue; self-check gate stays at 0, no re-baseline expected.
-- Cleanup (from actual `ls`, 2026-10-23): `.scratch/` contains pm-notes.md (PM's own; PO may delete) · `_to_delete/` empty. Nothing for PO to `git rm`.
+- Cleanup (from actual `ls`, 2026-10-23, post-Task-2): `.scratch/` contains pm-notes.md + review-notes.md (PM/Reviewer's own; PO may delete) · `_to_delete/` empty. Nothing for PO to `git rm`.
 
 ## ▶ RUN THIS
-Next: Task 2 — add CI line to .github/CONTRIBUTING.md PR checklist (ONE edit-site; exact insert-after line in spec). Do this task, then stop.
+Next: Task 3 — align commit-message conventions in CLAUDE.md :82 (3 edit-sites; spec is grep-verified current text + exact replacements). Do this task, then stop.
 
 ## Tasks
 
@@ -54,8 +54,8 @@ Next: Task 2 — add CI line to .github/CONTRIBUTING.md PR checklist (ONE edit-s
    - Self-check gate: SKIPPED (no .ts/.vue touched). Still run `npm run typecheck` once and record exit 0 in the checkpoint (baseline sanity, expected 0).
    - Commit: `sprint-15-ci: task 1 — add CI workflow (.github/workflows/ci.yml)`; then IN-REVIEW: write docs/plans/reviews/review-ci-workflow.md (goal line + the 3 Done-when criteria + base/head hashes + note to Reviewer: diff the file against the Task 1 spec block above verbatim).
 
-2. **Add CI line to CONTRIBUTING.md PR checklist** — [trivial] — STATUS: IN-PROGRESS
-   - Checkpoint (2026-10-23): read .github/CONTRIBUTING.md — PR Checklist = 6 checkboxes (currently); exact insert-after line `- [ ] PR description explains the changes and motivation` is the last one, immediately before blank line + `### Review Process`. Prerequisite `v18 or higher` present (Prerequisites section) — untouched per spec. Commit Messages section already Conventional Commits (feat/fix/docs/refactor/style/test/chore) — untouched. Applying the ONE edit next.
+2. **Add CI line to CONTRIBUTING.md PR checklist** — [trivial] — STATUS: DONE
+   - ✓ 2026-10-23 (commit 36c146c) — all Done-when pass: 7 checkboxes; CI line inside PR Checklist; v18 untouched.
    - Done when: `grep -c "^- \[ \] " .github/CONTRIBUTING.md` returns 7 (was 6).
    - Done when: `grep -nF "CI checks" .github/CONTRIBUTING.md` hits inside the PR Checklist section, and `grep -nF "v18 or higher" .github/CONTRIBUTING.md` still hits (prerequisite untouched).
    - Files: `.github/CONTRIBUTING.md` (ONE edit-site; do NOT rewrite the file)

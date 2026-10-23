@@ -1,8 +1,9 @@
 # SPRINT: sprint-15-ci
 
 **GOAL:** Add a GitHub Actions CI workflow (npm ci → typecheck → lint → build, Node 22, informational only) and align commit-message conventions across CLAUDE.md and .github/CONTRIBUTING.md.
-**DONE-CRITERIA (sprint):** `.github/workflows/ci.yml` exists with the 4 commands pinned to Node 22 on push + pull_request; CONTRIBUTING.md PR checklist carries the CI line; CLAUDE.md :82 speaks Conventional Commits (with `<sprint>: <task>` note kept).
+**DONE-CRITERIA (sprint):** `.github/workflows/ci.yml` exists with the 4 commands pinned to Node 22 on push (main only) + pull_request; CONTRIBUTING.md PR checklist carries the CI line; CLAUDE.md :82 speaks Conventional Commits (with `<sprint>: <task>` note kept).
 **Started:** 2026-10-23  ·  **Status:** IN PROGRESS
+<!-- rev1 (2026-10-23): PO directive — push trigger scoped to branches [main] only (WIP sprint-branch pushes carry intentional non-passing ratchet states); pull_request stays unfiltered. Task 1 spec + Done-when updated. -->
 
 ## Checkpoint
 - Branch: `sprint-15-ci`
@@ -16,7 +17,7 @@ Next: Task 1 — create .github/workflows/ci.yml. Do this task, then stop.
 
 1. **Create .github/workflows/ci.yml** — [high-stakes] — STATUS: PENDING
    - Done when: `ls .github/workflows/ci.yml` exists (dir is NEW — grep-confirmed absent today).
-   - Done when: each of `grep -F "node-version: 22"`, `grep -F "npm ci"`, `grep -F "npm run typecheck"`, `grep -F "npm run lint"`, `grep -F "npm run build"`, `grep "push:"`, `grep "pull_request:"` against the file returns ≥1 hit.
+   - Done when: each of `grep -F "node-version: 22"`, `grep -F "npm ci"`, `grep -F "npm run typecheck"`, `grep -F "npm run lint"`, `grep -F "npm run build"`, `grep "push:"`, `grep -F "branches: [main]"`, `grep "pull_request:"` against the file returns ≥1 hit.
    - Done when: file content matches the spec below EXACTLY (verbatim transcription; Reviewer diffs against this spec — YAML indentation is the failure mode grep can't catch).
    - Files: `.github/workflows/ci.yml` (create)
    - Spec — write EXACTLY this (2-space indentation as shown):
@@ -25,6 +26,7 @@ Next: Task 1 — create .github/workflows/ci.yml. Do this task, then stop.
 
      on:
        push:
+         branches: [main]
        pull_request:
 
      jobs:
@@ -47,6 +49,7 @@ Next: Task 1 — create .github/workflows/ci.yml. Do this task, then stop.
      - `.github/workflows` does NOT exist yet; path is not gitignored (`git check-ignore` exit 1).
      - Local dev node is v22.23.2 — the Node 22 pin matches the environment.
      - Scope: informational only — NO branch-protection changes, no other workflow files.
+     - Push trigger scoped to `main` only (PO rev1): WIP sprint-branch pushes carry intentionally non-passing intermediate ratchet states — unfiltered push would flood red. `pull_request:` stays unfiltered so every PR is checked.
    - Self-check gate: SKIPPED (no .ts/.vue touched). Still run `npm run typecheck` once and record exit 0 in the checkpoint (baseline sanity, expected 0).
    - Commit: `sprint-15-ci: task 1 — add CI workflow (.github/workflows/ci.yml)`; then IN-REVIEW: write docs/plans/reviews/review-ci-workflow.md (goal line + the 3 Done-when criteria + base/head hashes + note to Reviewer: diff the file against the Task 1 spec block above verbatim).
 

@@ -30,3 +30,16 @@ Fix-round ranges (added on each re-review): —
 
 **Hardware verdict (agent records from the PO's plain-language outcome):**
 - Hardware verdict: PENDING — PO to exercise items (a)–(f) on a real device.
+
+## 🔍 Reviewer verification (code review of the hw handoff)
+**Verdict: PASS (pending hw)** — 2026-10-22. This task has no code diff to judge (git diff 61cae73..HEAD is docs-only: current-sprint.md + both review files). Reviewer scope reduced to confirming the Hardware check items the Worker wrote are accurate against head `61cae73`, so the PO tests the real code.
+
+Grep-confirmed every item matches the code at head:
+- **(a)** Connect: button `:disabled="isConnecting || isConnected"` + `'Connecting...'` label; `connection.ts` sets `isConnecting=true` at connect start, `false` in finally. ✓
+- **(b)** KeyMapping: `selectedKeyValue === Number(keyValue)` class + `selectKeyValue(Number(keyValue))` click + Select All/Deselect All count from `layout?.flat().length`. ✓
+- **(c)** Calibration: overlay `v-if="calibrating && keyInfo.location"` guards `keyInfo.location.row/col` reads. ✓
+- **(d)** Single-key travel / Rapid Trigger / Performance: batching passes IDs via `processBatches(keyIds, physicalKeyValue => …)`; Performance/RapidTrigger debug line gated `item.value !== undefined && item.value !== 0`. ✓
+- **(e)** Lighting enable: `lightingEnabled.value = currentState.open === true` — no `|| currentState.open === 1` fallback remains anywhere in src. ✓
+- **(f)** Device-status validity (App.vue): arms now `typeof info.KeyboardSN === 'string' && length > 0` (same for appVersion) — the two `instanceof Uint8Array` fallbacks removed. ✓
+
+No new Findings. Task 3 stays **HW-TEST**; per CLAUDE.md Hardware gate a Reviewer never writes DONE for a [hw] task — the PO's device verdict on items (a)–(f) closes it.

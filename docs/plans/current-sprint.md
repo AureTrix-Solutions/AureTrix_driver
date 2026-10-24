@@ -1,9 +1,10 @@
 # SPRINT: sprint-18-code-hygiene-3
 
 **GOAL:** Clear two verified Code-hygiene backlog items — fix the `getRm6X21Travel` wrapper's `-Infinity` maxTravel on the all-zero-travels path, and remove the dead `@update-notification` binding (plus its now-orphaned `setNotification` helper) in Performance.vue.
-**DONE-CRITERIA (sprint):** `getRm6X21Travel` returns 0 (not -Infinity) when travels are non-empty but all ≤ 0, keeping the 4.0 empty-array default; `grep -rn "update-notification\|setNotification" src/` returns 0 hits; typecheck at baseline (0); lint exit 0.
+**DONE-CRITERIA (sprint):** `getRm6X21Travel` returns 0 (not -Infinity) when travels are non-empty but all ≤ 0, keeping the 4.0 empty-array default; `grep -rn "update-notification" src/` returns 0 hits AND `grep -n "setNotification" src/pages/Performance.vue` returns 0 hits (rev1: RapidTrigger.vue's `setNotification` is live and intentionally out of scope); typecheck at baseline (0); lint exit 0.
 **Started:** 2026-10-24  ·  **Status:** IN PROGRESS
 <!-- revN (YYYY-MM-DD): <what changed>   ← log revisions here, newest last -->
+<!-- rev1 (2026-10-24): sprint DONE-CRITERIA grep scoped — the src-wide "update-notification\|setNotification" → 0 clause was unachievable (RapidTrigger.vue owns a live, called setNotification; grep target: `grep -n "setNotification" src/pages/RapidTrigger.vue`). Replaced with two scoped greps, both already passing. Resolves Worker finding F1; PO confirmed. -->
 
 ## Checkpoint
 - Branch: `sprint-18-code-hygiene-3`
@@ -11,7 +12,7 @@
 - Worker (2026-10-24, task 2): commit `bf038c4` (1 file, 6 deletions). Task-level Done-when all pass: `setNotification` in Performance.vue → 0 hits; `update-notification` in src/ → 0 hits; typecheck 0; lint exit 0. Cleanup (from ls): `.scratch/` = pm-notes.md + review-notes.md (PO can delete); `_to_delete/` = .gitkeep only, empty.
 
 ## ▶ RUN THIS
-ALL TASKS DONE — awaiting PO sign-off. NOTE for PM-close (or PM revision before sign-off): the sprint-level DONE-CRITERIA grep `grep -rn "update-notification\|setNotification" src/` → 0 hits is UNACHIEVABLE as written — RapidTrigger.vue has its own LIVE `setNotification` (defined :633, callers :580/:626/:629/:666/:903) that is not part of this defect and must not be removed. See Findings F1; PM to revise the criterion (scope the grep to Performance.vue) on PO confirmation.
+ALL TASKS DONE — awaiting PO sign-off. F1 resolved by rev1 (2026-10-24): sprint DONE-CRITERIA grep re-scoped, both greps pass. Next: PO sign-off → PM-close (archive checklist).
 
 ## Tasks
 
@@ -37,6 +38,6 @@ ALL TASKS DONE — awaiting PO sign-off. NOTE for PM-close (or PM revision befor
    - Commit: `sprint-18-code-hygiene-3: task 2 — remove dead @update-notification binding + orphaned setNotification helper`.
 
 ## Findings
-- F1 (Worker, task 2, 2026-10-24): sprint DONE-CRITERIA grep (`grep -rn "update-notification\|setNotification" src/` → 0) is wrong — RapidTrigger.vue owns a live, called `setNotification`; the criterion as written can never pass and overreaches the defect's scope. Verify: `grep -n "setNotification" src/pages/RapidTrigger.vue`. Task-level criteria (:34-36) are correctly scoped and all pass. PM to revise the sprint criterion on PO confirmation.
+- F1 — RESOLVED by rev1 (2026-10-24, PO confirmed): sprint criterion grep re-scoped to Performance.vue + update-notification; both pass. Nothing to carry to backlog.
 <!-- One line per out-of-scope observation: DEFECT + WHERE TO VERIFY (never a pre-written fix). -->
 (none yet)

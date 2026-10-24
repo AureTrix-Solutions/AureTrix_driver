@@ -1,14 +1,33 @@
 <template>
   <div class="rapid-trigger-page">
-    <h2 class="title">Rapid Trigger Settings</h2>
-    <div v-if="notification" class="notification" :class="{ error: notification.isError }">
+    <h2 class="title">
+      Rapid Trigger Settings
+    </h2>
+    <div
+      v-if="notification"
+      class="notification"
+      :class="{ error: notification.isError }"
+    >
       {{ notification.message }}
-      <button @click="notification = null" class="dismiss-btn">&times;</button>
+      <button
+        class="dismiss-btn"
+        @click="notification = null"
+      >
+        &times;
+      </button>
     </div>
 
     <div class="rapid-trigger-container">
-      <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
-        <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
+      <div
+        v-if="layout.length && loaded"
+        class="key-grid"
+        :style="gridStyle"
+      >
+        <div
+          v-for="(row, rIdx) in layout"
+          :key="`r-${rIdx}`"
+          class="key-row"
+        >
           <div
             v-for="(keyInfo, cIdx) in row"
             :key="`k-${rIdx}-${cIdx}`"
@@ -20,29 +39,70 @@
             <div class="key-label">
               {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
             </div>
-            <div v-if="overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]" class="overlay">
+            <div
+              v-if="overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]"
+              class="overlay"
+            >
               <div class="overlay-values">
-                <div class="overlay-top-left">{{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.press || '0.00' }}</div>
-                <div class="overlay-top-right">{{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.release || '0.00' }}</div>
-                <div class="overlay-center">{{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.travel || '0.00' }}</div>
-                <div class="overlay-bottom-left">{{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.pressDead }}</div>
-                <div class="overlay-bottom-right">{{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.releaseDead }}</div>
+                <div class="overlay-top-left">
+                  {{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.press || '0.00' }}
+                </div>
+                <div class="overlay-top-right">
+                  {{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.release || '0.00' }}
+                </div>
+                <div class="overlay-center">
+                  {{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.travel || '0.00' }}
+                </div>
+                <div class="overlay-bottom-left">
+                  {{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.pressDead }}
+                </div>
+                <div class="overlay-bottom-right">
+                  {{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.releaseDead }}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div v-else class="no-layout">
+      <div
+        v-else
+        class="no-layout"
+      >
         <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
         <p>Debug: layout.length={{ layout.length }}, loaded={{ loaded }}, baseLayout={{ baseLayout ? 'defined' : 'null' }}</p>
       </div>
       <div class="bottom-section">
         <div class="selection-buttons">
-          <button @click="selectAll" class="select-btn">Select All</button>
-          <button @click="selectWASD" class="select-btn">Select WASD</button>
-          <button @click="selectLetters" class="select-btn">Select Letters</button>
-          <button @click="selectNumbers" class="select-btn">Select Numbers</button>
-          <button @click="selectNone" class="select-btn">Select None</button>
+          <button
+            class="select-btn"
+            @click="selectAll"
+          >
+            Select All
+          </button>
+          <button
+            class="select-btn"
+            @click="selectWASD"
+          >
+            Select WASD
+          </button>
+          <button
+            class="select-btn"
+            @click="selectLetters"
+          >
+            Select Letters
+          </button>
+          <button
+            class="select-btn"
+            @click="selectNumbers"
+          >
+            Select Numbers
+          </button>
+          <button
+            class="select-btn"
+            @click="selectNone"
+          >
+            Select None
+          </button>
         </div>
         <div class="parent">
           <div class="settings-panel">
@@ -53,169 +113,275 @@
 
               <div class="travel-row">
                 <div class="input-group">
-                  <div class="label">Initial Trigger Travel (<span class="initial-trigger-unit">mm</span>)</div>
+                  <div class="label">
+                    Initial Trigger Travel (<span class="initial-trigger-unit">mm</span>)
+                  </div>
                   <div class="slider-container">
-                    <div class="value-display">{{ minInitialActuation.toFixed(2) }}</div>
+                    <div class="value-display">
+                      {{ minInitialActuation.toFixed(2) }}
+                    </div>
                     <input
-                      type="range"
-                      v-model.number="initialActuation"
                       id="initial-actuation-slider"
+                      v-model.number="initialActuation"
+                      type="range"
                       :min="minInitialActuation"
                       :max="maxInitialActuation"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
                       @change="updateAllSettings"
-                    />
-                    <div class="value-display">{{ maxInitialActuation.toFixed(2) }}</div>
+                    >
+                    <div class="value-display">
+                      {{ maxInitialActuation.toFixed(2) }}
+                    </div>
                   </div>
                   <div class="adjusters">
-                    <button @click="adjustInitialActuation(-0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">-</button>
+                    <button
+                      class="adjust-btn"
+                      :disabled="selectedKeys.length === 0"
+                      @click="adjustInitialActuation(-0.01)"
+                    >
+                      -
+                    </button>
                     <input
-                      type="number"
-                      v-model.number="initialActuation"
                       id="initial-actuation-input"
+                      v-model.number="initialActuation"
+                      type="number"
                       :min="minInitialActuation"
                       :max="maxInitialActuation"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
                       @change="updateAllSettings"
-                    />
-                    <button @click="adjustInitialActuation(0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
+                    >
+                    <button
+                      class="adjust-btn"
+                      :disabled="selectedKeys.length === 0"
+                      @click="adjustInitialActuation(0.01)"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
                 <div class="global-btn-container">
-                  <button @click="setToGlobal" class="global-btn" :disabled="selectedKeys.length === 0">Reset</button>
+                  <button
+                    class="global-btn"
+                    :disabled="selectedKeys.length === 0"
+                    @click="setToGlobal"
+                  >
+                    Reset
+                  </button>
                 </div>
               </div>
 
               <div class="rt-travel-group">
                 <div class="input-group">
-                  <div class="label">Key Re-Trigger (<span class="key-retrigger-unit">mm</span>)</div>
+                  <div class="label">
+                    Key Re-Trigger (<span class="key-retrigger-unit">mm</span>)
+                  </div>
                   <div class="slider-container">
-                    <div class="value-display">0.10</div>
+                    <div class="value-display">
+                      0.10
+                    </div>
                     <input
-                      type="range"
-                      v-model.number="pressTravel"
                       id="press-travel-slider"
+                      v-model.number="pressTravel"
+                      type="range"
                       min="0.1"
                       :max="maxPressTravel"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
                       @change="updateAllSettings"
-                    />
-                    <div class="value-display">{{ maxPressTravel.toFixed(2) }}</div>
+                    >
+                    <div class="value-display">
+                      {{ maxPressTravel.toFixed(2) }}
+                    </div>
                   </div>
                   <div class="adjusters">
-                    <button @click="adjustPress(-0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">-</button>
+                    <button
+                      class="adjust-btn"
+                      :disabled="selectedKeys.length === 0"
+                      @click="adjustPress(-0.01)"
+                    >
+                      -
+                    </button>
                     <input
-                      type="number"
-                      v-model.number="pressTravel"
                       id="press-travel-input"
+                      v-model.number="pressTravel"
+                      type="number"
                       min="0.1"
                       :max="maxPressTravel"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
                       @change="updateAllSettings"
-                    />
-                    <button @click="adjustPress(0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
+                    >
+                    <button
+                      class="adjust-btn"
+                      :disabled="selectedKeys.length === 0"
+                      @click="adjustPress(0.01)"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
                 <div class="link-container">
-                  <button @click="toggleLinkRtTravel" class="link-btn">{{ rtTravelLinked ? 'Unlink' : 'Link' }}</button>
+                  <button
+                    class="link-btn"
+                    @click="toggleLinkRtTravel"
+                  >
+                    {{ rtTravelLinked ? 'Unlink' : 'Link' }}
+                  </button>
                 </div>
                 <div class="input-group">
-                  <div class="label">Key Reset (<span class="key-reset-unit">mm</span>)</div>
+                  <div class="label">
+                    Key Reset (<span class="key-reset-unit">mm</span>)
+                  </div>
                   <div class="slider-container">
-                    <div class="value-display">0.10</div>
+                    <div class="value-display">
+                      0.10
+                    </div>
                     <input
-                      type="range"
-                      v-model.number="releaseTravel"
                       id="release-travel-slider"
+                      v-model.number="releaseTravel"
+                      type="range"
                       min="0.1"
                       :max="maxReleaseTravel"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
                       @change="updateAllSettings"
-                    />
-                    <div class="value-display">{{ maxReleaseTravel.toFixed(2) }}</div>
+                    >
+                    <div class="value-display">
+                      {{ maxReleaseTravel.toFixed(2) }}
+                    </div>
                   </div>
                   <div class="adjusters">
-                    <button @click="adjustRelease(-0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">-</button>
+                    <button
+                      class="adjust-btn"
+                      :disabled="selectedKeys.length === 0"
+                      @click="adjustRelease(-0.01)"
+                    >
+                      -
+                    </button>
                     <input
-                      type="number"
-                      v-model.number="releaseTravel"
                       id="release-travel-input"
+                      v-model.number="releaseTravel"
+                      type="number"
                       min="0.1"
                       :max="maxReleaseTravel"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
                       @change="updateAllSettings"
-                    />
-                    <button @click="adjustRelease(0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
+                    >
+                    <button
+                      class="adjust-btn"
+                      :disabled="selectedKeys.length === 0"
+                      @click="adjustRelease(0.01)"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
               </div>
 
               <div class="deadzone-group">
                 <div class="input-group">
-                  <div class="label">Top Deadzone (<span class="top-deadzone-unit">mm</span>)</div>
+                  <div class="label">
+                    Top Deadzone (<span class="top-deadzone-unit">mm</span>)
+                  </div>
                   <div class="slider-container">
-                    <div class="value-display">0.00</div>
+                    <div class="value-display">
+                      0.00
+                    </div>
                     <input
-                      type="range"
                       v-model.number="pressDeadzone"
+                      type="range"
                       min="0.0"
                       max="1.0"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
                       @change="updateAllSettings"
-                    />
-                    <div class="value-display">1.00</div>
+                    >
+                    <div class="value-display">
+                      1.00
+                    </div>
                   </div>
                   <div class="adjusters">
-                    <button @click="adjustDeadzone(-0.01, 'press')" class="adjust-btn" :disabled="selectedKeys.length === 0">-</button>
+                    <button
+                      class="adjust-btn"
+                      :disabled="selectedKeys.length === 0"
+                      @click="adjustDeadzone(-0.01, 'press')"
+                    >
+                      -
+                    </button>
                     <input
-                      type="number"
                       v-model.number="pressDeadzone"
+                      type="number"
                       min="0.0"
                       max="1.0"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
                       @change="updateAllSettings"
-                    />
-                    <button @click="adjustDeadzone(0.01, 'press')" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
+                    >
+                    <button
+                      class="adjust-btn"
+                      :disabled="selectedKeys.length === 0"
+                      @click="adjustDeadzone(0.01, 'press')"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
                 <div class="link-container">
-                  <button @click="toggleLinkDeadZones" class="link-btn">{{ deadZonesLinked ? 'Unlink' : 'Link' }} </button>
+                  <button
+                    class="link-btn"
+                    @click="toggleLinkDeadZones"
+                  >
+                    {{ deadZonesLinked ? 'Unlink' : 'Link' }}
+                  </button>
                 </div>
                 <div class="input-group">
-                  <div class="label">Bottom Deadzone (<span class="bottom-deadzone-unit">mm</span>)</div>
+                  <div class="label">
+                    Bottom Deadzone (<span class="bottom-deadzone-unit">mm</span>)
+                  </div>
                   <div class="slider-container">
-                    <div class="value-display">0.00</div>
+                    <div class="value-display">
+                      0.00
+                    </div>
                     <input
-                      type="range"
                       v-model.number="releaseDeadzone"
+                      type="range"
                       min="0.0"
                       max="1.0"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
                       @change="updateAllSettings"
-                    />
-                    <div class="value-display">1.00</div>
+                    >
+                    <div class="value-display">
+                      1.00
+                    </div>
                   </div>
                   <div class="adjusters">
-                    <button @click="adjustDeadzone(-0.01, 'release')" class="adjust-btn" :disabled="selectedKeys.length === 0">-</button>
+                    <button
+                      class="adjust-btn"
+                      :disabled="selectedKeys.length === 0"
+                      @click="adjustDeadzone(-0.01, 'release')"
+                    >
+                      -
+                    </button>
                     <input
-                      type="number"
                       v-model.number="releaseDeadzone"
+                      type="number"
                       min="0.0"
                       max="1.0"
                       step="0.01"
                       :disabled="selectedKeys.length === 0"
                       @change="updateAllSettings"
-                    />
-                    <button @click="adjustDeadzone(0.01, 'release')" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
+                    >
+                    <button
+                      class="adjust-btn"
+                      :disabled="selectedKeys.length === 0"
+                      @click="adjustDeadzone(0.01, 'release')"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
               </div>

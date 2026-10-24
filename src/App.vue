@@ -2,109 +2,205 @@
   <div class="app-container">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <img src="@/assets/logo cropped.svg" alt="Keyboard Driver Logo" class="logo">
-        <div v-if="connectionStore.status" class="status">
+        <img
+          src="@/assets/logo cropped.svg"
+          alt="Keyboard Driver Logo"
+          class="logo"
+        >
+        <div
+          v-if="connectionStore.status"
+          class="status"
+        >
           <ul v-if="connectionStore.isInitialized && isStatusReady">
             <li>Connected: {{ connectionStore.deviceInfo?.productName || 'Unknown Device' }}</li>
             <li>SN: {{ decodeString(connectionStore.deviceInfo?.KeyboardSN) || 'N/A' }}</li>
-            <li v-if="connectionStore.deviceInfo?.BoardID">Board ID: {{ connectionStore.deviceInfo.BoardID }}</li>
-            <li v-if="connectionStore.deviceInfo?.appVersion">Version: {{
-              decodeString(connectionStore.deviceInfo?.appVersion) || 'N/A' }}</li>
+            <li v-if="connectionStore.deviceInfo?.BoardID">
+              Board ID: {{ connectionStore.deviceInfo.BoardID }}
+            </li>
+            <li v-if="connectionStore.deviceInfo?.appVersion">
+              Version: {{
+                decodeString(connectionStore.deviceInfo?.appVersion) || 'N/A' }}
+            </li>
           </ul>
           <ul v-else-if="connectionStore.isInitializing">
             <li>Initializing keyboard...</li>
           </ul>
           <ul v-else-if="connectionStore.initializationError">
-            <li style="color: #ff6b6b;">Initialization failed: {{ connectionStore.initializationError }}</li>
-            <li style="font-size: 0.9em;">Try reconnecting your keyboard</li>
+            <li style="color: #ff6b6b;">
+              Initialization failed: {{ connectionStore.initializationError }}
+            </li>
+            <li style="font-size: 0.9em;">
+              Try reconnecting your keyboard
+            </li>
           </ul>
           <ul v-else-if="connectionStore.isConnected">
             <li>Loading device info...</li>
           </ul>
-          <p v-else>{{ connectionStore.status }}</p>
+          <p v-else>
+            {{ connectionStore.status }}
+          </p>
         </div>
       </div>
       <nav class="sidebar-nav">
         <div class="main-nav-section">
-          <div class="main-nav-separator-top"></div>
+          <div class="main-nav-separator-top" />
           <div class="main-nav-header">
             <span class="main-nav-title">Main</span>
-            <div class="main-nav-separator"></div>
+            <div class="main-nav-separator" />
           </div>
-          <template v-for="item in menuItems" :key="item.name">
-            <router-link v-if="!item.isCategory" :to="item.path" class="nav-item">
+          <template
+            v-for="item in menuItems"
+            :key="item.name"
+          >
+            <router-link
+              v-if="!item.isCategory"
+              :to="item.path"
+              class="nav-item"
+            >
               {{ item.name }}
             </router-link>
-            <div v-else class="nav-item category-header" @click="handleCategoryClick(item, $event)">
+            <div
+              v-else
+              class="nav-item category-header"
+              @click="handleCategoryClick(item, $event)"
+            >
               {{ item.name }}
-              <span class="arrow" :class="{ open: openCategory === item }">></span>
+              <span
+                class="arrow"
+                :class="{ open: openCategory === item }"
+              >></span>
             </div>
           </template>
-          <div class="main-nav-separator-bottom"></div>
+          <div class="main-nav-separator-bottom" />
         </div>
 
         <div class="profiles-section">
           <div class="profiles-header">
             <span class="profiles-title">Profiles</span>
-            <div class="profiles-separator"></div>
+            <div class="profiles-separator" />
           </div>
           <div class="profile-grid">
-            <button v-for="profile in profileStore.profiles" :key="profile.id" class="profile-btn"
-              :class="{ active: profileStore.activeProfileId === profile.id }" @click="handleProfileClick(profile.id)">
-              <input v-if="editingProfileId === profile.id" v-model="editingProfileName" @blur="finishEditing"
-                @keyup.enter="finishEditing" @keyup.esc="cancelEditing" class="profile-name-input"
-                :ref="`profileInput-${profile.id}`" @click.stop />
-              <span v-else class="profile-name">{{ profile.name }}</span>
-              <span v-if="editingProfileId !== profile.id" class="edit-icon" @click.stop="startEditing(profile.id)"
-                role="button" tabindex="0" @keyup.enter="startEditing(profile.id)" aria-label="Edit profile name">
+            <button
+              v-for="profile in profileStore.profiles"
+              :key="profile.id"
+              class="profile-btn"
+              :class="{ active: profileStore.activeProfileId === profile.id }"
+              @click="handleProfileClick(profile.id)"
+            >
+              <input
+                v-if="editingProfileId === profile.id"
+                :ref="`profileInput-${profile.id}`"
+                v-model="editingProfileName"
+                class="profile-name-input"
+                @blur="finishEditing"
+                @keyup.enter="finishEditing"
+                @keyup.esc="cancelEditing"
+                @click.stop
+              >
+              <span
+                v-else
+                class="profile-name"
+              >{{ profile.name }}</span>
+              <span
+                v-if="editingProfileId !== profile.id"
+                class="edit-icon"
+                role="button"
+                tabindex="0"
+                aria-label="Edit profile name"
+                @click.stop="startEditing(profile.id)"
+                @keyup.enter="startEditing(profile.id)"
+              >
                 ✏️
               </span>
             </button>
           </div>
         </div>
         
-        <button class="export-btn" @click="exportProfile" :disabled="!connectionStore.isInitialized">
+        <button
+          class="export-btn"
+          :disabled="!connectionStore.isInitialized"
+          @click="exportProfile"
+        >
           Export Profile
         </button>
-        <button class="import-btn" @click="importProfile" :disabled="!connectionStore.isInitialized">
+        <button
+          class="import-btn"
+          :disabled="!connectionStore.isInitialized"
+          @click="importProfile"
+        >
           Import Profile
         </button>
-        <button class="debug-export-btn" @click="exportProfileDebug" :disabled="!connectionStore.isInitialized">
+        <button
+          class="debug-export-btn"
+          :disabled="!connectionStore.isInitialized"
+          @click="exportProfileDebug"
+        >
           Debug Export JSON
         </button>
-        <div class="import-separator"></div>
+        <div class="import-separator" />
 
         <div class="quick-settings-section">
           <div class="quick-settings-header">
             <span class="quick-settings-title">Quick Settings</span>
-            <div class="quick-settings-separator"></div>
+            <div class="quick-settings-separator" />
           </div>
-          <div class="nav-item category-header" @click="handleQuickSettingsClick('pollingRate', $event)">
+          <div
+            class="nav-item category-header"
+            @click="handleQuickSettingsClick('pollingRate', $event)"
+          >
             Polling Rate
-            <span class="arrow" :class="{ open: openQuickSettings === 'pollingRate' }">></span>
+            <span
+              class="arrow"
+              :class="{ open: openQuickSettings === 'pollingRate' }"
+            >></span>
           </div>
-          <div class="nav-item category-header" @click="handleQuickSettingsClick('systemMode', $event)">
+          <div
+            class="nav-item category-header"
+            @click="handleQuickSettingsClick('systemMode', $event)"
+          >
             System Mode
-            <span class="arrow" :class="{ open: openQuickSettings === 'systemMode' }">></span>
+            <span
+              class="arrow"
+              :class="{ open: openQuickSettings === 'systemMode' }"
+            >></span>
           </div>
-          <button class="factory-reset-btn" @click="showFactoryResetModal" :disabled="!connectionStore.isInitialized">
+          <button
+            class="factory-reset-btn"
+            :disabled="!connectionStore.isInitialized"
+            @click="showFactoryResetModal"
+          >
             Factory Reset
           </button>
         </div>
       </nav>
-      <p class="copyright">Copyright©2025 AureTrix</p>
+      <p class="copyright">
+        Copyright©2025 AureTrix
+      </p>
     </aside>
 
-    <div v-if="openCategory" class="flyout-menu" :style="{ top: flyoutTop + 'px' }" @click.self="closeCategory">
+    <div
+      v-if="openCategory"
+      class="flyout-menu"
+      :style="{ top: flyoutTop + 'px' }"
+      @click.self="closeCategory"
+    >
       <div class="flyout-content">
         <nav class="flyout-nav">
-          <router-link v-for="sub in openCategory.items" :key="sub.name" :to="sub.path" class="flyout-item"
-            @click="closeCategory">
+          <router-link
+            v-for="sub in openCategory.items"
+            :key="sub.name"
+            :to="sub.path"
+            class="flyout-item"
+            @click="closeCategory"
+          >
             <span class="flyout-item-text">{{ sub.name }}</span>
-            <span v-if="sub.tooltip" class="help-icon" 
+            <span
+              v-if="sub.tooltip"
+              class="help-icon" 
               @mouseenter="showTooltip(sub.tooltip, $event)"
               @mouseleave="hideTooltip"
-              @click.stop.prevent>
+              @click.stop.prevent
+            >
               ?
             </span>
           </router-link>
@@ -112,17 +208,34 @@
       </div>
     </div>
 
-    <div v-if="activeTooltip" class="tooltip-flyout" :style="{ top: tooltipTop + 'px' }">
+    <div
+      v-if="activeTooltip"
+      class="tooltip-flyout"
+      :style="{ top: tooltipTop + 'px' }"
+    >
       <div class="tooltip-flyout-content">
         {{ activeTooltip }}
       </div>
     </div>
 
-    <div v-if="openQuickSettings === 'pollingRate'" class="flyout-menu" :style="{ top: quickSettingsFlyoutTop + 'px' }" @click.self="closeQuickSettings">
+    <div
+      v-if="openQuickSettings === 'pollingRate'"
+      class="flyout-menu"
+      :style="{ top: quickSettingsFlyoutTop + 'px' }"
+      @click.self="closeQuickSettings"
+    >
       <div class="flyout-content">
         <div class="quick-setting-item">
-          <select v-model.number="currentPollingRate" @change="handlePollingRateChange" class="polling-rate-select">
-            <option v-for="option in pollingRateOptions" :key="option.value" :value="option.value">
+          <select
+            v-model.number="currentPollingRate"
+            class="polling-rate-select"
+            @change="handlePollingRateChange"
+          >
+            <option
+              v-for="option in pollingRateOptions"
+              :key="option.value"
+              :value="option.value"
+            >
               {{ option.label }}
             </option>
           </select>
@@ -130,11 +243,24 @@
       </div>
     </div>
 
-    <div v-if="openQuickSettings === 'systemMode'" class="flyout-menu" :style="{ top: quickSettingsFlyoutTop + 'px' }" @click.self="closeQuickSettings">
+    <div
+      v-if="openQuickSettings === 'systemMode'"
+      class="flyout-menu"
+      :style="{ top: quickSettingsFlyoutTop + 'px' }"
+      @click.self="closeQuickSettings"
+    >
       <div class="flyout-content">
         <div class="quick-setting-item">
-          <select v-model="currentSystemMode" @change="handleSystemModeChange" class="polling-rate-select">
-            <option v-for="option in systemModeOptions" :key="option.value" :value="option.value">
+          <select
+            v-model="currentSystemMode"
+            class="polling-rate-select"
+            @change="handleSystemModeChange"
+          >
+            <option
+              v-for="option in systemModeOptions"
+              :key="option.value"
+              :value="option.value"
+            >
               {{ option.label }}
             </option>
           </select>
@@ -142,7 +268,11 @@
       </div>
     </div>
 
-    <FactoryResetModal v-if="isFactoryResetModalVisible" @confirm="handleFactoryReset" @cancel="hideFactoryResetModal" />
+    <FactoryResetModal
+      v-if="isFactoryResetModalVisible"
+      @confirm="handleFactoryReset"
+      @cancel="hideFactoryResetModal"
+    />
 
     <main class="main-content">
       <router-view />

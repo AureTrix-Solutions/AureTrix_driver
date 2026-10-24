@@ -1,7 +1,11 @@
 <template>
-  <div class="page-wrapper"></div>
+  <div class="page-wrapper" />
   <div class="connect-page">
-    <button @click="connectDevice" :disabled="connectionStore.isConnecting || connectionStore.isConnected" class="connect-btn">
+    <button
+      :disabled="connectionStore.isConnecting || connectionStore.isConnected"
+      class="connect-btn"
+      @click="connectDevice"
+    >
       {{ connectionStore.isConnecting ? 'Connecting...' : connectionStore.isConnected ? 'Connected' : 'Connect Keyboard' }}
     </button>
   </div>

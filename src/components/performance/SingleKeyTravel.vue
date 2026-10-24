@@ -2,103 +2,166 @@
   <div class="settings-section">
     <div class="header-row">
       <h3>Single Travel</h3>
-      <button @click="toggleOverlay" class="show-btn">{{ showOverlay ? 'Hide' : 'Show' }}</button>
+      <button
+        class="show-btn"
+        @click="toggleOverlay"
+      >
+        {{ showOverlay ? 'Hide' : 'Show' }}
+      </button>
     </div>
     <div class="travel-row">
       <div class="input-group">
-        <div class="label">Trigger Travel (<span class="travel-unit">mm</span>)</div>
+        <div class="label">
+          Trigger Travel (<span class="travel-unit">mm</span>)
+        </div>
         <div class="slider-container">
-          <div class="value-display">{{ minTravel.toFixed(2) }}</div>
+          <div class="value-display">
+            {{ minTravel.toFixed(2) }}
+          </div>
           <input
-            type="range"
-            v-model.number="singleKeyTravel"
             id="single-key-travel-slider"
+            v-model.number="singleKeyTravel"
+            type="range"
             :min="minTravel"
             :max="maxTravel"
             step="0.01"
             :disabled="selectedKeys.length === 0"
             @change="updateSingleKeyTravel"
-          />
-          <div class="value-display">{{ maxTravel.toFixed(2) }}</div>
+          >
+          <div class="value-display">
+            {{ maxTravel.toFixed(2) }}
+          </div>
         </div>
         <div class="adjusters">
-          <button @click="adjustTravel(-0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">-</button>
+          <button
+            class="adjust-btn"
+            :disabled="selectedKeys.length === 0"
+            @click="adjustTravel(-0.01)"
+          >
+            -
+          </button>
           <input
-            type="number"
-            v-model.number="singleKeyTravel"
             id="single-key-travel-input"
+            v-model.number="singleKeyTravel"
+            type="number"
             :min="minTravel"
             :max="maxTravel"
             step="0.01"
             :disabled="selectedKeys.length === 0"
             @change="updateSingleKeyTravel"
-          />
-          <button @click="adjustTravel(0.01)" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
+          >
+          <button
+            class="adjust-btn"
+            :disabled="selectedKeys.length === 0"
+            @click="adjustTravel(0.01)"
+          >
+            +
+          </button>
         </div>
       </div>
     </div>
     <div class="deadzone-group">
       <div class="input-group">
-        <div class="label">Top Dead Zone (<span class="t-dzone">mm</span>)</div>
+        <div class="label">
+          Top Dead Zone (<span class="t-dzone">mm</span>)
+        </div>
         <div class="slider-container">
-          <div class="value-display">0.00</div>
+          <div class="value-display">
+            0.00
+          </div>
           <input
-            type="range"
             v-model.number="topDeadZone"
+            type="range"
             min="0.0"
             max="1.0"
             step="0.01"
             :disabled="selectedKeys.length === 0"
             @change="updateDeadZones"
-          />
-          <div class="value-display">1.00</div>
+          >
+          <div class="value-display">
+            1.00
+          </div>
         </div>
         <div class="adjusters">
-          <button @click="adjustDeadZone(-0.01, 'top')" class="adjust-btn" :disabled="selectedKeys.length === 0">-</button>
+          <button
+            class="adjust-btn"
+            :disabled="selectedKeys.length === 0"
+            @click="adjustDeadZone(-0.01, 'top')"
+          >
+            -
+          </button>
           <input
-            type="number"
             v-model.number="topDeadZone"
+            type="number"
             min="0.0"
             max="1.0"
             step="0.01"
             :disabled="selectedKeys.length === 0"
             @change="updateDeadZones"
-          />
-          <button @click="adjustDeadZone(0.01, 'top')" class="adjust-btn" :disabled="selectedKeys.length === 0">+</button>
+          >
+          <button
+            class="adjust-btn"
+            :disabled="selectedKeys.length === 0"
+            @click="adjustDeadZone(0.01, 'top')"
+          >
+            +
+          </button>
         </div>
       </div>
       <div class="link-container">
-        <button @click="toggleLinkDeadZones" class="link-btn" :disabled="selectedKeys.length === 0">
+        <button
+          class="link-btn"
+          :disabled="selectedKeys.length === 0"
+          @click="toggleLinkDeadZones"
+        >
           {{ deadZonesLinked ? 'Unlink' : 'Link' }} Zones
         </button>
       </div>
       <div class="input-group">
-        <div class="label">Bottom Dead Zone (mm)</div>
+        <div class="label">
+          Bottom Dead Zone (mm)
+        </div>
         <div class="slider-container">
-          <div class="value-display">0.00</div>
+          <div class="value-display">
+            0.00
+          </div>
           <input
-            type="range"
             v-model.number="bottomDeadZone"
+            type="range"
             min="0.0"
             max="1.0"
             step="0.01"
             :disabled="selectedKeys.length === 0 || deadZonesLinked"
             @change="updateDeadZones"
-          />
-          <div class="value-display">1.00</div>
+          >
+          <div class="value-display">
+            1.00
+          </div>
         </div>
         <div class="adjusters">
-          <button @click="adjustDeadZone(-0.01, 'bottom')" class="adjust-btn" :disabled="selectedKeys.length === 0 || deadZonesLinked">-</button>
+          <button
+            class="adjust-btn"
+            :disabled="selectedKeys.length === 0 || deadZonesLinked"
+            @click="adjustDeadZone(-0.01, 'bottom')"
+          >
+            -
+          </button>
           <input
-            type="number"
             v-model.number="bottomDeadZone"
+            type="number"
             min="0.0"
             max="1.0"
             step="0.01"
             :disabled="selectedKeys.length === 0 || deadZonesLinked"
             @change="updateDeadZones"
-          />
-          <button @click="adjustDeadZone(0.01, 'bottom')" class="adjust-btn" :disabled="selectedKeys.length === 0 || deadZonesLinked">+</button>
+          >
+          <button
+            class="adjust-btn"
+            :disabled="selectedKeys.length === 0 || deadZonesLinked"
+            @click="adjustDeadZone(0.01, 'bottom')"
+          >
+            +
+          </button>
         </div>
       </div>
     </div>

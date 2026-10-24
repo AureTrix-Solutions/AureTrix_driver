@@ -1,14 +1,33 @@
 <template>
   <div class="performance-page">
-    <h2 class="title">Key Travel Settings</h2>
-    <div v-if="notification" class="notification" :class="{ error: notification.isError }">
+    <h2 class="title">
+      Key Travel Settings
+    </h2>
+    <div
+      v-if="notification"
+      class="notification"
+      :class="{ error: notification.isError }"
+    >
       {{ notification.message }}
-      <button @click="notification = null" class="dismiss-btn">&times;</button>
+      <button
+        class="dismiss-btn"
+        @click="notification = null"
+      >
+        &times;
+      </button>
     </div>
 
     <div class="performance-container">
-      <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
-        <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
+      <div
+        v-if="layout.length && loaded"
+        class="key-grid"
+        :style="gridStyle"
+      >
+        <div
+          v-for="(row, rIdx) in layout"
+          :key="`r-${rIdx}`"
+          class="key-row"
+        >
           <div
             v-for="(keyInfo, cIdx) in row"
             :key="`k-${rIdx}-${cIdx}`"
@@ -20,27 +39,64 @@
             <div class="key-label">
               {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
             </div>
-            <div v-if="overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]" class="overlay">
+            <div
+              v-if="overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]"
+              class="overlay"
+            >
               <div class="overlay-values">
-                <div class="overlay-center">{{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.travel || '0.00' }}</div>
-                <div class="overlay-bottom-left">{{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.pressDead }}</div>
-                <div class="overlay-bottom-right">{{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.releaseDead }}</div>
+                <div class="overlay-center">
+                  {{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.travel || '0.00' }}
+                </div>
+                <div class="overlay-bottom-left">
+                  {{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.pressDead }}
+                </div>
+                <div class="overlay-bottom-right">
+                  {{ overlayData[keyInfo.physicalKeyValue || keyInfo.keyValue]?.releaseDead }}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div v-else class="no-layout">
+      <div
+        v-else
+        class="no-layout"
+      >
         <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
         <p>Debug: layout.length={{ layout.length }}, loaded={{ loaded }}, baseLayout={{ baseLayout ? 'defined' : 'null' }}</p>
       </div>
       <div class="bottom-section">
         <div class="selection-buttons">
-          <button @click="selectAll" class="select-btn">Select All</button>
-          <button @click="selectWASD" class="select-btn">Select WASD</button>
-          <button @click="selectLetters" class="select-btn">Select Letters</button>
-          <button @click="selectNumbers" class="select-btn">Select Numbers</button>
-          <button @click="selectNone" class="select-btn">Select None</button>
+          <button
+            class="select-btn"
+            @click="selectAll"
+          >
+            Select All
+          </button>
+          <button
+            class="select-btn"
+            @click="selectWASD"
+          >
+            Select WASD
+          </button>
+          <button
+            class="select-btn"
+            @click="selectLetters"
+          >
+            Select Letters
+          </button>
+          <button
+            class="select-btn"
+            @click="selectNumbers"
+          >
+            Select Numbers
+          </button>
+          <button
+            class="select-btn"
+            @click="selectNone"
+          >
+            Select None
+          </button>
         </div>
         <div class="parent">
           <div class="settings-panel">

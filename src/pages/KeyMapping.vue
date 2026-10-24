@@ -1,34 +1,81 @@
 <template>
   <div class="key-mapping-page">
-    <h2 class="title">Key Mapping</h2>
+    <h2 class="title">
+      Key Mapping
+    </h2>
     <div class="controls">
       <label for="layer-select">Layer: </label>
-      <select v-model="selectedLayer" id="layer-select">
-        <option v-for="layer in layers" :key="layer" :value="layer">{{ `Fn${layer}` }}</option>
+      <select
+        id="layer-select"
+        v-model="selectedLayer"
+      >
+        <option
+          v-for="layer in layers"
+          :key="layer"
+          :value="layer"
+        >
+          {{ `Fn${layer}` }}
+        </option>
       </select>
       <label for="category-select">Remap to Category: </label>
-      <select v-model="selectedCategory" id="category-select" @change="resetVirtualKeys">
-        <option value="" disabled selected>Select a Category</option>
-        <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
+      <select
+        id="category-select"
+        v-model="selectedCategory"
+        @change="resetVirtualKeys"
+      >
+        <option
+          value=""
+          disabled
+          selected
+        >
+          Select a Category
+        </option>
+        <option
+          v-for="category in categories"
+          :key="category"
+          :value="category"
+        >
+          {{ category }}
+        </option>
       </select>
       <button
         v-if="selectedKeys.length > 0 && selectedCategory && selectedKeyValue !== null"
-        @click="applyBulkRemap"
         class="action-btn"
+        @click="applyBulkRemap"
       >
         Apply to {{ selectedKeys.length }} Key{{ selectedKeys.length > 1 ? 's' : '' }}
       </button>
-      <button @click="toggleMultiSelect" class="action-btn secondary" :class="{ active: isMultiSelect }">
+      <button
+        class="action-btn secondary"
+        :class="{ active: isMultiSelect }"
+        @click="toggleMultiSelect"
+      >
         {{ isMultiSelect ? 'Stop Multi-Select' : 'Select Multi' }}
       </button>
-      <button @click="toggleSelectAll" class="action-btn secondary">
+      <button
+        class="action-btn secondary"
+        @click="toggleSelectAll"
+      >
         {{ selectedKeys.length === (layout?.flat().length || 0) ? 'Deselect All' : 'Select All' }}
       </button>
-      <button @click="setDefaultLayer" class="action-btn">Reset Mapping</button>
+      <button
+        class="action-btn"
+        @click="setDefaultLayer"
+      >
+        Reset Mapping
+      </button>
     </div>
     <div class="mapping-container">
-      <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
-        <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
+      <div
+        v-if="layout.length && loaded"
+        class="key-grid"
+        :style="gridStyle"
+      >
+        <div
+          v-for="(row, rIdx) in layout"
+          :key="`r-${rIdx}`"
+          class="key-row"
+        >
           <div
             v-for="(keyInfo, cIdx) in row"
             :key="`k-${rIdx}-${cIdx}`"
@@ -45,13 +92,25 @@
           </div>
         </div>
       </div>
-      <div v-else class="no-layout">
+      <div
+        v-else
+        class="no-layout"
+      >
         <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
       </div>
       <div class="key-config">
-        <div v-if="selectedCategory" class="virtual-keys-window">
-          <p class="hint-text">Click or drag a key to select it for remapping</p>
-          <div class="virtual-keys" @dragstart="onDragStart" @dragend="onDragEnd">
+        <div
+          v-if="selectedCategory"
+          class="virtual-keys-window"
+        >
+          <p class="hint-text">
+            Click or drag a key to select it for remapping
+          </p>
+          <div
+            class="virtual-keys"
+            @dragstart="onDragStart"
+            @dragend="onDragEnd"
+          >
             <div
               v-for="(label, keyValue) in filteredKeyMap"
               :key="keyValue"

@@ -1,35 +1,85 @@
 <template>
   <div class="lighting-page">
-    <h2 class="title">RGB Lighting</h2>
+    <h2 class="title">
+      RGB Lighting
+    </h2>
 
     <div class="lighting-container">
       <!-- Virtual Keyboard -->
-      <div v-if="layout.length && loaded" ref="keyGridRef" class="key-grid" :style="gridStyle"
-        @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp"
-        @mouseleave="handleMouseUp">
-        <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
-          <div v-for="(keyInfo, cIdx) in row" :key="`k-${rIdx}-${cIdx}`" class="key-btn"
-            :class="{ 'lighting-key-selected': isKeySelected(keyInfo) }" :style="getKeyStyleWithCustomColor(rIdx, cIdx)"
-            :data-key-value="keyInfo.physicalKeyValue || keyInfo.keyValue">
+      <div
+        v-if="layout.length && loaded"
+        ref="keyGridRef"
+        class="key-grid"
+        :style="gridStyle"
+        @mousedown="handleMouseDown"
+        @mousemove="handleMouseMove"
+        @mouseup="handleMouseUp"
+        @mouseleave="handleMouseUp"
+      >
+        <div
+          v-for="(row, rIdx) in layout"
+          :key="`r-${rIdx}`"
+          class="key-row"
+        >
+          <div
+            v-for="(keyInfo, cIdx) in row"
+            :key="`k-${rIdx}-${cIdx}`"
+            class="key-btn"
+            :class="{ 'lighting-key-selected': isKeySelected(keyInfo) }"
+            :style="getKeyStyleWithCustomColor(rIdx, cIdx)"
+            :data-key-value="keyInfo.physicalKeyValue || keyInfo.keyValue"
+          >
             <div class="key-label">
               {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
             </div>
           </div>
         </div>
-        <div v-if="isDragging" class="selection-rectangle" :style="selectionRectStyle"></div>
+        <div
+          v-if="isDragging"
+          class="selection-rectangle"
+          :style="selectionRectStyle"
+        />
       </div>
-      <div v-else class="no-layout">
+      <div
+        v-else
+        class="no-layout"
+      >
         <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
       </div>
 
       <div class="bottom-section">
         <!-- Selection Buttons -->
         <div class="selection-buttons">
-          <button @click="selectAll" class="select-btn">Select All</button>
-          <button @click="selectWASD" class="select-btn">Select WASD</button>
-          <button @click="selectLetters" class="select-btn">Select Letters</button>
-          <button @click="selectNumbers" class="select-btn">Select Numbers</button>
-          <button @click="selectNone" class="select-btn">Select None</button>
+          <button
+            class="select-btn"
+            @click="selectAll"
+          >
+            Select All
+          </button>
+          <button
+            class="select-btn"
+            @click="selectWASD"
+          >
+            Select WASD
+          </button>
+          <button
+            class="select-btn"
+            @click="selectLetters"
+          >
+            Select Letters
+          </button>
+          <button
+            class="select-btn"
+            @click="selectNumbers"
+          >
+            Select Numbers
+          </button>
+          <button
+            class="select-btn"
+            @click="selectNone"
+          >
+            Select None
+          </button>
         </div>
 
         <!-- RGB Settings Panel -->
@@ -37,7 +87,11 @@
           <div class="settings-section">
             <div class="header-row">
               <h3>RGB Settings</h3>
-              <button @click="toggleLighting" class="toggle-btn" :disabled="initializing">
+              <button
+                class="toggle-btn"
+                :disabled="initializing"
+                @click="toggleLighting"
+              >
                 {{ initializing ? 'SYNCING...' : (lightingEnabled ? 'ON' : 'OFF') }}
               </button>
             </div>
@@ -45,61 +99,155 @@
             <!-- Master Controls Row -->
             <div class="settings-row settings-row-three">
               <div class="input-group">
-                <div class="label">Brightness</div>
-                <select v-model.number="masterLuminance" @change="applyMasterLuminance" class="mode-select"
-                  :disabled="initializing || !lightingEnabled">
-                  <option :value="0">0 - Off</option>
-                  <option :value="1">1 - Low</option>
-                  <option :value="2">2 - Medium</option>
-                  <option :value="3">3 - High</option>
-                  <option :value="4">4 - Maximum</option>
+                <div class="label">
+                  Brightness
+                </div>
+                <select
+                  v-model.number="masterLuminance"
+                  class="mode-select"
+                  :disabled="initializing || !lightingEnabled"
+                  @change="applyMasterLuminance"
+                >
+                  <option :value="0">
+                    0 - Off
+                  </option>
+                  <option :value="1">
+                    1 - Low
+                  </option>
+                  <option :value="2">
+                    2 - Medium
+                  </option>
+                  <option :value="3">
+                    3 - High
+                  </option>
+                  <option :value="4">
+                    4 - Maximum
+                  </option>
                 </select>
               </div>
               <div class="input-group">
-                <div class="label">Speed</div>
-                <select v-model.number="masterSpeed" @change="applyMasterSpeed" class="mode-select"
-                  :disabled="initializing || !lightingEnabled">
-                  <option :value="0">0 - Slowest</option>
-                  <option :value="1">1 - Slow</option>
-                  <option :value="2">2 - Medium</option>
-                  <option :value="3">3 - Fast</option>
-                  <option :value="4">4 - Fastest</option>
+                <div class="label">
+                  Speed
+                </div>
+                <select
+                  v-model.number="masterSpeed"
+                  class="mode-select"
+                  :disabled="initializing || !lightingEnabled"
+                  @change="applyMasterSpeed"
+                >
+                  <option :value="0">
+                    0 - Slowest
+                  </option>
+                  <option :value="1">
+                    1 - Slow
+                  </option>
+                  <option :value="2">
+                    2 - Medium
+                  </option>
+                  <option :value="3">
+                    3 - Fast
+                  </option>
+                  <option :value="4">
+                    4 - Fastest
+                  </option>
                 </select>
               </div>
               <div class="input-group">
-                <div class="label">Lighting Mode</div>
-                <select v-model.number="selectedMode" @change="applyModeSelection" class="mode-select"
-                  :disabled="initializing || !lightingEnabled">
-                  <option :value="0">Static</option>
-                  <option :value="1">Wave</option>
-                  <option :value="2">Wave 2</option>
-                  <option :value="3">Ripple</option>
-                  <option :value="4">Wheel</option>
-                  <option :value="5">Wheel 2</option>
-                  <option :value="6">Collide</option>
-                  <option :value="7">Spectrum</option>
-                  <option :value="8">Shift</option>
-                  <option :value="9">Spot Shift</option>
-                  <option :value="10">Race</option>
-                  <option :value="11">Rainbow Wave</option>
-                  <option :value="12">Snake</option>
-                  <option :value="13">Twinkle</option>
-                  <option :value="14">Twinkle 2</option>
-                  <option :value="15">Twinkle 3</option>
-                  <option :value="16">Pong</option>
-                  <option :value="17">Pulse Reactive</option>
-                  <option :value="18">Radiate Reactive</option>
-                  <option :value="19">Column Reactive</option>
-                  <option :value="20">Explode Reactive</option>
-                  <option :value="21">Custom</option>
+                <div class="label">
+                  Lighting Mode
+                </div>
+                <select
+                  v-model.number="selectedMode"
+                  class="mode-select"
+                  :disabled="initializing || !lightingEnabled"
+                  @change="applyModeSelection"
+                >
+                  <option :value="0">
+                    Static
+                  </option>
+                  <option :value="1">
+                    Wave
+                  </option>
+                  <option :value="2">
+                    Wave 2
+                  </option>
+                  <option :value="3">
+                    Ripple
+                  </option>
+                  <option :value="4">
+                    Wheel
+                  </option>
+                  <option :value="5">
+                    Wheel 2
+                  </option>
+                  <option :value="6">
+                    Collide
+                  </option>
+                  <option :value="7">
+                    Spectrum
+                  </option>
+                  <option :value="8">
+                    Shift
+                  </option>
+                  <option :value="9">
+                    Spot Shift
+                  </option>
+                  <option :value="10">
+                    Race
+                  </option>
+                  <option :value="11">
+                    Rainbow Wave
+                  </option>
+                  <option :value="12">
+                    Snake
+                  </option>
+                  <option :value="13">
+                    Twinkle
+                  </option>
+                  <option :value="14">
+                    Twinkle 2
+                  </option>
+                  <option :value="15">
+                    Twinkle 3
+                  </option>
+                  <option :value="16">
+                    Pong
+                  </option>
+                  <option :value="17">
+                    Pulse Reactive
+                  </option>
+                  <option :value="18">
+                    Radiate Reactive
+                  </option>
+                  <option :value="19">
+                    Column Reactive
+                  </option>
+                  <option :value="20">
+                    Explode Reactive
+                  </option>
+                  <option :value="21">
+                    Custom
+                  </option>
                 </select>
                 <!-- Color Picker for Static and Custom modes -->
-                <div v-if="selectedMode === 0 || selectedMode === 21" class="color-picker-wrapper">
-                  <label for="color-picker" class="color-display" :style="{ backgroundColor: staticColor }"></label>
-                  <input type="color" id="color-picker" v-model="staticColor"
+                <div
+                  v-if="selectedMode === 0 || selectedMode === 21"
+                  class="color-picker-wrapper"
+                >
+                  <label
+                    for="color-picker"
+                    class="color-display"
+                    :style="{ backgroundColor: staticColor }"
+                  />
+                  <input
+                    id="color-picker"
+                    v-model="staticColor"
+                    type="color"
+                    :disabled="initializing || !lightingEnabled"
+                    class="color-input"
                     @input="selectedMode === 0 ? applyStaticColorThrottled() : updateVirtualKeyboardColorOnly()"
                     @change="selectedMode === 0 ? applyStaticColor() : applyCustomColor()"
-                    :disabled="initializing || !lightingEnabled" class="color-input" />
+                  >
                 </div>
               </div>
             </div>
@@ -107,30 +255,72 @@
             <!-- Additional Controls Row -->
             <div class="settings-row">
               <div class="input-group">
-                <div class="label">Sleep Timer</div>
-                <select v-model.number="masterSleepDelay" @change="applyMasterSleepDelay" class="mode-select"
-                  :disabled="initializing || !lightingEnabled">
-                  <option :value="0">Never</option>
-                  <option :value="1">1 minute</option>
-                  <option :value="2">2 minutes</option>
-                  <option :value="3">3 minutes</option>
-                  <option :value="5">5 minutes</option>
-                  <option :value="10">10 minutes</option>
-                  <option :value="15">15 minutes</option>
-                  <option :value="20">20 minutes</option>
-                  <option :value="25">25 minutes</option>
-                  <option :value="30">30 minutes</option>
-                  <option :value="45">45 minutes</option>
-                  <option :value="60">60 minutes</option>
-                  <option :value="120">120 minutes</option>
+                <div class="label">
+                  Sleep Timer
+                </div>
+                <select
+                  v-model.number="masterSleepDelay"
+                  class="mode-select"
+                  :disabled="initializing || !lightingEnabled"
+                  @change="applyMasterSleepDelay"
+                >
+                  <option :value="0">
+                    Never
+                  </option>
+                  <option :value="1">
+                    1 minute
+                  </option>
+                  <option :value="2">
+                    2 minutes
+                  </option>
+                  <option :value="3">
+                    3 minutes
+                  </option>
+                  <option :value="5">
+                    5 minutes
+                  </option>
+                  <option :value="10">
+                    10 minutes
+                  </option>
+                  <option :value="15">
+                    15 minutes
+                  </option>
+                  <option :value="20">
+                    20 minutes
+                  </option>
+                  <option :value="25">
+                    25 minutes
+                  </option>
+                  <option :value="30">
+                    30 minutes
+                  </option>
+                  <option :value="45">
+                    45 minutes
+                  </option>
+                  <option :value="60">
+                    60 minutes
+                  </option>
+                  <option :value="120">
+                    120 minutes
+                  </option>
                 </select>
               </div>
               <div class="input-group">
-                <div class="label">Direction</div>
-                <select v-model="masterDirection" @change="applyMasterDirection" class="mode-select"
-                  :disabled="initializing || !lightingEnabled">
-                  <option :value="false">Normal</option>
-                  <option :value="true">Reverse</option>
+                <div class="label">
+                  Direction
+                </div>
+                <select
+                  v-model="masterDirection"
+                  class="mode-select"
+                  :disabled="initializing || !lightingEnabled"
+                  @change="applyMasterDirection"
+                >
+                  <option :value="false">
+                    Normal
+                  </option>
+                  <option :value="true">
+                    Reverse
+                  </option>
                 </select>
               </div>
             </div>

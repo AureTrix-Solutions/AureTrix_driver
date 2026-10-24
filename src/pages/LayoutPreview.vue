@@ -3,26 +3,50 @@
     <h2>Layout Preview</h2>
     <div class="controls">
       <label for="layout-select">Select Layout: </label>
-      <select v-model="selectedLayout" id="layout-select" @change="updateLayout">
-        <option v-for="layout in layouts" :key="layout" :value="layout">{{ `${layout}-key` }}</option>
-        <optgroup v-if="customLayouts.length > 0" label="Custom Layouts">
-          <option v-for="layout in customLayouts" :key="layout.productName" :value="layout.productName">
-            {{ layout.productName }}
+      <select
+        id="layout-select"
+        v-model="selectedLayout"
+        @change="updateLayout"
+      >
+        <option
+          v-for="count in layouts"
+          :key="count"
+          :value="count"
+        >
+          {{ `${count}-key` }}
+        </option>
+        <optgroup
+          v-if="customLayouts.length > 0"
+          label="Custom Layouts"
+        >
+          <option
+            v-for="customLayout in customLayouts"
+            :key="customLayout.productName"
+            :value="customLayout.productName"
+          >
+            {{ customLayout.productName }}
           </option>
         </optgroup>
       </select>
     </div>
-    <div v-if="layout.length" class="key-grid" :style="gridStyle">
-      <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
+    <div
+      v-if="layout.length"
+      class="key-grid"
+      :style="gridStyle"
+    >
+      <div
+        v-for="(row, rIdx) in layout"
+        :key="`r-${rIdx}`"
+        class="key-row"
+      >
         <div
           v-for="(pos, cIdx) in row"
           :key="`k-${rIdx}-${cIdx}`"
           class="key-preview"
           :style="getKeyStyle(rIdx, cIdx)"
-        ></div>
+        />
       </div>
     </div>
-
   </div>
 </template>
 

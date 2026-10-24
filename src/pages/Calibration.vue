@@ -1,25 +1,35 @@
 <template>
   <div class="calibration-page">
-    <h2 class="title">Calibration</h2>
+    <h2 class="title">
+      Calibration
+    </h2>
     <div class="controls">
       <button
-        @click="startCalibration"
         :disabled="!connectionStore.isConnected || calibrating"
         class="action-btn"
+        @click="startCalibration"
       >
         Start Calibration
       </button>
       <button
-        @click="endCalibration"
         :disabled="!calibrating"
         class="action-btn secondary"
+        @click="endCalibration"
       >
         Save Calibration
       </button>
     </div>
     <div class="mapping-container">
-      <div v-if="loaded" class="key-grid" :style="gridStyle">
-        <div v-for="(row, rowIdx) in layout" :key="rowIdx" class="key-row">
+      <div
+        v-if="loaded"
+        class="key-grid"
+        :style="gridStyle"
+      >
+        <div
+          v-for="(row, rowIdx) in layout"
+          :key="rowIdx"
+          class="key-row"
+        >
           <button
             v-for="(keyInfo, colIdx) in row"
             :key="colIdx"
@@ -43,10 +53,16 @@
           </button>
         </div>
       </div>
-      <div v-else-if="error" class="no-layout">
+      <div
+        v-else-if="error"
+        class="no-layout"
+      >
         {{ error }}
       </div>
-      <div v-else class="no-layout">
+      <div
+        v-else
+        class="no-layout"
+      >
         Loading layout...
       </div>
       <div class="instructions">

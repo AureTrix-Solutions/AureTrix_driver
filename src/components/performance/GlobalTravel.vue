@@ -2,61 +2,160 @@
   <div class="settings-section">
     <div class="header-row">
       <h3>Global Travel</h3>
-      <button @click="toggleOverlay" class="show-btn">{{ showOverlay ? 'Hide' : 'Show' }}</button>
+      <button
+        class="show-btn"
+        @click="toggleOverlay"
+      >
+        {{ showOverlay ? 'Hide' : 'Show' }}
+      </button>
     </div>
     <div class="global-travel-row">
       <div class="input-group">
-        <div class="label">Global Travel (mm)</div>
+        <div class="label">
+          Global Travel (mm)
+        </div>
         <div class="slider-container">
-          <div class="value-display">{{ minTravel.toFixed(2) }}</div>
-          <input type="range" v-model.number="globalTravel" :min="minTravel" :max="maxTravel" step="0.01"
-            @change="updateGlobalSettings" />
-          <div class="value-display">{{ maxTravel.toFixed(2) }}</div>
+          <div class="value-display">
+            {{ minTravel.toFixed(2) }}
+          </div>
+          <input
+            v-model.number="globalTravel"
+            type="range"
+            :min="minTravel"
+            :max="maxTravel"
+            step="0.01"
+            @change="updateGlobalSettings"
+          >
+          <div class="value-display">
+            {{ maxTravel.toFixed(2) }}
+          </div>
         </div>
         <div class="adjusters">
-          <button @click="adjustTravel(-0.01)" class="adjust-btn">-</button>
-          <input type="number" v-model.number="globalTravel" :min="minTravel" :max="maxTravel" step="0.01"
-            @change="updateGlobalSettings" />
-          <button @click="adjustTravel(0.01)" class="adjust-btn">+</button>
+          <button
+            class="adjust-btn"
+            @click="adjustTravel(-0.01)"
+          >
+            -
+          </button>
+          <input
+            v-model.number="globalTravel"
+            type="number"
+            :min="minTravel"
+            :max="maxTravel"
+            step="0.01"
+            @change="updateGlobalSettings"
+          >
+          <button
+            class="adjust-btn"
+            @click="adjustTravel(0.01)"
+          >
+            +
+          </button>
         </div>
       </div>
       <div class="input-group global-mode-group">
-        <button @click="setKeyToGlobalMode" class="global-mode-btn" :disabled="selectedKeys.length === 0">
+        <button
+          class="global-mode-btn"
+          :disabled="selectedKeys.length === 0"
+          @click="setKeyToGlobalMode"
+        >
           Select to Global
         </button>
       </div>
     </div>
     <div class="deadzone-group">
       <div class="input-group">
-        <div class="label">Top Dead Zone (mm)</div>
+        <div class="label">
+          Top Dead Zone (mm)
+        </div>
         <div class="slider-container">
-          <div class="value-display">0.00</div>
-          <input type="range" v-model.number="pressDead" min="0.0" max="1.0" step="0.01" @change="updateGlobalSettings" />
-          <div class="value-display">1.00</div>
+          <div class="value-display">
+            0.00
+          </div>
+          <input
+            v-model.number="pressDead"
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            @change="updateGlobalSettings"
+          >
+          <div class="value-display">
+            1.00
+          </div>
         </div>
         <div class="adjusters">
-          <button @click="adjustDeadZone(-0.01, 'press')" class="adjust-btn">-</button>
-          <input type="number" v-model.number="pressDead" min="0.0" max="1.0" step="0.01"
-            @change="updateGlobalSettings" />
-          <button @click="adjustDeadZone(0.01, 'press')" class="adjust-btn">+</button>
+          <button
+            class="adjust-btn"
+            @click="adjustDeadZone(-0.01, 'press')"
+          >
+            -
+          </button>
+          <input
+            v-model.number="pressDead"
+            type="number"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            @change="updateGlobalSettings"
+          >
+          <button
+            class="adjust-btn"
+            @click="adjustDeadZone(0.01, 'press')"
+          >
+            +
+          </button>
         </div>
       </div>
       <div class="link-container">
-        <button @click="toggleLinkDeadZones" class="link-btn">{{ deadZonesLinked ? 'Unlink' : 'Link' }} Zones</button>
+        <button
+          class="link-btn"
+          @click="toggleLinkDeadZones"
+        >
+          {{ deadZonesLinked ? 'Unlink' : 'Link' }} Zones
+        </button>
       </div>
       <div class="input-group">
-        <div class="label">Bottom Dead Zone (mm)</div>
+        <div class="label">
+          Bottom Dead Zone (mm)
+        </div>
         <div class="slider-container">
-          <div class="value-display">0.00</div>
-          <input type="range" v-model.number="releaseDead" min="0.0" max="1.0" step="0.01"
-            @change="updateGlobalSettings" />
-          <div class="value-display">1.00</div>
+          <div class="value-display">
+            0.00
+          </div>
+          <input
+            v-model.number="releaseDead"
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            @change="updateGlobalSettings"
+          >
+          <div class="value-display">
+            1.00
+          </div>
         </div>
         <div class="adjusters">
-          <button @click="adjustDeadZone(-0.01, 'release')" class="adjust-btn">-</button>
-          <input type="number" v-model.number="releaseDead" min="0.0" max="1.0" step="0.01"
-            @change="updateGlobalSettings" />
-          <button @click="adjustDeadZone(0.01, 'release')" class="adjust-btn">+</button>
+          <button
+            class="adjust-btn"
+            @click="adjustDeadZone(-0.01, 'release')"
+          >
+            -
+          </button>
+          <input
+            v-model.number="releaseDead"
+            type="number"
+            min="0.0"
+            max="1.0"
+            step="0.01"
+            @change="updateGlobalSettings"
+          >
+          <button
+            class="adjust-btn"
+            @click="adjustDeadZone(0.01, 'release')"
+          >
+            +
+          </button>
         </div>
       </div>
     </div>

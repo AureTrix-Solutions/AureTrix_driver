@@ -1,7 +1,12 @@
 <template>
-  <div class="modal-backdrop" @click.self="onCancel">
+  <div
+    class="modal-backdrop"
+    @click.self="onCancel"
+  >
     <div class="modal-content">
-      <h2 class="modal-title">⚠️ Factory Reset</h2>
+      <h2 class="modal-title">
+        ⚠️ Factory Reset
+      </h2>
       <p class="modal-message">
         This will restore your keyboard to factory settings and <strong>delete all your custom configurations</strong>, including:
       </p>
@@ -15,8 +20,18 @@
         <strong>We strongly recommend exporting your profiles first!</strong>
       </p>
       <div class="modal-buttons">
-        <button class="cancel-btn" @click="onCancel">Cancel</button>
-        <button class="ok-btn" @click="onConfirm">OK, Reset</button>
+        <button
+          class="cancel-btn"
+          @click="onCancel"
+        >
+          Cancel
+        </button>
+        <button
+          class="ok-btn"
+          @click="onConfirm"
+        >
+          OK, Reset
+        </button>
       </div>
     </div>
   </div>

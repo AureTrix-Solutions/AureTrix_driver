@@ -1,28 +1,80 @@
 <template>
   <div class="layout-creator-page">
-    <h2 class="title">Keyboard Creator</h2>
+    <h2 class="title">
+      Keyboard Creator
+    </h2>
 
     <div class="layout-creator-container">
-      <div v-if="virtualKeyboard.length" class="key-grid" :style="gridStyle">
-        <div v-for="(row, rIdx) in virtualKeyboard" :key="`vrow-${rIdx}`" class="key-row">
-          <div v-for="(key, kIdx) in row" :key="`vkey-${rIdx}-${kIdx}`" class="key-btn"
-            :class="{ 'creator-key-selected': isKeySelected(rIdx, kIdx) }" :style="getKeyStyle(rIdx, kIdx)"
-            @click="selectKey(rIdx, kIdx)">
-            <div class="key-label">{{ key.size }}u</div>
+      <div
+        v-if="virtualKeyboard.length"
+        class="key-grid"
+        :style="gridStyle"
+      >
+        <div
+          v-for="(row, rIdx) in virtualKeyboard"
+          :key="`vrow-${rIdx}`"
+          class="key-row"
+        >
+          <div
+            v-for="(key, kIdx) in row"
+            :key="`vkey-${rIdx}-${kIdx}`"
+            class="key-btn"
+            :class="{ 'creator-key-selected': isKeySelected(rIdx, kIdx) }"
+            :style="getKeyStyle(rIdx, kIdx)"
+            @click="selectKey(rIdx, kIdx)"
+          >
+            <div class="key-label">
+              {{ key.size }}u
+            </div>
           </div>
         </div>
       </div>
-      <div v-else class="no-layout">
+      <div
+        v-else
+        class="no-layout"
+      >
         <p>Enter row counts below to generate virtual keyboard</p>
       </div>
       <div class="bottom-section">
         <div class="selection-buttons">
-          <button @click="saveLayout" class="select-btn">Save Layout</button>
-          <button @click="exportCompactCode" class="select-btn">Export Layout</button>
-          <button @click="importLayout" class="select-btn">Import Layout</button>
-          <button @click="shareLayout" class="select-btn" :disabled="isCommunityLayoutExists">Share</button>
-          <button @click="goBack" class="select-btn">Cancel</button>
-          <input ref="importFileInput" type="file" accept=".json,.txt" @change="handleImportFile" style="display: none" />
+          <button
+            class="select-btn"
+            @click="saveLayout"
+          >
+            Save Layout
+          </button>
+          <button
+            class="select-btn"
+            @click="exportCompactCode"
+          >
+            Export Layout
+          </button>
+          <button
+            class="select-btn"
+            @click="importLayout"
+          >
+            Import Layout
+          </button>
+          <button
+            class="select-btn"
+            :disabled="isCommunityLayoutExists"
+            @click="shareLayout"
+          >
+            Share
+          </button>
+          <button
+            class="select-btn"
+            @click="goBack"
+          >
+            Cancel
+          </button>
+          <input
+            ref="importFileInput"
+            type="file"
+            accept=".json,.txt"
+            style="display: none"
+            @change="handleImportFile"
+          >
         </div>
         <div class="parent">
           <div class="settings-panel">
@@ -30,14 +82,33 @@
             <div class="settings-section">
               <div class="input-row">
                 <div class="input-group">
-                  <div class="label">Product Name</div>
-                  <input v-model="productName" type="text" placeholder="Enter keyboard name" class="text-input" />
+                  <div class="label">
+                    Product Name
+                  </div>
+                  <input
+                    v-model="productName"
+                    type="text"
+                    placeholder="Enter keyboard name"
+                    class="text-input"
+                  >
                 </div>
                 <div class="input-group">
-                  <div class="label">Load Saved Layout</div>
-                  <select v-model="selectedSavedLayout" @change="loadSelectedLayout" class="select-input">
-                    <option value="">-- Select a saved layout --</option>
-                    <option v-for="layout in savedLayouts" :key="layout.productName" :value="layout.productName">
+                  <div class="label">
+                    Load Saved Layout
+                  </div>
+                  <select
+                    v-model="selectedSavedLayout"
+                    class="select-input"
+                    @change="loadSelectedLayout"
+                  >
+                    <option value="">
+                      -- Select a saved layout --
+                    </option>
+                    <option
+                      v-for="layout in savedLayouts"
+                      :key="layout.productName"
+                      :value="layout.productName"
+                    >
                       {{ layout.productName }}
                     </option>
                   </select>
@@ -52,18 +123,41 @@
               </div>
               <!-- Row Counts Row -->
               <div class="row-inputs-row">
-                <div v-for="i in displayRowCount" :key="`row-${i}`" class="input-group">
-                  <div class="label">Row{{ i - 1 }}</div>
-                  <input v-model.number="rowCounts[i - 1]" type="number" min="0" placeholder="0"
-                    class="number-input" />
+                <div
+                  v-for="i in displayRowCount"
+                  :key="`row-${i}`"
+                  class="input-group"
+                >
+                  <div class="label">
+                    Row{{ i - 1 }}
+                  </div>
+                  <input
+                    v-model.number="rowCounts[i - 1]"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    class="number-input"
+                  >
                 </div>
               </div>
               <!-- Gap Inputs Row -->
               <div class="gap-inputs-row">
-                <div v-for="i in displayRowCount" :key="`gap-${i}`" class="input-group">
-                  <div class="label">Gap{{ i - 1 }} (mm)</div>
-                  <input v-model.number="rowGaps[i - 1]" type="number" min="0" step="0.1" placeholder="0"
-                    class="number-input" />
+                <div
+                  v-for="i in displayRowCount"
+                  :key="`gap-${i}`"
+                  class="input-group"
+                >
+                  <div class="label">
+                    Gap{{ i - 1 }} (mm)
+                  </div>
+                  <input
+                    v-model.number="rowGaps[i - 1]"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    placeholder="0"
+                    class="number-input"
+                  >
                 </div>
               </div>
             </div>
@@ -72,33 +166,67 @@
             <div class="settings-section">
               <div class="header-row">
                 <h3>Edit Keys ({{ selectedKeys.length }} selected)</h3>
-                <button @click="clearSelection" class="clear-selection-btn">Clear</button>
+                <button
+                  class="clear-selection-btn"
+                  @click="clearSelection"
+                >
+                  Clear
+                </button>
               </div>
               <div class="key-editor-controls">
                 <div class="input-group">
-                  <div class="label">Size (Preset)</div>
-                  <select v-model.number="selectedKeyData.size" @change="onSizePresetChange" class="select-input">
-                    <option v-for="keySize in KEY_SIZES" :key="keySize.units" :value="keySize.units">
+                  <div class="label">
+                    Size (Preset)
+                  </div>
+                  <select
+                    v-model.number="selectedKeyData.size"
+                    class="select-input"
+                    @change="onSizePresetChange"
+                  >
+                    <option
+                      v-for="keySize in KEY_SIZES"
+                      :key="keySize.units"
+                      :value="keySize.units"
+                    >
                       {{ keySize.label }}
                     </option>
                   </select>
                 </div>
                 <div class="input-group">
-                  <div class="label">Size (mm)</div>
-                  <input v-model.number="selectedKeyData.sizeMm" type="number" min="0" step="0.1"
-                    @input="updateSelectedKey" class="number-input" />
+                  <div class="label">
+                    Size (mm)
+                  </div>
+                  <input
+                    v-model.number="selectedKeyData.sizeMm"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    class="number-input"
+                    @input="updateSelectedKey"
+                  >
                 </div>
                 <div class="input-group">
-                  <div class="label">Gap After (mm)</div>
-                  <input v-model.number="selectedKeyData.gap" type="number" min="0" step="0.1"
-                    @input="updateSelectedKey" class="number-input" />
+                  <div class="label">
+                    Gap After (mm)
+                  </div>
+                  <input
+                    v-model.number="selectedKeyData.gap"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    class="number-input"
+                    @input="updateSelectedKey"
+                  >
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div v-if="isCommunityLayoutExists" class="share-disabled-message">
+      <div
+        v-if="isCommunityLayoutExists"
+        class="share-disabled-message"
+      >
         A community layout already exists for "{{ productName }}". You can save custom modifications locally using Save Layout.
       </div>
     </div>

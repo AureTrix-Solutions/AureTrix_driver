@@ -6,54 +6,108 @@
       <div class="input-group">
         <label for="profile-name">New Profile Name:</label>
         <input
-          type="text"
-          v-model="newProfileName"
           id="profile-name"
+          v-model="newProfileName"
+          type="text"
           placeholder="Enter switch name (e.g., Gateron Red)"
           @keyup.enter="addProfile"
-        />
-        <button @click="addProfile" class="action-btn" :disabled="!newProfileName.trim()">Add Profile</button>
+        >
+        <button
+          class="action-btn"
+          :disabled="!newProfileName.trim()"
+          @click="addProfile"
+        >
+          Add Profile
+        </button>
       </div>
 
       <!-- Select Profile Dropdown -->
       <div class="input-group">
         <label for="profile-select">Select Profile:</label>
-        <select v-model="selectedProfileId" id="profile-select">
-          <option :value="null">Default 4mm</option>
-          <option v-for="profile in profileOptions" :key="profile.id" :value="profile.id">
+        <select
+          id="profile-select"
+          v-model="selectedProfileId"
+        >
+          <option :value="null">
+            Default 4mm
+          </option>
+          <option
+            v-for="profile in profileOptions"
+            :key="profile.id"
+            :value="profile.id"
+          >
             {{ profile.switchName }}&nbsp; ({{ profile.maxTravel ? profile.maxTravel.toFixed(1) : 'N/A' }} mm)
           </option>
         </select>
-        <button @click="deleteProfile" class="action-btn" :disabled="!selectedProfileId">Delete Profile</button>
+        <button
+          class="action-btn"
+          :disabled="!selectedProfileId"
+          @click="deleteProfile"
+        >
+          Delete Profile
+        </button>
       </div>
 
       <!-- Key Test Toggle -->
       <div class="input-group">
         <label for="key-test-toggle">Enable Key Test:</label>
-        <input type="checkbox" v-model="keyTestEnabled" id="key-test-toggle" :disabled="selectedKeys.length === 0" />
+        <input
+          id="key-test-toggle"
+          v-model="keyTestEnabled"
+          type="checkbox"
+          :disabled="selectedKeys.length === 0"
+        >
       </div>
     </div>
 
     <!-- Modal for Capture -->
-    <div v-if="showCaptureModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
+    <div
+      v-if="showCaptureModal"
+      class="modal-overlay"
+      @click="closeModal"
+    >
+      <div
+        class="modal-content"
+        @click.stop
+      >
         <h4>Capture Max Travel for {{ currentProfileName }}</h4>
         <p>Press any key now to capture travel... ({{ countdown }}s remaining)</p>
-        <div v-if="isCapturing" class="capturing-status">
+        <div
+          v-if="isCapturing"
+          class="capturing-status"
+        >
           Listening... (Captured: {{ capturedTravel.toFixed(1) }} mm)
         </div>
         <div class="modal-buttons">
-          <button @click="saveCapturedTravel" class="action-btn" :disabled="!capturedTravel">Save</button>
-          <button @click="closeModal" class="stop-btn">Cancel</button>
+          <button
+            class="action-btn"
+            :disabled="!capturedTravel"
+            @click="saveCapturedTravel"
+          >
+            Save
+          </button>
+          <button
+            class="stop-btn"
+            @click="closeModal"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Key Test Modal: Table Layout -->
-    <div v-if="showKeyTestModal" class="modal-overlay" @click="closeKeyTestModal">
-      <div class="modal-content key-test-modal" @click.stop>
+    <div
+      v-if="showKeyTestModal"
+      class="modal-overlay"
+      @click="closeKeyTestModal"
+    >
+      <div
+        class="modal-content key-test-modal"
+        @click.stop
+      >
         <h4>Key Test Monitor</h4>
-        <p>Press the selected key to monitor travel and trigger.<br /> Press slow for better accuracy.</p>
+        <p>Press the selected key to monitor travel and trigger.<br> Press slow for better accuracy.</p>
         <table class="key-test-table">
           <thead>
             <tr>
@@ -65,13 +119,22 @@
           <tbody>
             <tr>
               <td>{{ selectedKeyLabel }}</td>
-              <td class="live">{{ travelValue }} mm</td>
-              <td :class="{ 'trigger triggered': triggered }">{{ triggered ? triggerValue + ' mm' : 'N/A' }}</td>
+              <td class="live">
+                {{ travelValue }} mm
+              </td>
+              <td :class="{ 'trigger triggered': triggered }">
+                {{ triggered ? triggerValue + ' mm' : 'N/A' }}
+              </td>
             </tr>
           </tbody>
         </table>
         <div class="modal-buttons">
-          <button @click="closeKeyTestModal" class="stop-btn">Close</button>
+          <button
+            class="stop-btn"
+            @click="closeKeyTestModal"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

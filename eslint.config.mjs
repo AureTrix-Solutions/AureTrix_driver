@@ -7,7 +7,7 @@ export default tseslint.config(
   { ignores: ["dist/", "node_modules/", ".scratch/", "_to_delete/", "coverage/"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  ...pluginVue.configs["flat/essential"],
+  ...pluginVue.configs["flat/recommended"],
   {
     files: ["**/*.vue"],
     languageOptions: { parserOptions: { parser: tseslint.parser } },

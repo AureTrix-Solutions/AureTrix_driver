@@ -1,47 +1,108 @@
 <template>
   <div class="macros-page">
-    <h2 class="title">Macro Editor</h2>
+    <h2 class="title">
+      Macro Editor
+    </h2>
     <div class="controls">
-      <button @click="startNewMacro" class="action-btn">Record Macro</button>
+      <button
+        class="action-btn"
+        @click="startNewMacro"
+      >
+        Record Macro
+      </button>
       <input
-        type="text"
-        v-model="macroName"
         id="macro-name"
+        ref="macroNameInput"
+        v-model="macroName"
+        type="text"
         placeholder="Enter macro name"
         class="text-input"
         :disabled="!isRecording"
-        ref="macroNameInput"
-      />
-      <select v-model="layoutType" id="layout-type" class="control-select">
-        <option value="default">Default Layout</option>
-        <option value="mapped">Mapped Layout</option>
+      >
+      <select
+        id="layout-type"
+        v-model="layoutType"
+        class="control-select"
+      >
+        <option value="default">
+          Default Layout
+        </option>
+        <option value="mapped">
+          Mapped Layout
+        </option>
       </select>
-      <select v-model="selectedLayer" id="layer-select" class="control-select" :disabled="layoutType !== 'mapped'">
-        <option v-for="layer in layers" :key="layer" :value="layer">{{ `Fn${layer}` }}</option>
+      <select
+        id="layer-select"
+        v-model="selectedLayer"
+        class="control-select"
+        :disabled="layoutType !== 'mapped'"
+      >
+        <option
+          v-for="layer in layers"
+          :key="layer"
+          :value="layer"
+        >
+          {{ `Fn${layer}` }}
+        </option>
       </select>
-      <button @click="saveMacro" class="action-btn" :disabled="!currentSequence.length || !macroName || !isRecording">
+      <button
+        class="action-btn"
+        :disabled="!currentSequence.length || !macroName || !isRecording"
+        @click="saveMacro"
+      >
         Save Macro
       </button>
-      <button @click="clearMacro" class="action-btn secondary" :enabled="!isRecording">
+      <button
+        class="action-btn secondary"
+        :enabled="!isRecording"
+        @click="clearMacro"
+      >
         Clear Macro
       </button>
-      <button @click="exportMacros" class="action-btn secondary">Export Macros</button>
+      <button
+        class="action-btn secondary"
+        @click="exportMacros"
+      >
+        Export Macros
+      </button>
       <input
-        type="file"
         ref="importFile"
+        type="file"
         accept=".json"
-        @change="importMacros"
         style="display: none;"
-      />
-      <button @click="importFile?.click()" class="action-btn secondary">Import Macros</button>
+        @change="importMacros"
+      >
+      <button
+        class="action-btn secondary"
+        @click="importFile?.click()"
+      >
+        Import Macros
+      </button>
     </div>
-    <div v-if="notification" class="notification" :class="{ error: notification.isError }">
+    <div
+      v-if="notification"
+      class="notification"
+      :class="{ error: notification.isError }"
+    >
       <span>{{ notification.message }}</span>
-      <button @click="notification = null" class="dismiss-btn">&times;</button>
+      <button
+        class="dismiss-btn"
+        @click="notification = null"
+      >
+        &times;
+      </button>
     </div>
     <div class="macro-editor">
-      <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
-        <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
+      <div
+        v-if="layout.length && loaded"
+        class="key-grid"
+        :style="gridStyle"
+      >
+        <div
+          v-for="(row, rIdx) in layout"
+          :key="`r-${rIdx}`"
+          class="key-row"
+        >
           <div
             v-for="(keyInfo, cIdx) in row"
             :key="`k-${rIdx}-${cIdx}`"
@@ -57,32 +118,71 @@
         </div>
       </div>
       <div class="macro-sequence">
-        <h3 class="subtitle">Current Sequence</h3>
-        <div v-if="currentSequence.length" class="sequence-list">
-          <div v-for="(event, index) in currentSequence" :key="index" class="sequence-item">
+        <h3 class="subtitle">
+          Current Sequence
+        </h3>
+        <div
+          v-if="currentSequence.length"
+          class="sequence-list"
+        >
+          <div
+            v-for="(event, index) in currentSequence"
+            :key="index"
+            class="sequence-item"
+          >
             <span>{{ formatEvent(event) }}</span>
             <input
-              type="number"
               v-model.number="event.delay"
+              type="number"
               min="0"
               step="10"
               class="delay-input"
               title="Delay (ms)"
               @input="validateDelay(index)"
-            />
-            <button @click="removeEventFromSequence(index)" class="remove-btn">&times;</button>
+            >
+            <button
+              class="remove-btn"
+              @click="removeEventFromSequence(index)"
+            >
+              &times;
+            </button>
           </div>
         </div>
-        <p v-else class="empty-text">No events in sequence</p>
+        <p
+          v-else
+          class="empty-text"
+        >
+          No events in sequence
+        </p>
       </div>
       <div class="macro-list">
-        <div v-for="macro in macroList" :key="macro.id" class="macro-card">
-          <h4 class="card-title">{{ macro.name }}</h4>
-          <p class="card-text">Date: {{ macro.date }}</p>
-          <p class="card-text">Length: {{ macro.length }} steps</p>
+        <div
+          v-for="macro in macroList"
+          :key="macro.id"
+          class="macro-card"
+        >
+          <h4 class="card-title">
+            {{ macro.name }}
+          </h4>
+          <p class="card-text">
+            Date: {{ macro.date }}
+          </p>
+          <p class="card-text">
+            Length: {{ macro.length }} steps
+          </p>
           <div class="card-actions">
-            <button @click="loadMacro(macro.id.toString())" class="card-btn">Load</button>
-            <button @click="deleteMacro(macro.id.toString())" class="card-btn delete">Delete</button>
+            <button
+              class="card-btn"
+              @click="loadMacro(macro.id.toString())"
+            >
+              Load
+            </button>
+            <button
+              class="card-btn delete"
+              @click="deleteMacro(macro.id.toString())"
+            >
+              Delete
+            </button>
           </div>
         </div>
       </div>

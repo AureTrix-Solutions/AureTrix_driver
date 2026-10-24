@@ -1,38 +1,74 @@
 <template>
   <div class="debug-page">
-    <h2 class="title">Key Debug</h2>
+    <h2 class="title">
+      Key Debug
+    </h2>
 
     <div class="debug-container">
-      <div v-if="layout.length && loaded" class="key-grid" :style="gridStyle">
-        <div v-for="(row, rIdx) in layout" :key="`r-${rIdx}`" class="key-row">
-          <div v-for="(keyInfo, cIdx) in row" :key="`k-${rIdx}-${cIdx}`" class="key-btn"
+      <div
+        v-if="layout.length && loaded"
+        class="key-grid"
+        :style="gridStyle"
+      >
+        <div
+          v-for="(row, rIdx) in layout"
+          :key="`r-${rIdx}`"
+          class="key-row"
+        >
+          <div
+            v-for="(keyInfo, cIdx) in row"
+            :key="`k-${rIdx}-${cIdx}`"
+            class="key-btn"
             :class="{ 'key-selected': isSelected(keyInfo) }"
-            :style="getKeyStyle(rIdx, cIdx)" @click="selectKey(keyInfo)">
+            :style="getKeyStyle(rIdx, cIdx)"
+            @click="selectKey(keyInfo)"
+          >
             <div class="key-label">
               {{ keyInfo.remappedLabel || keyMap[keyInfo.keyValue] || `Key ${keyInfo.keyValue}` }}
             </div>
           </div>
         </div>
       </div>
-      <div v-else class="no-layout">
+      <div
+        v-else
+        class="no-layout"
+      >
         <p>{{ error || 'No keyboard layout available. Ensure a device is connected and try again.' }}</p>
       </div>
 
       <div class="axis-panel">
         <h3>Axis Data</h3>
-        <div v-if="!selectedKey" class="no-selection">
+        <div
+          v-if="!selectedKey"
+          class="no-selection"
+        >
           Click a key to view its axis data
         </div>
-        <div v-else class="axis-content">
+        <div
+          v-else
+          class="axis-content"
+        >
           <div class="selected-key-info">
             <span class="key-name">{{ selectedKeyLabel }}</span>
             <span class="key-value">(Key {{ selectedKey.physicalKeyValue || selectedKey.keyValue }})</span>
-            <button @click="refreshAxis" class="refresh-btn" :disabled="loading">
+            <button
+              class="refresh-btn"
+              :disabled="loading"
+              @click="refreshAxis"
+            >
               {{ loading ? 'Loading...' : 'Refresh' }}
             </button>
           </div>
-          <div v-if="axisError" class="axis-error">{{ axisError }}</div>
-          <pre v-else class="axis-output">{{ axisData }}</pre>
+          <div
+            v-if="axisError"
+            class="axis-error"
+          >
+            {{ axisError }}
+          </div>
+          <pre
+            v-else
+            class="axis-output"
+          >{{ axisData }}</pre>
         </div>
       </div>
     </div>

@@ -10,13 +10,12 @@
 - Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty (from actual ls at PM-open)
 
 ## ▶ RUN THIS
-Next: Task 1 REVIEW — open a fresh Reviewer window and paste:
-  follow docs/plans/reviews/review-getRm6X21Travel-comment.md
+Next: Task 2 — open a fresh Worker window and paste:
+  go
+(then follow Task 2's edit spec below: remove dead baseLayout prop cascade)
 
 ## Tasks
-1. **getRm6X21Travel clarifying comment** — [high-stakes] — STATUS: IN-REVIEW
-   - ✓ Worker done 2026-10-24 (base `94a156c` → head `5fb626a`): comment at :981, annotation intact at :982, diff 1±1, typecheck 0 (baseline 0), build skipped (comment-only). Cleanup (actual ls): .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty. Awaiting Reviewer → docs/plans/reviews/review-getRm6X21Travel-comment.md
-   - Why: the sprint-13 finding misread this annotation as an SDK-shape claim and filed it as a defect (PO confirmed 2026-10-24 it stays as a comment-only task). The wrapper body (:987-992) flattens `result.travels` and computes `maxTravel`; consumers (SwitchProfiles.vue :253-255, :365) match the flattened shape.
+1. **getRm6X21Travel clarifying comment** — [high-stakes] — ✓ DONE 2026-10-24 (head `5fb626a`; Reviewer PASS, 0 fails — all 3 Done-when re-run green; see review-getRm6X21Travel-comment.md)
 
 2. **Remove dead baseLayout prop cascade (KeyTravel → Performance binding)** — [high-stakes] (multi-file) — STATUS: PENDING
    - Done when: `grep -c baseLayout src/components/performance/KeyTravel.vue` → 0.

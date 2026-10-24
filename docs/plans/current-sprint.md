@@ -8,16 +8,16 @@
 ## Checkpoint
 - Branch: `sprint-18-code-hygiene-3`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt)
-- Reviewer (2026-10-24): Task 1 PASS, 0 findings; verdict + checklist in review-getRm6X21Travel-maxtravel.md; ▶ RUN THIS advanced to Task 2. Cleanup (from ls): `.scratch/` = pm-notes.md + review-notes.md (PO can delete); `_to_delete/` empty.
+- Worker (2026-10-24, task 2): commit `bf038c4` (1 file, 6 deletions). Task-level Done-when all pass: `setNotification` in Performance.vue → 0 hits; `update-notification` in src/ → 0 hits; typecheck 0; lint exit 0. Cleanup (from ls): `.scratch/` = pm-notes.md + review-notes.md (PO can delete); `_to_delete/` = .gitkeep only, empty.
 
 ## ▶ RUN THIS
-Next: Task 2 — Remove dead `@update-notification` binding + orphaned `setNotification` helper (Performance.vue). Do this task, then stop.
+ALL TASKS DONE — awaiting PO sign-off. NOTE for PM-close (or PM revision before sign-off): the sprint-level DONE-CRITERIA grep `grep -rn "update-notification\|setNotification" src/` → 0 hits is UNACHIEVABLE as written — RapidTrigger.vue has its own LIVE `setNotification` (defined :633, callers :580/:626/:629/:666/:903) that is not part of this defect and must not be removed. See Findings F1; PM to revise the criterion (scope the grep to Performance.vue) on PO confirmation.
 
 ## Tasks
 
 1. ✓ **Fix `getRm6X21Travel` all-zero maxTravel (-Infinity → 0)** — [high-stakes] — STATUS: DONE (Reviewer PASS 2026-10-24, 0 findings; commits `9e878f7`..`6cd0788`; review-getRm6X21Travel-maxtravel.md)
 
-2. **Remove dead `@update-notification` binding + orphaned `setNotification` helper (Performance.vue)** — [trivial] — STATUS: PENDING
+2. ✓ **Remove dead `@update-notification` binding + orphaned `setNotification` helper (Performance.vue)** — [trivial] — STATUS: DONE (Worker self-check 2026-10-24, all task-level Done-when pass; commit `bf038c4`)
    - Files: `src/pages/Performance.vue`
    - The defect: `<KeyTravel>` binds `@update-notification="setNotification"`, but KeyTravel's emits are `['update-overlay','update-single-overlay','mode-changed']` — `update-notification` is never emitted, so the binding can never fire. Removing it orphans the `setNotification` helper (its only call site), so the helper and its setup-return entry go too. The `notification` ref stays (used independently by the template + a watch + :329).
    - Edit 1 — in the `<KeyTravel ...>` block (`grep -n "@update-notification" src/pages/Performance.vue`, ~:108), delete the whole line:
@@ -37,5 +37,6 @@ Next: Task 2 — Remove dead `@update-notification` binding + orphaned `setNotif
    - Commit: `sprint-18-code-hygiene-3: task 2 — remove dead @update-notification binding + orphaned setNotification helper`.
 
 ## Findings
+- F1 (Worker, task 2, 2026-10-24): sprint DONE-CRITERIA grep (`grep -rn "update-notification\|setNotification" src/` → 0) is wrong — RapidTrigger.vue owns a live, called `setNotification`; the criterion as written can never pass and overreaches the defect's scope. Verify: `grep -n "setNotification" src/pages/RapidTrigger.vue`. Task-level criteria (:34-36) are correctly scoped and all pass. PM to revise the sprint criterion on PO confirmation.
 <!-- One line per out-of-scope observation: DEFECT + WHERE TO VERIFY (never a pre-written fix). -->
 (none yet)

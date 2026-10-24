@@ -30,8 +30,6 @@ it is a rule to follow rather than a defect to fix.
 - Foundation: docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet reassembly).
 
 ## Code issues
-- [code] `getRm6X21Travel` wrapper (KeyboardService.ts ~:991) returns `maxTravel = -Infinity` if the travels array is non-empty but every value is ≤ 0 (`Math.max()` of an empty filtered list); the `: 4.0` fallback only covers the empty-array case. Harmless today (consumer SwitchProfiles.vue `result.maxTravel || 0` renders '0.00'), latent UI oddity if data changes. Verify: read the maxTravel line in the getRm6X21Travel wrapper; feed all-zero travels. (sprint-17 PM-open 2026-10-24.)
-- [code] Performance.vue ~:109 binds `@update-notification="setNotification"` on `<KeyTravel>`, but KeyTravel's emits list is ['update-overlay','update-single-overlay','mode-changed'] — the listener can never fire (dead binding or missing emit). Verify: `grep -n "update-notification" src/components/performance/KeyTravel.vue src/pages/Performance.vue`. (sprint-17 PM-open 2026-10-24.)
 
 ## Document issues
 - [docs] docs/pages/Debug.md still describes the old 16-getter debug panel (autoConnect/requestDevice/fetchAllData, mode testing, export JSON), but Debug.vue (~307 lines) is now a simple axis inspector (select key → getAxis() → JSON display); sprint-11 Task 3 fixed only the service-name mentions. Verify: src/pages/Debug.vue script section vs Debug.md Features/Data Flow/API Reference. (2026-10-13.)

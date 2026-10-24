@@ -9,12 +9,14 @@ Every hardware call goes through a `KeyboardService` wrapper — the only place 
 
 ## Canonical shape
 
-Copy for any new getter/setter (cf. `calibrationStart`, `KeyboardService.ts:798`):
+Copy for any new getter/setter (cf. `calibrationStart`, `KeyboardService.ts:926`):
 
 ```ts
-async calibrationStart(): Promise<any | Error> {
+async calibrationStart(): Promise<null | Error> {
   try {
-    if (!this.connectedDevice) return new Error('No device connected');
+    if (!this.connectedDevice) {
+      return new Error('No device connected');
+    }
     const result = await this.ensureKeyboard().calibrationStart();
     if (result instanceof Error) return result;
     return result;
@@ -26,20 +28,20 @@ async calibrationStart(): Promise<any | Error> {
 ```
 
 Four required parts, in order:
-1. **Return type is `<Success> | Error`** — never throws; the union forces callers to handle failure. Many wrappers write `any | Error` (`getMacro :518`, `setLighting :913`, `setPollingRate :1174`) since the SDK's `.d.ts` returns `Promise<any>` — prefer a real type where sourceable (see *Where types come from*).
-2. **`if (!this.connectedDevice) return new Error('No device connected');`** — guard before any SDK access. `connectedDevice` (`Device | PairedDevice | null`, decl `:11`) is the service's own field, not `connectionStore`.
+1. **Return type is `<Success> | Error`** — never throws; the union forces callers to handle failure. No wrapper returns `any | Error` any more (sprint-19 re-verify: zero hits) — they are typed, e.g. `getMacro :589` → `MacroSlotInfo | Error`, `setPollingRate :1348` → `number | Error`, `setLighting :1042` → `DataView | DataView[] | null | Error`. Keep it that way: pin the real type where sourceable (see *Where types come from*); the SDK's own `.d.ts` often says `Promise<any>`, which is not a licence to propagate `any`.
+2. **`if (!this.connectedDevice) { return new Error('No device connected'); }`** — guard before any SDK access. `connectedDevice` (`Device | PairedDevice | null`, decl `:74`) is the service's own field, not `connectionStore`.
 3. **`await this.ensureKeyboard().<method>(...)`** — always via `ensureKeyboard()`, never `this.keyboard` directly.
 4. **`if (result instanceof Error) return result;`** — the SDK reports failure by *returning* an `Error`; pass it through unchanged (no re-wrap, no stringify). Callers check `instanceof Error` only — truthiness misreads a falsy payload as failure.
 
-Outer `try/catch` exists only to convert an unexpected throw into the contract: `console.error` naming the operation, then `return error as Error`; never re-throw. `ensureKeyboard()` (`:37`) is a lazy constructor — `if (!this.keyboard) this.keyboard = new XDKeyboard({ usage: 1, usagePage: [65440], configs: [] }); return this.keyboard;` — no connection-state binding; bypassing it risks a null crash or a second, differently-optioned instance.
+Outer `try/catch` exists only to convert an unexpected throw into the contract: `console.error` naming the operation, then `return error as Error`; never re-throw. `ensureKeyboard()` (`:100`) is a lazy constructor — `if (!this.keyboard) this.keyboard = new XDKeyboard({ usage: 1, usagePage: [65440], configs: [] }); return this.keyboard;` — no connection-state binding; bypassing it risks a null crash or a second, differently-optioned instance.
 
 ## Known deviations (real code — don't "fix" in passing)
 
 | Method | Line | Deviation |
 |---|---|---|
-| `setKey` | `:508` | `Promise<void \| Error>`, but no `connectedDevice` guard, no `instanceof` check |
-| `getDevices` | `:109` | `Promise<Device[]>` — no `Error` union; returns `[]` on failure; no guard |
-| `initializeKeyboard` | `:255` | `Promise<void>`; dedupes via `initializationPromise`. Real work in `_initializeKeyboardInternal` (`:268`, retries ≤ 2), which does guard |
+| `setKey` | `:579` | `Promise<void \| Error>`, but no `connectedDevice` guard, no `instanceof` check |
+| `getDevices` | `:172` | `Promise<Device[]>` — no `Error` union; returns `[]` on failure; no guard |
+| `initializeKeyboard` | `:326` | `Promise<void>`; dedupes via `initializationPromise`. Real work in `_initializeKeyboardInternal` (`:339`, retries ≤ 2), which does guard |
 
 Match surrounding behaviour and flag the inconsistency; don't silently normalise (`getDevices`' `[]` fallback has dependents). A genuine bug outside scope → one line in `docs/plans/backlog.md` (CLAUDE.md §8).
 
@@ -73,12 +75,12 @@ Ground-truth order (CLAUDE.md §6 — verify before relying):
 
 ## Never change (design intent — CLAUDE.md hard rule 7)
 
-See CLAUDE.md hard rule 7 (unfiltered `requestDevice({ filters: [] })`; wrappers return `Error`, never throw). Skill-specific: `usagePage: [65440]` lives in `ensureKeyboard` (`:37`), **never** in `requestDevice` — it selects the SparkLink command interface on an already-chosen device, not a filter.
+See CLAUDE.md hard rule 7 (unfiltered `requestDevice({ filters: [] })`; wrappers return `Error`, never throw). Skill-specific: `usagePage: [65440]` lives in `ensureKeyboard` (`:100`), **never** in `requestDevice` — it selects the SparkLink command interface on an already-chosen device, not a filter.
 
 ## Checklist for a new wrapper
 
 - [ ] Return type `<Success> | Error` (real type where sourceable, not `any`)
-- [ ] `if (!this.connectedDevice) return new Error('No device connected')` runs first
+- [ ] `if (!this.connectedDevice) { return new Error('No device connected'); }` runs first
 - [ ] SDK via `this.ensureKeyboard().<method>()`, never `this.keyboard`
 - [ ] `if (result instanceof Error) return result;` — passed through unchanged
 - [ ] Outer `try/catch` → `console.error` + `return error as Error`, no re-throw

@@ -10,14 +10,15 @@
 - tsc baseline: N/A this sprint — docs-only, no `.ts`/`.vue` edits, so the self-check gate does not apply (`docs/tsc-baseline.txt` untouched)
 - Cleanup (from an actual `ls`): `.scratch/` has `pm-notes.md` (PO may delete); `_to_delete/` is empty — no cleanup needed
 - Base commit for the review diff: `04ea632`
+- Task 1a ✓ DONE (edits 1–6 applied + 2 gate-required inline fixes the edit list missed: `(`:37`)`→`(`:100`)` in Never-change §, one-line→braced guard in checklist §; all five Done-when commands pass — DW1 empty, 926=1, null|Error=1, DW4=6 hits, diff only SKILL.md+plan; SKILL.md 91 ln). Cleanup (actual `ls`): `.scratch/` = pm-notes.md only (PO may delete); `_to_delete/` = empty — no cleanup needed.
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: **Task 1a** — refresh the *Canonical shape* + *Known deviations* sections of SKILL.md. Do this task, commit, then stop. (Task 1b follows in a new window; the Reviewer runs once after 1b.)
+Next: **Task 1b** — refresh the *Bulk / many-key operations* + *Where types come from* sections of SKILL.md (edits 7–15 below). Do this task, then set task 1 → IN-REVIEW, write `docs/plans/reviews/review-sdk-skill-verify.md`, commit, stop. (Reviewer runs once after 1b.)
 
 ## Tasks
 
-### 1. Re-verify and correct SKILL.md — [high-stakes] — STATUS: PENDING
+### 1. Re-verify and correct SKILL.md — [high-stakes] — STATUS: IN-PROGRESS (1a ✓, 1b next)
 Docs-only. **Do not edit any source file.** SKILL.md is the only file you change (plus this plan's checkpoint/Findings). Read SKILL.md ONCE (it is 89 lines) — every `old_string` below is quoted verbatim from it; apply, don't re-derive.
 
 Why high-stakes: the skill encodes SDK-correctness guidance that future Workers apply blindly; a wrong ref or a wrong shape claim propagates. Reviewer runs ONCE at the end over `04ea632..HEAD`.
@@ -26,7 +27,7 @@ Split into two sequential sub-tasks (4 `##` sections touched, ~14 edit-sites —
 
 ---
 
-#### 1a — *Canonical shape* + *Known deviations* — STATUS: PENDING
+#### 1a — *Canonical shape* + *Known deviations* — STATUS: ✓ DONE (2026-10-24, all Done-when pass)
 
 **Verified facts (PM-confirmed 2026-10-24; grep targets given — do NOT re-derive, just apply):**
 

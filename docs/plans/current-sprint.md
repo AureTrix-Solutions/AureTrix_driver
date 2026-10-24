@@ -8,31 +8,14 @@
 ## Checkpoint
 - Branch: `sprint-18-code-hygiene-3`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt)
-- Cleanup: none (`.scratch/` holds only pm-notes.md; `_to_delete/` untouched)
+- Reviewer (2026-10-24): Task 1 PASS, 0 findings; verdict + checklist in review-getRm6X21Travel-maxtravel.md; ▶ RUN THIS advanced to Task 2. Cleanup (from ls): `.scratch/` = pm-notes.md + review-notes.md (PO can delete); `_to_delete/` empty.
 
 ## ▶ RUN THIS
-Next: Task 1 REVIEW — open a fresh Reviewer window: "follow docs/plans/reviews/review-getRm6X21Travel-maxtravel.md". Do this, then stop.
+Next: Task 2 — Remove dead `@update-notification` binding + orphaned `setNotification` helper (Performance.vue). Do this task, then stop.
 
 ## Tasks
 
-1. **Fix `getRm6X21Travel` all-zero maxTravel (-Infinity → 0)** — [high-stakes] — STATUS: IN-REVIEW
-   - Checkpoint (Worker, 2026-10-24): both edits applied per spec (:992 two-line form, :981 annotation); typecheck exit 0 (baseline held); committed base `9e878f7` → head `6cd0788`; review file docs/plans/reviews/review-getRm6X21Travel-maxtravel.md; cleanup: `.scratch/` = pm-notes.md only, `_to_delete/` empty.
-   - Files: `src/services/KeyboardService.ts`
-   - Why high-stakes: touches KeyboardService (auto high-stakes per CLAUDE.md). NOT [hw] — the sole consumer (SwitchProfiles.vue key-test) already guards with `if (currentTravel > 0)`, so both -Infinity and 0 fail the guard and hold the display; no on-device behavior changes today. This is contract hygiene.
-   - The defect: when `flatTravels` is non-empty but every value ≤ 0, `Math.max(...[])` returns `-Infinity`, which the wrapper hands back as `maxTravel`. The `: 4.0` fallback only covers the empty-array case.
-   - PO decision (resolved up-front, 2026-10-24): all-zero path falls back to **0**, NOT 4.0 — 0 is the honest "no key movement" value for the Key Test Monitor; 4.0 is full depth and would falsely imply a bottomed-out key. **Leave the empty-array `4.0` default unchanged** (that is the separate, correct "no profile/test data → user default" case).
-   - Edit 1 — `grep -n "flatTravels.length > 0 ? Math.max" src/services/KeyboardService.ts` (currently ~:991). Replace that single line:
-     - FROM: `      const maxTravel = flatTravels.length > 0 ? Math.max(...flatTravels.filter((t: number) => t > 0)) : 4.0;`
-     - TO (two lines):
-       `      const positiveTravels = flatTravels.filter((t: number) => t > 0);`
-       `      const maxTravel = flatTravels.length === 0 ? 4.0 : positiveTravels.length > 0 ? Math.max(...positiveTravels) : 0;`
-     - Semantics: empty travels → 4.0 (unchanged); non-empty with a positive value → real max (unchanged); non-empty but all ≤ 0 → 0 (the fix).
-   - Edit 2 — update the annotation comment above the signature (`grep -n "computes maxTravel" src/services/KeyboardService.ts`, ~:981). In that JSDoc, change the phrase `computes maxTravel (Math.max of travels > 0, else 4.0)` to `computes maxTravel (Math.max of travels > 0; 4.0 if no travels reported at all; 0 if travels exist but all are ≤ 0)`. Touch only that phrase; leave the rest of the comment intact.
-   - Do NOT change the consumer (SwitchProfiles.vue) — its `result.maxTravel || 0` + `if (currentTravel > 0)` guard is already correct and needs no edit.
-   - Done when: `grep -n "flatTravels.length > 0 ? Math.max" src/services/KeyboardService.ts` returns nothing (old form gone).
-   - Done when: `grep -n "positiveTravels.length > 0 ? Math.max(...positiveTravels) : 0" src/services/KeyboardService.ts` returns the new line.
-   - Done when: `npm run typecheck` exits with 0 errors (baseline).
-   - Commit: `sprint-18-code-hygiene-3: task 1 — getRm6X21Travel all-zero maxTravel returns 0, empty-array 4.0 kept`. Then set IN-REVIEW and write `docs/plans/reviews/review-getRm6X21Travel-zero.md`.
+1. ✓ **Fix `getRm6X21Travel` all-zero maxTravel (-Infinity → 0)** — [high-stakes] — STATUS: DONE (Reviewer PASS 2026-10-24, 0 findings; commits `9e878f7`..`6cd0788`; review-getRm6X21Travel-maxtravel.md)
 
 2. **Remove dead `@update-notification` binding + orphaned `setNotification` helper (Performance.vue)** — [trivial] — STATUS: PENDING
    - Files: `src/pages/Performance.vue`

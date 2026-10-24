@@ -32,17 +32,29 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task. Rationale (from the plan): the sole consumer (SwitchProfiles.vue key-test) guards with `if (currentTravel > 0)`, so both -Infinity and 0 fail the guard and hold the display; no on-device behavior changes today. Contract hygiene only.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files) — `git diff --stat 9e878f7..6cd0788`: only src/services/KeyboardService.ts, +3/-2, 2 hunks
+- [x] no design-intent violation — edit is inside the try-block OUTPUT transform only; `instanceof Error` returns and `return error as Error` untouched; no filters/usagePage changes
+- [x] typecheck/build gate met where it applies — Reviewer reran `npm run typecheck`: exit 0 (baseline 0 held); build N/A (no build-affecting change)
+- [x] tag is correct (high-stakes where required) — touches KeyboardService → always [high-stakes]; not-[hw] rationale sound (sole consumer guards `if (currentTravel > 0)` — static fact, no runtime question)
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** ___  ·  **Date:** ___  ·  **Fail count:** ___
+**Result:** PASS  ·  **Date:** 2026-10-24  ·  **Fail count:** 0
+
+All four Done-when criteria verified against diff `9e878f7..6cd0788` and rerun commands:
+1. **Code edit verbatim** ✓ — diff hunk @@ -988 shows the exact two-line spec form (`positiveTravels` filter + `flatTravels.length === 0 ? 4.0 : positiveTravels.length > 0 ? Math.max(...positiveTravels) : 0`). Old `-Infinity`-prone line removed: head-commit grep of `flatTravels.length > 0 ? Math.max` → 0 hits; new form present at :992.
+2. **Annotation** ✓ — hunk @@ -978 now reads `computes maxTravel (Math.max of travels > 0; 4.0 if no travels reported at all; 0 if travels exist but all are ≤ 0)`; rest of the JSDoc untouched.
+3. **Scope** ✓ — only KeyboardService.ts changed, 2 hunks; no other edit in the file.
+4. **Typecheck** ✓ — Reviewer reran `npm run typecheck`: exit 0.
+
+Semantics confirmed on all three paths: empty → 4.0 (unchanged default, per PO); non-empty with positives → real max (unchanged); non-empty all ≤ 0 → 0 (the fix; was -Infinity). PO decision honored exactly.
 
 ### Failed items (FAIL only)
+(none — PASS)
+
+### Reviewer findings
+(none)

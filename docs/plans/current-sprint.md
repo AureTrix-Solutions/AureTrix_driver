@@ -10,16 +10,12 @@
 - Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty (from actual ls at PM-open)
 
 ## ▶ RUN THIS
-Next: Task 1 — getRm6X21Travel clarifying comment. Do this task, then stop.
+Next: Task 1 REVIEW — open a fresh Reviewer window and paste:
+  follow docs/plans/reviews/review-getRm6X21Travel-comment.md
 
 ## Tasks
-1. **getRm6X21Travel clarifying comment** — [high-stakes] (touches KeyboardService — always high-stakes per hard rule) — STATUS: PENDING
-   - Done when: `grep -n "Wraps SDK getRm6X21Travel" src/services/KeyboardService.ts` returns one hit immediately above the `async getRm6X21Travel` signature.
-   - Done when: the annotation line is UNCHANGED — `grep -n "travels: number\[\]; maxTravel: number" src/services/KeyboardService.ts` still hits :982 (it was correct; do NOT "fix" it to `number[][]`).
-   - Done when: `npm run typecheck` → 0 errors (baseline 0; comment-only change cannot introduce any).
-   - Files: `src/services/KeyboardService.ts`
-   - Edit spec (PM-verified spans this session): insert ONE comment line between the closing `}` of the previous wrapper (:980) and `async getRm6X21Travel(...)` (:982), i.e. replace the blank line at :981 with:
-     `  /** Wraps SDK getRm6X21Travel (SDK returns {status: number[][], travels: number[][]} — sdk-ref §4). This wrapper TRANSFORMS: flattens travels to number[] and computes maxTravel (Math.max of travels > 0, else 4.0). The annotation below is the wrapper's OUTPUT shape, not the SDK's. */`
+1. **getRm6X21Travel clarifying comment** — [high-stakes] — STATUS: IN-REVIEW
+   - ✓ Worker done 2026-10-24 (base `94a156c` → head `5fb626a`): comment at :981, annotation intact at :982, diff 1±1, typecheck 0 (baseline 0), build skipped (comment-only). Cleanup (actual ls): .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty. Awaiting Reviewer → docs/plans/reviews/review-getRm6X21Travel-comment.md
    - Why: the sprint-13 finding misread this annotation as an SDK-shape claim and filed it as a defect (PO confirmed 2026-10-24 it stays as a comment-only task). The wrapper body (:987-992) flattens `result.travels` and computes `maxTravel`; consumers (SwitchProfiles.vue :253-255, :365) match the flattened shape.
 
 2. **Remove dead baseLayout prop cascade (KeyTravel → Performance binding)** — [high-stakes] (multi-file) — STATUS: PENDING

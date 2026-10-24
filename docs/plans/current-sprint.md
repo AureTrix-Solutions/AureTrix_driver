@@ -11,11 +11,12 @@
 - Cleanup: none (`.scratch/` holds only pm-notes.md; `_to_delete/` untouched)
 
 ## ▶ RUN THIS
-Next: Task 1 — Fix `getRm6X21Travel` all-zero `-Infinity` maxTravel. Do this task, then stop.
+Next: Task 1 REVIEW — open a fresh Reviewer window: "follow docs/plans/reviews/review-getRm6X21Travel-maxtravel.md". Do this, then stop.
 
 ## Tasks
 
-1. **Fix `getRm6X21Travel` all-zero maxTravel (-Infinity → 0)** — [high-stakes] — STATUS: PENDING
+1. **Fix `getRm6X21Travel` all-zero maxTravel (-Infinity → 0)** — [high-stakes] — STATUS: IN-REVIEW
+   - Checkpoint (Worker, 2026-10-24): both edits applied per spec (:992 two-line form, :981 annotation); typecheck exit 0 (baseline held); committed base `9e878f7` → head `6cd0788`; review file docs/plans/reviews/review-getRm6X21Travel-maxtravel.md; cleanup: `.scratch/` = pm-notes.md only, `_to_delete/` empty.
    - Files: `src/services/KeyboardService.ts`
    - Why high-stakes: touches KeyboardService (auto high-stakes per CLAUDE.md). NOT [hw] — the sole consumer (SwitchProfiles.vue key-test) already guards with `if (currentTravel > 0)`, so both -Infinity and 0 fail the guard and hold the display; no on-device behavior changes today. This is contract hygiene.
    - The defect: when `flatTravels` is non-empty but every value ≤ 0, `Math.max(...[])` returns `-Infinity`, which the wrapper hands back as `maxTravel`. The `: 4.0` fallback only covers the empty-array case.

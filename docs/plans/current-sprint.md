@@ -1,8 +1,60 @@
-# No active sprint
+# SPRINT: sprint-17-code-hygiene-2
 
-COMPLETE — run PM-open for the next sprint.
+**GOAL:** Clear four code-hygiene defects — clarify the getRm6X21Travel wrapper annotation, delete the dead KeyTravel baseLayout prop cascade, and make decryptSDKConfig replicate the SDK import's `keyboards.flat()` so nested-array repairs can't silently skip.
+**DONE-CRITERIA (sprint):** All three tasks DONE (Reviewer PASS each); `npm run typecheck` 0 new errors (baseline 0); `npm run build` passes; the two backlog-only observations (superResponse, -Infinity edge) are routed, not coded.
+**Started:** 2026-10-24  ·  **Status:** IN PROGRESS
+
+## Checkpoint
+- Branch: `sprint-17-code-hygiene-2`
+- tsc baseline: 0 errors (docs/tsc-baseline.txt)
+- Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty (from actual ls at PM-open)
 
 ## ▶ RUN THIS
-No active sprint. To start one, open a fresh window and paste:
-  Act as PM per CLAUDE.md. Plan the "<name>" sprint from docs/plans/backlog.md.
-(Or a direct goal: Act as PM per CLAUDE.md. Goal: <...>.)
+Next: Task 1 — getRm6X21Travel clarifying comment. Do this task, then stop.
+
+## Tasks
+1. **getRm6X21Travel clarifying comment** — [high-stakes] (touches KeyboardService — always high-stakes per hard rule) — STATUS: PENDING
+   - Done when: `grep -n "Wraps SDK getRm6X21Travel" src/services/KeyboardService.ts` returns one hit immediately above the `async getRm6X21Travel` signature.
+   - Done when: the annotation line is UNCHANGED — `grep -n "travels: number\[\]; maxTravel: number" src/services/KeyboardService.ts` still hits :982 (it was correct; do NOT "fix" it to `number[][]`).
+   - Done when: `npm run typecheck` → 0 errors (baseline 0; comment-only change cannot introduce any).
+   - Files: `src/services/KeyboardService.ts`
+   - Edit spec (PM-verified spans this session): insert ONE comment line between the closing `}` of the previous wrapper (:980) and `async getRm6X21Travel(...)` (:982), i.e. replace the blank line at :981 with:
+     `  /** Wraps SDK getRm6X21Travel (SDK returns {status: number[][], travels: number[][]} — sdk-ref §4). This wrapper TRANSFORMS: flattens travels to number[] and computes maxTravel (Math.max of travels > 0, else 4.0). The annotation below is the wrapper's OUTPUT shape, not the SDK's. */`
+   - Why: the sprint-13 finding misread this annotation as an SDK-shape claim and filed it as a defect (PO confirmed 2026-10-24 it stays as a comment-only task). The wrapper body (:987-992) flattens `result.travels` and computes `maxTravel`; consumers (SwitchProfiles.vue :253-255, :365) match the flattened shape.
+
+2. **Remove dead baseLayout prop cascade (KeyTravel → Performance binding)** — [high-stakes] (multi-file) — STATUS: PENDING
+   - Done when: `grep -c baseLayout src/components/performance/KeyTravel.vue` → 0.
+   - Done when: `grep -c ':base-layout' src/pages/Performance.vue` → 0.
+   - Done when: `grep -c baseLayout src/pages/Performance.vue` → ≥ 2 (the ref stays ALIVE: debug-template line ~:66 and the watch ~:357 read it; do NOT touch the destructure/watch/setup-return, and do NOT touch useMappedKeyboard — KeyMapping.vue consumes its baseLayout).
+   - Done when: `npm run typecheck` → 0 errors; `npm run build` passes.
+   - Files: `src/components/performance/KeyTravel.vue`, `src/pages/Performance.vue`
+   - Edit spec (PM-verified): (a) KeyTravel.vue — delete the whole `baseLayout: { ... },` prop block (:49-52: `baseLayout: {` / `type: Object as PropType<IDefKeyInfo[][] | null>,` / `default: null,` / `},`). NO import changes: `PropType` (:26) and `IDefKeyInfo` (:27) are still used by the remaining props (:42, :46). (b) Performance.vue — delete line :106 `              :base-layout="baseLayout"` inside the `<KeyTravel` block (:103-111).
+   - Why: sprint-14 task 3 removed all downstream consumers; the prop is declared but never read in KeyTravel's template or setup (PM verified full-file read). Cascade stops at these 2 sites — Performance's own `baseLayout` still feeds its debug line and watch.
+
+3. **decryptSDKConfig replicates SDK import's keyboards.flat()** — [high-stakes] (SDK/import correctness) — STATUS: PENDING
+   - Done when: `grep -n "cfg.keyboards = cfg.keyboards.flat()" src/services/ExportService.ts` returns one hit inside `decryptSDKConfig`.
+   - Done when: `grep -c "config.keyboards ?? \[\]" src/services/ExportService.ts` → 5 (the five repair loops at ~:584/:608/:661/:696/:805 stay UNCHANGED — the fix is one site upstream of all of them).
+   - Done when: `npm run typecheck` → 0 errors with NO `as any` added; `npm run build` passes.
+   - Files: `src/services/ExportService.ts`
+   - Edit spec (PM-verified :854-864): in `decryptSDKConfig`, replace :859 `      return JSON.parse(plaintext) as KeyboardConfig;` with:
+     ```ts
+     const cfg = JSON.parse(plaintext) as KeyboardConfig;
+     if (Array.isArray(cfg.keyboards)) {
+       cfg.keyboards = cfg.keyboards.flat();
+     }
+     return cfg;
+     ```
+     Types cleanly: `KeyboardConfig['keyboards']` is `Array<Keyboards>` (flat, validate.d.ts) so `flat()` on it returns `Keyboards[]` — no cast, no widening needed. `flat()` on an already-flat array is a safe no-op; on nested input it repairs the shape the SDK bundle itself produces (`keyboards=i.keyboards.flat()` in importEncryptedJSON, dist/esm/index.js — PM grep-verified this session).
+   - Why: both-sides check passed at plan time — SDK import flattens, app decrypt did not, so IF an SDK export ever ships nested `keyboards`, all five app-side repair loops silently skip while the SDK still applies the config (divergence). Failure mode today is a safe no-op (current exports verified flat), but the fix removes the divergence class.
+
+## Findings
+<!-- one line per out-of-scope defect: DEFECT + WHERE TO VERIFY, never a fix; PM routes at close -->
+
+## Close-out (PM)
+- [ ] All tasks DONE + done-criteria met + baseline final (0) + no waivers
+- [ ] Findings routed to backlog
+- [ ] Snapshot → docs/plans/archive/sprint-17-code-hygiene-2/sprint.md
+- [ ] Review files git mv'd into the archive folder; pointers updated
+- [ ] index.md row added (status = signed off)
+- [ ] current-sprint.md reset to IDLE stub (live file)
+- [ ] One close commit

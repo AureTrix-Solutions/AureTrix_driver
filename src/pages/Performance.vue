@@ -105,7 +105,6 @@
               :layout="layout"
               @update-single-overlay="updateSingleOverlayData"
               @update-overlay="updateOverlayData"
-              @update-notification="setNotification"
               @mode-changed="handleModeChange"
             />
           </div>
@@ -367,10 +366,6 @@ export default defineComponent({
       }, 100);
     });
 
-    const setNotification = (message: string, isError: boolean) => {
-      notification.value = { message, isError };
-    };
-
     // Initialize key mode map
     const initializeKeyModes = async () => {
       try {
@@ -434,7 +429,6 @@ export default defineComponent({
       overlayData,
       updateSingleOverlayData,
       notification,
-      setNotification,
       error,
       baseLayout,
       updateOverlayData,

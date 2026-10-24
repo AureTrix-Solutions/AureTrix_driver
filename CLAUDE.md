@@ -57,8 +57,8 @@ Hardware calls for many keys go through the **`useBatchProcessing` composable** 
 
 Physical layout geometry (key sizes in mm, gaps, row spacing) resolves in this order:
 
-1. `src/utils/sharedLayout.ts` — community-contributed layouts keyed by **productName** (checked first; this is where user-submitted layouts go)
-2. IndexedDB custom layouts via `LayoutStorageService` (created in the Layout Creator page; cache preloaded in `main.ts` via `loadCustomLayouts()` before app mount)
+1. IndexedDB custom layouts via `LayoutStorageService` (created in the Layout Creator page; cache preloaded in `main.ts` via `loadCustomLayouts()` before app mount) — checked first; a user's own custom layout overrides everything
+2. `src/utils/sharedLayout.ts` — community-contributed layouts keyed by **productName** (where user-submitted shared layouts go)
 3. `src/utils/layoutConfigs.ts` — built-in fallback layouts keyed by **total key count** (61, 68, ...)
 
 `getLayoutConfig(totalKeys, layout, ..., productName)` in layoutConfigs.ts implements this resolution. `keyUnits.ts` converts mm to px.

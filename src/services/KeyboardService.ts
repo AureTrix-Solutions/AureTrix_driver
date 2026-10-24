@@ -978,7 +978,7 @@ class KeyboardService {
       return error as Error;
     }
   }
-  /** Wraps SDK getRm6X21Travel (SDK returns {status: number[][], travels: number[][]} — sdk-ref §4). This wrapper TRANSFORMS: flattens travels to number[] and computes maxTravel (Math.max of travels > 0, else 4.0). The annotation below is the wrapper's OUTPUT shape, not the SDK's. */
+  /** Wraps SDK getRm6X21Travel (SDK returns {status: number[][], travels: number[][]} — sdk-ref §4). This wrapper TRANSFORMS: flattens travels to number[] and computes maxTravel (Math.max of travels > 0; 4.0 if no travels reported at all; 0 if travels exist but all are ≤ 0). The annotation below is the wrapper's OUTPUT shape, not the SDK's. */
   async getRm6X21Travel(): Promise<{ status: number[][]; travels: number[]; maxTravel: number } | Error> {
     try {
       if (!this.connectedDevice) {
@@ -988,7 +988,8 @@ class KeyboardService {
       if (result instanceof Error) return result;
       const travels = result.travels || [];
       const flatTravels = travels.flat();
-      const maxTravel = flatTravels.length > 0 ? Math.max(...flatTravels.filter((t: number) => t > 0)) : 4.0;
+      const positiveTravels = flatTravels.filter((t: number) => t > 0);
+      const maxTravel = flatTravels.length === 0 ? 4.0 : positiveTravels.length > 0 ? Math.max(...positiveTravels) : 0;
       return { status: result.status, travels: flatTravels, maxTravel };
     } catch (error) {
       console.error('Failed to fetch RM6X21 travel data:', error);

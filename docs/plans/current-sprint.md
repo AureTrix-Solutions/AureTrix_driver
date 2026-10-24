@@ -10,15 +10,15 @@
 - tsc baseline: N/A this sprint — docs-only, no `.ts`/`.vue` edits, so the self-check gate does not apply (`docs/tsc-baseline.txt` untouched)
 - Cleanup (from an actual `ls`): `.scratch/` has `pm-notes.md` (PO may delete); `_to_delete/` is empty — no cleanup needed
 - Base commit for the review diff: `04ea632`
-- Task 1a ✓ DONE (edits 1–6 applied + 2 gate-required inline fixes the edit list missed: `(`:37`)`→`(`:100`)` in Never-change §, one-line→braced guard in checklist §; all five Done-when commands pass — DW1 empty, 926=1, null|Error=1, DW4=6 hits, diff only SKILL.md+plan; SKILL.md 91 ln). Cleanup (actual `ls`): `.scratch/` = pm-notes.md only (PO may delete); `_to_delete/` = empty — no cleanup needed.
+- Task 1 → IN-REVIEW: 1a ✓ (`d509dae`) + 1b ✓ (`46a925b`, edits 7–15 applied verbatim; all four Done-when pass — DW1 empty, DW2=8 hits, 96 ln ≤100, diff SKILL.md+docs/plans/* only). Review file `docs/plans/reviews/review-sdk-skill-verify.md` written; review range `04ea632..HEAD`. Cleanup (actual `ls`): `.scratch/` = pm-notes.md only (PO may delete); `_to_delete/` = empty — no cleanup needed.
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: **Task 1b** — refresh the *Bulk / many-key operations* + *Where types come from* sections of SKILL.md (edits 7–15 below). Do this task, then set task 1 → IN-REVIEW, write `docs/plans/reviews/review-sdk-skill-verify.md`, commit, stop. (Reviewer runs once after 1b.)
+Next: **Task 2** — Reviewer window: "follow docs/plans/reviews/review-sdk-skill-verify.md". Runs ONCE over `04ea632..HEAD` (1a `d509dae` + 1b `46a925b` + handoff). Re-run every Done-when command from both sub-tasks and spot-check ≥5 corrected refs against source. PASS → task 1 DONE + sprint flags "ALL TASKS DONE — awaiting PO sign-off".
 
 ## Tasks
 
-### 1. Re-verify and correct SKILL.md — [high-stakes] — STATUS: IN-PROGRESS (1a ✓, 1b next)
+### 1. Re-verify and correct SKILL.md — [high-stakes] — STATUS: IN-REVIEW (1a ✓, 1b ✓; review-sdk-skill-verify.md written)
 Docs-only. **Do not edit any source file.** SKILL.md is the only file you change (plus this plan's checkpoint/Findings). Read SKILL.md ONCE (it is 89 lines) — every `old_string` below is quoted verbatim from it; apply, don't re-derive.
 
 Why high-stakes: the skill encodes SDK-correctness guidance that future Workers apply blindly; a wrong ref or a wrong shape claim propagates. Reviewer runs ONCE at the end over `04ea632..HEAD`.
@@ -79,7 +79,7 @@ async calibrationStart(): Promise<null | Error> {
 
 ---
 
-#### 1b — *Bulk / many-key operations* + *Where types come from* — STATUS: PENDING
+#### 1b — *Bulk / many-key operations* + *Where types come from* — STATUS: ✓ DONE (2026-10-24, `46a925b`, all Done-when pass; task 1 → IN-REVIEW)
 
 **Verified facts (PM-confirmed 2026-10-24):**
 

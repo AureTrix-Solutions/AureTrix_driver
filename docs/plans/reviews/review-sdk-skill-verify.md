@@ -96,12 +96,27 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task; docs-only, nothing device-affecting.
 
 ## ❓ Reviewer, please confirm (Task 3 only)
-- [ ] meets every Task 3 "DONE WHEN" criterion above (4 commands)
-- [ ] incremental diff scope matches the task (`2d99766..HEAD`: SKILL.md one-line fix + review file + current-sprint.md handoff only — no source files)
-- [ ] new sentence agrees with CLAUDE.md §8 (findings → current-sprint.md `## Findings`; PM sole backlog writer)
-- [ ] no design-intent violation; SKILL.md still ≤100 lines
-- [ ] tag correct ([high-stakes], docs-only, not [hw])
+- [x] meets every Task 3 "DONE WHEN" criterion above (4 commands)
+- [x] incremental diff scope matches the task (`2d99766..HEAD`: SKILL.md one-line fix + review file + current-sprint.md handoff only — no source files)
+- [x] new sentence agrees with CLAUDE.md §8 (findings → current-sprint.md `## Findings`; PM sole backlog writer)
+- [x] no design-intent violation; SKILL.md still ≤100 lines
+- [x] tag correct ([high-stakes], docs-only, not [hw])
 
 ## ✅ REVIEWER VERDICT (Task 3)
 <!-- After ONE verification pass, RULE. Output = PASS/FAIL + findings. Do NOT plan task order. -->
-(pending Reviewer)
+**PASS — 2026-10-24 (Reviewer, fresh session). Fail count: 0. One verification pass, then ruled.**
+
+Re-ran, all commands executed by this Reviewer:
+- DW1: `grep -n 'one line in \`docs/plans/backlog.md\`' .openclaude/skills/sdk-wrapper/SKILL.md` → no output (exit 1). ✓
+- DW2: `grep -n '## Findings' .openclaude/skills/sdk-wrapper/SKILL.md` → 1 hit at :47; text matches the PM spec VERBATIM: ``A genuine bug outside scope → one line in the `## Findings` section of `docs/plans/current-sprint.md`; the PM routes it to backlog (CLAUDE.md §8 — the PM is the only writer of backlog.md).`` ✓
+- DW3: `wc -l .openclaude/skills/sdk-wrapper/SKILL.md` → 96 ≤ 100. ✓
+- DW4: `git diff --name-only 2d99766..HEAD` → SKILL.md + docs/plans/current-sprint.md + docs/plans/reviews/review-sdk-skill-verify.md only; no source files. ✓
+
+Additional checks:
+- Incremental diff is a single line at SKILL.md:47 (`git diff 2d99766..HEAD -- SKILL.md` = 1 +/1 −); surrounding deviation table untouched.
+- New sentence agrees with CLAUDE.md §8 — grep-verified this session: CLAUDE.md:141 says "Append ONE line to the `## Findings` section of current-sprint.md" and "The PM is the only writer of backlog.md". F1 is resolved: the skill no longer teaches a §8 contradiction.
+- Design intent untouched (docs-only; no source diff in range).
+
+Reviewer Findings: none (no new out-of-scope defects observed in the incremental diff).
+
+Tasks 1+2 verdict above stands (PASS, 2026-10-24). With Task 3 PASS: ALL TASKS DONE — sprint ready for PO sign-off via PM-close.

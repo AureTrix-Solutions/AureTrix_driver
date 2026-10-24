@@ -38,19 +38,28 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task; docs-only, nothing device-affecting.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above (1a and 1b)
-- [ ] diff scope matches the task (only SKILL.md + docs/plans/* — no source files)
-- [ ] no design-intent violation (filters:[], usagePage 65440, return-Error all still documented, unchanged)
-- [ ] typecheck/build gate met where it applies — N/A here (docs-only)
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
-- [ ] ≥5 corrected refs spot-checked against source
+- [x] meets every "DONE WHEN" criterion above (1a and 1b) — all 8 commands re-run, all pass (1aDW1/1bDW1 empty; 1aDW2=1; 1aDW3=1; 1aDW4=6; 1bDW2=8; wc -l=96 ≤100)
+- [x] diff scope matches the task (only SKILL.md + docs/plans/* — no source files; `git diff --name-only 04ea632..HEAD` confirms)
+- [x] no design-intent violation (filters:[], usagePage 65440, return-Error all still documented, unchanged)
+- [x] typecheck/build gate met where it applies — N/A here (docs-only)
+- [x] tag is correct (high-stakes where required) — docs-only re-verify, correctly [high-stakes], not [hw]
+- [x] ≥5 corrected refs spot-checked against source — 15+ checked, all exact (see Findings below)
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** —  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-10-24  ·  **Fail count:** 0
 
-### Failed items (FAIL only)
-—
+All 8 Done-when commands re-run and pass. Diff scope clean: SKILL.md + docs/plans/* only, no source files. SKILL.md = 96 lines (≤100). Design intent intact. Tag correct ([high-stakes], docs-only, not [hw]).
+
+Refs spot-checked against source (all exact):
+- KeyboardService.ts: calibrationStart :926 (sig `Promise<null | Error>`, snippet :926–938 VERBATIM), getMacro :589 (`MacroSlotInfo | Error`), setPollingRate :1348 (`number | Error`), setLighting :1042 (`DataView | DataView[] | null | Error`), connectedDevice decl :74 (`Device | PairedDevice | null`), ensureKeyboard :100, setKey :579 (`void | Error`; deviation "bare `return;`, no result check" TRUE), getDevices :172 (deviation "returns `[]` in catch, no guard" TRUE), initializeKeyboard :326 / _initializeKeyboardInternal :339 / maxRetries=2 :341 ("retries ≤ 2" TRUE), MacroSlotInfo export interface :44, usagePage:[65440] :104, filters:[] :187; `Promise<any | Error>` = 0 hits (skill's "zero hits" TRUE); wc -l = 1605 (header "(1605 ln)" TRUE).
+- ExportService.ts: class :23, `private processBatches = useBatchProcessing().processBatches` :24.
+- useBatchProcessing.ts (25 ln): processBatches :3–:22, isObjectArray check :10, keyIds map :12, batch loop :19–:20 (80/100ms) — all match skill text.
+- SingleKeyTravel.vue: travelChanged :215 / deadChanged :216 / `physicalKeyValue || keyValue` :219 / processBatches call :223 / setPerformanceMode :224 — all match.
+- src/types/types.ts (17 ln): `import type` DksLayoutType/DksType :5, IDefKeyInfo :7, re-export :9, `Omit<SdkIDefKeyInfo, 'location'>` :13 — 17-line re-export story in skill §"Where types come from" item 3 TRUE.
+
+### Findings (non-defect observations, routed to current-sprint.md ## Findings)
+- F1 (out of scope, pre-existing): SKILL.md line 47 routes out-of-scope bugs to `docs/plans/backlog.md` directly; CLAUDE.md rule 8 routes Findings to current-sprint.md `## Findings` (PM owns backlog). Pre-existing text (untouched by 1a/1b — diff context confirms), not a self-created defect → PASS stands; PM may align the wording at next touchpoint.

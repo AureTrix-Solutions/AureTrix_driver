@@ -44,7 +44,7 @@ Outer `try/catch` exists only to convert an unexpected throw into the contract: 
 | `getDevices` | `:172` | `Promise<Device[]>` — no `Error` union; returns `[]` on failure; no guard |
 | `initializeKeyboard` | `:326` | `Promise<void>`; dedupes via `initializationPromise`. Real work in `_initializeKeyboardInternal` (`:339`, retries ≤ 2), which does guard |
 
-Match surrounding behaviour and flag the inconsistency; don't silently normalise (`getDevices`' `[]` fallback has dependents). A genuine bug outside scope → one line in `docs/plans/backlog.md` (CLAUDE.md §8).
+Match surrounding behaviour and flag the inconsistency; don't silently normalise (`getDevices`' `[]` fallback has dependents). A genuine bug outside scope → one line in the `## Findings` section of `docs/plans/current-sprint.md`; the PM routes it to backlog (CLAUDE.md §8 — the PM is the only writer of backlog.md).
 
 ## Bulk / many-key operations
 

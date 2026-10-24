@@ -27,17 +27,30 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task. Dead-prop removal with zero runtime behavior change: the prop was declared but never read in KeyTravel.vue (verified by PM at plan time; grep confirms no other `baseLayout` occurrence remains in that file).
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** —  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-10-24  ·  **Fail count:** 0
 
 ### Failed items (FAIL only)
+None — PASS on the first verification pass.
+
+### Verification evidence
+- Diff scope (`git diff --stat 67cec9c..d85ad99`): exactly 2 files, 5 deletions, 0 insertions — KeyTravel.vue −4 (the whole `baseLayout` prop block), Performance.vue −1 (the `:base-layout="baseLayout"` binding line). Full diff inspected: nothing else touched, imports untouched (`PropType`/`IDefKeyInfo` still used by surviving props), no stray files.
+- Done-when greps independently re-run: `grep -c baseLayout src/components/performance/KeyTravel.vue` → **0** ✓; `grep -c ':base-layout' src/pages/Performance.vue` → **0** ✓; `grep -c baseLayout src/pages/Performance.vue` → **4** ✓ (≥ 2).
+- The 4 Performance.vue survivors are exactly the spec'd live-ref uses: debug template (:66), `useMappedKeyboard` destructure (:159), `watch` (:356), setup-return (:439). Ref stays ALIVE as required.
+- Dead-prop claim holds: zero `baseLayout` occurrences remain in KeyTravel.vue ⇒ no reads survived removal; the prop was dead.
+- Gates: `npm run typecheck` → exit 0, 0 errors (baseline 0; none newly introduced or unmasked). `npm run build` → exit 0, "✓ built in 1.76s".
+- Design intent: the diff contains no SDK call, no `filters:[]`, no `usagePage` semantics, no wrapper — all untouched.
+- Tag: [high-stakes] (multi-file) correct.
+- Findings: none — no defects, no non-defect observations worth routing.
+
+Reviewer verified base `67cec9c` → head `d85ad99`.

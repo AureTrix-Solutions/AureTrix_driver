@@ -10,21 +10,12 @@
 - Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty (from actual ls at PM-open)
 
 ## ▶ RUN THIS
-Next: Task 2 REVIEW — open a fresh Reviewer window and paste:
-  follow docs/plans/reviews/review-baseLayout-cascade.md
+Next: Task 3 — decryptSDKConfig replicates SDK import's keyboards.flat(). Do this task, then stop.
 
 ## Tasks
 1. **getRm6X21Travel clarifying comment** — [high-stakes] — ✓ DONE 2026-10-24 (head `5fb626a`; Reviewer PASS, 0 fails — all 3 Done-when re-run green; see review-getRm6X21Travel-comment.md)
 
-2. **Remove dead baseLayout prop cascade (KeyTravel → Performance binding)** — [high-stakes] (multi-file) — STATUS: IN-REVIEW
-   - ✓ Worker done 2026-10-24 (base `67cec9c` → head `d85ad99`): 2 files, −5/+0; all Done-when greps green (0 / 0 / 4≥2 — Performance ref alive); typecheck 0 (baseline 0); build ✓. Cleanup (actual ls): .scratch/ has pm-notes.md + review-notes.md (PO may delete); _to_delete/ empty. Awaiting Reviewer → docs/plans/reviews/review-baseLayout-cascade.md
-   - Done when: `grep -c baseLayout src/components/performance/KeyTravel.vue` → 0.
-   - Done when: `grep -c ':base-layout' src/pages/Performance.vue` → 0.
-   - Done when: `grep -c baseLayout src/pages/Performance.vue` → ≥ 2 (the ref stays ALIVE: debug-template line ~:66 and the watch ~:357 read it; do NOT touch the destructure/watch/setup-return, and do NOT touch useMappedKeyboard — KeyMapping.vue consumes its baseLayout).
-   - Done when: `npm run typecheck` → 0 errors; `npm run build` passes.
-   - Files: `src/components/performance/KeyTravel.vue`, `src/pages/Performance.vue`
-   - Edit spec (PM-verified): (a) KeyTravel.vue — delete the whole `baseLayout: { ... },` prop block (:49-52: `baseLayout: {` / `type: Object as PropType<IDefKeyInfo[][] | null>,` / `default: null,` / `},`). NO import changes: `PropType` (:26) and `IDefKeyInfo` (:27) are still used by the remaining props (:42, :46). (b) Performance.vue — delete line :106 `              :base-layout="baseLayout"` inside the `<KeyTravel` block (:103-111).
-   - Why: sprint-14 task 3 removed all downstream consumers; the prop is declared but never read in KeyTravel's template or setup (PM verified full-file read). Cascade stops at these 2 sites — Performance's own `baseLayout` still feeds its debug line and watch.
+2. **Remove dead baseLayout prop cascade (KeyTravel → Performance binding)** — [high-stakes] — ✓ DONE 2026-10-24 (head `d85ad99`; Reviewer PASS, 0 fails — all 4 Done-when re-run green: greps 0/0/4, typecheck 0, build ✓, diff exactly 2 files −5/+0, no strays; see review-baseLayout-cascade.md)
 
 3. **decryptSDKConfig replicates SDK import's keyboards.flat()** — [high-stakes] (SDK/import correctness) — STATUS: PENDING
    - Done when: `grep -n "cfg.keyboards = cfg.keyboards.flat()" src/services/ExportService.ts` returns one hit inside `decryptSDKConfig`.

@@ -7,14 +7,15 @@
 ## Checkpoint
 - Branch: `sprint-16-eslint-recommended`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt)
-- Cleanup: .scratch/ has pm-notes.md, check-fix.cjs, eslint.recommended.mjs (PO may delete); _to_delete/ empty except .gitkeep — from actual `ls` at PM-open.
+- Cleanup (actual `ls` at Task-1 commit): .scratch/ has pm-notes.md, check-fix.cjs, eslint.recommended.mjs (PO may delete); _to_delete/ empty.
 - Base commit for review: `c256b7f`
 
 ## ▶ RUN THIS
-Next: Task 1 — flip to flat/recommended, run the bulk auto-fix, rename the 2 template shadows, self-check, commit, then write the review file and set IN-REVIEW. Do this task, then stop.
+Next: Reviewer window — "follow docs/plans/reviews/review-eslint-recommended.md". Task 1 is IN-REVIEW (committed 2c8a75a, base c256b7f).
 
 ## Tasks
-1. **ESLint flat/essential → flat/recommended @ 0 warnings** — [high-stakes] — STATUS: PENDING
+1. **ESLint flat/essential → flat/recommended @ 0 warnings** — [high-stakes] — STATUS: IN-REVIEW
+   - Checkpoint: spec applied as written — Edit flipped the preset; `lint -- --fix` reformatted 15 .vue (16 files, +1569/−420, zero .ts); both LayoutPreview shadow renames landed (`layout`→`count`, `layout`→`customLayout`). Self-check all green: lint exit 0/empty, typecheck exit 0 (baseline unchanged), build exit 0, all 5 Done-when greps pass. Committed `2c8a75a`; review file docs/plans/reviews/review-eslint-recommended.md (base c256b7f). No Findings.
    - Done when: `grep -c 'flat/recommended' eslint.config.mjs` → `1` AND `grep -c 'flat/essential' eslint.config.mjs` → `0`.
    - Done when: `npm run lint` exits 0 AND prints nothing (no warnings; the script has no --max-warnings, so check output emptiness, not just exit code).
    - Done when: `grep -c 'v-for="layout in' src/pages/LayoutPreview.vue` → `0` (both shadow aliases renamed) AND `grep -n 'v-if="layout.length"' src/pages/LayoutPreview.vue` → 1 match AND `grep -n 'v-for="(row, rIdx) in layout"' src/pages/LayoutPreview.vue` → 1 match (outer `layout` ref untouched).

@@ -856,7 +856,11 @@ class ExportService {
       const parsed = JSON.parse(text);
       const plaintext = CryptoJS.AES.decrypt(parsed.data, 'fDPy6vvnpPsYm2T0g1bh').toString(CryptoJS.enc.Utf8);
       if (!plaintext) return null;
-      return JSON.parse(plaintext) as KeyboardConfig;
+      const cfg = JSON.parse(plaintext) as KeyboardConfig;
+      if (Array.isArray(cfg.keyboards)) {
+        cfg.keyboards = cfg.keyboards.flat();
+      }
+      return cfg;
     } catch (error) {
       console.error('Failed to decrypt SDK export:', error);
       return null;

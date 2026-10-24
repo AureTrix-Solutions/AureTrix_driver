@@ -978,7 +978,7 @@ class KeyboardService {
       return error as Error;
     }
   }
-
+  /** Wraps SDK getRm6X21Travel (SDK returns {status: number[][], travels: number[][]} — sdk-ref §4). This wrapper TRANSFORMS: flattens travels to number[] and computes maxTravel (Math.max of travels > 0, else 4.0). The annotation below is the wrapper's OUTPUT shape, not the SDK's. */
   async getRm6X21Travel(): Promise<{ status: number[][]; travels: number[]; maxTravel: number } | Error> {
     try {
       if (!this.connectedDevice) {

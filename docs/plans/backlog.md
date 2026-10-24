@@ -33,7 +33,6 @@ it is a rule to follow rather than a defect to fix.
 
 ## Document issues
 - [docs] docs/pages/Debug.md still describes the old 16-getter debug panel (autoConnect/requestDevice/fetchAllData, mode testing, export JSON), but Debug.vue (~307 lines) is now a simple axis inspector (select key → getAxis() → JSON display); sprint-11 Task 3 fixed only the service-name mentions. Verify: src/pages/Debug.vue script section vs Debug.md Features/Data Flow/API Reference. (2026-10-13.)
-- [docs] CLAUDE.md Architecture bullet says "`KeyboardService` (~1400 lines)" — file is now 1605 lines (found at sprint-19 PM-open). Verify: `wc -l src/services/KeyboardService.ts` + grep `~1400` CLAUDE.md. (2026-10-24.)
 
 ## Constraints (standing guardrails — NOT work items; apply conditionally, never removed by a sprint)
 - [deps] vue-tsc 3.x requires TypeScript 5.x — `typescript@latest` is 7.0.2 and vue-tsc 3.3.13 crashes under it with `ERR_PACKAGE_PATH_NOT_EXPORTED './lib/tsc'` (verified by PM dryrun 2026-10-22: fails on TS 7.0.2, works on TS 5.9.2). The repo's `^5.9.2` caret cannot reach 7, so this only bites on a deliberate TS major bump or a tool resolving TypeScript outside the lockfile. Verify before any TS major upgrade: `npm view vue-tsc dist-tags` + the installed vue-tsc's compatibility with that TS major. (sprint-13 PM-open, 2026-10-22.)

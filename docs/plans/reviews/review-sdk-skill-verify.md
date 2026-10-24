@@ -63,3 +63,45 @@ Refs spot-checked against source (all exact):
 
 ### Findings (non-defect observations, routed to current-sprint.md ## Findings)
 - F1 (out of scope, pre-existing): SKILL.md line 47 routes out-of-scope bugs to `docs/plans/backlog.md` directly; CLAUDE.md rule 8 routes Findings to current-sprint.md `## Findings` (PM owns backlog). Pre-existing text (untouched by 1a/1b — diff context confirms), not a self-created defect → PASS stands; PM may align the wording at next touchpoint.
+- F1 ROUTED by PM 2026-10-24 → Task 3 of this sprint (see Task 3 section below).
+
+---
+# REVIEW: sdk-skill-verify — TASK 3 (fix F1 findings-routing line) — INCREMENTAL
+
+**SPRINT GOAL:** Re-verify `.openclaude/skills/sdk-wrapper/SKILL.md` against the current `src/services/KeyboardService.ts` (and its cited companions) and correct every drifted claim — the skill was last source-verified in sprint-04 and the code has moved on.
+**TASK:** Task 3 — Fix SKILL.md findings-routing line (from Reviewer F1): SKILL.md:47 cited CLAUDE.md §8 as authority while contradicting it (sent findings straight to backlog.md; §8 says one line in current-sprint.md `## Findings`, PM is sole backlog writer).  ·  **TAG:** [high-stakes] (protocol-teaching artifact; not [hw] — docs-only)
+**DONE WHEN (PM grep-verified spec, applied as-is):**
+- `grep -n 'one line in `docs/plans/backlog.md`' .openclaude/skills/sdk-wrapper/SKILL.md` → **NOTHING**
+- `grep -n '## Findings' .openclaude/skills/sdk-wrapper/SKILL.md` → **the new routing sentence** (``A genuine bug outside scope → one line in the `## Findings` section of `docs/plans/current-sprint.md`; the PM routes it to backlog (CLAUDE.md §8 — the PM is the only writer of backlog.md).``)
+- `wc -l .openclaude/skills/sdk-wrapper/SKILL.md` → **≤100**
+- `git diff --name-only` → **only `.openclaude/skills/sdk-wrapper/SKILL.md`** (+ `docs/plans/*` for the handoff commit)
+
+**Review scope:** INCREMENTAL ONLY — re-check the diff `2d99766..HEAD` (SKILL.md one-line fix + handoff mechanics). Tasks 1+2 verdict above stands.
+
+## 📝 Worker notes & self-check
+- Spec located by `grep -n "backlog" .openclaude/skills/sdk-wrapper/SKILL.md` → line 47, current text matched the PM's spec verbatim; single Edit applied exactly as written, no re-derivation, no other lines touched.
+- Self-check: all 4 Done-when commands pass (DW1 empty/exit 1; DW2 = new sentence at :47; `wc -l` = 96 ≤ 100; `git diff --name-only` = SKILL.md only).
+- typecheck/build: N/A — docs-only task, no `.ts`/`.vue` edits (self-check gate skipped per spec).
+- Design intent untouched; no source file modified.
+
+## 🔍 Commits to review
+Base: `2d99766` (post-Task-2 state)   Head: `48a1c20` (task 3 SKILL.md fix)
+Note: the handoff mechanics (this Task 3 section + current-sprint.md status/checkpoint) land in the commit immediately after `48a1c20`; incremental review range is `2d99766..HEAD` of the branch.
+<!-- Reviewer runs this itself — do NOT paste the diff here:
+       git diff --stat 2d99766..HEAD     then      git diff 2d99766..HEAD
+     A file touched outside this task's scope is a flag. -->
+Fix-round ranges (added on each re-review): —
+
+## 🖥️ Hardware check ([hw] tasks only)
+N/A — not a [hw] task; docs-only, nothing device-affecting.
+
+## ❓ Reviewer, please confirm (Task 3 only)
+- [ ] meets every Task 3 "DONE WHEN" criterion above (4 commands)
+- [ ] incremental diff scope matches the task (`2d99766..HEAD`: SKILL.md one-line fix + review file + current-sprint.md handoff only — no source files)
+- [ ] new sentence agrees with CLAUDE.md §8 (findings → current-sprint.md `## Findings`; PM sole backlog writer)
+- [ ] no design-intent violation; SKILL.md still ≤100 lines
+- [ ] tag correct ([high-stakes], docs-only, not [hw])
+
+## ✅ REVIEWER VERDICT (Task 3)
+<!-- After ONE verification pass, RULE. Output = PASS/FAIL + findings. Do NOT plan task order. -->
+(pending Reviewer)

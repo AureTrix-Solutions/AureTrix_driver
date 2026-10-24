@@ -10,13 +10,12 @@
 - Branch: `sprint-19-doc-verify`
 - tsc baseline: N/A this sprint — docs-only, no `.ts`/`.vue` edits, so the self-check gate does not apply (`docs/tsc-baseline.txt` untouched)
 - Base commit for the review diff: `04ea632`
-- Task 1 → DONE (Reviewer PASS 2026-10-24, review-sdk-skill-verify.md); Task 2 → DONE.
-- PM touchpoint 2026-10-24: F1 verified against both files (SKILL.md:47 exact text; CLAUDE.md:141 §8 "PM is the only writer of backlog.md") and routed INTO the sprint as Task 3 — sign-off is NOT due until Task 3 closes.
-- Cleanup (actual `ls` at review close): `.scratch/` = pm-notes.md + review-notes.md (PO may delete); `_to_delete/` = empty — no cleanup needed.
+- Task 1 → DONE (Reviewer PASS 2026-10-24, review-sdk-skill-verify.md); Task 2 → DONE; Task 3 → IN-REVIEW (`48a1c20`, Base `2d99766`).
+- Cleanup (actual `ls` 2026-10-24, Worker Task 3): `.scratch/` = pm-notes.md + review-notes.md (PO may delete); `_to_delete/` = empty (.gitkeep only) — no cleanup needed.
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: **Task 3** — Worker: "go" → apply the one grep-verified edit below to SKILL.md, run the Done-when commands, commit, set IN-REVIEW, append the Task 3 section (sprint goal + Task 3 Done-when + Base `2d99766` / Head = your commit) to docs/plans/reviews/review-sdk-skill-verify.md. Then a Reviewer window re-checks ONLY the incremental diff `2d99766..head`. PM-close follows Task 3 PASS.
+Next: **Task 3 review** — Reviewer: "follow docs/plans/reviews/review-sdk-skill-verify.md" → judge the **Task 3 section only**, INCREMENTAL diff `2d99766..HEAD` (Tasks 1+2 verdict stands; do not re-review them). Re-run the 4 Task 3 Done-when commands, confirm the new sentence agrees with CLAUDE.md §8, write the PASS/FAIL verdict in the review file, set Task 3 → DONE (PASS) or → IN-PROGRESS (FAIL, with fix checklist here). PM-close follows Task 3 PASS.
 
 ## Tasks
 
@@ -28,7 +27,7 @@ Next: **Task 3** — Worker: "go" → apply the one grep-verified edit below to 
 
 ---
 
-### 3. Fix SKILL.md findings-routing line (from Reviewer F1) — [high-stakes] — STATUS: PENDING
+### 3. Fix SKILL.md findings-routing line (from Reviewer F1) — [high-stakes] — STATUS: IN-REVIEW (2026-10-24; Worker applied the PM's grep-verified one-line edit verbatim — SKILL.md:47 now routes findings to current-sprint.md `## Findings` with PM-routes-to-backlog; all 4 Done-when pass (DW1 empty; DW2 = new sentence :47; 96 ln ≤100; diff = SKILL.md only); commit `48a1c20`; Task 3 section appended to review-sdk-skill-verify.md with Base `2d99766` / Head `48a1c20`)
 Tag rationale: SKILL.md is a protocol-teaching artifact and the fix touches CLAUDE.md §8 semantics; one edit, but the Research gate means it is not trivial. Review is incremental only (base `2d99766`).
 
 **Spec (PM grep-verified 2026-10-24 — apply as-is, do not re-derive).** One edit in `.openclaude/skills/sdk-wrapper/SKILL.md` (locate with `grep -n "backlog" .openclaude/skills/sdk-wrapper/SKILL.md` → currently line 47):

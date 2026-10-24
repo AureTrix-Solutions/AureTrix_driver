@@ -10,31 +10,15 @@
 - Cleanup: .scratch/ has pm-notes.md + review-notes.md (PO may delete); _to_delete/ empty (from actual ls, task-3 Worker)
 
 ## ▶ RUN THIS
-Next: Task 3 REVIEW (last task) — open a fresh Reviewer window and paste:
-  follow docs/plans/reviews/review-decryptSDKConfig-flat.md
-On PASS: mark task 3 DONE and flag "ALL TASKS DONE — awaiting PO sign-off"; then PM-close.
+**ALL TASKS DONE — awaiting PO sign-off.** Next: PM-close — open a fresh PM window and paste:
+  Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise.
 
 ## Tasks
 1. **getRm6X21Travel clarifying comment** — [high-stakes] — ✓ DONE 2026-10-24 (head `5fb626a`; Reviewer PASS, 0 fails — all 3 Done-when re-run green; see review-getRm6X21Travel-comment.md)
 
 2. **Remove dead baseLayout prop cascade (KeyTravel → Performance binding)** — [high-stakes] — ✓ DONE 2026-10-24 (head `d85ad99`; Reviewer PASS, 0 fails — all 4 Done-when re-run green: greps 0/0/4, typecheck 0, build ✓, diff exactly 2 files −5/+0, no strays; see review-baseLayout-cascade.md)
 
-3. **decryptSDKConfig replicates SDK import's keyboards.flat()** — [high-stakes] (SDK/import correctness) — STATUS: IN-REVIEW
-   - ✓ Worker done 2026-10-24 (base `4bd97dc` → head `e604c42`, 1 file +5/−1): flat() guard added in decryptSDKConfig; all 3 Done-when green (grep :861 one hit; `config.keyboards ?? []` count 5 unchanged; typecheck exit 0 / 0 errors / no `as any`; build ✓). Cleanup (actual ls): .scratch/ has pm-notes.md + review-notes.md (PO may delete); _to_delete/ empty (just .gitkeep). Awaiting Reviewer → docs/plans/reviews/review-decryptSDKConfig-flat.md
-   - Done when: `grep -n "cfg.keyboards = cfg.keyboards.flat()" src/services/ExportService.ts` returns one hit inside `decryptSDKConfig`.
-   - Done when: `grep -c "config.keyboards ?? \[\]" src/services/ExportService.ts` → 5 (the five repair loops at ~:584/:608/:661/:696/:805 stay UNCHANGED — the fix is one site upstream of all of them).
-   - Done when: `npm run typecheck` → 0 errors with NO `as any` added; `npm run build` passes.
-   - Files: `src/services/ExportService.ts`
-   - Edit spec (PM-verified :854-864): in `decryptSDKConfig`, replace :859 `      return JSON.parse(plaintext) as KeyboardConfig;` with:
-     ```ts
-     const cfg = JSON.parse(plaintext) as KeyboardConfig;
-     if (Array.isArray(cfg.keyboards)) {
-       cfg.keyboards = cfg.keyboards.flat();
-     }
-     return cfg;
-     ```
-     Types cleanly: `KeyboardConfig['keyboards']` is `Array<Keyboards>` (flat, validate.d.ts) so `flat()` on it returns `Keyboards[]` — no cast, no widening needed. `flat()` on an already-flat array is a safe no-op; on nested input it repairs the shape the SDK bundle itself produces (`keyboards=i.keyboards.flat()` in importEncryptedJSON, dist/esm/index.js — PM grep-verified this session).
-   - Why: both-sides check passed at plan time — SDK import flattens, app decrypt did not, so IF an SDK export ever ships nested `keyboards`, all five app-side repair loops silently skip while the SDK still applies the config (divergence). Failure mode today is a safe no-op (current exports verified flat), but the fix removes the divergence class.
+3. **decryptSDKConfig replicates SDK import's keyboards.flat()** — [high-stakes] (SDK/import correctness) — ✓ DONE 2026-10-24 (head `e604c42`; Reviewer PASS, 0 fails — all 3 Done-when re-run green: grep one hit :861 inside decryptSDKConfig; `config.keyboards ?? []` count 5 unchanged; typecheck 0 errors / no `as any`; build ✓; diff exactly 1 file +5/−1, no strays; see review-decryptSDKConfig-flat.md)
 
 ## Findings
 <!-- one line per out-of-scope defect: DEFECT + WHERE TO VERIFY, never a fix; PM routes at close -->

@@ -21,15 +21,26 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task. Pure import-path data-shape normalization; no device interaction.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
-<!-- Reviewer fills this section. -->
-**Result:** (pending)  ·  **Date:**   ·  **Fail count:**
+**Result:** PASS  ·  **Date:** 2026-10-24  ·  **Fail count:** 0
+
+### Reviewer findings (all re-run independently against `4bd97dc..e604c42`)
+- **Diff scope:** exactly 1 file, `src/services/ExportService.ts`, +5/−1 — matches the Worker report; no stray files. The change replaces `return JSON.parse(plaintext) as KeyboardConfig;` with parse → `if (Array.isArray(cfg.keyboards)) { cfg.keyboards = cfg.keyboards.flat(); }` → `return cfg;`, i.e. the PM edit spec verbatim. It stays inside the existing try/catch (`'Failed to decrypt SDK export'` → `return null` untouched).
+- **Done-when 1:** `grep -n "cfg.keyboards = cfg.keyboards.flat()"` → one hit, `:861`. Confirmed inside `decryptSDKConfig`: `grep -n decryptSDKConfig` yields only the declaration `:854` (`private decryptSDKConfig(text: string): KeyboardConfig | null`) and the call site `:917`; `:861` lies between them.
+- **Done-when 2:** `grep -c "config.keyboards ?? \[\]"` → 5. The five repair loops are unchanged, as spec'd — the fix is one site upstream of all of them.
+- **Done-when 3:** `npm run typecheck` → exit 0, zero `error TS` lines (baseline 0; no unmasking). `npm run build` → exit 0, "✓ built in 1.77s". `grep -n "as any" src/services/ExportService.ts` → no matches; no new cast added (the sole `as KeyboardConfig` is the pre-existing one, kept on the parse line).
+- **Design intent:** the diff touches no SDK call, no `filters: []`, no `usagePage 65440`. `decryptSDKConfig` keeps its pre-existing `KeyboardConfig | null` contract — returns null on failure, never throws. `flat()` on an already-flat array is a no-op and the `Array.isArray` guard leaves non-array input on the existing null/skip path, so no behavior regression for well-formed exports.
+- **Tag:** [high-stakes] (SDK/import correctness) is correct. Not a [hw] task → this PASS closes the task; no HW-TEST stage.
 
 ### Failed items (FAIL only)
+None.
+
+### Findings (non-blocking observations)
+None from this review.

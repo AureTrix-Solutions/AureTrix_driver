@@ -4,6 +4,7 @@ description: The AureTrix KeyboardService wrapper pattern — how to add or revi
 ---
 
 # SDK wrapper pattern
+<!-- Refs source-verified against KeyboardService.ts (1605 ln) + cited companions 2026-10-24 (sprint-19). -->
 
 Every hardware call goes through a `KeyboardService` wrapper — the only place that touches `XDKeyboard`. Callers (pages/components/stores) check `instanceof Error`, never call the SDK directly, and never `try/catch` a hardware call for control flow. Return-`Error`-never-throw is design intent (CLAUDE.md hard rule 7); changing it is always `[high-stakes]`.
 
@@ -47,26 +48,30 @@ Match surrounding behaviour and flag the inconsistency; don't silently normalise
 
 ## Bulk / many-key operations
 
-**Never loop per-key SDK calls over a whole keyboard** — it overloads the device. Use `useBatchProcessing.ts`; batching lives in the caller (page/component/service) — never inside KeyboardService. `ExportService.ts` is a service-layer consumer: `private processBatches = useBatchProcessing().processBatches;` at `:6`.
+**Never loop per-key SDK calls over a whole keyboard** — it overloads the device. Use `useBatchProcessing.ts`; batching lives in the caller (page/component/service) — never inside KeyboardService. `ExportService.ts` is a service-layer consumer: `private processBatches = useBatchProcessing().processBatches;` at `:24`.
 
-Signature (`useBatchProcessing.ts:5`):
+Signature (`useBatchProcessing.ts:3`):
 
 ```ts
-processBatches<T>(keys: { physicalKeyValue: number; keyValue: number }[] | number[],
-  updateFn: (physicalKey: number) => Promise<T>, batchSize = 80, delayMs = 100): Promise<void>
+const processBatches = async <T>(
+  keys: { physicalKeyValue: number; keyValue: number }[] | number[],
+  updateFn: (physicalKey: number) => Promise<T>,
+  batchSize: number = 80,
+  delayMs: number = 100
+) => { /* … */ }   // Promise<void> by inference — not annotated
 ```
 
-- `keys` accepts objects **or** numbers (detects via `'physicalKeyValue' in keys[0]`, `:12`); `updateFn` receives the **`physicalKeyValue`**, never the display `keyValue` (CLAUDE.md §Key model).
-- Defaults **80/batch, 100ms between** — don't raise/lower without a hardware-tested reason. Batches sequential (`await Promise.all(batch.map(updateFn))` then `setTimeout`, `:21`); keys within a batch concurrent. Returns `Promise<void>` and **does not collect per-key errors** — accumulate them in the `updateFn` closure.
-- Example, simplified (real `SingleKeyTravel.vue:164` wraps `setSingleTravel/setDp/setDr` in `travelChanged/deadChanged` conditionals; `setPerformanceMode` unconditional): `await processBatches(keys, async (pkv) => { await KeyboardService.setPerformanceMode(pkv, 'single', 0); await KeyboardService.setSingleTravel(pkv, singleKeyTravel.value); })`
-- **Gotcha:** `types.ts` `IDefKeyInfo.physicalKeyValue?` is optional, but the object form requires `physicalKeyValue: number` — narrow at the call site (`SingleKeyTravel.vue:160`): `physicalKeyValue: key.physicalKeyValue || key.keyValue`. Don't loosen the composable's signature.
+- `keys` accepts objects **or** numbers (detects via `'physicalKeyValue' in keys[0]`, `:10`); `updateFn` receives the **`physicalKeyValue`**, never the display `keyValue` (CLAUDE.md §Key model).
+- Defaults **80/batch, 100ms between** — don't raise/lower without a hardware-tested reason. Batches sequential (`await Promise.all(batch.map(updateFn))` then `setTimeout`, `:19`–`:20`); keys within a batch concurrent. Returns `Promise<void>` (inferred) and **does not collect per-key errors** — accumulate them in the `updateFn` closure.
+- Example, simplified (real `src/components/performance/SingleKeyTravel.vue:223` wraps `setSingleTravel/setDp/setDr` in `travelChanged/deadChanged` conditionals; `setPerformanceMode` unconditional): `await processBatches(keyIds, async (pkv) => { await KeyboardService.setPerformanceMode(pkv, 'single', 0); await KeyboardService.setSingleTravel(pkv, singleKeyTravel.value); })`
+- **Gotcha:** `types.ts` `IDefKeyInfo.physicalKeyValue?` is optional, but the object form requires `physicalKeyValue: number` — narrow at the call site (`SingleKeyTravel.vue:219`): `physicalKeyValue: key.physicalKeyValue || key.keyValue`. Don't loosen the composable's signature.
 
 ## Where types come from
 
 Ground-truth order (CLAUDE.md §6 — verify before relying):
 1. `docs/sdk-reference-v2.md` — behaviour/semantics; check its Verification status table first (Partial/Unverified → confirm against source).
 2. `@sparklinkplayjoy/protocol-keyboard/src/` (readable TS, permitted) — param/payload types: `constants/param.ts` (88 ln — `OrderType`, `KeyLayout`, `KeyTouchMode`, `BLControls`); `types/interface.ts` (183 ln — `IDefKeyInfo`, `ILightMode`, `LightModeType`, `IDKSMode`, …). Read bodies for member values — never guess.
-3. `src/types/types.ts` (13 ln) — **three** app types: `IDefKeyInfo`, `DksLayoutType`, `DksType`; header says it mirrors `@sparklinkplayjoy/sdk-keyboard dist/cjs/src/types/type.d.ts` verbatim (not a duplicate of protocol-keyboard's `IDefKeyInfo`).
+3. `src/types/types.ts` (17 ln) — `DksLayoutType`/`DksType` are **re-exported `import type`s** from the sdk-keyboard deep `.d.ts` (`:5`, `:9`); `IDefKeyInfo` is the **app-extended** key model `Omit<SdkIDefKeyInfo,'location'> & { physicalKeyValue?; location?; remappedLabel? }` (`:13`), with `SdkIDefKeyInfo` from the protocol-keyboard root (`:7`). Header: "Derived from the SDK public type surface (§10.1, §10.4, §13.7)"; the deep-path import MUST stay `import type` — a value import fails (§13.4).
 4. `sdk-keyboard/dist/cjs/src/controller/*.d.ts` — exact `XDKeyboard` signatures; many return `Promise<any>` (treat as untyped; pin the real shape from reference/source).
 
 ### Importing protocol-keyboard types — verify before relying

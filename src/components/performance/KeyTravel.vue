@@ -46,10 +46,6 @@ export default defineComponent({
       type: Array as PropType<IDefKeyInfo[][]>,
       required: true,
     },
-    baseLayout: {
-      type: Object as PropType<IDefKeyInfo[][] | null>,
-      default: null,
-    },
   },
   emits: ['update-overlay', 'update-single-overlay', 'mode-changed'],
   setup(props, { emit }) {

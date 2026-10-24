@@ -103,7 +103,6 @@
             <KeyTravel
               :selected-keys="selectedKeys"
               :layout="layout"
-              :base-layout="baseLayout"
               @update-single-overlay="updateSingleOverlayData"
               @update-overlay="updateOverlayData"
               @update-notification="setNotification"

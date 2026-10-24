@@ -10,14 +10,14 @@
 - Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty (from actual ls at PM-open)
 
 ## ▶ RUN THIS
-Next: Task 2 — open a fresh Worker window and paste:
-  go
-(then follow Task 2's edit spec below: remove dead baseLayout prop cascade)
+Next: Task 2 REVIEW — open a fresh Reviewer window and paste:
+  follow docs/plans/reviews/review-baseLayout-cascade.md
 
 ## Tasks
 1. **getRm6X21Travel clarifying comment** — [high-stakes] — ✓ DONE 2026-10-24 (head `5fb626a`; Reviewer PASS, 0 fails — all 3 Done-when re-run green; see review-getRm6X21Travel-comment.md)
 
-2. **Remove dead baseLayout prop cascade (KeyTravel → Performance binding)** — [high-stakes] (multi-file) — STATUS: PENDING
+2. **Remove dead baseLayout prop cascade (KeyTravel → Performance binding)** — [high-stakes] (multi-file) — STATUS: IN-REVIEW
+   - ✓ Worker done 2026-10-24 (base `67cec9c` → head `d85ad99`): 2 files, −5/+0; all Done-when greps green (0 / 0 / 4≥2 — Performance ref alive); typecheck 0 (baseline 0); build ✓. Cleanup (actual ls): .scratch/ has pm-notes.md + review-notes.md (PO may delete); _to_delete/ empty. Awaiting Reviewer → docs/plans/reviews/review-baseLayout-cascade.md
    - Done when: `grep -c baseLayout src/components/performance/KeyTravel.vue` → 0.
    - Done when: `grep -c ':base-layout' src/pages/Performance.vue` → 0.
    - Done when: `grep -c baseLayout src/pages/Performance.vue` → ≥ 2 (the ref stays ALIVE: debug-template line ~:66 and the watch ~:357 read it; do NOT touch the destructure/watch/setup-return, and do NOT touch useMappedKeyboard — KeyMapping.vue consumes its baseLayout).

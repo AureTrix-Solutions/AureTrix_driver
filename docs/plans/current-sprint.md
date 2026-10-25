@@ -11,12 +11,13 @@
 - Facts for the Worker: vitest ^5.0.3 installed; tsconfig `types:["vite/client"]` → NO globals — every test file starts `import { describe, it, expect, vi } from 'vitest';` (import only what it uses; no-unused rules). eslint lints src/**/*.test.ts (no-explicit-any = error). Probe proved: zero-config vitest already resolves the @ aliases and runs in node env; explicit config below just pins it. LayoutStorageService module import is SAFE in node (indexedDB.open is inside async init(), not ctor) — but 2e vi.mocks it anyway to control getAllLayouts().
 
 ## ▶ RUN THIS
-Next: Task 2a — create `src/utils/__tests__/keyUnits.test.ts` per spec below (Worker session: "go"). Do this task, then stop (commit, update checkpoint, advance ▶ RUN THIS to 2b).
+Next: Task 2b — create `src/composables/__tests__/useBatchProcessing.test.ts` per spec below (Worker session: "go"). Do this task, then stop (commit, update checkpoint, advance ▶ RUN THIS to 2c).
+2a ✓ — `src/utils/__tests__/keyUnits.test.ts` created per spec (6 tests); vitest run pass, typecheck 0, lint exit 0. All plan values used as-is, none recomputed. NOTE for Reviewer: plan's parenthetical "map has a 2:38.1 entry" is inaccurate — KEY_SIZES 2u entry is 35.999; mmToU(38.1)===2 passes via the ÷19.05 fallback (38.1/19.05=2). Pinned value matches plan.
 1 ✓ DONE — Reviewer PASS 2026-10-24 (review-test-infra.md, base beca01b → head f526813); all gates rerun green; `.scratch` exclusion deviation ACCEPTED. Findings: none.
 
 ## Tasks
 1. **Phase 0 — test infra** — [high-stakes] — ✓ DONE (Reviewer PASS 2026-10-24, review-test-infra.md; vitest config node env + .scratch exclude, smoke test, test:run script, CI step; deviation accepted)
-2. **Phase 1 — Tier A pure-logic tests** — [high-stakes] (new behavior-pinning tests across 4 modules) — STATUS: PENDING
+2. **Phase 1 — Tier A pure-logic tests** — [high-stakes] (new behavior-pinning tests across 4 modules) — STATUS: IN-PROGRESS (2a ✓ committed; next 2b)
    Sequential sub-tasks 2a→2f (2b/2c share one file, 2e/2f share one file), each with its own commit; ≤40 new authored lines per sub-task. Task → IN-REVIEW after 2f (Reviewer ONCE over cumulative diff from Task 1's head, review file `docs/plans/reviews/review-tier-a-tests.md`). Convention: colocated `src/**/__tests__/<module>.test.ts`. Every expected value below is probe-verified — do NOT recompute or "correct" it.
    **2a. `src/utils/__tests__/keyUnits.test.ts`** (new, ~30 ln)
    - uToMm: (1)→19.05, (2)→35.999, (1.75)→32.3 (empirical table — NOT 1.75×19.05), unknown (3)→`toBeCloseTo(57.15, 10)` (probe: 57.150000000000006, float).

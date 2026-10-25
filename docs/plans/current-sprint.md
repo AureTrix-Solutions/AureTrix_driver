@@ -7,40 +7,15 @@
 ## Checkpoint
 - Branch: `sprint-20-test-foundation` (tree clean at plan time, HEAD beca01b)
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — test files live under src/**/* so vue-tsc typechecks them; every task must end at 0
-- Cleanup: from actual ls 2026-10-24 — `.scratch/` has pm-notes.md + probe.test.ts + probe2.test.ts (PO may delete; now excluded from vitest collection); `_to_delete/` empty
+- Cleanup: from actual ls at review close 2026-10-24 — `.scratch/` has pm-notes.md, probe.test.ts, probe2.test.ts, review-notes.md (all PO-deletable; probes excluded from vitest collection); `_to_delete/` empty → no git rm needed
 - Facts for the Worker: vitest ^5.0.3 installed; tsconfig `types:["vite/client"]` → NO globals — every test file starts `import { describe, it, expect, vi } from 'vitest';` (import only what it uses; no-unused rules). eslint lints src/**/*.test.ts (no-explicit-any = error). Probe proved: zero-config vitest already resolves the @ aliases and runs in node env; explicit config below just pins it. LayoutStorageService module import is SAFE in node (indexedDB.open is inside async init(), not ctor) — but 2e vi.mocks it anyway to control getAllLayouts().
 
 ## ▶ RUN THIS
-Next: REVIEWER — "follow docs/plans/reviews/review-test-infra.md" (fresh session). Task 1 (Phase 0 test infra, 1a+1b) is IN-REVIEW; cumulative diff base `beca01b` → head `f526813`. On PASS: Reviewer flips Task 1 → DONE (collapse to ✓) and advances ▶ RUN THIS to Task 2a (keyUnits.test.ts). On FAIL: Reviewer → IN-PROGRESS + fix checklist here.
-1a+1b ✓ (pending review) — all gates pass (vitest/test:run 1 file passed exit 0; typecheck 0; build ✓; lint 0). ONE deviation logged for Reviewer ruling: 1a shipped `test:{environment:'node', exclude:[...configDefaults.exclude, '.scratch/**']}` — the exclude line (+`configDefaults` import) was added because vitest collected PM's gitignored .scratch/probe*.test.ts (3 files ran, not 1); restores the spec's "1 file passed" literally. Full detail in review-test-infra.md.
+Next: Task 2a — create `src/utils/__tests__/keyUnits.test.ts` per spec below (Worker session: "go"). Do this task, then stop (commit, update checkpoint, advance ▶ RUN THIS to 2b).
+1 ✓ DONE — Reviewer PASS 2026-10-24 (review-test-infra.md, base beca01b → head f526813); all gates rerun green; `.scratch` exclusion deviation ACCEPTED. Findings: none.
 
 ## Tasks
-1. **Phase 0 — test infra** — [high-stakes] (config + CI = infra) — STATUS: IN-REVIEW (review-test-infra.md, base beca01b → head f526813)
-   Sequential sub-tasks 1a→1b, each with its own commit; task stays IN-PROGRESS until 1b, then → IN-REVIEW (Reviewer runs ONCE over cumulative diff, review file `docs/plans/reviews/review-test-infra.md`, base = beca01b).
-   **1a. vitest config + smoke test** — Files: `vite.config.ts`, `src/__tests__/smoke.test.ts` (new)
-   - Edit 1 (grep `from 'vite';` in vite.config.ts — line 1): replace `import { defineConfig } from 'vite';` with `import { defineConfig } from 'vitest/config';` (superset type; vite build unaffected).
-   - Edit 2 (grep `preview: {` — insert AFTER the preview block's closing `},`, before the final `});`):
-     ```ts
-       test: {
-         environment: 'node',
-       },
-     ```
-   - Edit 3: create `src/__tests__/smoke.test.ts`:
-     ```ts
-     import { describe, it, expect } from 'vitest';
-     import { uToMm } from '@utils/keyUnits';
-
-     describe('test infra smoke', () => {
-       it('resolves path aliases and asserts real module values', () => {
-         expect(uToMm(1)).toBe(19.05);
-       });
-     });
-     ```
-   - Done when: `npx vitest run` → exit 0, 1 file passed; `grep -n "vitest/config" vite.config.ts` → 1 hit; `npm run typecheck` → 0 errors; `npm run build` → succeeds (config change can affect build); `npm run lint` → exit 0.
-   **1b. test:run script + CI step** — Files: `package.json`, `.github/workflows/ci.yml`
-   - Edit 1 (grep `"test": "vitest"` in package.json — line 9): insert after it: `    "test:run": "vitest run",`
-   - Edit 2 (grep `npm run lint` in ci.yml — line 19): insert after it: `      - run: npm run test:run` (before the build step at line 20).
-   - Done when: `npm run test:run` → exit 0, 1 file passed; `grep -n "test:run" package.json .github/workflows/ci.yml` → 1 hit each; typecheck 0; lint exit 0.
+1. **Phase 0 — test infra** — [high-stakes] — ✓ DONE (Reviewer PASS 2026-10-24, review-test-infra.md; vitest config node env + .scratch exclude, smoke test, test:run script, CI step; deviation accepted)
 2. **Phase 1 — Tier A pure-logic tests** — [high-stakes] (new behavior-pinning tests across 4 modules) — STATUS: PENDING
    Sequential sub-tasks 2a→2f (2b/2c share one file, 2e/2f share one file), each with its own commit; ≤40 new authored lines per sub-task. Task → IN-REVIEW after 2f (Reviewer ONCE over cumulative diff from Task 1's head, review file `docs/plans/reviews/review-tier-a-tests.md`). Convention: colocated `src/**/__tests__/<module>.test.ts`. Every expected value below is probe-verified — do NOT recompute or "correct" it.
    **2a. `src/utils/__tests__/keyUnits.test.ts`** (new, ~30 ln)

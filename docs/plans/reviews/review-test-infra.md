@@ -32,13 +32,22 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task (no hardware-facing code).
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above (1a and 1b)
-- [ ] diff scope matches the task (no stray files; PM planning commits noted above are in-scope for the range)
-- [ ] no design-intent violation
-- [ ] the 1a DEVIATION (`.scratch/**` exclusion) is acceptable or listed as a failed item
-- [ ] typecheck/build gate met where it applies (no newly introduced errors) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above (1a and 1b) — all rerun independently: `npx vitest run` exit 0 "Test Files 1 passed (1)"; `npm run test:run` exit 0; `grep -n "vitest/config" vite.config.ts` 1 hit; `grep -n "test:run" package.json .github/workflows/ci.yml` 1 hit each; typecheck 0; lint exit 0; build exit 0
+- [x] diff scope matches the task (no stray files; PM planning commits noted above are in-scope for the range) — `git diff --stat beca01b..f526813`: exactly the 4 worker files (ci.yml, package.json, smoke.test.ts, vite.config.ts) + PM planning files (current-sprint.md, backlog.md), as the note predicted
+- [x] no design-intent violation — no service/hardware code in diff
+- [x] the 1a DEVIATION (`.scratch/**` exclusion) is ACCEPTED — see ruling below
+- [x] typecheck/build gate met (1a touched .ts) — typecheck 0 errors, build ✓, both rerun by Reviewer
+- [x] tag is correct — [high-stakes] appropriate (config + CI infra)
+
+### Deviation ruling
+The added `exclude: [...configDefaults.exclude, '.scratch/**']` (+ `configDefaults` import) is ACCEPTED. It was the only in-scope fix available (Worker never deletes; the PM's probe files are gitignored and live outside Worker reach), it restores the spec's own "1 file passed" Done-when literally, and it keeps future `.scratch` probes out of the suite permanently. Scope-minimal; no behavior beyond test collection.
+
+### Smoke-test value check
+`uToMm(1)` = 19.05 confirmed against source (`KEY_SIZE_MAP` row `{ units: 1, mm: 19.05 }`, fallback `units * 19.05`) — the assertion pins a real module value via the `@utils` alias, as specced.
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** —  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-10-24  ·  **Fail count:** 0
+
+Task 1 (Phase 0 test infra, 1a+1b) passes code review on the cumulative diff base `beca01b` → head `f526813`. Not a [hw] task → DONE (no HW-TEST stage). Findings: none (no defects, no out-of-scope observations worth routing).
+

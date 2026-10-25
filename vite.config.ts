@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, configDefaults } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 
@@ -46,5 +46,9 @@ export default defineConfig({
   preview: {
     host: '0.0.0.0',
     port: 5000,
+  },
+  test: {
+    environment: 'node',
+    exclude: [...configDefaults.exclude, '.scratch/**'],
   },
 });

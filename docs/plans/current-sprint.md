@@ -7,11 +7,12 @@
 ## Checkpoint
 - Branch: `sprint-20-test-foundation` (tree clean at plan time, HEAD beca01b)
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — test files live under src/**/* so vue-tsc typechecks them; every task must end at 0
-- Cleanup: from actual ls 2026-10-24 — `.scratch/` has pm-notes.md + probe.test.ts (PO may delete); `_to_delete/` empty
+- Cleanup: from actual ls 2026-10-24 — `.scratch/` has pm-notes.md + probe.test.ts + probe2.test.ts (PO may delete; now excluded from vitest collection); `_to_delete/` empty
 - Facts for the Worker: vitest ^5.0.3 installed; tsconfig `types:["vite/client"]` → NO globals — every test file starts `import { describe, it, expect, vi } from 'vitest';` (import only what it uses; no-unused rules). eslint lints src/**/*.test.ts (no-explicit-any = error). Probe proved: zero-config vitest already resolves the @ aliases and runs in node env; explicit config below just pins it. LayoutStorageService module import is SAFE in node (indexedDB.open is inside async init(), not ctor) — but 2e vi.mocks it anyway to control getAllLayouts().
 
 ## ▶ RUN THIS
-Next: Task 1a — vitest config + smoke test. Do this task, then stop (commit, update checkpoint, advance ▶ RUN THIS to 1b).
+Next: Task 1b — test:run script + CI step. Do this task, then stop (commit, update checkpoint, advance ▶ RUN THIS to 2a).
+1a ✓ — gates all pass (vitest 1 file passed; typecheck 0; build ✓; lint 0). DEVIATION for Reviewer: spec's `test:{environment:'node'}` shipped with one added line `exclude: [...configDefaults.exclude, '.scratch/**']` (+ `configDefaults` added to the import) — vitest was collecting PM's gitignored .scratch/probe*.test.ts (3 files ran, not 1); Worker never deletes, so exclusion was the only in-scope fix. Restores the spec's "1 file passed" Done-when literally; keeps future .scratch probes out of the suite.
 
 ## Tasks
 1. **Phase 0 — test infra** — [high-stakes] (config + CI = infra) — STATUS: PENDING

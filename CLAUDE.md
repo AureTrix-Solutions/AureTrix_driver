@@ -16,10 +16,11 @@ npm run preview       # serve the production build
 npm run typecheck     # vue-tsc --noEmit (type-checks .ts AND .vue; no emit, reports type errors only)
 npm run lint          # ESLint flat config (eslint.config.mjs); exit 0 = clean (0 warnings)
 npm test              # vitest (watch mode by default)
+npm run test:run      # vitest run — single pass, CI mode
 npx vitest run path/to/file.test.ts   # run a single test file
 ```
 
-Lint runs via ESLint 10 flat config (`eslint.config.mjs`); warnings were ratcheted to 0 (sprint-11). Which rules are enforced at `"error"` lives in `eslint.config.mjs` — treat that file as the source of truth, not this line. There are currently no test files, despite vitest/@vue/test-utils being installed.
+Lint runs via ESLint 10 flat config (`eslint.config.mjs`); warnings were ratcheted to 0 (sprint-11). Which rules are enforced at `"error"` lives in `eslint.config.mjs` — treat that file as the source of truth, not this line. Tests live colocated in src/**/__tests__/*.test.ts (node env, explicit vitest imports — no globals); CI runs npm run test:run. Component/DOM tests need a DOM env dep (not yet installed).
 
 ## Architecture
 

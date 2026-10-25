@@ -1,33 +1,8 @@
-# SPRINT: sprint-20-test-foundation
+# No active sprint
 
-**GOAL:** Stand up the test foundation — vitest config (node env, aliases reused), `test:run` script, CI test step — and cover the Tier A pure-logic modules (keyUnits, useBatchProcessing, keyCategories, layoutConfigs) with tests, keeping typecheck at 0 and CI green.
-**DONE-CRITERIA (sprint):** `npm run test:run` exits 0 with 5 test files passing (smoke + 4 modules); `npm run typecheck` = 0 errors (baseline docs/tsc-baseline.txt = 0); `npm run lint` exit 0; ci.yml runs `npm run test:run`. All expected values below are probe-verified (`.scratch/pm-notes.md`, 2026-10-24) — use them as-is, never recompute.
-**Started:** 2026-10-24  ·  **Status:** ALL TASKS DONE — awaiting PO sign-off (2026-10-25)
-
-## Checkpoint
-- Branch: `sprint-20-test-foundation` (tree clean at plan time, HEAD beca01b)
-- tsc baseline: 0 errors (docs/tsc-baseline.txt) — test files live under src/**/* so vue-tsc typechecks them; every task must end at 0
-- Cleanup: from actual ls at Task 3 close 2026-10-25 — `.scratch/` has pm-notes.md, probe.test.ts, probe2.test.ts, review-notes.md (all PO-deletable; probes excluded from vitest collection); `_to_delete/` empty → no git rm needed
-- Facts for the Worker: vitest ^5.0.3 installed; tsconfig `types:["vite/client"]` → NO globals — every test file starts `import { describe, it, expect, vi } from 'vitest';` (import only what it uses; no-unused rules). eslint lints src/**/*.test.ts (no-explicit-any = error). Probe proved: zero-config vitest already resolves the @ aliases and runs in node env; explicit config below just pins it. LayoutStorageService module import is SAFE in node (indexedDB.open is inside async init(), not ctor) — but 2e vi.mocks it anyway to control getAllLayouts().
+COMPLETE — run PM-open for the next sprint.
 
 ## ▶ RUN THIS
-ALL TASKS DONE — awaiting PO sign-off (next session: PM-close). Task 3 ✓ — CLAUDE.md updated per spec: added `npm run test:run` command line, replaced stale "no test files" sentence with colocated-tests/CI/DOM-env note. Both Done-when greps hit; `git diff --stat` = CLAUDE.md only (2+/1−); docs task, typecheck gate skipped, no inline-fixable defects.
-2 ✓ DONE — Reviewer PASS 2026-10-25 (review-tier-a-tests.md, base b5ec520 → head f9cdacd, fail count 0). All DONE-WHEN criteria rerun green: test:run 5 files/24 tests pass, typecheck 0, lint exit 0; probe values confirmed used as-is; deviations (null→undefined TS2345, 2b first-arg assertion, 2a 38.1 fallback nit) accepted. Findings: none.
-2f ✓ — appended `describe('layoutConfigs geometry', …)` with 4 geometry tests per spec (import line gained getPaddedKeySizes). Probe values as-is, none recomputed. Commit f9cdacd. File 8/8 pass; full suite 5 files/24 tests pass; typecheck 0; lint exit 0. Cleanup (actual ls): `.scratch/` pm-notes.md, probe.test.ts, probe2.test.ts, review-notes.md (PO-deletable); `_to_delete/` empty → no cleanup needed.
-2e ✓ — `src/utils/__tests__/layoutConfigs.test.ts` created per spec (4 priority-chain tests: P1 custom via vi.mock LayoutStorageService alias specifier, P2 Slice75 HE 6×15, P3 layoutMap[61] 5×14, P4 default 6×1). Fixture hoisted via vi.hoisted to avoid TDZ in the hoisted mock factory. vitest file 4/4 pass, suite 5 files 20 tests, typecheck 0, lint exit 0. One spec-vs-reality deviation (test-side only): spec's literal `null` args fail TS2345 vs `baseLayout?: unknown[][]` etc. — used `undefined` in the same positions; all pinned rows/cols values used as-is, none recomputed. Cleanup (actual ls): `.scratch/` pm-notes.md, probe.test.ts, probe2.test.ts, review-notes.md (PO-deletable); `_to_delete/` empty → no cleanup needed.
-2d ✓ — `src/utils/__tests__/keyCategories.test.ts` created per spec (4 tests: category order+16, Special {0:' ',1:'Fn'}, non-empty labels/no id reuse/seen.size===250, exact per-category counts incl. Special:2). Commit 7f3a1e6. vitest file 4/4 pass, typecheck 0, lint exit 0. All probe values used as-is, none recomputed. Cleanup (actual ls): `.scratch/` pm-notes.md, probe.test.ts, probe2.test.ts, review-notes.md (PO-deletable); `_to_delete/` empty → no cleanup needed.
-2c ✓ — appended 2 timing tests to useBatchProcessing.test.ts per spec (fake-timer delay gating; intra-batch concurrency) — file now 5/5 pass; typecheck 0; lint exit 0. Spec code applied as-is, no recomputed values. Cleanup from actual ls: `.scratch/` pm-notes.md, probe.test.ts, probe2.test.ts, review-notes.md (PO-deletable); `_to_delete/` empty.
-2b ✓ — `src/composables/__tests__/useBatchProcessing.test.ts` created per spec (3 tests: number array order, object array physicalKeyValue-only, empty array). vitest pass (file 3/3; suite 3 files 10 tests), typecheck 0, lint exit 0. One spec-vs-reality deviation (test-side only, no source change): spec's `expect(spy.mock.calls).toEqual([[7],[8]])` fails because `batch.map(updateFn)` passes (value, index, array) — actual calls are [[7,0,[7,8]],[8,1,[7,8]]]. Asserted first-arg only: `spy.mock.calls.map(c => c[0])` → [7,8] — pins "physicalKeyValue only, keyValue never passed" as intended. Cleanup (actual ls): .scratch/ has pm-notes.md, probe.test.ts, probe2.test.ts, review-notes.md (PO-deletable); _to_delete/ empty → no cleanup needed.
-2a ✓ — `src/utils/__tests__/keyUnits.test.ts` created per spec (6 tests); vitest run pass, typecheck 0, lint exit 0. All plan values used as-is, none recomputed. NOTE for Reviewer: plan's parenthetical "map has a 2:38.1 entry" is inaccurate — KEY_SIZES 2u entry is 35.999; mmToU(38.1)===2 passes via the ÷19.05 fallback (38.1/19.05=2). Pinned value matches plan.
-1 ✓ DONE — Reviewer PASS 2026-10-24 (review-test-infra.md, base beca01b → head f526813); all gates rerun green; `.scratch` exclusion deviation ACCEPTED. Findings: none.
-
-## Tasks
-1. **Phase 0 — test infra** — [high-stakes] — ✓ DONE (Reviewer PASS 2026-10-24, review-test-infra.md; vitest config node env + .scratch exclude, smoke test, test:run script, CI step; deviation accepted)
-2. **Phase 1 — Tier A pure-logic tests** — [high-stakes] — ✓ DONE (Reviewer PASS 2026-10-25, review-tier-a-tests.md; 2a–2f: keyUnits, useBatchProcessing chunking+timing, keyCategories, layoutConfigs priority chain + geometry; probe values used as-is; 5 files/24 tests, typecheck 0, lint 0)
-3. **CLAUDE.md conventions update** — [trivial] — STATUS: PENDING
-   - Edit 1 (grep `npm test              # vitest (watch mode by default)` in CLAUDE.md): add after it a line: `npm run test:run      # vitest run — single pass, CI mode`.
-   - Edit 2 (grep `There are currently no test files, despite vitest/@vue/test-utils being installed.`): replace that sentence with: `Tests live colocated in src/**/__tests__/*.test.ts (node env, explicit vitest imports — no globals); CI runs npm run test:run. Component/DOM tests need a DOM env dep (not yet installed).`
-   - Done when: both greps return the new text; no other CLAUDE.md changes. (Docs task — skips the typecheck gate.)
-
-## Findings (raw — PM routes at close)
-- <none yet>
+No active sprint. To start one, open a fresh window and paste:
+  Act as PM per CLAUDE.md. Plan the "<name>" sprint from docs/plans/backlog.md.
+(Or a direct goal: Act as PM per CLAUDE.md. Goal: <...>.)

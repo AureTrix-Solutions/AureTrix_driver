@@ -11,12 +11,11 @@
 - Facts for the Worker: vitest ^5.0.3 installed; tsconfig `types:["vite/client"]` → NO globals — every test file starts `import { describe, it, expect, vi } from 'vitest';` (import only what it uses; no-unused rules). eslint lints src/**/*.test.ts (no-explicit-any = error). Probe proved: zero-config vitest already resolves the @ aliases and runs in node env; explicit config below just pins it. LayoutStorageService module import is SAFE in node (indexedDB.open is inside async init(), not ctor) — but 2e vi.mocks it anyway to control getAllLayouts().
 
 ## ▶ RUN THIS
-Next: Task 2a — keyUnits.test.ts. Do this task, then stop (commit, update checkpoint, advance ▶ RUN THIS to 2b).
-1b ✓ — `"test:run": "vitest run"` in package.json; `- run: npm run test:run` after lint in ci.yml; test:run exit 0 (1 file passed), typecheck 0, lint 0. No deviations.
-1a ✓ — gates all pass (vitest 1 file passed; typecheck 0; build ✓; lint 0). DEVIATION for Reviewer: spec's `test:{environment:'node'}` shipped with one added line `exclude: [...configDefaults.exclude, '.scratch/**']` (+ `configDefaults` added to the import) — vitest was collecting PM's gitignored .scratch/probe*.test.ts (3 files ran, not 1); Worker never deletes, so exclusion was the only in-scope fix. Restores the spec's "1 file passed" Done-when literally; keeps future .scratch probes out of the suite.
+Next: REVIEWER — "follow docs/plans/reviews/review-test-infra.md" (fresh session). Task 1 (Phase 0 test infra, 1a+1b) is IN-REVIEW; cumulative diff base `beca01b` → head `f526813`. On PASS: Reviewer flips Task 1 → DONE (collapse to ✓) and advances ▶ RUN THIS to Task 2a (keyUnits.test.ts). On FAIL: Reviewer → IN-PROGRESS + fix checklist here.
+1a+1b ✓ (pending review) — all gates pass (vitest/test:run 1 file passed exit 0; typecheck 0; build ✓; lint 0). ONE deviation logged for Reviewer ruling: 1a shipped `test:{environment:'node', exclude:[...configDefaults.exclude, '.scratch/**']}` — the exclude line (+`configDefaults` import) was added because vitest collected PM's gitignored .scratch/probe*.test.ts (3 files ran, not 1); restores the spec's "1 file passed" literally. Full detail in review-test-infra.md.
 
 ## Tasks
-1. **Phase 0 — test infra** — [high-stakes] (config + CI = infra) — STATUS: PENDING
+1. **Phase 0 — test infra** — [high-stakes] (config + CI = infra) — STATUS: IN-REVIEW (review-test-infra.md, base beca01b → head f526813)
    Sequential sub-tasks 1a→1b, each with its own commit; task stays IN-PROGRESS until 1b, then → IN-REVIEW (Reviewer runs ONCE over cumulative diff, review file `docs/plans/reviews/review-test-infra.md`, base = beca01b).
    **1a. vitest config + smoke test** — Files: `vite.config.ts`, `src/__tests__/smoke.test.ts` (new)
    - Edit 1 (grep `from 'vite';` in vite.config.ts — line 1): replace `import { defineConfig } from 'vite';` with `import { defineConfig } from 'vitest/config';` (superset type; vite build unaffected).

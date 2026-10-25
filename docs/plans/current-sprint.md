@@ -11,7 +11,8 @@
 - Facts for the Worker: vitest ^5.0.3 installed; tsconfig `types:["vite/client"]` → NO globals — every test file starts `import { describe, it, expect, vi } from 'vitest';` (import only what it uses; no-unused rules). eslint lints src/**/*.test.ts (no-explicit-any = error). Probe proved: zero-config vitest already resolves the @ aliases and runs in node env; explicit config below just pins it. LayoutStorageService module import is SAFE in node (indexedDB.open is inside async init(), not ctor) — but 2e vi.mocks it anyway to control getAllLayouts().
 
 ## ▶ RUN THIS
-Next: Task 1b — test:run script + CI step. Do this task, then stop (commit, update checkpoint, advance ▶ RUN THIS to 2a).
+Next: Task 2a — keyUnits.test.ts. Do this task, then stop (commit, update checkpoint, advance ▶ RUN THIS to 2b).
+1b ✓ — `"test:run": "vitest run"` in package.json; `- run: npm run test:run` after lint in ci.yml; test:run exit 0 (1 file passed), typecheck 0, lint 0. No deviations.
 1a ✓ — gates all pass (vitest 1 file passed; typecheck 0; build ✓; lint 0). DEVIATION for Reviewer: spec's `test:{environment:'node'}` shipped with one added line `exclude: [...configDefaults.exclude, '.scratch/**']` (+ `configDefaults` added to the import) — vitest was collecting PM's gitignored .scratch/probe*.test.ts (3 files ran, not 1); Worker never deletes, so exclusion was the only in-scope fix. Restores the spec's "1 file passed" Done-when literally; keeps future .scratch probes out of the suite.
 
 ## Tasks

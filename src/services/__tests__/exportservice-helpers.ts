@@ -3,11 +3,14 @@
 // applyExportDefaults (programs the export-side happy path: V7-V9 of the sprint plan).
 // Mocks pin SOFTWARE contracts only — they never claim device behavior.
 import { vi } from 'vitest';
+import CryptoJS from 'crypto-js';
+import type { KeyboardConfig, Keyboards } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
+import type { ILightMode } from '@sparklinkplayjoy/protocol-keyboard';
 
 // V1 — default getLighting/getLogoLighting/getSpecialLighting value.
 // Deliberately distinct from getDefaultLightConfig() so Error-fallback paths
 // are distinguishable from successful reads in assertions.
-const LIGHT_STATIC = {
+export const LIGHT_STATIC: ILightMode & { dynamicColorId: number } = {
   open: true,
   direction: false,
   superResponse: false,
@@ -135,4 +138,215 @@ export function applyExportDefaults(ks: KeyboardServiceMock): void {
   ks.setSocd.mockResolvedValue(null);
   ks.exportConfig.mockResolvedValue(undefined);
   ks.importConfig.mockResolvedValue({ success: true, error: null });
+}
+
+// ---- Part B (Task 1b): canonical fixture values V1–V7 + builders ----
+
+// LightConfig is not exported from validate.d.ts — derive it (F17).
+type LightConfig = KeyboardConfig['light']['main'];
+
+// V2 — convertLightingToConfig(LIGHT_STATIC). Deliberately ≠ getDefaultLightConfig()
+// (F4) so Error-fallback slots stay distinguishable from successful reads.
+export const LIGHT_STATIC_CFG: LightConfig = {
+  open: true,
+  mode: 'static',
+  staticColors: ['#00FF00'],
+  selectStaticColor: 1,
+  luminance: 80,
+  speed: 60,
+  sleepTime: 5,
+  direction: false,
+  dynamic: 0,
+};
+
+// V3 — convertLightConfigToSDKFormat(LIGHT_STATIC_CFG): the reverse of V2.
+// This is what the import-side main/special lighting repairs must re-emit.
+export const SDK_FORMAT_STATIC: Omit<ILightMode, 'open'> = {
+  direction: false,
+  speed: 60,
+  colors: ['#00FF00'],
+  luminance: 80,
+  sleepDelay: 5,
+  staticColor: 1,
+  type: 'static',
+  mode: 0,
+  superResponse: false,
+};
+
+// V4 — export snapshot setLighting call #1 (F10 temp-switch: open forced true).
+export const TEMP_SWITCH_EXPECTED: ILightMode = {
+  open: true,
+  direction: false,
+  superResponse: false,
+  speed: 60,
+  colors: ['#00FF00'],
+  mode: 21,
+  luminance: 80,
+  sleepDelay: 5,
+  staticColor: 1,
+  type: 'custom',
+};
+
+// V5 — import pre-switch setLighting call #1 (F13a: NO open, NO dynamicColorId).
+export const PRE_SWITCH_EXPECTED: Omit<ILightMode, 'open'> = {
+  direction: false,
+  superResponse: false,
+  speed: 60,
+  colors: ['#00FF00'],
+  mode: 21,
+  luminance: 80,
+  sleepDelay: 5,
+  staticColor: 1,
+  type: 'custom',
+};
+
+// V6 — export finally-restore setLighting (V1 minus dynamicColorId).
+export const RESTORE_MAIN_EXPECTED: ILightMode = {
+  open: true,
+  direction: false,
+  superResponse: false,
+  speed: 60,
+  colors: ['#00FF00'],
+  mode: 0,
+  luminance: 80,
+  sleepDelay: 5,
+  staticColor: 1,
+  type: 'static',
+};
+
+// V7 — gatherDeviceInfo with ROES→8, TOP_DEAD→true (Number(true)=1); identity static (F3).
+export const SYSTEM_EXPECTED: KeyboardConfig['system'] = {
+  rateOfReturn: 8,
+  topDeadBandSwitch: 1,
+  productId: 0,
+  vendorId: 0,
+  keyboardName: '',
+  usage: 0,
+  usagePage: 0,
+};
+
+// V8 — defKey layout: 1 row × 2 keys (65 at row0/col0, 66 at row0/col1).
+// Consumed by applyExportDefaults (part A); export for tests asserting on defKey.
+export const LAYOUT_FIXTURE: Array<Array<{ keyValue: number; location: { row: number; col: number } }>> = [
+  [
+    { keyValue: 65, location: { row: 0, col: 0 } },
+    { keyValue: 66, location: { row: 0, col: 1 } },
+  ],
+];
+
+// V10 — expected performance object for key 65 (per spec: isSingle:false).
+export const EXPECTED_PERF: Keyboards['performance'] = {
+  isGlobalTriggering: false,
+  globalTriggeringValue: 55,
+  isRt: true,
+  isSingle: false,
+  singleTriggeringValue: 77,
+  rtPressValue: 10,
+  rtReleaseValue: 20,
+  axisID: 2,
+  deadBandPressValue: 30,
+  deadBandReleaseValue: 40,
+  advancedKeyMode: 1,
+};
+
+// V11 — expected advancedKeys object (advancedType 'dks', value 1, all sub-blocks).
+export const EXPECTED_ADV: Keyboards['advancedKeys'] = {
+  advancedType: 'dks',
+  value: 1,
+  dks: { dks: { 1: 1, 2: 2, 3: 3, 4: 4 }, trps: { 1: 5, 2: 6, 3: 7, 4: 8 }, db: 11, db2: 22, db3: 33 },
+  mpt: { mpt: 1 },
+  socd: { pos1: 1, pos2: 2, key1: 3, key2: 4, type: 0, mode: 1, delay: 150 },
+  mt: { dksAll: [9, 8, 7, 6], delay: 150 },
+  tgl: { tgl: 2 },
+  end: { dks: 3, delay: 250 },
+};
+
+// V12 — expected customKeys for key 65 (fn0 bound to 100) and light.custom {R:1,G:2,B:3}.
+export const EXPECTED_CUSTOM_KEYS_65: Keyboards['customKeys'] = {
+  fn0: { keyValue: 65, bindKeyValue: 100 },
+  fn1: null,
+  fn2: null,
+  fn3: null,
+};
+export const EXPECTED_CUSTOM_KEYS_66: Keyboards['customKeys'] = {
+  fn0: null,
+  fn1: null,
+  fn2: null,
+  fn3: null,
+};
+
+export function makeLightMode(overrides: Partial<ILightMode & { dynamicColorId: number }> = {}) {
+  return {
+    open: true,
+    direction: false,
+    superResponse: false,
+    speed: 60,
+    colors: ['#00FF00'],
+    mode: 0,
+    luminance: 80,
+    sleepDelay: 5,
+    staticColor: 1,
+    type: 'static' as const,
+    dynamicColorId: 7,
+    ...overrides,
+  };
+}
+
+export function makeKeyboardEntry(
+  overrides: Partial<Keyboards> & { keyValue: number; row: number; col: number },
+): Keyboards {
+  return {
+    performance: { ...EXPECTED_PERF },
+    advancedKeys: {
+      advancedType: EXPECTED_ADV.advancedType,
+      value: EXPECTED_ADV.value,
+      dks: EXPECTED_ADV.dks,
+      mpt: EXPECTED_ADV.mpt,
+      socd: EXPECTED_ADV.socd,
+      mt: EXPECTED_ADV.mt,
+      tgl: EXPECTED_ADV.tgl,
+      end: EXPECTED_ADV.end,
+    },
+    customKeys: overrides.keyValue === 66 ? EXPECTED_CUSTOM_KEYS_66 : EXPECTED_CUSTOM_KEYS_65,
+    light: { custom: { R: 1, G: 2, B: 3, key: overrides.keyValue } },
+    ...overrides,
+  } as Keyboards;
+}
+
+export function makeConfig(overrides: Partial<KeyboardConfig> = {}): KeyboardConfig {
+  return {
+    light: {
+      main: { ...LIGHT_STATIC_CFG },
+      logo: { ...LIGHT_STATIC_CFG },
+      other: { ...LIGHT_STATIC_CFG },
+    },
+    keyboards: [makeKeyboardEntry({ keyValue: 65, row: 0, col: 0 }), makeKeyboardEntry({ keyValue: 66, row: 0, col: 1 })],
+    macro: { list: [], v2list: [] },
+    system: { ...SYSTEM_EXPECTED },
+    ...overrides,
+  };
+}
+
+// Mirrors SDK exportEncryptedJSON: {data: AES.encrypt(JSON.stringify(cfg), key).toString()}.
+export function makeEncryptedFile(cfg: KeyboardConfig): File {
+  const key = 'fDPy6vvnpPsYm2T0g1bh';
+  const str = JSON.stringify({ data: CryptoJS.AES.encrypt(JSON.stringify(cfg), key).toString() });
+  return { text: async () => str } as unknown as File;
+}
+
+// Map-backed localStorage stub (get/set/remove/clear). Preset MacroList='["local"]' per F1.
+export function makeLocalStorage(presets: Record<string, string> = { MacroList: '["local"]' }) {
+  const store = new Map<string, string>(Object.entries(presets));
+  return {
+    getItem: vi.fn((k: string) => (store.has(k) ? store.get(k)! : null)),
+    setItem: vi.fn((k: string, v: string) => {
+      store.set(k, String(v));
+    }),
+    removeItem: vi.fn((k: string) => {
+      store.delete(k);
+    }),
+    clear: vi.fn(() => {
+      store.clear();
+    }),
+  };
 }

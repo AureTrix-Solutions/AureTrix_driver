@@ -115,4 +115,112 @@ describe('importProfile', () => {
     const mainOrder = ks.setLighting.mock.invocationCallOrder[1];
     expect(mainOrder).toBeGreaterThan(specialOrder);
   });
+
+  it('importConfig Error → {success:false, error:message} and MacroList RESTORED (F-R1 finally)', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    ks.importConfig.mockResolvedValueOnce(new Error('device disconnected'));
+
+    const result = await runImport(makeEncryptedFile(makeImportConfig()));
+
+    expect(result).toEqual({ success: false, error: 'device disconnected' });
+    // F-R1: the failure return passes through the finally — snapshot restored.
+    expect(ls.setItem).toHaveBeenCalledWith('MacroList', '["local"]');
+    // Early return: no decrypt, no repairs.
+    expect(ks.setDksTravel).not.toHaveBeenCalled();
+    expect(ks.saveCustomLighting).not.toHaveBeenCalled();
+  });
+
+  it('importConfig {success:false, error:"boom"} → error "boom" + MacroList restored', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    ks.importConfig.mockResolvedValueOnce({ success: false, error: 'boom' });
+
+    const result = await runImport(makeEncryptedFile(makeImportConfig()));
+
+    expect(result).toEqual({ success: false, error: 'boom' });
+    expect(ls.setItem).toHaveBeenCalledWith('MacroList', '["local"]');
+  });
+
+  it('importConfig {success:false} with no error field → "Import failed" + MacroList restored', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    ks.importConfig.mockResolvedValueOnce({ success: false });
+
+    const result = await runImport(makeEncryptedFile(makeImportConfig()));
+
+    expect(result).toEqual({ success: false, error: 'Import failed' });
+    expect(ls.setItem).toHaveBeenCalledWith('MacroList', '["local"]');
+  });
+
+  it('absent MacroList (null snapshot) → removeItem called, not setItem (F-R1 else-branch)', async () => {
+    // Empty presets → getItem returns null for any key (helper: store.has check).
+    const ls = makeLocalStorage({});
+    vi.stubGlobal('localStorage', ls);
+
+    const result = await runImport(makeEncryptedFile(makeImportConfig()));
+
+    expect(result).toEqual({ success: true });
+    // Snapshot was null → finally must REMOVE (not write back null).
+    expect(ls.removeItem).toHaveBeenCalledWith('MacroList');
+    expect(ls.setItem).not.toHaveBeenCalled();
+  });
+
+  it('garbage file text → decryptSDKConfig null → {success:true}, no repairs, logged, MacroList restored', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    const errSpy = vi.spyOn(console, 'error');
+    // SDK import itself succeeds; only the post-import decrypt/repairs are skipped.
+    const garbage = new File(['not json'], 'garbage.json', { type: 'application/json' });
+
+    const result = await runImport(garbage);
+
+    expect(result).toEqual({ success: true });
+    expect(errSpy).toHaveBeenCalledWith('Failed to decrypt SDK export:', expect.any(Error));
+    // config === null → repair block skipped entirely; but the F-R1 finally still ran.
+    expect(ks.setDksTravel).not.toHaveBeenCalled();
+    expect(ks.setSocd).not.toHaveBeenCalled();
+    expect(ks.setCustomLighting).not.toHaveBeenCalled();
+    expect(ks.saveCustomLighting).not.toHaveBeenCalled();
+    expect(ls.setItem).toHaveBeenCalledWith('MacroList', '["local"]');
+  });
+
+  // Spec 2b said "getLighting Error → console.error('Failed to switch to custom mode:')".
+  // Source says otherwise (grep `async importProfile`): getLighting Error SKIPS the whole
+  // pre-switch block silently; that log fires only on setLighting Error. Both branches
+  // pinned here, source-faithful (2a precedent).
+  it('pre-switch getLighting Error → setLighting NOT called, no log, import CONTINUES {success:true}', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    const errSpy = vi.spyOn(console, 'error');
+    ks.getLighting.mockResolvedValueOnce(new Error('read failed'));
+
+    const result = await runImport(makeEncryptedFile(makeImportConfig()));
+
+    expect(result).toEqual({ success: true });
+    // Pre-switch skipped: NO setLighting before importConfig. (Shape can't discriminate —
+    // ensureCustomModeReady re-issues the same mode-21/custom switch during RGB repair;
+    // only invocation ORDER distinguishes the pre-switch.)
+    expect(ks.setLighting.mock.invocationCallOrder[0] ?? Infinity).toBeGreaterThan(
+      ks.importConfig.mock.invocationCallOrder[0]
+    );
+    expect(errSpy).not.toHaveBeenCalledWith('Failed to switch to custom mode:', expect.anything());
+    // Import proceeded normally — first repair fired.
+    expect(ks.setDksTravel).toHaveBeenCalledWith(65, 33, 'Layout_DB3');
+  });
+
+  it('pre-switch setLighting Error → logs "Failed to switch to custom mode:", skips 250ms settle, import CONTINUES', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    const errSpy = vi.spyOn(console, 'error');
+    ks.setLighting.mockResolvedValueOnce(new Error('switch refused'));
+
+    const result = await runImport(makeEncryptedFile(makeImportConfig()));
+
+    expect(result).toEqual({ success: true });
+    expect(errSpy).toHaveBeenCalledWith('Failed to switch to custom mode:', 'switch refused');
+    // Error branch skips the settle sleep — the trailing repair setLighting still lands.
+    expect(ks.setLighting).toHaveBeenCalledWith(SDK_FORMAT_STATIC);
+    expect(ks.setDksTravel).toHaveBeenCalledWith(65, 33, 'Layout_DB3');
+  });
 });

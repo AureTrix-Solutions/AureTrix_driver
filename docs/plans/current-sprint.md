@@ -13,7 +13,7 @@
 - Scoping settled at plan time (no open PO decisions): one export test file built incrementally (1c→1e), one import file (2a→2d), roundtrip separate (2e); Reviewer runs ONCE per task group over the cumulative diff; NO [hw] tasks — everything is headless software-contract pinning; mocks never claim device behavior. PO scope directive honored: Phase 2 only; Phase 3 untouched in backlog.
 
 ## ▶ RUN THIS
-Next: WORKER session — do Task 1f (small fix-task from a routed Finding, spec below in ## Tasks): strengthen the export suite's F-D7-2 assertion so it is non-vacuous (one new additive test in ExportService.export.test.ts). Then Task 2a per its spec: create `src/services/__tests__/ExportService.import.test.ts` (same F1 header as the export suite), importProfile happy path + guards. Both in ONE session is acceptable (1f is ~15 lines); separate commits per task. Build INCREMENTALLY (one describe/it per Edit, ≤40 new lines per generation); checkpoint into this file.
+Next: WORKER session (fresh window) — Task 2a per its spec in ## Tasks: create `src/services/__tests__/ExportService.import.test.ts` (same F1 header as the export suite), importProfile happy path + guards. Build INCREMENTALLY (one describe/it per Edit, ≤40 new lines per generation); checkpoint into this file.
 Build every test file INCREMENTALLY: one describe/it block per Edit (~≤40 new lines per generation); never one big Write. Commit at the end of each sub-task.
 
 ## Shared verified facts (PM-open 2026-10-25, all grep/read-verified — Worker APPLIES, never re-derives)
@@ -55,24 +55,10 @@ V12 EXPECTED customKeys: key65 `{fn0:{keyValue:65,bindKeyValue:100}, fn1:null, f
 - Findings outside scope → ONE line in `## Findings` below, carry on.
 
 ## Tasks
-1f. **F-D7-2 non-vacuity fix (routed from Findings — Reviewer Task-1 PASS finding)** — [high-stakes] — STATUS: PENDING — one additive test, no source changes.
-   - File: `src/services/__tests__/ExportService.export.test.ts` ONLY (ExportService.ts and helpers untouched).
-   - Why: export flow calls `getLighting` exactly TWICE — snapshot `originalLighting` (grep `originalLighting = await KeyboardService.getLighting`) then the post-switch re-read inside gatherLightingConfig (grep `const lighting = await KeyboardService.getLighting`). The snapshot value wins for `light.main` via the F-D7-2 overwrite (grep `F-D7-2` in ExportService.ts). Fixture gives V1 on every call → the happy-path assertion passes with or without the overwrite.
-   - Edit: in `describe('exportProfile')`, append one new `it` after the happy-path test (~15 new lines; imports makeLightMode/LIGHT_STATIC_CFG/runExport already present):
-     ```ts
-     it('F-D7-2 pinned: light.main converts the PRE-switch snapshot, not the post-switch re-read', async () => {
-       ks.getLighting
-         .mockResolvedValueOnce({ ...LIGHT_STATIC, colors: [...LIGHT_STATIC.colors] }) // snapshot (pre-switch)
-         .mockResolvedValueOnce(makeLightMode({ mode: 21, type: 'custom', speed: 61 })); // gatherLightingConfig re-read
-       const result = await runExport();
-       expect(result).toEqual({ success: true });
-       const [config] = ks.exportConfig.mock.calls[0];
-       expect(config.light.main).toEqual(LIGHT_STATIC_CFG);
-     });
-     ```
-     Helpers' `freshLightStatic` is PRIVATE (not exported — grep `const freshLightStatic`); use the inline spread above. Do NOT mutate shared LIGHT_STATIC and do NOT touch helpers.
-   - Done when: `npx vitest run src/services/__tests__/ExportService.export.test.ts` exit 0 (43/43); typecheck 0; lint 0; AND mutation check: temporarily comment the overwrite line (grep `light.main = this.convertLightingToConfig`) → the NEW test FAILS (main = mode 21/speed 61 conversion) → restore → PASSES → `git diff src/services/ExportService.ts` EMPTY at commit. Commit `sprint-21-test-exportservice: Task 1f — F-D7-2 non-vacuity test`; checkpoint one line here.
-   - Review: verified by the Task-2 Reviewer window over the cumulative diff (re-runs the mutation check); Task 1 stays DONE, review-export-side.md unchanged.
+1f. **F-D7-2 non-vacuity fix (routed from Findings)** — [high-stakes] — STATUS: IN-REVIEW — one additive test, no source changes.
+   - Worker done 2026-10-27, commit `b094779`: one `it('F-D7-2 pinned: light.main converts the PRE-switch snapshot…')` appended after the happy path in ExportService.export.test.ts (`describe('exportProfile')`) — seeds `getLighting` twice (V1 static snapshot → `makeLightMode({mode:21,type:'custom',speed:61})` gather re-read), asserts `exportConfig.mock.calls[0][0].light.main` === LIGHT_STATIC_CFG. Helpers/ExportService.ts untouched; inline spread used (`freshLightStatic` is private).
+   - Self-check: file 43/43, full suite 66/66, typecheck 0, lint 0. Mutation check per Done-when: commenting `light.main = this.convertLightingToConfig(originalLighting)` (ExportService.ts, grep it) fails ONLY the new test (`mode:'custom'` leaked vs `'static'`) → restored, `git diff --stat` showed only the test file (+12) at commit.
+   - Review: folded into the Task-2 Reviewer window over the cumulative diff — RE-RUN the mutation check above; Task 1 stays DONE, review-export-side.md unchanged.
 2. **Import-side + round-trip suite** — [high-stakes] — STATUS: PENDING — unblocked (Task 1 Reviewer PASS 2026-10-27; sequential 2a→2e, own commits; Reviewer ONCE after 2e over cumulative base..head)
    - Files: `src/services/__tests__/ExportService.import.test.ts` (2a–2d), `src/services/__tests__/ExportService.roundtrip.test.ts` (2e)
    - **2a importProfile happy + guards** — create ExportService.import.test.ts (same F1 header): stubGlobal localStorage (makeLocalStorage, MacroList preset `'["local"]'`); importConfig resolves `{success:true}`; File stub = makeEncryptedFile(makeConfig()); fake timers (250+1000ms) → `{success:true}`; setLighting call #1 = PRE_SWITCH_EXPECTED (V5); MacroList restored `'["local"]'` after success; repairs ran (assert setters called: setDksTravel(65,33,'Layout_DB3'), setDp/setDr, setSpecialLighting(SDK_FORMAT_STATIC), setSocd 7-field '1.0.7', setEND({key:65,dks:3,delay:250},'1.0.7'), setCustomLighting×2 keys, setLighting LAST = SDK_FORMAT_STATIC — repair ORDER via setLighting/setSpecialLighting/setLogoLighting call sequence: mainLighting repair strictly last); saveCustomLighting called. Done when: vitest exit 0; typecheck 0.

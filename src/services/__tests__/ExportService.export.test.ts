@@ -346,3 +346,193 @@ describe('gatherKeyboardSnapshot logo/special restore payload details', () => {
     expect(errorSpy()).toHaveBeenCalledWith('Error restoring original lighting:', expect.any(Error));
   });
 });
+
+// ---- Part E (Task 1e): per-key gather details — retry semantics, cache, mode map, gates ----
+
+// Helper: run exportProfile and capture the config object passed to exportConfig.
+async function runExportCaptured(filename = 'profile.json') {
+  await runExport(filename);
+  expect(ks.exportConfig).toHaveBeenCalledTimes(1);
+  return ks.exportConfig.mock.calls[0][0] as ReturnType<typeof makeConfig>;
+}
+
+describe('retryWithBackoff throw path (F2) — performance gather', () => {
+  it('getPerformanceMode rejects → 3 calls total per key, gather still resolves with defaults, console.error', async () => {
+    ks.getPerformanceMode.mockRejectedValue(new Error('perf boom'));
+
+    const config = await runExportCaptured();
+
+    expect(ks.getPerformanceMode).toHaveBeenCalledTimes(6); // 2 keys × (1 + 2 retries)
+    expect(errorSpy()).toHaveBeenCalledWith('Error gathering performance data for key 65:', expect.any(Error));
+    // The perf pass aborted at the FIRST read — everything after it in that key's
+    // pass never ran; the seed defaults survive untouched.
+    const key65 = config.keyboards.find((k) => k.keyValue === 65)!;
+    expect(key65.performance).toEqual({
+      isGlobalTriggering: true,
+      globalTriggeringValue: 0,
+      isRt: false,
+      isSingle: false,
+      singleTriggeringValue: 0,
+      rtPressValue: 0,
+      rtReleaseValue: 0,
+      axisID: 0,
+      deadBandPressValue: 0,
+      deadBandReleaseValue: 0,
+      advancedKeyMode: 0,
+    });
+    // Export overall still succeeds — a gather failure is swallowed per-key.
+    expect(ks.exportConfig).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolved Error passes through WITHOUT retry — getRtTravel Error → 1 call per key, travel fields keep defaults', async () => {
+    ks.getRtTravel.mockResolvedValue(new Error('rt rejected'));
+
+    const config = await runExportCaptured();
+
+    // retryWithBackoff only retries THROWS; a resolved Error is a normal return value.
+    expect(ks.getRtTravel).toHaveBeenCalledTimes(2); // once per key, no retries
+    const key65 = config.keyboards.find((k) => k.keyValue === 65)!;
+    expect(key65.performance!.rtPressValue).toBe(0);
+    expect(key65.performance!.rtReleaseValue).toBe(0);
+    // Reads after the Error still ran (guard skips assignment, not the pass).
+    expect(key65.performance!.isRt).toBe(true);
+    expect(key65.performance!.singleTriggeringValue).toBe(77);
+  });
+});
+
+describe('globalTravelCache — read once per snapshot', () => {
+  it('getGlobalTouchTravel called exactly once for 2 keys (cache hit on second key)', async () => {
+    const config = await runExportCaptured();
+
+    expect(ks.getGlobalTouchTravel).toHaveBeenCalledTimes(1);
+    for (const key of config.keyboards) {
+      expect(key.performance!.globalTriggeringValue).toBe(55);
+    }
+  });
+
+  it('getGlobalTouchTravel resolves Error → cache stays null → globalTriggeringValue 0 for every key', async () => {
+    ks.getGlobalTouchTravel.mockResolvedValue(new Error('global boom'));
+
+    const config = await runExportCaptured();
+
+    // Error is not cached (cache assignment is guarded), so each key re-reads — 2 calls.
+    expect(ks.getGlobalTouchTravel).toHaveBeenCalledTimes(2);
+    for (const key of config.keyboards) {
+      expect(key.performance!.globalTriggeringValue).toBe(0);
+    }
+  });
+});
+
+describe('touchMode flag mapping', () => {
+  it.each([
+    ['global', { isGlobalTriggering: true, isRt: false, isSingle: false }],
+    ['single', { isGlobalTriggering: false, isRt: false, isSingle: true }],
+    ['rt', { isGlobalTriggering: false, isRt: true, isSingle: false }],
+  ])('touchMode %s maps to its flag set', async (touchMode, flags) => {
+    ks.getPerformanceMode.mockResolvedValue({ touchMode, advancedKeyMode: 1 });
+
+    const config = await runExportCaptured();
+
+    for (const key of config.keyboards) {
+      expect(key.performance).toMatchObject(flags);
+    }
+  });
+
+  it('getPerformanceMode resolves Error → flags block skipped, isGlobalTriggering stays true (seed default)', async () => {
+    ks.getPerformanceMode.mockResolvedValue(new Error('mode boom'));
+
+    const config = await runExportCaptured();
+
+    // No throw → no retry; the instanceof guard skips the flags block.
+    expect(ks.getPerformanceMode).toHaveBeenCalledTimes(2);
+    for (const key of config.keyboards) {
+      expect(key.performance!.isGlobalTriggering).toBe(true);
+      expect(key.performance!.isRt).toBe(false);
+      expect(key.performance!.isSingle).toBe(false);
+    }
+  });
+});
+
+describe('ADVANCED_KEY_MODE_MAP edges + advanced-key gates', () => {
+  it('advancedKeyMode 7 (no map entry) → advancedType none/value 7; mode 9 → rs/value 9', async () => {
+    ks.getPerformanceMode.mockImplementation(async (key: number) => ({
+      touchMode: 'rt',
+      advancedKeyMode: key === 65 ? 7 : 9,
+    }));
+
+    const config = await runExportCaptured();
+
+    const key65 = config.keyboards.find((k) => k.keyValue === 65)!;
+    const key66 = config.keyboards.find((k) => k.keyValue === 66)!;
+    expect(key65.advancedKeys!.advancedType).toBe('none');
+    expect(key65.advancedKeys!.value).toBe(7);
+    expect(key66.advancedKeys!.advancedType).toBe('rs');
+    expect(key66.advancedKeys!.value).toBe(9);
+  });
+
+  it('dks block omitted when trpsAll resolves Error (F8 both-gate); other sub-blocks intact', async () => {
+    ks.getTrpsAll.mockResolvedValue(new Error('trps boom'));
+
+    const config = await runExportCaptured();
+
+    for (const key of config.keyboards) {
+      expect(key.advancedKeys!.dks).toBeUndefined();
+      // Gate is dks-specific: siblings still stored from the default mocks.
+      expect(key.advancedKeys!.mpt).toEqual({ mpt: 1 });
+      expect(key.advancedKeys!.socd).toEqual({ pos1: 1, pos2: 2, key1: 3, key2: 4, type: 0, mode: 1, delay: 150 });
+      // advancedType/value derive from the mode id (1), not from the dks read.
+      expect(key.advancedKeys!.advancedType).toBe('dks');
+      expect(key.advancedKeys!.value).toBe(1);
+    }
+  });
+
+  it('dbN reads resolve Error → stored as 0 (db/db2/db3)', async () => {
+    ks.getDksTravel.mockResolvedValue(new Error('travel boom'));
+
+    const config = await runExportCaptured();
+
+    for (const key of config.keyboards) {
+      expect(key.advancedKeys!.dks).toEqual({
+        dks: { 1: 1, 2: 2, 3: 3, 4: 4 },
+        trps: { 1: 5, 2: 6, 3: 7, 4: 8 },
+        db: 0,
+        db2: 0,
+        db3: 0,
+      });
+    }
+  });
+
+  it('mt delay stored AS-IS in ms (150) with dksAll [9,8,7,6]', async () => {
+    const config = await runExportCaptured();
+
+    for (const key of config.keyboards) {
+      expect(key.advancedKeys!.mt).toEqual({ dksAll: [9, 8, 7, 6], delay: 150 });
+    }
+  });
+
+  it('getMtorTgl resolves Error → mt.delay 0 (dksAll still stored)', async () => {
+    ks.getMtorTgl.mockResolvedValue(new Error('mtorTgl boom'));
+
+    const config = await runExportCaptured();
+
+    for (const key of config.keyboards) {
+      expect(key.advancedKeys!.mt).toEqual({ dksAll: [9, 8, 7, 6], delay: 0 });
+    }
+  });
+
+  it('fn bindings (V12): layer-0 value 100 → key65 bind; undefined → key66 fn0 null', async () => {
+    const config = await runExportCaptured();
+
+    const key65 = config.keyboards.find((k) => k.keyValue === 65)!;
+    const key66 = config.keyboards.find((k) => k.keyValue === 66)!;
+    expect(key65.customKeys).toEqual({
+      fn0: { keyValue: 65, bindKeyValue: 100 },
+      fn1: null,
+      fn2: null,
+      fn3: null,
+    });
+    expect(key66.customKeys).toEqual({ fn0: null, fn1: null, fn2: null, fn3: null });
+    // 4 fn layers × 1 batch each (2 keys < batchSize 10).
+    expect(ks.getLayoutKeyInfo).toHaveBeenCalledTimes(4);
+  });
+});

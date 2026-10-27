@@ -59,6 +59,18 @@ describe('exportProfile', () => {
     expect(config).toEqual(makeConfig());
   });
 
+  it('F-D7-2 pinned: light.main converts the PRE-switch snapshot, not the post-switch re-read', async () => {
+    ks.getLighting
+      .mockResolvedValueOnce({ ...LIGHT_STATIC, colors: [...LIGHT_STATIC.colors] }) // snapshot (pre-switch)
+      .mockResolvedValueOnce(makeLightMode({ mode: 21, type: 'custom', speed: 61 })); // gatherLightingConfig re-read
+
+    const result = await runExport();
+
+    expect(result).toEqual({ success: true });
+    const [config] = ks.exportConfig.mock.calls[0];
+    expect(config.light.main).toEqual(LIGHT_STATIC_CFG);
+  });
+
   it('returns {success:false, error} when exportConfig resolves an Error', async () => {
     ks.exportConfig.mockResolvedValue(new Error('sdk rejected'));
 

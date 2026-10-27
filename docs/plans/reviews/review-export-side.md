@@ -46,6 +46,31 @@ n/a — headless suite, no device behavior claimed. All KeyboardService interact
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** PASS / PASS (pending hw) / FAIL  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** PASS  ·  **Date:** 2026-10-27  ·  **Fail count:** 0
+
+Reviewed cumulative base `b47d2b7`..head `5d77876` (10 commits, incl. PM-open plan commit and 5× checkpoint commits; deliverables: `exportservice-helpers.ts` +352, `ExportService.export.test.ts` +538). One independent read pass of both files + ExportService.ts, then re-ran all gates.
+
+### Done-when criteria (all rerun by Reviewer)
+- 1a: `grep -c "vi.fn()" exportservice-helpers.ts` = **35** (≥35 ✓); typecheck 0 ✓; lint 0 ✓
+- 1b: `grep -c "^export" exportservice-helpers.ts` = **20** (≥12 ✓); typecheck 0 ✓; lint 0 ✓
+- 1c/1d/1e: `npx vitest run src/services/__tests__/ExportService.export.test.ts` → **42/42 passed, exit 0** ✓; `npm run typecheck` exit 0 ✓; `npm run lint` exit 0 ✓; full `npm run test:run` → **65/65 passed, exit 0** ✓
+- Review file present with sprint goal + Done-when list + hashes + Hardware check "n/a — headless suite, no device behavior claimed" ✓
+
+### Correctness spot-checks (test assertions vs ExportService.ts source)
+- **Worker-flagged deviation RESOLVED in Worker's favor:** spec 1e said retry-throw → "3 calls total"; the test pins **3 calls PER KEY (6 total, 2 keys)**. Source is authoritative: `retryWithBackoff` loops `attempt <= maxRetries(2)` = 3 attempts per call site, and `gatherPerformanceData` calls it per key. The spec line was wrong; the test is source-faithful. Not a defect.
+- Resolved-Error pass-through (no retry): `retryWithBackoff` only retries on *throw*; resolved `Error` instances return untouched → getRtTravel called once per key. Test matches.
+- `globalTravelCache`: `null`-check + Error-not-cached → re-read per key, `?? 0` fallback. Test matches.
+- TouchMode seed: `isGlobalTriggering: true` survives an Error from getTouchMode (guard skips assignment). Test matches.
+- F8 dks both-gate: `!(dksAll instanceof Error) && dksAll && !(trpsAll instanceof Error) && trpsAll` → trpsAll Error omits dks only; mpt/socd untouched. Test matches.
+- mt delay pinned **150 AS-IS** (no ÷10) — the round-trip bug class the plan warned about. Test matches.
+- F-D7-2 pre-switch source for light.main, temp-switch/finally-restore choreography, RESTORE_MAIN payload (V1 minus dynamicColorId), logo type-normalization, verbatim special restore, console.error text per branch — all verified line-for-line against source.
+- Mock header matches F1: 35 methods 1:1, explicit vitest imports, fake-timer `runExport` pattern, spy restore in afterEach, `unstubAllGlobals`.
+
+### Findings (non-defect observations, alongside PASS)
+1. **F-D7-2 main-source assertion is weak in the happy fixture:** `getLighting` returns V1 on every call, so deleting `light.main = convert(originalLighting)` in `gatherLightingConfig` would NOT fail any test — re-read and pre-switch sources are indistinguishable. A variant where the second `getLighting` call returns a different value would pin it. Spec 1c dictated exactly this assertion, so not a FAIL item → routed to `## Findings` in current-sprint.md for PM routing (Task 2 or backlog).
+2. `makeKeyboardEntry` selects customKeys via `overrides.keyValue === 66` — couples the builder to canonical key values; fine for this fixture set.
+
+No inline-fixable defects (QA tier) found at IN-REVIEW: files read clean, lint 0, typecheck 0.
 
 ### Failed items (FAIL only)
+None — PASS.

@@ -9,6 +9,7 @@ vi.mock('../KeyboardService', async () => {
 
 import KeyboardService from '../KeyboardService';
 import ExportService from '../ExportService';
+import type { KeyboardConfig, Keyboards } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
 import {
   applyExportDefaults,
   makeConfig,
@@ -35,6 +36,23 @@ async function runImport(file: File) {
     await vi.runAllTimersAsync();
     return await pending;
   } finally {
+    vi.useRealTimers();
+  }
+}
+
+// runImport variant that captures setTimeout calls for the 2c sleep pins
+// (ensureCustomModeReady 400ms backoff, writeVerifiedCustomRgb 200/400ms).
+// Spy installed AFTER useFakeTimers so it wraps the fake — runAllTimersAsync
+// still drives every sleep; mockRestore before useRealTimers.
+async function runImportSpyingTimers(file: File) {
+  vi.useFakeTimers();
+  const timerSpy = vi.spyOn(globalThis, 'setTimeout');
+  try {
+    const pending = ExportService.importProfile(file);
+    await vi.runAllTimersAsync();
+    return { result: await pending, timerSpy };
+  } finally {
+    timerSpy.mockRestore();
     vi.useRealTimers();
   }
 }

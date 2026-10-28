@@ -33,18 +33,29 @@ Fix-round ranges (added on each re-review): —
 n/a — headless suite; mocks pin SOFTWARE contracts only, no device behavior verified.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
-- [ ] Task-1f mutation check RE-RUN (comment the `light.main =` line → only the 1f test fails → restore byte-identical)
+- [x] meets every "DONE WHEN" criterion above — 1f (+12 lines, PRE_SWITCH/POST_CUSTOM seeds, light.main pin) and 2a–2e all verified line-by-line against the diff; every named assertion present with the exact spec'd values (setSocd 7-field EXPECTED_ADV.socd '1.0.7', setEND {key:65,dks:3,delay:250}, mt delay 150 AS-IS in capture AND in the test-side real-CryptoJS decrypt of the encrypted file, nested flat() via repairs on both keys, ensureCustomModeReady SUCCESS/RETRY-400ms/EXHAUSTED with exact log text, writeVerifiedCustomRgb FAIL/OK-after-retry/readback-Error exact messages, 2d gate its deadband/socd/end/db3/light-both-sides + setter-Error sweep)
+- [x] diff scope matches the task (no stray files) — `git diff --stat 210c88c..b2605f6`: exactly 4 files (current-sprint.md, export.test.ts +12, import.test.ts +659, roundtrip.test.ts +171); NO source files touched
+- [x] no design-intent violation — test-only change; wrappers-return-Error contract is what the sweep/guard its pin, nothing bypasses it; no device filters or usagePage changes
+- [x] typecheck/build gate met — `npm run typecheck` exit 0, `npm run lint` exit 0 (re-run by Reviewer); full suite `npx vitest run` 96/96 across 7 files
+- [x] tag is correct — [high-stakes] (logic/behavior pinning, multi-file); matches the work
+- [x] Task-1f mutation check RE-RUN — commented ExportService.ts:491 `light.main = this.convertLightingToConfig(originalLighting);` → export suite: 1 failed | 42 passed, the ONLY failure being `F-D7-2 pinned: light.main converts the PRE-switch snapshot, not the post-switch re-read` → restored byte-identical (`git status --short` + `git diff --stat` both empty; re-run 43/43). Non-vacuity proven.
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** —  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-10-28  ·  **Fail count:** 0
 
 ### Failed items (FAIL only)
+None.
+
+### Evidence summary (Reviewer-run)
+- `npx vitest run` → Test Files 7 passed, Tests 96 passed.
+- `npm run typecheck` → exit 0; `npm run lint` → exit 0.
+- Mutation check (1f): comment source line → only the F-D7-2 test fails → restore → tree byte-identical, 43/43.
+
+### Findings (non-defect observations, for the PM/backlog)
+1. The 2b pre-switch getLighting-Error test (import.test.ts `pre-switch getLighting Error → setLighting NOT called…`) pins NO console.error on that path, while the sibling setLighting-Error test pins `"Failed to switch to custom mode:"`. A spec-2b misread would easily "fix" the log assertion onto the wrong branch — verify: grep `Failed to switch to custom mode` in ExportService.ts and confirm it sits in the setLighting-error catch only.
+2. The mt-delay pin asserts `EXPECTED_ADV.mt` on BOTH the captured config and the decrypted file, but EXPECTED_ADV.mt.delay is the same 150 either way — a future ÷10 regression at export would be caught, but a ×10 at import-decrypt would not (decrypt is test-side real CryptoJS, so import-side scaling bugs are out of this suite's reach by design). Verify: grep `mt.delay` / `÷` / `/ 10` in ExportService.ts import path if Phase 3 ever touches delay conversion.
+3. Hardware check: n/a — headless suite, no [hw] tag; mocks pin SOFTWARE contracts only.

@@ -9,7 +9,7 @@ vi.mock('../KeyboardService', async () => {
 
 import KeyboardService from '../KeyboardService';
 import ExportService from '../ExportService';
-import type { KeyboardConfig, Keyboards } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
+import type { Keyboards } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
 import {
   applyExportDefaults,
   makeConfig,
@@ -40,17 +40,18 @@ async function runImport(file: File) {
   }
 }
 
-// runImport variant that captures setTimeout calls for the 2c sleep pins
+// runImport variant that captures setTimeout delays for the 2c sleep pins
 // (ensureCustomModeReady 400ms backoff, writeVerifiedCustomRgb 200/400ms).
 // Spy installed AFTER useFakeTimers so it wraps the fake — runAllTimersAsync
-// still drives every sleep; mockRestore before useRealTimers.
+// still drives every sleep. Delays are SNAPSHOTTED inside the try: mockRestore
+// in the finally clears mock.calls, so returning the live spy reads back [].
 async function runImportSpyingTimers(file: File) {
   vi.useFakeTimers();
   const timerSpy = vi.spyOn(globalThis, 'setTimeout');
   try {
     const pending = ExportService.importProfile(file);
     await vi.runAllTimersAsync();
-    return { result: await pending, timerSpy };
+    return { result: await pending, delays: timerSpy.mock.calls.map(c => c[1] as number) };
   } finally {
     timerSpy.mockRestore();
     vi.useRealTimers();
@@ -240,5 +241,199 @@ describe('importProfile', () => {
     // Error branch skips the settle sleep — the trailing repair setLighting still lands.
     expect(ks.setLighting).toHaveBeenCalledWith(SDK_FORMAT_STATIC);
     expect(ks.setDksTravel).toHaveBeenCalledWith(65, 33, 'Layout_DB3');
+  });
+
+  // ---- Task 2c: decryptSDKConfig flatten + RGB-repair state machine ----
+
+  it('nested keyboards [[e65],[e66]] → decryptSDKConfig flattens → both keys RGB-repaired', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    // SDK exports have shipped keyboards as nested arrays; decryptSDKConfig
+    // flattens (cfg.keyboards.flat()) so repairCustomRgb sees real entries.
+    // Without the flatten, entries would be arrays → light undefined → skipped.
+    const cfg = makeConfig({
+      keyboards: [
+        [makeKeyboardEntry({ keyValue: 65, row: 0, col: 0 })],
+        [makeKeyboardEntry({ keyValue: 66, row: 0, col: 1 })],
+      ] as unknown as Keyboards[],
+    });
+
+    const result = await runImport(makeEncryptedFile(cfg));
+
+    expect(result).toEqual({ success: true });
+    expect(ks.setCustomLighting).toHaveBeenCalledWith({ key: 65, r: 1, g: 2, b: 3 });
+    expect(ks.setCustomLighting).toHaveBeenCalledWith({ key: 66, r: 1, g: 2, b: 3 });
+  });
+
+  it('no valid custom.R (non-number) → rgbMap empty → ensure SKIPPED, saveCustomLighting still runs', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    // repairCustomRgb filters entries whose light.custom.R is not a number;
+    // with an empty rgbMap it returns BEFORE ensureCustomModeReady, so the
+    // import path's ONLY getLighting call is the pre-switch probe.
+    const cfg = makeConfig({
+      keyboards: [
+        makeKeyboardEntry({ keyValue: 65, row: 0, col: 0, light: { custom: { R: 'x' as unknown as number, G: 2, B: 3, key: 65 } } }),
+        makeKeyboardEntry({ keyValue: 66, row: 0, col: 1, light: { custom: { R: 'y' as unknown as number, G: 2, B: 3, key: 66 } } }),
+      ],
+    });
+
+    const result = await runImport(makeEncryptedFile(cfg));
+
+    expect(result).toEqual({ success: true });
+    expect(ks.getLighting).toHaveBeenCalledTimes(1); // pre-switch only — no ensure probes
+    expect(ks.setCustomLighting).not.toHaveBeenCalled();
+    expect(ks.saveCustomLighting).toHaveBeenCalledTimes(1); // unconditional after repairs
+  });
+
+  it('ensureCustomModeReady: probe reads mode 21 → immediate success, NO re-command, NO 400ms backoff', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    // Device already reports custom mode when the repair probes it.
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    const { result, delays } = await runImportSpyingTimers(makeEncryptedFile(makeImportConfig()));
+    expect(result).toEqual({ success: true });
+    // getLighting: pre-switch probe + exactly 1 ensure probe (mode 21 → return true).
+    expect(ks.getLighting).toHaveBeenCalledTimes(2);
+    // setLighting: pre-switch + trailing main-lighting repair only — ensure
+    // issues no mode re-command when the first probe already reads 21.
+    expect(ks.setLighting).toHaveBeenCalledTimes(2);
+    // No 400ms ensure-backoff sleep (only the fixed 250 settle + 1000 wait + batch delays).
+    expect(delays).not.toContain(400);
+    expect(delays).toContain(250); // sanity: the spy DOES capture sleeps
+    expect(ks.setCustomLighting).toHaveBeenCalledWith({ key: 65, r: 1, g: 2, b: 3 });
+  });
+
+  it('ensureCustomModeReady retry: probe mode 0 → re-command → 400ms sleep → probe mode 21 → success', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    // Import path getLighting order: pre-switch probe, then ensure probes.
+    // Ensure probe #1 reads mode 0 (not settled yet) → re-command + 400×1 sleep;
+    // probe #2 reads 21 → true. No exhausted log.
+    ks.getLighting
+      .mockResolvedValueOnce(makeLightMode({ mode: 0, type: 'static' })) // pre-switch
+      .mockResolvedValueOnce(makeLightMode({ mode: 0, type: 'static' })) // ensure probe 1
+      .mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));   // ensure probe 2+
+    // console.error already spied+silenced by beforeEach; afterEach restores.
+    const errSpy = console.error as unknown as ReturnType<typeof vi.fn>;
+    const { result, delays } = await runImportSpyingTimers(makeEncryptedFile(makeImportConfig()));
+    expect(result).toEqual({ success: true });
+    // 3 probes total (pre-switch + 2 ensure), not 5 — retry succeeded on attempt 2.
+    expect(ks.getLighting).toHaveBeenCalledTimes(3);
+    // Exactly ONE ensure re-command: pre-switch + re-command + main-lighting repair = 3.
+    expect(ks.setLighting).toHaveBeenCalledTimes(3);
+    // Re-command is post-import (order discriminator from 2b).
+    const reCommandOrder = ks.setLighting.mock.invocationCallOrder[1];
+    expect(reCommandOrder).toBeGreaterThan(ks.importConfig.mock.invocationCallOrder[0]);
+    // One 400ms backoff (attempt 1); no second-attempt 800.
+    expect(delays).toContain(400);
+    expect(delays).not.toContain(800);
+    expect(errSpy).not.toHaveBeenCalledWith(
+      'Custom mode not confirmed after import settle window; RGB writes proceed best-effort'
+    );
+    expect(ks.setCustomLighting).toHaveBeenCalledWith({ key: 65, r: 1, g: 2, b: 3 });
+  });
+
+  it('ensureCustomModeReady exhausted: all probes mode 0 → 5 probes/4 re-commands, 400+800+1200+1600 backoffs, exhausted log, RGB still best-effort', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    // applyExportDefaults getLighting is mode 0 → every ensure probe fails;
+    // attempt 5 BREAKS before re-commanding (5 probes, only 4 re-commands).
+    const errSpy = console.error as unknown as ReturnType<typeof vi.fn>;
+    const { result, delays } = await runImportSpyingTimers(makeEncryptedFile(makeImportConfig()));
+    expect(result).toEqual({ success: true }); // exhausted is non-fatal
+    // 6 getLighting = 1 pre-switch + 5 ensure probes.
+    expect(ks.getLighting).toHaveBeenCalledTimes(6);
+    // 6 setLighting = 1 pre-switch + 4 ensure re-commands + 1 main-lighting repair.
+    expect(ks.setLighting).toHaveBeenCalledTimes(6);
+    // Backoff 400×attempt after each non-final attempt: 400, 800, 1200, 1600.
+    expect(delays).toContain(400);
+    expect(delays).toContain(800);
+    expect(delays).toContain(1200);
+    expect(delays).toContain(1600);
+    expect(errSpy).toHaveBeenCalledWith(
+      'Custom mode not confirmed after import settle window; RGB writes proceed best-effort'
+    );
+    // Best-effort: RGB writes still fire despite the unconfirmed mode.
+    expect(ks.setCustomLighting).toHaveBeenCalledWith({ key: 65, r: 1, g: 2, b: 3 });
+  });
+
+  it('writeVerifiedCustomRgb verify FAIL: readback always 0:0:0 → 3 attempts/key, 200+400 sleeps/key, "Custom RGB verify failed" per key', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    // getCustomLighting default matches (1:2:3); make every readback mismatch
+    // so all 3 attempts exhaust per key and the final failure log fires.
+    ks.getCustomLighting.mockResolvedValue({ R: 0, G: 0, B: 0, key: 0 });
+    // Mode 21 immediately → ensure adds no 400ms backoff of its own, so the
+    // 200/400 delay counts below come purely from verify retries.
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    const errSpy = console.error as unknown as ReturnType<typeof vi.fn>;
+    const { result, delays } = await runImportSpyingTimers(makeEncryptedFile(makeImportConfig()));
+    expect(result).toEqual({ success: true }); // verify failure is non-fatal
+    // 2 keys × 3 attempts each (F2-2 sequential batching, size 1).
+    expect(ks.setCustomLighting).toHaveBeenCalledTimes(6);
+    // Backoff sleep 200×attempt only if attempt<3 → 200 + 400 per key.
+    expect(delays.filter(d => d === 200)).toHaveLength(2);
+    expect(delays.filter(d => d === 400)).toHaveLength(2);
+    // Final log per key: `Custom RGB verify failed for key N: expected r:g:b, read back R:G:B`.
+    expect(errSpy).toHaveBeenCalledWith('Custom RGB verify failed for key 65: expected 1:2:3, read back 0:0:0');
+    expect(errSpy).toHaveBeenCalledWith('Custom RGB verify failed for key 66: expected 1:2:3, read back 0:0:0');
+    expect(ks.saveCustomLighting).toHaveBeenCalledTimes(1);
+  });
+
+  it('writeVerifiedCustomRgb OK-after-retry: first readback mismatch, second matches → 2 attempts/key, one 200 sleep, no failure log', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    // Sequential keys (F2-2): k65 mismatch, k65 match, k66 mismatch, k66 match.
+    ks.getCustomLighting
+      .mockResolvedValueOnce({ R: 9, G: 9, B: 9, key: 65 })
+      .mockResolvedValueOnce({ R: 1, G: 2, B: 3, key: 65 })
+      .mockResolvedValueOnce({ R: 9, G: 9, B: 9, key: 66 })
+      .mockResolvedValueOnce({ R: 1, G: 2, B: 3, key: 66 });
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    const errSpy = console.error as unknown as ReturnType<typeof vi.fn>;
+    const { result, delays } = await runImportSpyingTimers(makeEncryptedFile(makeImportConfig()));
+    expect(result).toEqual({ success: true });
+    // Attempt 2 verifies → return before attempt 3: 2 writes per key.
+    expect(ks.setCustomLighting).toHaveBeenCalledTimes(4);
+    // One 200ms backoff per key (attempt 1 only); no 400 (attempt 2 verified).
+    expect(delays.filter(d => d === 200)).toHaveLength(2);
+    expect(delays.filter(d => d === 400)).toHaveLength(0);
+    expect(errSpy).not.toHaveBeenCalledWith(expect.stringContaining('Custom RGB verify failed'));
+  });
+
+  it('writeVerifiedCustomRgb error paths: setCustomLighting Error logs "Failed to restore"; readback Error → "readback error: <msg>" in final failure log', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    ks.setCustomLighting.mockResolvedValue(new Error('write refused'));
+    ks.getCustomLighting.mockResolvedValue(new Error('read fail'));
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    const errSpy = console.error as unknown as ReturnType<typeof vi.fn>;
+    const { result } = await runImportSpyingTimers(makeEncryptedFile(makeImportConfig()));
+    expect(result).toEqual({ success: true }); // best-effort, never throws
+    // 3 attempts per key despite the write Error each time.
+    expect(ks.setCustomLighting).toHaveBeenCalledTimes(6);
+    expect(errSpy).toHaveBeenCalledWith('Failed to restore custom RGB for key 65:', 'write refused');
+    expect(errSpy).toHaveBeenCalledWith('Failed to restore custom RGB for key 66:', 'write refused');
+    expect(errSpy).toHaveBeenCalledWith('Custom RGB verify failed for key 65: expected 1:2:3, readback error: read fail');
+    expect(errSpy).toHaveBeenCalledWith('Custom RGB verify failed for key 66: expected 1:2:3, readback error: read fail');
+  });
+
+  it('F2-2 sequential single-flight: key 66 write starts only after key 65 write+verify cycle completes', async () => {
+    const ls = makeLocalStorage();
+    vi.stubGlobal('localStorage', ls);
+    // repairCustomRgb → processBatches(keys, fn, 1, 0): batch size 1, no
+    // delay — one closed-loop write+verify per key, strictly in order.
+    const result = await runImport(makeEncryptedFile(makeImportConfig()));
+    expect(result).toEqual({ success: true });
+    const order = ks.setCustomLighting.mock.invocationCallOrder;
+    expect(order).toHaveLength(2);
+    expect(ks.setCustomLighting.mock.calls[0][0]).toEqual({ key: 65, r: 1, g: 2, b: 3 });
+    expect(ks.setCustomLighting.mock.calls[1][0]).toEqual({ key: 66, r: 1, g: 2, b: 3 });
+    // key 65's verify readback happens BEFORE key 66's write (single-flight).
+    const k65Read = ks.getCustomLighting.mock.invocationCallOrder[0];
+    expect(k65Read).toBeLessThan(order[1]);
+    expect(k65Read).toBeGreaterThan(order[0]);
+    expect(ks.getCustomLighting.mock.calls).toEqual([[65], [66]]);
   });
 });

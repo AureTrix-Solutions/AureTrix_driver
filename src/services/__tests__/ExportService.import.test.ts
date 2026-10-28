@@ -436,4 +436,224 @@ describe('importProfile', () => {
     expect(k65Read).toBeGreaterThan(order[0]);
     expect(ks.getCustomLighting.mock.calls).toEqual([[65], [66]]);
   });
+
+  // --- Task 2d: repair gates (each gate pinned from BOTH sides: fires / skipped) ---
+
+  it('deadband gate: isGlobalTriggering false → NO setDp/setDr, rest of flow intact', async () => {
+    vi.stubGlobal('localStorage', makeLocalStorage());
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    // Default makeConfig() entries carry EXPECTED_PERF with isGlobalTriggering
+    // === false (V10) → gate closed for BOTH keys (makeImportConfig flips it on).
+    const cfg = makeConfig();
+    const result = await runImport(makeEncryptedFile(cfg));
+    expect(result).toEqual({ success: true });
+    expect(ks.setDp).not.toHaveBeenCalled();
+    expect(ks.setDr).not.toHaveBeenCalled();
+    // Sanity: another repair DID run — this it is gate-specific, not a dead fixture.
+    // Default advancedType 'dks' + db3 33 → setDksTravel fires for both keys.
+    expect(ks.setDksTravel).toHaveBeenCalledTimes(2);
+  });
+
+  it('deadband gate: press non-number → NO setDp even with isGlobalTriggering true', async () => {
+    vi.stubGlobal('localStorage', makeLocalStorage());
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    // typeof deadBandPressValue === 'number' fails → key skipped BEFORE batching;
+    // setDr never reached (release is only called after press in the same batch fn).
+    const cfg = makeConfig({
+      keyboards: [
+        makeKeyboardEntry({
+          keyValue: 65, row: 0, col: 0,
+          performance: {
+            ...EXPECTED_PERF,
+            isGlobalTriggering: true,
+            deadBandPressValue: 'x' as unknown as number,
+          },
+        }),
+      ],
+    });
+    const result = await runImport(makeEncryptedFile(cfg));
+    expect(result).toEqual({ success: true });
+    expect(ks.setDp).not.toHaveBeenCalled();
+    expect(ks.setDr).not.toHaveBeenCalled();
+  });
+
+  it('deadband gate: press 0 → setDp(key,0) DOES fire (stale-clear, 0 values applied)', async () => {
+    vi.stubGlobal('localStorage', makeLocalStorage());
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    const cfg = makeConfig({
+      keyboards: [
+        makeKeyboardEntry({
+          keyValue: 65, row: 0, col: 0,
+          performance: { ...EXPECTED_PERF, isGlobalTriggering: true, deadBandPressValue: 0 },
+        }),
+      ],
+    });
+    const result = await runImport(makeEncryptedFile(cfg));
+    expect(result).toEqual({ success: true });
+    // 0 is NOT falsy-filtered: F14 "0 values applied — clears stale".
+    expect(ks.setDp).toHaveBeenCalledWith(65, 0);
+    expect(ks.setDr).toHaveBeenCalledWith(65, 40); // release from EXPECTED_PERF (40)
+    // press runs BEFORE release (F14 order).
+    expect(ks.setDp.mock.invocationCallOrder[0])
+      .toBeLessThan(ks.setDr.mock.invocationCallOrder[0]);
+  });
+
+  it('socd gate: wrong advancedType OR non-number delay → NO setSocd for that key', async () => {
+    vi.stubGlobal('localStorage', makeLocalStorage());
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    // key65: socd block present but advancedType 'mt' → gate closed on TYPE.
+    // key66: advancedType 'socd' but delay non-number → gate closed on DELAY.
+    const cfg = makeConfig({
+      keyboards: [
+        makeKeyboardEntry({
+          keyValue: 65, row: 0, col: 0,
+          advancedKeys: { ...EXPECTED_ADV, advancedType: 'mt' },
+        }),
+        makeKeyboardEntry({
+          keyValue: 66, row: 0, col: 1,
+          advancedKeys: {
+            ...EXPECTED_ADV,
+            advancedType: 'socd',
+            socd: { ...EXPECTED_ADV.socd, delay: 'x' },
+          },
+        }),
+      ],
+    });
+    const result = await runImport(makeEncryptedFile(cfg));
+    expect(result).toEqual({ success: true });
+    expect(ks.setSocd).not.toHaveBeenCalled();
+    // Sanity: socd-key fixture still exercises the END repair (key65 advancedType
+    // is 'mt', so END is gated off too — assert nothing leaked into setEND either).
+    expect(ks.setEND).not.toHaveBeenCalled();
+  });
+
+  it('socd gate: advancedType socd + numeric delay → setSocd(verbatim 7-field obj, "1.0.7")', async () => {
+    vi.stubGlobal('localStorage', makeLocalStorage());
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    const cfg = makeConfig({
+      keyboards: [
+        makeKeyboardEntry({
+          keyValue: 66, row: 0, col: 0,
+          advancedKeys: { ...EXPECTED_ADV, advancedType: 'socd' },
+        }),
+      ],
+    });
+    const result = await runImport(makeEncryptedFile(cfg));
+    expect(result).toEqual({ success: true });
+    // Verbatim EXPECTED_ADV.socd (7 fields incl. delay 150 — no key field added).
+    expect(ks.setSocd).toHaveBeenCalledWith(EXPECTED_ADV.socd, '1.0.7');
+    expect(ks.setSocd).toHaveBeenCalledTimes(1);
+  });
+
+  it('end gate: wrong advancedType → NO setEND; numeric delay passes AS-IS incl. 65535', async () => {
+    vi.stubGlobal('localStorage', makeLocalStorage());
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    // key65: advancedType 'dks' (default) → gate closed on TYPE despite end block.
+    // key66: advancedType 'end', delay 65535 → gate OPEN; delay applied verbatim,
+    // NO sentinel filter (PM ruling — unlike export-side F-D2 filtering).
+    const cfg = makeConfig({
+      keyboards: [
+        makeKeyboardEntry({ keyValue: 65, row: 0, col: 0 }),
+        makeKeyboardEntry({
+          keyValue: 66, row: 0, col: 1,
+          advancedKeys: {
+            ...EXPECTED_ADV,
+            advancedType: 'end',
+            end: { dks: 3, delay: 65535 },
+          },
+        }),
+      ],
+    });
+    const result = await runImport(makeEncryptedFile(cfg));
+    expect(result).toEqual({ success: true });
+    expect(ks.setEND).toHaveBeenCalledTimes(1);
+    expect(ks.setEND).toHaveBeenCalledWith(
+      { key: 66, dks: 3, delay: 65535 },
+      '1.0.7',
+    );
+  });
+
+  it('db3 gate: db3 absent → NO setDksTravel; db3 0 → setDksTravel(key,0,"Layout_DB3") fires', async () => {
+    vi.stubGlobal('localStorage', makeLocalStorage());
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    // key65: dks.db3 deleted → typeof undefined !== 'number' → skipped.
+    // key66: db3 0 → 0 IS a number → fires (stale-clear per F14).
+    const noDb3 = { ...EXPECTED_ADV.dks };
+    delete noDb3.db3;
+    const cfg = makeConfig({
+      keyboards: [
+        makeKeyboardEntry({
+          keyValue: 65, row: 0, col: 0,
+          advancedKeys: { ...EXPECTED_ADV, dks: noDb3 },
+        }),
+        makeKeyboardEntry({
+          keyValue: 66, row: 0, col: 1,
+          advancedKeys: { ...EXPECTED_ADV, dks: { ...EXPECTED_ADV.dks, db3: 0 } },
+        }),
+      ],
+    });
+    const result = await runImport(makeEncryptedFile(cfg));
+    expect(result).toEqual({ success: true });
+    expect(ks.setDksTravel).toHaveBeenCalledTimes(1);
+    expect(ks.setDksTravel).toHaveBeenCalledWith(66, 0, 'Layout_DB3');
+  });
+
+  it('special-lighting gate: light.other absent → NO setSpecialLighting, flow intact', async () => {
+    vi.stubGlobal('localStorage', makeLocalStorage());
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    const cfg = makeImportConfig();
+    // KeyboardConfig requires light.other → delete post-build (gate is `config.light?.other`).
+    delete (cfg.light as Partial<typeof cfg.light>).other;
+    const result = await runImport(makeEncryptedFile(cfg));
+    expect(result).toEqual({ success: true });
+    expect(ks.setSpecialLighting).not.toHaveBeenCalled();
+    // Sanity: main-lighting repair still ran (pre-switch + main = 2 setLighting;
+    // pre-switch Error path logs but does NOT skip the main repair).
+    expect(ks.setLighting).toHaveBeenCalledTimes(2);
+    expect(ks.setLighting.mock.calls[1][0]).toEqual(SDK_FORMAT_STATIC);
+  });
+
+  it('main-lighting gate: light.main absent → NO final setLighting repair (pre-switch only)', async () => {
+    vi.stubGlobal('localStorage', makeLocalStorage());
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    const cfg = makeImportConfig();
+    delete (cfg.light as Partial<typeof cfg.light>).main;
+    const result = await runImport(makeEncryptedFile(cfg));
+    expect(result).toEqual({ success: true });
+    // Exactly ONE setLighting = the pre-switch to custom mode; repair skipped.
+    expect(ks.setLighting).toHaveBeenCalledTimes(1);
+    expect(ks.setLighting.mock.calls[0][0]).toEqual(PRE_SWITCH_EXPECTED);
+  });
+
+  it('setter-Error sweep: every repair logs its error and import STILL succeeds', async () => {
+    vi.stubGlobal('localStorage', makeLocalStorage());
+    ks.getLighting.mockResolvedValue(makeLightMode({ mode: 21, type: 'custom' }));
+    // Every repair setter fails → console.error per setter, never a throw,
+    // and importProfile still returns {success:true} (wrappers return Error).
+    ks.setDksTravel.mockResolvedValue(new Error('db3-boom'));
+    ks.setDp.mockResolvedValue(new Error('dp-boom'));
+    ks.setDr.mockResolvedValue(new Error('dr-boom'));
+    ks.setSpecialLighting.mockResolvedValue(new Error('spec-boom'));
+    ks.setSocd.mockResolvedValue(new Error('socd-boom'));
+    ks.setEND.mockResolvedValue(new Error('end-boom'));
+    ks.saveCustomLighting.mockResolvedValue(new Error('save-boom'));
+    ks.setLighting.mockResolvedValue(new Error('light-boom'));
+    const errSpy = console.error as unknown as ReturnType<typeof vi.fn>;
+    const result = await runImport(makeEncryptedFile(makeImportConfig()));
+    expect(result).toEqual({ success: true });
+    const msgs = errSpy.mock.calls.map(c => String(c[0]));
+    // Per-key repair errors (keys 65+66 both gate-open in makeImportConfig).
+    expect(msgs.filter(m => m.startsWith('Failed to restore DB3 travel for key'))).toHaveLength(2);
+    expect(msgs.filter(m => m.startsWith('Failed to restore press deadband for key'))).toHaveLength(2);
+    expect(msgs.filter(m => m.startsWith('Failed to restore release deadband for key'))).toHaveLength(2);
+    expect(msgs.filter(m => m.startsWith('Failed to restore SOCD for key'))).toHaveLength(1); // key66 only
+    expect(msgs.filter(m => m.startsWith('Failed to restore END for key'))).toHaveLength(1);  // key65 only
+    expect(msgs).toContain('Failed to restore special lighting:');
+    expect(msgs).toContain('Failed to restore main lighting mode:');
+    expect(msgs).toContain('Failed to save custom lighting:');
+    expect(msgs).toContain('Failed to switch to custom mode:');
+    // Error messages are passed as the SECOND arg, not interpolated.
+    const db3Call = errSpy.mock.calls.find(c => String(c[0]).startsWith('Failed to restore DB3'));
+    expect(db3Call?.[1]).toBe('db3-boom');
+  });
 });

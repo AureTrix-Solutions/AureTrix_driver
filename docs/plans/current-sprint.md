@@ -6,14 +6,13 @@
 <!-- revN (YYYY-MM-DD): <what changed> -->
 
 ## Checkpoint
-- Branch: `sprint-22-test-stores-mappedkeyboard` (PM-open HEAD: bad4d3e — review base)
-- tsc baseline: 0 errors (docs/tsc-baseline.txt; test files ARE typechecked — keep 0)
-- Suite baseline at open: 7 files / 96 tests green
-- Cleanup: `.scratch/` has pm-notes.md (PO may delete); `_to_delete/` empty (from actual ls at PM-open)
-- Group review: Tasks 1–7 are ONE high-stakes group — Reviewer runs ONCE at the end over cumulative base..head (sprint-21 precedent). Each task commits with a ✓ checkpoint line "awaiting group review"; Task 7 writes the review file and flips the group IN-REVIEW.
+- ✓ Task 1 DONE — `src/store/__tests__/travelProfiles.test.ts` (12 tests, commit 60858d3). npx vitest run: 12/12. typecheck exit 0. lint exit 0. Awaiting group review.
+- Suite: 8 files / 108 tests. Baselines unchanged (tsc 0).
+- Cleanup: `.scratch/` pm-notes.md (PO may delete); `_to_delete/` empty.
+- Group review: Tasks 1–7 are ONE high-stakes group — Reviewer runs ONCE at the end over cumulative base..head (sprint-21 precedent). Task 7 writes the review file and flips the group IN-REVIEW.
 
 ## ▶ RUN THIS
-Next: Task 1 — travelProfilesStore tests. Do this task, then stop.
+Next: Task 2 — profileStore tests. Do this task, then stop.
 
 ## Shared facts (all grep-verified at PM-open; re-grep only if a check fails)
 - vitest env is **node** (vite.config.ts `environment: 'node'`); default include picks up `src/**/__tests__/*.test.ts` — NO config change needed. Explicit `import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'` (no globals). ESLint: `no-explicit-any` is error — type mocks instead.
@@ -28,10 +27,7 @@ Next: Task 1 — travelProfilesStore tests. Do this task, then stop.
 - NO source-file edits this sprint (tests pin AS-IS). Out-of-scope defects → ONE line in `## Findings`. Two known defect candidates the Worker will encounter — pin AS-IS, then route to Findings, do NOT fix: (a) travelProfiles addProfile `id = Date.now().toString()` collides on same-ms adds; (b) MappedKeyboard.batchSetKey ignores a *resolved* `Error` from setKey (only throws are caught) — pin that resolved-Error continues silently; (c) fetchLayerLayout keeps the FIRST baseLayout (`if (!baseLayout.value)`) but the layer-merge builds from the FRESH `newBaseLayout.map(...)` while the null-layer path returns the stuck `baseLayout.value` — mixed layout sources across refetches (grep `if (!baseLayout.value)` + `newBaseLayout.map` in MappedKeyboard.ts); Task 6 pins baseLayout stickiness AS-IS.
 
 ## Tasks
-1. **travelProfilesStore tests** — [high-stakes] (group; see Checkpoint) — STATUS: PENDING
-   - Files: NEW `src/store/__tests__/travelProfiles.test.ts`
-   - Spec: `setActivePinia(createPinia())` per test. Cases (≥10 `it()`): default state (profiles [], selectedProfileId null); selectedProfile null when empty / returns the profile after select; addProfile with `vi.setSystemTime(new Date(...))` → id = that ms as string, appended, auto-selects new id; two adds at DIFFERENT set times get distinct ids; profileOptions returns shallow copies (`options[0].switchName='x'` does NOT mutate store); updateProfile merges Partial by id; updateProfile unknown id = no-op; deleteProfile resets selectedProfileId to null when deleting the selected one; deleteProfile non-selected keeps selection + filters; selectProfile(null) clears. AS-IS pin (Findings candidate a): two addProfile calls within the SAME mocked ms produce IDENTICAL ids — assert current behavior in one test.
-   - Done when: `npx vitest run src/store/__tests__/travelProfiles.test.ts` exits 0 with ≥10 tests; `npm run typecheck` exit 0; `npm run lint` exit 0; committed.
+✓ 1. **travelProfilesStore tests** — committed 60858d3 (12 tests), awaiting group review
 2. **profileStore tests** — [high-stakes] (group) — STATUS: PENDING
    - Files: NEW `src/store/__tests__/profileStore.test.ts`
    - Spec: `vi.mock('@services/KeyboardService', () => ({ default: { switchConfig: vi.fn(), getActiveProfile: vi.fn() } }))`. Cases (≥12): default state 4 profiles named 'Profile 1'..'Profile 4', activeProfileId 1; getters activeProfile/getProfileById (incl. undefined for id 9); setActiveProfile(2) sets, boundaries 0 and 5 silently ignored; updateProfileName trims ('  G  ' → 'G'), ignores '' and '   ', ignores unknown id; switchProfile(0)/switchProfile(5) → `{ success: false, error: 'Invalid profile ID' }` and switchConfig NOT called; switchProfile resolving Error → `{ success: false, error: <err.message> }`, activeProfileId unchanged; switchProfile success → `{ success: true }`, activeProfileId set immediately, getActiveProfile NOT yet called; with `vi.useFakeTimers()` advance 500ms (`await vi.advanceTimersByTimeAsync(500)`) → getActiveProfile called (setTimeout sync); syncActiveProfileFromHardware assigns number, ignores Error (activeProfileId unchanged).
@@ -61,4 +57,4 @@ Next: Task 1 — travelProfilesStore tests. Do this task, then stop.
      Collapse a finished task to one line:  ✓ 1. <title> — committed, awaiting group review -->
 
 ## Findings (raw — PM routes at close)
-- <none yet>
+- travelProfilesStore.addProfile: `id = Date.now().toString()` — two adds within the same millisecond get IDENTICAL ids (pinned AS-IS in travelProfiles.test.ts "AS-IS pin" test; verify at `const id = Date.now()` in src/store/travelProfilesStore.ts addProfile).

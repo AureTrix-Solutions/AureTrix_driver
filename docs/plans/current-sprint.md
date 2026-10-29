@@ -12,12 +12,13 @@
 - ✓ Task 4 DONE — `src/store/__tests__/connection.async.test.ts` (11 tests, commit 3dd0b2d). vitest 11/11; typecheck exit 0; lint exit 0. Spec diverged from source once (drafted `connect` — real action is `connectDevice`; `autoConnect` reject string is `'Please Connect.'` capital-C+period, distinct from null path `'Please connect'`). Await group review.
 - ✓ Task 5 DONE — `src/utils/__tests__/MappedKeyboard.geometry.test.ts` (10 tests, commit 3db302e). vitest 10/10; typecheck exit 0; lint exit 0. Source matched spec verbatim (gridStyle reduce, absolute-box getKeyStyle, zeroed fallback); confirmed `IDefKeyInfo` needs only `keyValue` (location optional in app type) and real `getLayoutConfig` returns rows/cols too — mock returns include them. Await group review.
 - ✓ Task 6 DONE — `src/utils/__tests__/MappedKeyboard.fetch.test.ts` (12 tests, commit e741d67). vitest 12/12; typecheck exit 0; lint exit 0. Source matched spec (all 13 spec cases covered incl. duplicate-key-later-wins and baseLayout stickiness). Note: `ref()` reactive-proxy wrapping breaks `toBe` identity on layout/baseLayout — used `toStrictEqual`. Await group review.
-- Suite: 13 files / 167 tests green (`npm run test:run`). Baselines unchanged (tsc 0).
+- Suite: 14 files / 174 tests green (`npm run test:run`). Baselines unchanged (tsc 0, lint 0).
 - Cleanup: `.scratch/` pm-notes.md (PO may delete); `_to_delete/` empty.
 - Group review: Tasks 1–7 are ONE high-stakes group — Reviewer runs ONCE at the end over cumulative base..head (sprint-21 precedent). Task 7 writes the review file and flips the group IN-REVIEW.
 
 ## ▶ RUN THIS
-Next: Task 7 — batchSetKey + connection watch + full-suite sweep + write review-sprint-22.md (group close). Do this task, then stop.
+ALL TASKS DONE — awaiting review/sign-off.
+Reviewer window: follow docs/plans/reviews/review-sprint-22.md, then PM-close.
 
 ## Shared facts (all grep-verified at PM-open; re-grep only if a check fails)
 - vitest env is **node** (vite.config.ts `environment: 'node'`); default include picks up `src/**/__tests__/*.test.ts` — NO config change needed. Explicit `import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'` (no globals). ESLint: `no-explicit-any` is error — type mocks instead.
@@ -32,19 +33,17 @@ Next: Task 7 — batchSetKey + connection watch + full-suite sweep + write revie
 - NO source-file edits this sprint (tests pin AS-IS). Out-of-scope defects → ONE line in `## Findings`. Two known defect candidates the Worker will encounter — pin AS-IS, then route to Findings, do NOT fix: (a) travelProfiles addProfile `id = Date.now().toString()` collides on same-ms adds; (b) MappedKeyboard.batchSetKey ignores a *resolved* `Error` from setKey (only throws are caught) — pin that resolved-Error continues silently; (c) fetchLayerLayout keeps the FIRST baseLayout (`if (!baseLayout.value)`) but the layer-merge builds from the FRESH `newBaseLayout.map(...)` while the null-layer path returns the stuck `baseLayout.value` — mixed layout sources across refetches (grep `if (!baseLayout.value)` + `newBaseLayout.map` in MappedKeyboard.ts); Task 6 pins baseLayout stickiness AS-IS.
 
 ## Tasks
-✓ 1. **travelProfilesStore tests** — committed 60858d3 (12 tests), awaiting group review
-✓ 2. **profileStore tests** — committed bda9a62 (16 tests), awaiting group review
-✓ 3. **connectionStore sync actions** — committed 2e932b3 (10 tests), awaiting group review
-✓ 4. **connectionStore async actions** — committed 3dd0b2d (11 tests), awaiting group review
-✓ 5. **useMappedKeyboard geometry** — committed 3db302e (10 tests), awaiting group review
-✓ 6. **useMappedKeyboard fetchLayerLayout behavior** — committed e741d67 (12 tests), awaiting group review
-7. **batchSetKey + connection watch + full-suite sweep** — [high-stakes] (group) — STATUS: PENDING
-   - Files: NEW `src/utils/__tests__/MappedKeyboard.batch-watch.test.ts`
-   - Spec: same mocks. batchSetKey cases: 25 configs (default batchSize 10) → setKey called 3× with lengths 10/10/5 and exact slice contents; setKey REJECTS on batch 1 → call rejects with `new Error('Failed to set key batch')` (message pinned, `.cause` set) and setKey called only ONCE (subsequent batches do NOT run); setKey RESOLVES an Error instance → AS-IS pin: NOT detected, all batches run, no throw (Findings candidate b). Watch cases (watch has default flush 'pre' → `await nextTick()` after mutating `connectionStore.isConnected`; set isConnected BEFORE calling useMappedKeyboard to avoid an unwanted fetch): connected+loaded state → set isConnected=false + await nextTick → layout [], loaded false, baseLayout null, error null (FULL reset incl. baseLayout — pin); from disconnected → set true + `await nextTick()` + flush pending promises (vi.waitFor or microtask drain) → defKey called (fetch fired by watch). For this case mock defKey to RESOLVE a valid base layout and use layerIndex ref(null) so the watch-triggered fetch completes on the null-layer path — no retry sleeps, no fake timers needed. hasFetchedOnce is NOT returned — never assert it directly. Sweep: `npm run test:run` ALL green (report totals), typecheck 0, lint 0. Then (group close, sprint-21 precedent): write `docs/plans/reviews/review-sprint-22.md` from the review template — sprint goal (one line) + Tasks 1–7 Done-whens + Base bad4d3e / Head <this commit>, Hardware check section 'n/a — no [hw] tasks'; flip ALL task statuses to IN-REVIEW in one edit and set ▶ RUN THIS to "Reviewer window: follow docs/plans/reviews/review-sprint-22.md, then PM-close"; flag "ALL TASKS DONE — awaiting review/sign-off"; commit.
-   - Done when: file run exits 0 with ≥7 tests; FULL `npm run test:run` exits 0 (7 baseline files + 7 new = 14 files, ≥96+56 tests); typecheck 0; lint 0; review-sprint-22.md exists with base/head hashes; committed.
+✓ 1. **travelProfilesStore tests** — committed 60858d3 (12 tests) — IN-REVIEW (group review: review-sprint-22.md)
+✓ 2. **profileStore tests** — committed bda9a62 (16 tests) — IN-REVIEW (group review: review-sprint-22.md)
+✓ 3. **connectionStore sync actions** — committed 2e932b3 (10 tests) — IN-REVIEW (group review: review-sprint-22.md)
+✓ 4. **connectionStore async actions** — committed 3dd0b2d (11 tests) — IN-REVIEW (group review: review-sprint-22.md)
+✓ 5. **useMappedKeyboard geometry** — committed 3db302e (10 tests) — IN-REVIEW (group review: review-sprint-22.md)
+✓ 6. **useMappedKeyboard fetchLayerLayout behavior** — committed e741d67 (12 tests) — IN-REVIEW (group review: review-sprint-22.md)
+✓ 7. **batchSetKey + connection watch + full-suite sweep** — committed 5f41b09 (8 tests; batch slicing/abort/sequential-await, AS-IS resolved-Error pin, watch reset+refetch) — IN-REVIEW (group review: review-sprint-22.md, Base bad4d3e / Head 5f41b09). Suite 14 files / 174 green; tsc 0; lint 0.
 
 <!-- STATUS values: PENDING → IN-PROGRESS → IN-REVIEW (group, at Task 7) → DONE (Reviewer PASS).
-     Collapse a finished task to one line:  ✓ 1. <title> — committed, awaiting group review -->
+     Collapse a finished task to one line:  ✓ 1. <title> — committed — IN-REVIEW (group review: review-sprint-22.md) -->
 
 ## Findings (raw — PM routes at close)
 - travelProfilesStore.addProfile: `id = Date.now().toString()` — two adds within the same millisecond get IDENTICAL ids (pinned AS-IS in travelProfiles.test.ts "AS-IS pin" test; verify at `const id = Date.now()` in src/store/travelProfilesStore.ts addProfile).
+- MappedKeyboard.batchSetKey: does not check whether `setKey` RESOLVES an Error instance (KeyboardService wrappers return Error instead of throwing) — a device-side failure passes silently (pinned AS-IS in MappedKeyboard.batch-watch.test.ts "AS-IS pin" test; verify at the `await KeyboardService.setKey(...)` call inside batchSetKey's loop in src/utils/MappedKeyboard.ts).

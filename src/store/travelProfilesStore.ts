@@ -17,7 +17,7 @@ export const useTravelProfilesStore = defineStore('travelProfiles', {
 },
   actions: {
     addProfile(switchName: string, maxTravel: number) {
-      const id = Date.now().toString(); // Simple ID; use UUID if needed
+      const id = crypto.randomUUID();
       this.profiles.push({ id, switchName, maxTravel });
       this.selectedProfileId = id; // Auto-select new
     },

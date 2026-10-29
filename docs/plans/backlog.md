@@ -42,6 +42,8 @@ extraction per sprint/branch — never a multi-phase rewrite in one go.
 - Foundation: docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet reassembly).
 
 ## Code issues
+- [code] travelProfilesStore.addProfile uses `id = Date.now().toString()` — two adds within the same millisecond get IDENTICAL ids (pinned AS-IS by src/store/__tests__/travelProfiles.test.ts "AS-IS pin"). Verify: `const id = Date.now()` in src/store/travelProfilesStore.ts addProfile; detail: docs/plans/archive/sprint-22-test-stores-mappedkeyboard/review-sprint-22.md §Confirmed AS-IS pins. (sprint-22, 2026-10-29.)
+- [code] MappedKeyboard.batchSetKey catches only THROWN setKey failures — a *resolved* `Error` instance (house convention: wrappers return Error, never throw) passes silently as success (pinned AS-IS by src/utils/__tests__/MappedKeyboard.batch-watch.test.ts "AS-IS pin"). Verify: the `await KeyboardService.setKey(...)` loop inside batchSetKey in src/utils/MappedKeyboard.ts; detail: docs/plans/archive/sprint-22-test-stores-mappedkeyboard/review-sprint-22.md §Confirmed AS-IS pins. (sprint-22, 2026-10-29.)
 
 ## Document issues
 - [docs] docs/pages/Debug.md still describes the old 16-getter debug panel (autoConnect/requestDevice/fetchAllData, mode testing, export JSON), but Debug.vue (~307 lines) is now a simple axis inspector (select key → getAxis() → JSON display); sprint-11 Task 3 fixed only the service-name mentions. Verify: src/pages/Debug.vue script section vs Debug.md Features/Data Flow/API Reference. (2026-10-13.)

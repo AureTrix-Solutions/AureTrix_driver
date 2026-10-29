@@ -14,7 +14,7 @@
 - Task 5: `npx vitest run src/utils/__tests__/MappedKeyboard.geometry.test.ts` green (10 tests).
 - Task 6: `npx vitest run src/utils/__tests__/MappedKeyboard.fetch.test.ts` green (12 tests).
 - Task 7: `npx vitest run src/utils/__tests__/MappedKeyboard.batch-watch.test.ts` green (8 tests).
-- Sprint gates: `npm run test:run` all green (14 files / 174 tests); `npm run typecheck` exit 0; `npm run lint` exit 0.
+- Sprint gates: `npm run test:run` all green (14 files / 175 tests); `npm run typecheck` exit 0; `npm run lint` exit 0. <!-- F1 corrected 174→175 at PM-close 2026-10-29 -->
 - Zero source edits — all 7 new files are tests under src/store/__tests__/ and src/utils/__tests__/ (plus docs/plans).
 <!-- If a criterion is revised after this file exists, UPDATE it here too — the Reviewer judges
      this file, not current-sprint.md. -->

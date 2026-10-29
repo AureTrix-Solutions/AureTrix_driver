@@ -6,13 +6,14 @@
 <!-- revN (YYYY-MM-DD): <what changed> -->
 
 ## Checkpoint
-- ✓ Task 1 DONE — `src/store/__tests__/travelProfiles.test.ts` (12 tests, commit 60858d3). npx vitest run: 12/12. typecheck exit 0. lint exit 0. Awaiting group review.
-- Suite: 8 files / 108 tests. Baselines unchanged (tsc 0).
+- ✓ Task 1 DONE — `src/store/__tests__/travelProfiles.test.ts` (12 tests, commit 60858d3). Await group review.
+- ✓ Task 2 DONE — `src/store/__tests__/profileStore.test.ts` (16 tests, commit bda9a62). vitest 16/16; typecheck exit 0; lint exit 0. Source matched spec verbatim. Await group review.
+- Suite: 9 files / 124 tests green (`npm run test:run`). Baselines unchanged (tsc 0).
 - Cleanup: `.scratch/` pm-notes.md (PO may delete); `_to_delete/` empty.
 - Group review: Tasks 1–7 are ONE high-stakes group — Reviewer runs ONCE at the end over cumulative base..head (sprint-21 precedent). Task 7 writes the review file and flips the group IN-REVIEW.
 
 ## ▶ RUN THIS
-Next: Task 2 — profileStore tests. Do this task, then stop.
+Next: Task 3 — connection store tests (synchronous slice). Do this task, then stop.
 
 ## Shared facts (all grep-verified at PM-open; re-grep only if a check fails)
 - vitest env is **node** (vite.config.ts `environment: 'node'`); default include picks up `src/**/__tests__/*.test.ts` — NO config change needed. Explicit `import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'` (no globals). ESLint: `no-explicit-any` is error — type mocks instead.
@@ -28,7 +29,7 @@ Next: Task 2 — profileStore tests. Do this task, then stop.
 
 ## Tasks
 ✓ 1. **travelProfilesStore tests** — committed 60858d3 (12 tests), awaiting group review
-2. **profileStore tests** — [high-stakes] (group) — STATUS: PENDING
+✓ 2. **profileStore tests** — committed bda9a62 (16 tests), awaiting group review
    - Files: NEW `src/store/__tests__/profileStore.test.ts`
    - Spec: `vi.mock('@services/KeyboardService', () => ({ default: { switchConfig: vi.fn(), getActiveProfile: vi.fn() } }))`. Cases (≥12): default state 4 profiles named 'Profile 1'..'Profile 4', activeProfileId 1; getters activeProfile/getProfileById (incl. undefined for id 9); setActiveProfile(2) sets, boundaries 0 and 5 silently ignored; updateProfileName trims ('  G  ' → 'G'), ignores '' and '   ', ignores unknown id; switchProfile(0)/switchProfile(5) → `{ success: false, error: 'Invalid profile ID' }` and switchConfig NOT called; switchProfile resolving Error → `{ success: false, error: <err.message> }`, activeProfileId unchanged; switchProfile success → `{ success: true }`, activeProfileId set immediately, getActiveProfile NOT yet called; with `vi.useFakeTimers()` advance 500ms (`await vi.advanceTimersByTimeAsync(500)`) → getActiveProfile called (setTimeout sync); syncActiveProfileFromHardware assigns number, ignores Error (activeProfileId unchanged).
    - Done when: file run exits 0 with ≥12 tests; typecheck 0; lint 0; committed.

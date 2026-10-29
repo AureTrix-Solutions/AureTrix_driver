@@ -13,56 +13,8 @@
 Next: Task 2 — MappedKeyboard.batchSetKey resolved-Error detection + pin-test inversion. Do this task, then stop.
 
 ## Tasks
-1. **travelProfilesStore: UUID ids** — [high-stakes] — STATUS: IN-REVIEW
-   - ✓ All Done-whens pass: Date.now grep empty · randomUUID count 1 · 12/12 tests green · typecheck 0 · lint 0. Commit 1688d4a; review file docs/plans/reviews/review-travel-uuid-ids.md.
-   - Done when: `grep -n "Date.now" src/store/travelProfilesStore.ts` returns nothing
-   - Done when: `grep -c "crypto.randomUUID" src/store/travelProfilesStore.ts` returns 1
-   - Done when: `npx vitest run src/store/__tests__/travelProfiles.test.ts` → 12 tests pass (0 fail)
-   - Done when: `npm run typecheck` exits 0
-   - Files: `src/store/travelProfilesStore.ts`, `src/store/__tests__/travelProfiles.test.ts`
-   - Background (PM-verified): ids are opaque strings everywhere — SwitchProfiles.vue uses them as select values/keys, KeyTravel.vue + RapidTrigger.vue only read selectedProfile; nothing parses the id as a timestamp; persisted localStorage ids unaffected (new ids just look different). `crypto.randomUUID()` typechecks (lib.dom) and exists in Node 22 (vitest node env); fake timers do NOT mock it. Consumers verified → NO edits needed outside the 2 files.
-   - Edits:
-     1. travelProfilesStore.ts — in `addProfile(switchName: string, maxTravel: number) {`, replace (exact current text):
-        `      const id = Date.now().toString(); // Simple ID; use UUID if needed`
-        with:
-        `      const id = crypto.randomUUID();`
-     2. test T3 "selectedProfile returns the profile after selectProfile" — replace body lines:
-        ```
-        vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
-        store.addProfile('Fast', 3.5);
-        const id = String(Date.now());
-        ```
-        with:
-        ```
-        store.addProfile('Fast', 3.5);
-        const id = store.profiles[0].id;
-        ```
-     3. test T4 — replace whole test (current name: 'addProfile uses the current ms timestamp as id, appends, and auto-selects'):
-        ```
-        it('addProfile assigns a UUID id, appends, and auto-selects', () => {
-          const store = useTravelProfilesStore();
-          store.addProfile('Slow', 4.0);
-          expect(store.profiles).toHaveLength(1);
-          expect(store.profiles[0].id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
-          expect(store.profiles[0].switchName).toBe('Slow');
-          expect(store.profiles[0].maxTravel).toBe(4.0);
-          expect(store.selectedProfileId).toBe(store.profiles[0].id);
-        });
-        ```
-     4. test T5 'two adds at different mocked times get distinct ids' — rename to 'two adds get distinct ids' and delete the two `vi.setSystemTime(...)` lines; keep the rest (addProfile A/B + distinct-id + selectedProfileId asserts) unchanged.
-     5. test T6 (the AS-IS pin, current name: 'AS-IS pin: two adds within the SAME mocked ms produce identical ids (Findings candidate a)') — replace whole test with the FIXED-behavior version:
-        ```
-        it('two adds back-to-back get distinct ids (was AS-IS pin: same-ms collision)', () => {
-          const store = useTravelProfilesStore();
-          store.addProfile('A', 1.0);
-          store.addProfile('B', 2.0);
-          expect(store.profiles).toHaveLength(2);
-          expect(store.profiles[0].id).not.toBe(store.profiles[1].id);
-        });
-        ```
-     - LEAVE ALONE: beforeEach/afterEach fake timers and the `vi.setSystemTime(...)` calls in T7–T12 — harmless with UUID ids (crypto.randomUUID is not timer-mocked); removing them would add 10 edit sites for zero behavior change.
-   - Self-check: the 4 Done-when commands above.
-   - On complete (high-stakes): write `docs/plans/reviews/review-travel-id-uuid.md` from the review template (sprint goal + Done-when list + Base/Head hashes + what changed), set STATUS: IN-REVIEW, advance ▶ RUN THIS to Reviewer for Task 1.
+1. **travelProfilesStore: UUID ids** — [high-stakes] — STATUS: DONE
+   - ✓ Reviewer PASS 2026-07-06 (0 fails): all 4 Done-when commands rerun green (Date.now grep empty · randomUUID count 1 · 12/12 tests · typecheck 0); diff scope = exactly the 2 task files; AS-IS pin correctly inverted; design intent untouched. Commit 1688d4a; detail in docs/plans/reviews/review-travel-uuid-ids.md.
 
 2. **batchSetKey: detect resolved Errors** — [high-stakes] — STATUS: PENDING
    - Done when: `grep -c "instanceof Error" src/utils/MappedKeyboard.ts` returns 3 (was 2)

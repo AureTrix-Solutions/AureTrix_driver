@@ -10,10 +10,11 @@
 - Cleanup: .scratch/ has pm-notes.md (gitignored, PO may delete); _to_delete/ empty (only .gitkeep) — from actual ls at PM-open
 
 ## ▶ RUN THIS
-Next: Task 1 — travelProfilesStore UUID ids + test updates. Do this task, then stop.
+Next: Task 2 — MappedKeyboard.batchSetKey resolved-Error detection + pin-test inversion. Do this task, then stop.
 
 ## Tasks
-1. **travelProfilesStore: UUID ids** — [high-stakes] — STATUS: PENDING
+1. **travelProfilesStore: UUID ids** — [high-stakes] — STATUS: IN-REVIEW
+   - ✓ All Done-whens pass: Date.now grep empty · randomUUID count 1 · 12/12 tests green · typecheck 0 · lint 0. Commit 1688d4a; review file docs/plans/reviews/review-travel-uuid-ids.md.
    - Done when: `grep -n "Date.now" src/store/travelProfilesStore.ts` returns nothing
    - Done when: `grep -c "crypto.randomUUID" src/store/travelProfilesStore.ts` returns 1
    - Done when: `npx vitest run src/store/__tests__/travelProfiles.test.ts` → 12 tests pass (0 fail)

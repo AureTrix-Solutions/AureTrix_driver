@@ -16,11 +16,7 @@ it is a rule to follow rather than a defect to fix.
 ### dks-page — build the Dynamic Keystroke config page (setDks wrapper + DKS.vue)
 
 ### advanced-key-pages — MPT, MT, TGL, END, SOCD, RS pages
-
-### rs-export-recovery — RS (advancedKeyMode 9) export/import round-trip (deferred from sprint-12, PO 2026-10-14)
-- Scope DECISION PENDING a hardware read (below) — feature-scoped (export carries rs, import silently drops) vs device-scoped (full round-trip via post-import repair). NOT an RS page — that's `advanced-key-pages`.
-- Pick-up sequence (PO-specified): (1) add a getRS wrapper to KeyboardService (sdk-wrapper pattern; wrappers return Error, never throw); (2) PO sets RS via OEM tooling and reads it back through the wrapper; (3) if `dks1 !== dks2` can occur, recovery is partial (setRS takes single `dks`; cmdRS writes `[key,dks,dks,key]` so slot 2 can't be set independently), else trivial full round-trip; (4) decide scope after that read.
-- Banked sizing (PM-verified 2026-10-14, grep targets in .scratch/pm-notes.md "RS (mode 9) sizing" + "RS investigation"): (a) setAdvancedKeys has NO 'rs' branch (dispatch chain dks/mpt/mt/tgl/end/socd/macro only; advancedKeysSdkMap has 9:setRS but it's never called → silent no-op) → device-scoped needs a post-import repair loop calling setRS directly, like DB3. (b) shapes DON'T match: getRS returns `{dks1,dks2}` (single bytes), setRS takes IRSMode `{key,dks}` → shape to `{key, dks: dks1}`. Feature-scoped ≈ 4-6 lines (gather branch + type field); device-scoped adds ≈ 10-15 (batched repair loop + hw criterion). RS is version-independent (no `v` param). What the `dks` byte means functionally is unverified in source/sdk-ref (§6.9) — hw-observe question.
+- each page to be its own sprint.
 
 ### macro-page — build the Macro config page (setMacro wrapper + Macro.vue)
 - Pitfall: setMacro without touchMode may reset a key's touch mode to global (sdk-reference-v2.md §7); the wrapper now requires touchMode (Task 4b item G) — the page must pass/preserve it; verify on single + RT keys on hardware.

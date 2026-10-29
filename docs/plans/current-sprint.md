@@ -10,13 +10,14 @@
 - Cleanup: .scratch/ has pm-notes.md (gitignored, PO may delete); _to_delete/ empty (only .gitkeep) — from actual ls at PM-open
 
 ## ▶ RUN THIS
-Next: Task 2 — MappedKeyboard.batchSetKey resolved-Error detection + pin-test inversion. Do this task, then stop.
+All Worker tasks done. Next: REVIEWER session — "follow docs/plans/reviews/review-batch-setkey-resolved-errors.md". After PASS on task 2, all tasks are DONE → awaiting PO sign-off (PM-close).
 
 ## Tasks
 1. **travelProfilesStore: UUID ids** — [high-stakes] — STATUS: DONE
    - ✓ Reviewer PASS 2026-07-06 (0 fails): all 4 Done-when commands rerun green (Date.now grep empty · randomUUID count 1 · 12/12 tests · typecheck 0); diff scope = exactly the 2 task files; AS-IS pin correctly inverted; design intent untouched. Commit 1688d4a; detail in docs/plans/reviews/review-travel-uuid-ids.md.
 
-2. **batchSetKey: detect resolved Errors** — [high-stakes] — STATUS: PENDING
+2. **batchSetKey: detect resolved Errors** — [high-stakes] — STATUS: IN-REVIEW
+   - ✓ Worker self-check all green: instanceof-Error grep = 3 · batch-watch 8/8 · full suite 175/175 (14 files) · typecheck 0 · lint 0. Commit 22dee80 (base 3e98a41); review file docs/plans/reviews/review-batch-setkey-resolved-errors.md. Cleanup (actual ls): .scratch/ = pm-notes.md + review-notes.md (gitignored); _to_delete/ = only .gitkeep — no cleanup needed.
    - Done when: `grep -c "instanceof Error" src/utils/MappedKeyboard.ts` returns 3 (was 2)
    - Done when: `npx vitest run src/utils/__tests__/MappedKeyboard.batch-watch.test.ts` → 8 tests pass (0 fail)
    - Done when: `npm run test:run` → full suite green

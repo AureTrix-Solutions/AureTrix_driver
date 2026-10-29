@@ -46,10 +46,22 @@ N/A — no [hw] tasks in this sprint. Tests are headless; no hardware behavior c
 ---
 
 ## ✅ REVIEWER VERDICT — fill this in
-**VERDICT:** PASS ☐   FAIL ☐
+**VERDICT:** PASS ☑   FAIL ☐
+
+**Reviewed:** Base `bad4d3e` .. Head `5f41b09` (cumulative group diff, Tasks 1–7), one verification pass.
 
 **Findings:**
-- (none yet)
+- **F1 (criterion slip — route to PM, NOT a code defect).** DONE-WHEN line 17 and the Worker self-check predict `npm run test:run` = "14 files / **174** tests". Actual measured = 14 files / **175** tests. Root cause: the `174` was a PM plan-time arithmetic prediction (current-sprint.md:15, written before the tests existed) that the Worker copied verbatim; it is off by one. All 7 per-task DONE-WHEN counts match their specs EXACTLY (T1=12, T2=16, T3=10, T4=11, T5=10, T6=12, T7=8 → 79 new) and the 7 pre-existing files are untouched at 96, so the true total is necessarily 96+79=175. No test is missing or extra vs spec. The gate's substance ("test:run all green, 14 files") is met. Disposition: PASS the code; PM should correct `174→175` in current-sprint.md (lines 15, 42) and this file's line 17 at close. Per CLAUDE.md, a wrong done-criterion routes to the PM to revise — it does not FAIL correct code.
+- **F2 (non-defect observation).** The "Expected diff contents" note (line ~36) lists review-sprint-22.md in the base..head range, but this file was created in `22a00d0` — the IN-REVIEW flip commit, one past Head — so it is not in `bad4d3e..5f41b09`. Expected and correct. Likewise `docs/plans/backlog.md` appears in the range (PM-open commit `e564c66` removed the sprinted item) but is not listed. Both are legitimate role mechanics, not Worker source edits. No action needed.
+- **Confirmed AS-IS pins (not defects introduced here).** The two `## Findings` items in current-sprint.md are correctly pinned-as-is by tests, not fixed: (a) `travelProfilesStore.addProfile` same-ms `Date.now()` id collision; (b) `MappedKeyboard.batchSetKey` does not check whether `setKey` *resolves* an `Error` (only throws are caught) — pinned at MappedKeyboard.batch-watch.test.ts:107 against source MappedKeyboard.ts:68-75. Design intent preserved: `filters:[]`, `usagePage 65440`, and wrappers-return-Error are all untouched.
+- **No inline-fixable defects** (typos/dead links/broken path refs/format) found in the delivered test files or planning artifacts, other than the F1 number. Nothing to clear in a fix-round.
 
 **Re-run results (commands + output):**
-- (fill in)
+- `npm run test:run` → `Test Files 14 passed (14)` · `Tests 175 passed (175)` (criteria said 174 → see F1).
+- Per-file: `npx vitest run src/store/__tests__/travelProfiles.test.ts` → 12 passed; `profileStore.test.ts` → 16; `connection.sync.test.ts` → 10; `connection.async.test.ts` → 11; `src/utils/__tests__/MappedKeyboard.geometry.test.ts` → 10; `MappedKeyboard.fetch.test.ts` → 12; `MappedKeyboard.batch-watch.test.ts` → 8. (All 7 match DONE-WHEN exactly.)
+- `npm run typecheck` → `TYPECHECK_EXIT=0` (clean).
+- `npm run lint` → `LINT_EXIT=0` (clean).
+- `git diff --stat bad4d3e..5f41b09` → 9 files, +1267/-18: 7 new test files + `docs/plans/current-sprint.md` + `docs/plans/backlog.md`. Zero `src/*.ts|*.vue` non-test source files touched → **zero-source-edits criterion MET.**
+- Content spot-check (`MappedKeyboard.batch-watch.test.ts` vs `src/utils/MappedKeyboard.ts:68-75,179-195`): test expectations for slice sizes 10/10/5, `console.error('Batch setKey failed for keys 0 to 9:')`, `throw Error('Failed to set key batch',{cause})`, the AS-IS resolved-Error pass-through, and the watch disconnect-reset (`baseLayout=null`) + connect-refetch all match the real source. No fabricated/green-by-mock-only assertions.
+
+**Reviewer status change:** IN-REVIEW → DONE (non-hw group PASS). No [hw] tasks in this sprint.

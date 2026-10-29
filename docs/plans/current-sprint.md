@@ -10,51 +10,14 @@
 - Cleanup: .scratch/ has pm-notes.md (gitignored, PO may delete); _to_delete/ empty (only .gitkeep) — from actual ls at PM-open
 
 ## ▶ RUN THIS
-All Worker tasks done. Next: REVIEWER session — "follow docs/plans/reviews/review-batch-setkey-resolved-errors.md". After PASS on task 2, all tasks are DONE → awaiting PO sign-off (PM-close).
+ALL TASKS DONE (task 2 Reviewer PASS 2026-10-29) — awaiting PO sign-off. PO: exercise both fixes if desired, then run PM-close — "Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise."
 
 ## Tasks
 1. **travelProfilesStore: UUID ids** — [high-stakes] — STATUS: DONE
    - ✓ Reviewer PASS 2026-07-06 (0 fails): all 4 Done-when commands rerun green (Date.now grep empty · randomUUID count 1 · 12/12 tests · typecheck 0); diff scope = exactly the 2 task files; AS-IS pin correctly inverted; design intent untouched. Commit 1688d4a; detail in docs/plans/reviews/review-travel-uuid-ids.md.
 
-2. **batchSetKey: detect resolved Errors** — [high-stakes] — STATUS: IN-REVIEW
-   - ✓ Worker self-check all green: instanceof-Error grep = 3 · batch-watch 8/8 · full suite 175/175 (14 files) · typecheck 0 · lint 0. Commit 22dee80 (base 3e98a41); review file docs/plans/reviews/review-batch-setkey-resolved-errors.md. Cleanup (actual ls): .scratch/ = pm-notes.md + review-notes.md (gitignored); _to_delete/ = only .gitkeep — no cleanup needed.
-   - Done when: `grep -c "instanceof Error" src/utils/MappedKeyboard.ts` returns 3 (was 2)
-   - Done when: `npx vitest run src/utils/__tests__/MappedKeyboard.batch-watch.test.ts` → 8 tests pass (0 fail)
-   - Done when: `npm run test:run` → full suite green
-   - Done when: `npm run typecheck` exits 0
-   - Files: `src/utils/MappedKeyboard.ts`, `src/utils/__tests__/MappedKeyboard.batch-watch.test.ts`
-   - Background (PM-verified): `KeyboardService.setKey` is `Promise<void | Error>` — returns Error, never throws (house convention). batchSetKey's try/catch only catches throws, so a resolved Error passes as success. fetchLayerLayout in the same file already models the fix pattern (`if (newBaseLayout instanceof Error)`). All 3 KeyMapping.vue callers wrap batchSetKey in try/catch → a rejection lands in their existing error handling; NO caller edits. The 5 other batchSetKey tests use `mockResolvedValue(undefined)` → unaffected. The existing 'setKey rejects on batch 1' test stays green: fix routes through the SAME catch (same message 'Failed to set key batch', same cause identity, same console.error line).
-   - Edits:
-     1. MappedKeyboard.ts — in `batchSetKey`, inside the try block replace (exact current text):
-        `        await KeyboardService.setKey(batch);`
-        with:
-        ```
-        const result = await KeyboardService.setKey(batch);
-        if (result instanceof Error) throw result;
-        ```
-        (the existing catch then logs + wraps identically for BOTH failure paths)
-     2. test — replace the whole AS-IS pin test (current name: 'AS-IS pin: setKey RESOLVING an Error is not detected — all batches run, no throw (Findings candidate b)') with the FIXED-behavior version:
-        ```
-        it('setKey RESOLVING an Error is detected: rejects with cause, later batches do NOT run', async () => {
-          const busy = new Error('device busy');
-          setKeyMock.mockResolvedValue(busy);
-          const { kb } = setup();
-
-          const rejection = await kb.batchSetKey(makeConfigs(25)).then(
-            () => null,
-            (e: unknown) => e as Error
-          );
-
-          expect(rejection).toBeInstanceOf(Error);
-          expect(rejection?.message).toBe('Failed to set key batch');
-          expect(rejection?.cause).toBe(busy);
-          expect(setKeyMock).toHaveBeenCalledTimes(1); // resolved Error aborts the loop
-          expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-          expect(consoleErrorSpy.mock.calls[0][0]).toBe('Batch setKey failed for keys 0 to 9:');
-        });
-        ```
-   - Self-check: the 4 Done-when commands above.
-   - On complete (high-stakes): write `docs/plans/reviews/review-batchsetkey-resolved-error.md` from the review template, set STATUS: IN-REVIEW, advance ▶ RUN THIS to Reviewer for Task 2.
+2. **batchSetKey: detect resolved Errors** — [high-stakes] — STATUS: DONE
+   - ✓ Reviewer PASS 2026-10-29 (0 fails): all 4 Done-when commands rerun green (instanceof-Error grep = 3 · batch-watch 8/8 · full suite 175/175 (14 files) · typecheck 0); diff scope = exactly the 2 task files; AS-IS pin correctly inverted to detected-behavior; design intent untouched (wrapper unmodified, consumer detects returned Error). Commit 22dee80; detail in docs/plans/reviews/review-batch-setkey-resolved-errors.md.
 
 ## Findings
 <!-- Out-of-scope bugs/ideas: ONE line each (defect + where to verify). No fixes here. -->

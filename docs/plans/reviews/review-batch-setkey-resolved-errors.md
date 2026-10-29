@@ -28,23 +28,38 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task. Pure logic/test change; the reject path is already exercised by the mocked unit tests.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies (no newly introduced errors; unmasked ones recorded/deferred) — or N/A
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
      to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
      Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** _pending_  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** PASS  ·  **Date:** 2026-10-29  ·  **Fail count:** 0
 
-<!-- PASS (non-hw): one line confirming criteria met; flip task to DONE + advance ▶ RUN THIS.
-     PASS (pending hw): flip task to HW-TEST (never DONE); PO does the hands-on check above.
-     FAIL: list each failed item below with full detail. Then append a short checklist to
-     current-sprint.md ▶ RUN THIS, one bullet per item, each citing its §Fn here. -->
+All four DONE-WHEN criteria rerun green by the Reviewer; the diff is the plan spec applied verbatim; scope clean; design intent untouched. Task 2 → DONE.
 
 ### Failed items (FAIL only)
-_None yet — Reviewer fills on FAIL._
+None.
+
+### Verification evidence (all commands rerun by Reviewer)
+| Done-when | Command | Result |
+|---|---|---|
+| instanceof-Error count 3 | `grep -c "instanceof Error" src/utils/MappedKeyboard.ts` | 3 ✓ |
+| pin-test file green | `npx vitest run src/utils/__tests__/MappedKeyboard.batch-watch.test.ts` | Test Files 1 passed (1); **Tests 8 passed (8)** ✓ |
+| full suite | `npm run test:run` | Test Files 14 passed (14); **Tests 175 passed (175)** ✓ |
+| typecheck | `npm run typecheck` | exit 0 ✓ |
+
+**Diff scope** — `git diff --stat 3e98a41..22dee80` = exactly the two task files (`MappedKeyboard.ts` +3/−1, `MappedKeyboard.batch-watch.test.ts` +15/−6 net). No stray files. Code head `22dee80` is code-only; the review file + sprint checkpoint landed in the following docs-only commit `52d19a2` (verified via `git diff --stat 22dee80..52d19a2` = only current-sprint.md + this review file) — hashes in "Commits to review" are accurate.
+
+**Spec conformance** — edit 1 is the planned change verbatim: in `batchSetKey`'s try block, `await KeyboardService.setKey(batch);` → `const result = await KeyboardService.setKey(batch); if (result instanceof Error) throw result;`. A resolved Error now enters the SAME existing catch as a thrown one (console.error with the batch-range message + `throw new Error('Failed to set key batch', { cause: error })`), so the pre-existing 'setKey rejects on batch 1' behavior is unchanged and the 5 `mockResolvedValue(undefined)` tests are unaffected. Edit 2 is the planned test verbatim: the AS-IS pin ('...is not detected — all batches run, no throw (Findings candidate b)') is inverted to 'setKey RESOLVING an Error is detected: rejects with cause, later batches do NOT run', asserting rejection instanceof Error, message, `cause` identity (`toBe(busy)`), setKey called 1× (loop aborts; 25 configs would otherwise be 3 batches), console.error 1× with the exact range message. One test replaced by one — count held at 8. `grep "AS-IS pin"` in the test file → no matches. The inverted pin is the defect this sprint exists to fix, so inverting it is correct, not a lost pin. This mirrors the `fetchLayerLayout` pattern already in the same file.
+
+**Design intent** — untouched: no `filters`/`requestDevice` change, no `usagePage` 65440 change; `KeyboardService.setKey` wrapper itself unmodified (still returns Error, never throws) — the consumer now *detects* the returned Error per house convention.
+
+**Tag** — [high-stakes] required (logic/behavior change) and correctly tagged; correctly not [hw] (pure logic; reject path exercised by mocked unit tests).
+
+**Observation (non-defect, no action)** — the task's "On complete" instruction line in current-sprint.md referenced slug `review-batchsetkey-resolved-error.md`; the Worker created the better-slug `review-batch-setkey-resolved-errors.md` and the live ▶ RUN THIS pointer was correct. The stale reference was historical PM-plan text, physically removed when the task collapsed to ✓ on PASS. No Findings line warranted.

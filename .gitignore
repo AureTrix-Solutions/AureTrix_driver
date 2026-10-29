@@ -11,6 +11,9 @@ dist-ssr/
 *.local
 .vite/
 
+# Vitest JSON report output (written by vitest --reporter=json; regenerable)
+.vitest/
+
 # TypeScript build output
 *.tsbuildinfo
 

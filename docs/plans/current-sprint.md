@@ -8,12 +8,13 @@
 ## Checkpoint
 - ✓ Task 1 DONE — `src/store/__tests__/travelProfiles.test.ts` (12 tests, commit 60858d3). Await group review.
 - ✓ Task 2 DONE — `src/store/__tests__/profileStore.test.ts` (16 tests, commit bda9a62). vitest 16/16; typecheck exit 0; lint exit 0. Source matched spec verbatim. Await group review.
-- Suite: 9 files / 124 tests green (`npm run test:run`). Baselines unchanged (tsc 0).
+- ✓ Task 3 DONE — `src/store/__tests__/connection.sync.test.ts` (10 tests, commit 2e932b3). vitest 10/10; typecheck exit 0; lint exit 0. Source matched spec verbatim. Await group review.
+- Suite: 10 files / 134 tests green (`npm run test:run`). Baselines unchanged (tsc 0).
 - Cleanup: `.scratch/` pm-notes.md (PO may delete); `_to_delete/` empty.
 - Group review: Tasks 1–7 are ONE high-stakes group — Reviewer runs ONCE at the end over cumulative base..head (sprint-21 precedent). Task 7 writes the review file and flips the group IN-REVIEW.
 
 ## ▶ RUN THIS
-Next: Task 3 — connection store tests (synchronous slice). Do this task, then stop.
+Next: Task 4 — connection store async actions (autoConnect + connect). Do this task, then stop.
 
 ## Shared facts (all grep-verified at PM-open; re-grep only if a check fails)
 - vitest env is **node** (vite.config.ts `environment: 'node'`); default include picks up `src/**/__tests__/*.test.ts` — NO config change needed. Explicit `import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'` (no globals). ESLint: `no-explicit-any` is error — type mocks instead.

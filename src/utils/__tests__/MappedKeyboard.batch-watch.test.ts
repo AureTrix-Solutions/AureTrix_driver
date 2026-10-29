@@ -104,14 +104,22 @@ describe('useMappedKeyboard batchSetKey', () => {
     expect(consoleErrorSpy.mock.calls[0][0]).toBe('Batch setKey failed for keys 0 to 9:');
   });
 
-  it('AS-IS pin: setKey RESOLVING an Error is not detected — all batches run, no throw (Findings candidate b)', async () => {
-    setKeyMock.mockResolvedValue(new Error('device busy'));
+  it('setKey RESOLVING an Error is detected: rejects with cause, later batches do NOT run', async () => {
+    const busy = new Error('device busy');
+    setKeyMock.mockResolvedValue(busy);
     const { kb } = setup();
 
-    await expect(kb.batchSetKey(makeConfigs(25))).resolves.toBeUndefined();
+    const rejection = await kb.batchSetKey(makeConfigs(25)).then(
+      () => null,
+      (e: unknown) => e as Error
+    );
 
-    expect(setKeyMock).toHaveBeenCalledTimes(3); // instanceof Error never checked on the result
-    expect(consoleErrorSpy).not.toHaveBeenCalled();
+    expect(rejection).toBeInstanceOf(Error);
+    expect(rejection?.message).toBe('Failed to set key batch');
+    expect(rejection?.cause).toBe(busy);
+    expect(setKeyMock).toHaveBeenCalledTimes(1); // resolved Error aborts the loop
+    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+    expect(consoleErrorSpy.mock.calls[0][0]).toBe('Batch setKey failed for keys 0 to 9:');
   });
 
   it('batches run SEQUENTIALLY: batch 2 starts only after batch 1 resolves (await inside loop)', async () => {

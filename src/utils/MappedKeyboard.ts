@@ -69,7 +69,8 @@ export function useMappedKeyboard(layerIndex: Ref<number | null>) {
     for (let i = 0; i < config.length; i += batchSize) {
       const batch = config.slice(i, i + batchSize);
       try {
-        await KeyboardService.setKey(batch);
+        const result = await KeyboardService.setKey(batch);
+        if (result instanceof Error) throw result;
       } catch (error) {
         console.error(`Batch setKey failed for keys ${batch[0].key} to ${batch[batch.length - 1].key}:`, error);
         throw new Error(`Failed to set key batch`, { cause: error });

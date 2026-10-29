@@ -37,6 +37,12 @@ extraction per sprint/branch — never a multi-phase rewrite in one go.
 ### custom-firmware (long-term) — firmware for an own board (RP2040/STM32)
 - Foundation: docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet reassembly).
 
+### docs-pages-verify — reconcile each docs/pages/*.md against its current .vue (one page per sprint)
+Page docs predate the code changes and haven't been re-verified. One sprint per implemented page: check the doc against current source, update stale content. Advanced-key stub pages excluded (documented when built).
+
+### docs-meta-verify — correctness pass on project meta docs
+README.md (repo root) + .github/* (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, issue/PR templates, ci.yml).
+
 ## Code issues
 (empty — the 2 sprint-22 items were routed into sprint-23-code-issues, 2026-10-29.)
 

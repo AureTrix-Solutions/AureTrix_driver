@@ -32,3 +32,26 @@ Base: 52e09e7 · Head: d021578
 *(No hardware — docs task; Reviewer PASS closes it.)*
 **What changed and why:** N/A — documentation-only edits reconciling Connect.md and the PAGES_OVERVIEW.md Connect entry with current code behavior (connection state feedback via button + App.vue sidebar, unfiltered WebHID picker, KeyboardService auto-reconnect at startup, no navigation gating, fixed-size layout).
 **How to verify:** N/A — no device behavior changed.
+
+## Reviewer verdict
+**VERDICT: PASS** — 2026-11-01
+
+**Reviewed:** cumulative diff 52e09e7..d021578 (`docs/pages/Connect.md`, `docs/PAGES_OVERVIEW.md`) vs the 14-edit spec in current-sprint.md Task 1.
+
+**Verification performed (all grep-verified this session, notes in .scratch/review-notes.md):**
+1. **Diff vs spec:** all 14 edits present in the diff; every REPLACE text matches the plan verbatim, including edit 14's final corrected state. KEEP items intact (serialNumber limitation bullet, SCSS variables, "computed but not shown", connect.svg note). No out-of-spec changes to the doc files.
+2. **Done-when gates re-run:** 1a — 4/4 zero-count greps = 0, "Renders from:" = 1, "font-size: 0%" = 4 (≥2), "KeyboardService" = 4 (≥2). 1b — 4/4 zero-count greps = 0, "sidebar" = 8 (≥3), PAGES_OVERVIEW "Connection status display" = 0. Extras: "requestDevice" = 3, serialNumber bullet kept, "computed but not shown" kept; stale-phrase grep (semi-transparent / Connection store triggers / Connection State Display / - Monitors:) returns nothing.
+3. **Doc claims vs code:**
+   - Connect.vue: label binding 'Connect Keyboard'/'Connecting...'/'Connected'; `:disabled="isConnecting || isConnected"`; disabled style `font-size: 0%` + transparent bg; `deviceInfoText` computed returned from setup but never rendered; fixed 3125×1700 circuit board; no media queries.
+   - store/connection.ts: `connectDevice()` → `KeyboardService.requestDevice()` → `getBaseInfo()` merged into deviceInfo → `profileStore.syncActiveProfileFromHardware()`; catch sets `status` string; `finally` resets isConnecting.
+   - KeyboardService.ts: `requestDevice()` unfiltered `filters: []`, saves `localStorage.pairedStableId`, throws Error on failure; deferred auto-reconnect (load event → `setTimeout(reconnectIfPaired, 100)`), 3 attempts × 1000ms.
+   - App.vue + router: sidebar renders `connectionStore.status` and deviceInfo (productName/KeyboardSN/BoardID/appVersion); nav router-links are NOT gated by connection state; no `beforeEach` guard in router/index.ts.
+4. **Worker-flagged deviations:** edit 14 mis-replacement was corrected — final state verbatim (confirmed in diff). font-size count 4 ≥ 2 — passes. Both non-issues.
+
+**Findings (non-defect observations, no FAIL items):**
+- Plan's Task 2 Done-when names the review file `review-connect-doc.md`; the actual file (and ▶ RUN THIS pointer, and commit message) is `review-connect-docs.md`. Naming inconsistency in the plan text only; all live pointers are self-consistent. No action needed.
+- F2 (already routed by Worker to Findings): PAGES_OVERVIEW.md "Typical User Journey" diagram implies a prescribed linear flow. PM to route at close.
+
+**Hardware check:** N/A — docs-only task; no [hw] tag. PASS closes the task.
+
+**Reviewer cleanup (actual ls):** `.scratch/` contains `pm-notes.md` (PM's) and `review-notes.md` (this review, PO may delete); `_to_delete/` empty — nothing for PO to `git rm`.

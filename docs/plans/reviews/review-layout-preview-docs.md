@@ -57,7 +57,16 @@ N/A — not a [hw] task (documentation only; no hardware behavior touched).
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. Output = PASS/FAIL + findings + Findings one-liners. -->
-**Result:** ___ / PASS / FAIL  ·  **Date:** ____-__-__  ·  **Fail count:** __
+**Result:** FAIL  ·  **Date:** 2026-11-01  ·  **Fail count:** 1
+
+All 14 grep criteria were re-run against HEAD (24180c5; doc identical to declared head 98d5e7d — `git diff 98d5e7d..24180c5 -- docs/pages/LayoutPreview.md` is empty). 13/14 PASS as annotated. Scope clean (only LayoutPreview.md + current-sprint.md checkpoints). All six snippet blocks verified verbatim against src/pages/LayoutPreview.vue L54-150 (identifiers/values identical; only allowed condensation: indent, trailing `;`, comment wording, ellipsis). Design-intent untouched. Tag [high-stakes] correct.
 
 ### Failed items (FAIL only)
-(none yet)
+**F1 — Stale criterion in THIS review file (self-created inconsistency; QA tier → FAIL, quick fix-round clears it).**
+- Line 13: `- 1b: \`grep -c 'getLayoutConfig(keyCount' docs/pages/LayoutPreview.md\` prints \`1\`` — actual count at HEAD is **2** (doc L128 = updateLayout snippet, 1b; doc L202 = data-flow diagram line, a *planned* 1d edit per Worker notes: "productName in Storage value/diagram/persistence lines").
+- Verified: at 1b commit 7d12843 the count WAS 1 (`git show 7d12843:docs/pages/LayoutPreview.md | grep -c 'getLayoutConfig(keyCount'` → 1). The criterion was accurate when written but the Worker's own 1d diagram edit made it stale — and the Worker annotated the two parallel criteria (L9 `layoutData` 2→5, L14 `loadCustomLayouts` 2→3) but missed this one.
+- Per this file's own rule ("If a criterion is revised after this file exists, UPDATE it here too"), the revision never landed.
+- **Fix (Worker, fix ONLY this):** annotate line 13 to match the L9/L14 pattern — e.g. append `(was exactly 1 at 1b; now 2 after 1d diagram edit)`. NO change to docs/pages/LayoutPreview.md — the doc content is correct; L202 `getLayoutConfig(keyCount, ..., productName) → layoutData` accurately reflects src.
+
+### Findings (non-defect observations)
+(none)

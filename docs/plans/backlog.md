@@ -38,7 +38,8 @@ extraction per sprint/branch — never a multi-phase rewrite in one go.
 - Foundation: docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet reassembly).
 
 ### docs-pages-verify — reconcile each docs/pages/*.md against its current .vue (one page per sprint)
-Page docs predate the code changes and haven't been re-verified. One sprint per implemented page: check the doc against current source, update stale content. Advanced-key stub pages excluded (documented when built).
+- [docs] Page docs predate the code changes and haven't been re-verified. One sprint per implemented page: check the doc against current source, update stale content. Advanced-key stub pages excluded (documented when built).
+- [docs] docs/pages/Debug.md still describes the old 16-getter debug panel (autoConnect/requestDevice/fetchAllData, mode testing, export JSON), but Debug.vue (~307 lines) is now a simple axis inspector (select key → getAxis() → JSON display); sprint-11 Task 3 fixed only the service-name mentions. Verify: src/pages/Debug.vue script section vs Debug.md Features/Data Flow/API Reference. (2026-10-13.)
 
 ### docs-meta-verify — correctness pass on project meta docs
 README.md (repo root) + .github/* (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, issue/PR templates, ci.yml).
@@ -47,7 +48,6 @@ README.md (repo root) + .github/* (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, issu
 (empty — the 2 sprint-22 items were routed into sprint-23-code-issues, 2026-10-29.)
 
 ## Document issues
-- [docs] docs/pages/Debug.md still describes the old 16-getter debug panel (autoConnect/requestDevice/fetchAllData, mode testing, export JSON), but Debug.vue (~307 lines) is now a simple axis inspector (select key → getAxis() → JSON display); sprint-11 Task 3 fixed only the service-name mentions. Verify: src/pages/Debug.vue script section vs Debug.md Features/Data Flow/API Reference. (2026-10-13.)
 - [docs] sdk-reference-v2.md stale app line-refs (found during sprint-24 §9 sweep, all OUTSIDE §9 — §9's own refs were fixed in sprint-24; doc line-refs re-verified 2026-11-01 at sprint-24 PM-close after the +6 drift from the §9 edits — re-verify again before any future edit, they drift with every doc change). Verify each against current source before editing: (a) §13.7 `ExportService.ts:3` at :3845 and :3961 → now :4; (b) §13.7 "Site 3 — no other file imports" + "three sites" count (:179/:3779/:3783) → src/ now has 5 `utils/validate` import sites (2 prod + 3 `__tests__` since sprint-21); (c) §13.x bundle table :3684 "192 K" → ~170 K at sdk-keyboard 1.0.20 (173,688 B); (d) :3525 `retryWithBackoff (ExportService.ts:9)` → declaration at :27; (e) :3522 `requestDevice … KeyboardService.ts:120–125` → method at :182, `navigator.hid.requestDevice` call at :187; (f) §7/§14.9 claims "app calls `setMacro(param, macros)` with NO third arg (`KeyboardService.ts:538`)" at :105/:1974/:4281/:4319 → KeyboardService now has `async setMacro(param, macros, touchMode: string)` (:603 wrapper, :608 delegation) and PASSES touchMode — the documented touchMode-reset exposure may be CLOSED; needs its own verify pass (incl. whether callers always supply touchMode) + doc rewrite of the §7 bug narrative. One doc sweep can fix (a)-(e); (f) is a separate verify+doc task. (2026-10-29, sprint-24 PM-open; refs refreshed 2026-11-01, sprint-24 PM-close, F2.)
 
 ## Constraints (standing guardrails — NOT work items; apply conditionally, never removed by a sprint)

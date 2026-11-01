@@ -38,8 +38,8 @@ extraction per sprint/branch — never a multi-phase rewrite in one go.
 - Foundation: docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet reassembly).
 
 ### docs-pages-verify — reconcile each docs/pages/*.md against its current .vue (one page per sprint)
-- [docs] Page docs predate the code changes and haven't been re-verified. One sprint per implemented page: check the doc against current source, update stale content. Advanced-key stub pages excluded (documented when built).
-- [docs] docs/pages/Debug.md still describes the old 16-getter debug panel (autoConnect/requestDevice/fetchAllData, mode testing, export JSON), but Debug.vue (~307 lines) is now a simple axis inspector (select key → getAxis() → JSON display); sprint-11 Task 3 fixed only the service-name mentions. Verify: src/pages/Debug.vue script section vs Debug.md Features/Data Flow/API Reference. (2026-10-13.)
+- [docs] Page docs predate the code changes and haven't been re-verified. One sprint per implemented page: check the doc against current source, update stale content. Advanced-key stub pages excluded (documented when built). Skip debug.md for a possible future sprint of its own.
+
 
 ### docs-meta-verify — correctness pass on project meta docs
 README.md (repo root) + .github/* (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, issue/PR templates, ci.yml).

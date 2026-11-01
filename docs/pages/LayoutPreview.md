@@ -59,10 +59,16 @@ The Layout Preview page provides a visual representation of different keyboard p
 ### Component Setup
 ```vue
 <script lang="ts">
+import { getLayoutConfig, refreshCustomLayouts } from '@utils/layoutConfigs';
+import LayoutStorageService, { type CustomLayoutConfig } from '@/services/LayoutStorageService';
+
 setup() {
-  const layout = ref<any[][]>([]);
-  const selectedLayout = ref<number | null>(null);
+  const layout = ref<number[][][]>([]);
+  const selectedLayout = ref<number | string | null>(null); // Number or productName string
   const layouts = [61, 67, 68, 80, 82, 84, 87];
+  const customLayouts = ref<CustomLayoutConfig[]>([]);
+
+  const layoutData = ref<ReturnType<typeof getLayoutConfig>>({ rows: 0, cols: 0, keyPositions: [], gaps: [] });
   ...
 }
 </script>
@@ -72,29 +78,18 @@ setup() {
 
 #### 1. **Grid Style Calculation**
 ```typescript
-const gridStyle = computed(() => {
-  const { keyPositions, gaps } = getLayoutConfig(selectedLayout.value ?? 82);
-  
+const gridStyle = computed<CSSProperties>(() => {
+  const { keyPositions, gaps } = layoutData.value;
   if (!keyPositions || keyPositions.length === 0) {
-    return { height: '0px', width: '0px' };
+    return { height: '0px', width: '0px' } as CSSProperties;
   }
-  
-  // Calculate total container height (sum of row heights + gaps)
-  const containerHeight = keyPositions.reduce((max, row, i) => {
-    const rowMaxHeight = Math.max(...row.map(pos => pos[1] + pos[3]));
-    return max + rowMaxHeight + (gaps[i] || 0);
-  }, 0);
-  
-  // Calculate max row width
-  const maxRowWidth = Math.max(...keyPositions.map(row => 
-    row.reduce((sum, pos) => sum + pos[2], 0)
-  ));
-  
+  const containerHeight = keyPositions.reduce((max: number, row: number[][], i: number) => max + Math.max(...row.map((pos: number[]) => pos[1] + pos[3])) + (gaps[i] || 0), 0);
+  const maxRowWidth = Math.max(...keyPositions.map((row: number[][]) => row.reduce((sum: number, pos: number[]) => sum + pos[2], 0)));
   return {
     position: 'relative',
     height: `${containerHeight}px`,
     width: `${maxRowWidth}px`,
-    margin: '0 auto'
+    margin: '0 auto',
   };
 });
 ```

@@ -11,10 +11,11 @@
 - Cleanup (from actual ls): `.scratch/` has pm-notes.md + review-notes.md (review-notes.md is stale sprint-26 leftover; PO may delete both freely). `_to_delete/` empty.
 
 ## ▶ RUN THIS
-Next: Task 1a — LayoutPreview.md snippet fixes: Component Setup + gridStyle. Do this task, commit, advance this block to 1b, then stop.
+Next: Task 1b — LayoutPreview.md snippet fixes: getKeyStyle + updateLayout. Do this task, commit, advance this block to 1c, then stop.
 
 ## Tasks
-1. **LayoutPreview.md ↔ LayoutPreview.vue reconciliation** — [high-stakes] — STATUS: PENDING
+1. **LayoutPreview.md ↔ LayoutPreview.vue reconciliation** — [high-stakes] — STATUS: IN-PROGRESS
+   - Checkpoint (1a DONE): both edits applied verbatim (file is CRLF — python replace used). Done-when all pass: `ref<any` → nothing; `layoutData` → 2; `selectedLayout.value ?? 82` → 2 (doc now 362 lines). base=a846953 for review file. Committed. Next: 1b.
    - Sequential sub-tasks 1a→1b→1c→1d, each with its OWN commit + Done-when greps. Parent stays IN-PROGRESS until 1d; then Worker → IN-REVIEW + writes `docs/plans/reviews/review-layout-preview-docs.md` (base = this PM-open commit — `git rev-parse HEAD` at 1a start; head = the 1d commit). Reviewer runs ONCE at the end over cumulative base..head.
    - Files: edit ONLY `docs/pages/LayoutPreview.md`. Source of truth (READ-ONLY): `src/pages/LayoutPreview.vue`. Read each file ONCE.
    - All replacement text below is grep/awk-verified against src this session — apply VERBATIM. Code-snippet formatting may stay condensed, but identifiers/values must match src exactly.

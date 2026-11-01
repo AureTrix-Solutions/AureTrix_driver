@@ -11,11 +11,12 @@
 - Cleanup (actual `ls` at PM-open): `.scratch/` has pm-notes.md (PO may delete); `_to_delete/` empty (only .gitkeep)
 
 ## ▶ RUN THIS
-**Worker session ("go"):** run the session-start check, then execute Task 1 below. The 4 edits are given as exact OLD→NEW text (grep-verified at PM-open against HEAD `59baae1`) — APPLY, do not re-derive. If any OLD text fails to match, STOP and report to the PO; do not improvise a variant. Then: run all Done-when greps, commit `sprint-24-sdk-ref-s9-verify: task 1`, create `docs/plans/reviews/review-s9-verify.md` from docs/plans/templates/review-template.md (SPRINT GOAL = the GOAL line above; DONE WHEN = Task 1's criteria; Base `59baae1` → Head `<your commit>`), set Task 1 → IN-REVIEW, overwrite this block with:
+**PM session (plan mode):** revise Task 1's Done-when criterion 5 — it is WRONG as written (see `## Findings` F1). All 4 edits (E1–E4) are already applied verbatim and committed (`563e0a0`); only the criterion needs revising. Proposed: scope the grep to the E4 line, e.g. `grep -cF "See §13.7 for all three import sites" docs/sdk-reference-v2.md` → `0`, plus a note that the residual `all three import sites` at :3783 is §13.7's own intro (backlogged, untouched). Revise + log `revN (date): <change>` on PO confirmation, update the checkpoint, then hand to the Reviewer: create `docs/plans/reviews/review-s9-verify.md` per the original block (Base `59baae1` → Head `563e0a0`, or the revision commit if the file changes), set Task 1 → IN-REVIEW, and overwrite this block with:
 > **Reviewer session:** follow docs/plans/reviews/review-s9-verify.md
 
 ## Tasks
-1. **Apply the 4 in-§9 drift fixes to docs/sdk-reference-v2.md** — [high-stakes] — STATUS: PENDING
+1. **Apply the 4 in-§9 drift fixes to docs/sdk-reference-v2.md** — [high-stakes] — STATUS: IN-PROGRESS
+   - CHECKPOINT (Worker): E1–E4 applied verbatim, committed `563e0a0` (touches ONLY docs/sdk-reference-v2.md; hunks at :2262/:2389/:2397, all inside §9). Done-when greps rerun: 1,2,3a,3b,4,6 all PASS; 5 FAILS BY SPEC CONFLICT (see Findings F1 — routed to PM, no improvisation). Self-check done: both edited spans reread once — list numbering in §9 item 6 intact, backticks balanced, no double spaces at joins; no TODO/FIXME introduced. Cleanup (actual `ls`): `.scratch/` has pm-notes.md (PO may delete); `_to_delete/` empty — no cleanup needed from this task.
    - Files: `docs/sdk-reference-v2.md` ONLY. No source edits. No other doc sections (the status-table row :154 "`setMacro` not awaited" stays — that phrase is still true; the FALSE claim is the body sentence fixed in E1).
    - Why high-stakes: rewrites an SDK behavioral claim (E1) in the project's ground-truth reference.
    - **E1 — §9 intro, item 6: the setMacro race claim is WRONG** (bundle 1.0.20: `setImportData` ends `…await this.setSystem(r),this.setMacro(s),{success:!0}`; the `setMacro` it binds is ExportController's own SYNCHRONOUS method `setMacro(e){const{list:t}=e;localStorage.setItem("MacroList",JSON.stringify(t))}` — not the async hardware-writing facade `setMacro` of §7, which lives on HigherKeyController). Grep anchor (unique, :2265-2266): `can resolve before macros are written`.
@@ -52,5 +53,5 @@
    - Worker self-check before IN-REVIEW: reread the 4 edited spans ONCE for markdown sanity (list numbering in §9 item 6 intact, backticks balanced, no double spaces at line joins); fix inline-fixable defects before handoff.
 
 ## Findings (raw — PM routes at close)
-- <none yet>
+- F1 (WRONG DONE-CRITERION — this sprint, Task 1): Done-when `grep -cF "all three import sites" docs/sdk-reference-v2.md → 0` is unsatisfiable within Task 1's scope. E4 replaces that phrase only at its §9.2 anchor (:2399); a second, distinct occurrence lives in §13.7's own intro (`grep -n "all three import sites" docs/sdk-reference-v2.md` → :3783), which E4 explicitly declares out of scope and Done-when 7 forbids touching. Verify: after applying E4 verbatim the grep returns 1 (commit `563e0a0`). Criterion needs PM revision (scope the grep to the E4 anchor phrase), not a Worker edit.
 <!-- Out-of-§9 drift found at PM-open was routed DIRECTLY to backlog.md (Document issues) — PM is sole backlog writer; no need to re-route at close. -->

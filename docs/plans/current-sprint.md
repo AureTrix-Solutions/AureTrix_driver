@@ -9,14 +9,14 @@ rev1 (2026-11-01): Task 2 "no third argument" done-when count fixed 0→1 — PM
 - Branch: `sprint-25-sdk-ref-2`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — docs-only sprint, code self-check gate SKIPPED (no .ts/.vue touched)
 - Cleanup (actual ls at PM-open): .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty — no cleanup needed
-- Task 2 → IN-REVIEW (Worker 2026-11-01, commit 29aa7c6, base 7e374d4): edits 1–4 applied verbatim to the 4 grep-anchored sites; all 7 Done-when greps pass (0/1/4/2/1/1/1); no new Findings; docs-only so typecheck/build gate N/A; review-setmacro-close.md written with base/head. Cleanup (actual ls): .scratch/ empty, _to_delete/ only .gitkeep — no cleanup needed.
+- Task 2 → DONE @ 29aa7c6 (Reviewer PASS 2026-11-01, review-setmacro-close.md): diff scope single-file, 4 hunks at exactly the 4 anchored sites, edits verbatim vs PM spec; all 7 Done-when greps match; doc's new claims re-verified vs wrapper (:603 required touchMode, :608 forwards), zero app callers, SDK facade/entry typings; no Findings. Cleanup (actual ls): .scratch/ has review-notes.md (PO may delete); _to_delete/ has .gitkeep only — no cleanup needed.
 - Task 1 → DONE @ 0b7401a (Reviewer PASS 2026-11-01, review-ref-sweep.md; the two +1 count deltas ruled — caused by the PM-specified banner text itself, substantive criteria all met). Cleanup (actual ls): .scratch/ has pm-notes.md + review-notes.md (PO may delete); _to_delete/ has .gitkeep only — no cleanup needed
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted → STOP, report.
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph.
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-ALL TASKS DONE (work-wise) — Task 2 is IN-REVIEW: open a Reviewer window ("follow docs/plans/reviews/review-setmacro-close.md"), then PO sign-off at PM-close. Task 1 is DONE (Reviewer PASS).
+ALL TASKS DONE — Reviewer PASS on both tasks (Task 1 @ 0b7401a, Task 2 @ 29aa7c6). Awaiting PO sign-off: open a PM-close window ("Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise.").
 
 ## Tasks
 
@@ -40,7 +40,7 @@ ALL TASKS DONE (work-wise) — Task 2 is IN-REVIEW: open a Reviewer window ("fol
    - Done when: historical body untouched — `grep -c "two of them broken"` → 1 AND `grep -c "Site 3"` before edits == after edits (record both counts in the checkpoint)
    - Then: commit `sprint-25-sdk-ref-2: task 1 — line-ref sweep (a)-(e)`; write review-ref-sweep.md (sprint goal + these criteria + Base/Head hashes); STATUS → IN-REVIEW; advance ▶ RUN THIS to Task 2.
 
-2. **setMacro exposure-CLOSED rewrite (f)** — [high-stakes] — STATUS: IN-REVIEW
+2. **setMacro exposure-CLOSED rewrite (f)** — [high-stakes] — ✓ DONE (Reviewer PASS 2026-11-01 @ 29aa7c6; review-setmacro-close.md)
    - Files: `docs/sdk-reference-v2.md` only. Sequel to Task 1 (line refs have drifted — anchors only).
    - PM-verified ground truth (all banked; Worker may re-grep to confirm, not re-derive): wrapper `src/services/KeyboardService.ts:603` is `async setMacro(param: IMacroMode, macros: MacroType[], touchMode: string)` — REQUIRED 3rd arg — and `:608` passes it (`ensureKeyboard().setMacro(param, macros, touchMode)`). **Zero app callers** (`grep -rn "setMacro" src/` minus KeyboardService.ts → only ExportService comments about the localStorage facade). SDK bundle @1.0.20: `XDKeyboard.setMacro` forwards 3 args to the controller; controller maps `"quick"`→u=2, `"single"`→u=1, else u=0 (`let u=0;…y=u<<4|6`); `setImportData` calls `ExportController`'s SYNC `setMacro` = localStorage-only facade → **import path has NO touchMode exposure** (doc ~:2271 already says this correctly — NO EDIT there). SDK `.d.ts` types the param as bare `string` (index.d.ts:76) — doc ~:1973 sentence "typed as bare `string` on `XDKeyboard`" stays TRUE — NO EDIT. §7 u-mapping table (~:1970-1971, `'quick'`/`'single'`/collapse rows) is SDK-true — NO EDIT.
    - Residual hazard to state in the rewrite: `getPerformanceMode` reads back `'global'|'single'|'rt'` (bundle `getLayoutModel`), but the controller only accepts `'quick'`→u=2 — so a FUTURE macro-page caller passing back a read `'rt'` still collapses that key to global. Hardware confirmation of the SDK device behavior remains PENDING (encoding source-verified, never tested on device) — keep the checklist row, do not delete it.

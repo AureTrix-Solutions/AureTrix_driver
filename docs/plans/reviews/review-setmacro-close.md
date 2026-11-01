@@ -32,13 +32,28 @@ Fix-round ranges (added on each re-review): —
 N/A — not an [hw] task.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies — or N/A (docs-only)
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies — or N/A (docs-only)
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
 <!-- After ONE verification pass, RULE. -->
-**Result:** — (awaiting Reviewer)  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-11-01  ·  **Fail count:** 0
+
+**Evidence (all grep-verified at head `29aa7c6`, range `7e374d4..29aa7c6`):**
+- Diff scope: `git diff --stat` → ONLY `docs/sdk-reference-v2.md`, 4 insertions / 14 deletions. No stray files.
+- All 7 Done-when greps match exactly: `KeyboardService\.ts:538`→0 · `no third argument`→1 · `KeyboardService\.ts:603`→4 · `Residual hazard`→2 · kept-greps `typed as bare \`string\` on \`XDKeyboard\``→1, `all collapse to the same value`→1, `is not called by`→1.
+- `git diff -U0`: exactly 4 hunks (doc :105 checklist row, :1974 §7 prose, :4283 §14.9(a), :4321 §15 row) — precisely the plan's 4 anchored sites; each replacement matches the PM-specified text verbatim (incl. edit-4 severity `**High**`→`**Low** (closed in current code)` and the renamed risk cell). No edits outside the sites; no historical/banner-protected text touched.
+- Independent re-verification of the doc's new factual claims against source:
+  - Wrapper (`grep -n setMacro src/services/KeyboardService.ts`): `:603` `async setMacro(param: IMacroMode, macros: MacroType[], touchMode: string)` — third arg REQUIRED; `:608` forwards all three. Matches doc.
+  - Zero app callers (`grep -rn setMacro src/` minus KeyboardService.ts): only two comment lines in ExportService.ts about the SDK-internal sync facade — no call sites. Matches "zero app callers as of sprint-25".
+  - Import-path facade (`grep -n setMacro` sdk-keyboard dist/esm): `higherKey.d.ts:26` requires `touchMode`; package entry `index.d.ts:76` is the narrower 3-arg form. Matches the doc's facade/typings claims.
+- Typecheck/build gate: N/A — docs-only task, no .ts/.vue touched. Design intent: n/a (no code).
+- Tag [high-stakes] correct (SDK-correctness doc claims) — properly reviewed.
+
+**Findings:** none. Cleanup (actual ls): `.scratch/` has review-notes.md (PO may delete); `_to_delete/` has .gitkeep only — no cleanup needed.
+
+**Task 2 → DONE.** All sprint tasks DONE — awaiting PO sign-off at PM-close.

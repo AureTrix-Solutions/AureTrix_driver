@@ -41,7 +41,7 @@ Base: `a846953` (PM-open commit, branch point)   Head: `98d5e7d` (1d, final sub-
      NOTE: docs/plans/current-sprint.md appears in the diff — that is checkpoint/status
      bookkeeping by the Worker (per protocol), expected, not a scope violation. The only
      SOURCE-of-truth file edited is docs/pages/LayoutPreview.md. -->
-Fix-round ranges (added on each re-review): none
+Fix-round ranges (added on each re-review): `98d5e7d..dfedbc7` (F1 fix: review-file L13 annotation only; `git diff 98d5e7d..dfedbc7 -- docs/pages/LayoutPreview.md` empty — doc untouched)
 
 ## 🖥️ Hardware check ([hw] tasks only)
 N/A — not a [hw] task (documentation only; no hardware behavior touched).
@@ -70,3 +70,14 @@ All 14 grep criteria were re-run against HEAD (24180c5; doc identical to declare
 
 ### Findings (non-defect observations)
 (none)
+
+---
+## ✅ RE-CHECK VERDICT (F1 only)
+**Result:** PASS  ·  **Date:** 2026-11-01  ·  **HEAD reviewed:** dfedbc7  ·  **Scope:** F1 fix only, per ▶ RUN THIS (all other 13 criteria PASSED in the review above; not re-run).
+
+- **F1 FIXED** — line 13 now reads: `- 1b: \`grep -c 'getLayoutConfig(keyCount' docs/pages/LayoutPreview.md\` prints \`1\` (was exactly 1 at 1b; now 2 after 1d diagram edit)` — the exact annotation pattern prescribed, consistent with L9 (`layoutData`) and L14 (`loadCustomLayouts`).
+- Annotation factually accurate: `grep -c 'getLayoutConfig(keyCount' docs/pages/LayoutPreview.md` → **2** at HEAD (doc L128 updateLayout snippet + L202 data-flow diagram line — the same two occurrences verified in the prior round).
+- Scope clean: fix commit `dfedbc7` touched ONLY this review file (1 line) + current-sprint.md (checkpoint bookkeeping, expected). `git diff 98d5e7d..dfedbc7 -- docs/pages/LayoutPreview.md` is **empty** → doc identical to the declared head that passed all content checks.
+- Findings: (none).
+
+**Task 1 → DONE.** All sprint tasks complete — awaiting PO sign-off (route via PM-close).

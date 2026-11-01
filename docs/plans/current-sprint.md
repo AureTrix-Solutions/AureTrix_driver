@@ -11,13 +11,11 @@
 - Cleanup (from actual ls): `.scratch/` has pm-notes.md + review-notes.md (review-notes.md is stale sprint-26 leftover; PO may delete both freely). `_to_delete/` empty.
 
 ## ▶ RUN THIS
-Next: WORKER fix-round — fix ONLY these (detail in docs/plans/reviews/review-layout-preview-docs.md):
-- F1 (review file §Failed items): annotate the stale 1b criterion on review-file line 13 (`grep -c 'getLayoutConfig(keyCount'` "prints 1" → actual 2 after the planned 1d diagram edit) to match the L9/L14 annotation pattern, e.g. append `(was exactly 1 at 1b; now 2 after 1d diagram edit)`. Do NOT touch docs/pages/LayoutPreview.md — the doc itself passed all checks.
-Then commit and flip Task 1 → IN-REVIEW for re-check of ONLY this item.
+Next: REVIEWER re-check — "follow docs/plans/reviews/review-layout-preview-docs.md". Re-check ONLY the F1 fix (review-file line 13 annotation); all other items already PASSED 2026-11-01. Fix commit: review file only, docs/pages/LayoutPreview.md untouched. On PASS → Task 1 DONE + advance.
 
 ## Tasks
-1. **LayoutPreview.md ↔ LayoutPreview.vue reconciliation** — [high-stakes] — STATUS: IN-PROGRESS
-   - Reviewer verdict 2026-11-01: FAIL (1 item — F1, stale criterion in review file; doc content clean: 13/14 greps pass, snippets verbatim vs src, scope clean). ✓ 1a-1d all committed (62a07b1/7d12843/0a3b404/98d5e7d). Fix checklist in ▶ RUN THIS.
+1. **LayoutPreview.md ↔ LayoutPreview.vue reconciliation** — [high-stakes] — STATUS: IN-REVIEW
+   - Fix-round done 2026-11-01: F1 fixed — review-file L13 annotated `(was exactly 1 at 1b; now 2 after 1d diagram edit)`; grep count = 2 at HEAD confirmed. docs/pages/LayoutPreview.md untouched. ✓ 1a-1d (62a07b1/7d12843/0a3b404/98d5e7d). Awaiting Reviewer F1-only re-check.
 
 ## Findings
 (empty — append ONE line per out-of-scope defect/idea: what + where to verify)

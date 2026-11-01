@@ -10,7 +10,7 @@
 - 1a: `grep -c 'selectedLayout.value ?? 82' docs/pages/LayoutPreview.md` printed `2` at 1a (getKeyStyle + updateLayout remained until 1b)
 - 1b: `grep -n 'selectedLayout.value ?? 82' docs/pages/LayoutPreview.md` returns nothing
 - 1b: `grep -n 'rowLength' docs/pages/LayoutPreview.md` returns ≥1 line
-- 1b: `grep -c 'getLayoutConfig(keyCount' docs/pages/LayoutPreview.md` prints `1`
+- 1b: `grep -c 'getLayoutConfig(keyCount' docs/pages/LayoutPreview.md` prints `1` (was exactly 1 at 1b; now 2 after 1d diagram edit)
 - 1c: `grep -c 'loadCustomLayouts' docs/pages/LayoutPreview.md` prints ≥2 (was exactly 2 at 1c; now 3 after 1d diagram edit)
 - 1c: `grep -n 'isCustom' docs/pages/LayoutPreview.md` returns ≥1 line
 - 1c: `grep -c 'onMounted(async' docs/pages/LayoutPreview.md` prints `1`

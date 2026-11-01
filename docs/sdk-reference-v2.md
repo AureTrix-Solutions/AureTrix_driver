@@ -102,7 +102,7 @@ index. Non-hardware unverified items (e.g. packaging defects in §13.4) are not 
 | SOCD & END `delay` unit | §6.7, §6.8 | Unit of the raw unscaled 16-bit `delay` (ms? 10 ms? something else) and its effective ceiling | `setEND`/`setSocd` (v ≥ 1.0.7) with known delays, measure the observed timing (high-speed capture or stopwatch), and check clamping at large values |
 | SOCD V1 duplicated packing — intentional or bug | §6.0, §13.3 | Whether `[key, dks1, mode1, dks1, key, mode2]` is meaningful to firmware | Requires a device on firmware < 1.0.5: write V1 shape, exercise the key pair, read back (decode is V3-only, so judge by behaviour) |
 | RS byte meaning & slot independence | §6.9 | What the single 0–255 `dks` byte controls (no scaling ⇒ neither mm nor 10 ms delay), and whether wire offsets 1/2 are two independent firmware slots or one mirrored value | `setRS(key, dks)` across the range and observe key behaviour; `getRS` afterwards — `dks1 !== dks2` ever appearing (after vendor-software writes or firmware defaults) proves independent slots |
-| `setMacro` touchMode reset bug | §7 | Writing a macro rewrites the whole `Layout_Mode` byte as `(u << 4) \| 6`, with `u = 0` unless `touchMode` is `'quick'`/`'single'` — so an omitted third arg should reset a `single`/`rt` key to global | Put a key in single or RT mode (`setPerformanceMode`), call `setMacro` **without** `touchMode` (as `KeyboardService.ts:538` does), then `getPerformanceMode(key)` — expected `{ touchMode: 'global', advancedKeyMode: 6 }` |
+| `setMacro` touchMode reset bug | §7 | Writing a macro rewrites the whole `Layout_Mode` byte as `(u << 4) \| 6`, with `u = 0` unless `touchMode` is `'quick'`/`'single'` — so an omitted third arg should reset a `single`/`rt` key to global | No longer reachable through app code (wrapper `KeyboardService.ts:603` requires `touchMode` and passes it at `:608`; zero app callers as of sprint-25). To test the SDK behavior directly: put a key in single or RT mode (`setPerformanceMode`), then from the console call the raw `XDKeyboard.setMacro(param, macros)` with no third argument, then `getPerformanceMode(key)` — expected `{ touchMode: 'global', advancedKeyMode: 6 }` |
 | `KeyboardConfig` round-trip | §9.1 | Which fields actually survive `exportConfig` → `importConfig` through hardware | `exportConfig`, change several settings on the device, `importConfig` the saved blob, then re-export and diff field by field |
 | MT `delay` unit | §6.5 | Unit of the single raw byte (0–255) hold threshold in `IMTMode` | `setMT` with known delays, measure where the tap/hold decision flips; compare with `getMtorTgl`'s `raw * 10` ms reading of the same slot |
 | TGL `delay` firmware minimum | §6.6 | Minimum delay firmware accepts below the proven 2550 ms ceiling / 10 ms granularity | Binary-search small delays via `setTGL`, checking `getTGL` read-back and toggle behaviour |
@@ -1971,8 +1971,7 @@ through to `u = 0` (identical to `'global'`). So the declared type and the imple
 | `'global'`, `'rt'`, anything else | `0` | Mode byte `(0 << 4) \| 6` — all collapse to the same value |
 
 Since the parameter is typed as bare `string` on `XDKeyboard`, TypeScript will not catch a wrong
-value. **This app calls `setMacro(param, macros)` with no third argument** (`KeyboardService.ts:538`),
-so `touchMode` is `undefined` → `u = 0` in practice.
+value. **The app wrapper requires the third argument** — `KeyboardService.ts:603` declares `touchMode: string` and `:608` forwards it to `XDKeyboard.setMacro` — so `touchMode` is never `undefined` from app code (zero app callers as of sprint-25; the macro page is not built yet). Residual hazard for a future caller: `getPerformanceMode` reads back `'rt'`, but only `'quick'` maps to `u = 2` — passing `'rt'` through would yield `u = 0` and reset an RT key to global, so the macro page must map `'rt'`→`'quick'` (or re-apply the mode after the write).
 
 ```ts
 interface IMacroMode {
@@ -4280,16 +4279,7 @@ verified against source/bundle; the first additionally needs a hardware check fo
 *runtime effect*.
 
 **(a) `setMacro` without `touchMode` should reset a single/RT key to global — §7.**
-The app calls `setMacro(param, macros)` with **no third argument** (`KeyboardService.ts:538`),
-so `touchMode` is `undefined` → the compiled implementation computes `u = 0` and rewrites the
-entire `Layout_Mode` byte as `(u << 4) | 6 = 0x06`. Because `KeyTouchMode` is
-`{ global = 0, single = 1, rt = 2 }` (§5.2) and `'quick'` is the **only** accepted string that
-yields `u = 2`, writing a macro to a key that is currently in `single` or `rt` mode should
-collapse it to `global` (and set `advancedKeyMode = 6`). This is a source-verified encoding;
-its **real-world effect is a hardware test** (see the
-[Hardware verification checklist](#hardware-verification-checklist), "setMacro touchMode reset
-bug"). If confirmed, the app should pass the key's current `touchMode` as the third argument,
-or re-apply it after the macro write.
+The app wrapper now requires the third argument — `KeyboardService.ts:603` declares `touchMode: string` and `:608` forwards it — and no app code calls it as of sprint-25, so the omission is unreachable through the app (the import path is unaffected too: `setImportData` binds the **synchronous** `ExportController.setMacro`, a localStorage-only facade with no device write). The encoding hazard remains SDK-true: with `touchMode` omitted or any value other than `'quick'`/`'single'`, the compiled implementation computes `u = 0` and rewrites the entire `Layout_Mode` byte as `(u << 4) | 6 = 0x06`; because `KeyTouchMode` is `{ global = 0, single = 1, rt = 2 }` (§5.2) but `'quick'` is the **only** accepted string yielding `u = 2`, a future caller that passes back the `getPerformanceMode` value `'rt'` would still collapse that key to `global` (and set `advancedKeyMode = 6`). This is a source-verified encoding; its **real-world effect is a hardware test** (see the [Hardware verification checklist](#hardware-verification-checklist), "setMacro touchMode reset bug"). The macro-page sprint must map `'rt'`→`'quick'` or re-apply the mode after the write.
 
 **(b) The lighting `v` (1.0.9 `dynamicColorId`) gate is unreachable through the public facade — §6.0, §8.**
 `XDKeyboard.getLighting`/`setLighting` delegate to `LightingController` **without forwarding a
@@ -4318,7 +4308,7 @@ dead bands. A complete restore would need the third DB written separately.
 | **High** | `setDks` unwrapped (§14.5) | DKS **and** TRPS cannot be saved at all — no `setTrps` exists anywhere. |
 | **High** | All of `setMT`/`setTGL`/`setEND`/`setSocd`/`setMpt` unwrapped, plus `getMtorTgl` (§14.6) | Five advanced-key pages can render config but not persist it. MT-vs-TGL *is* disambiguable — via `advancedKeyMode` 3/4 from the wrapped `getPerformanceMode` (§5.2) — so the wrapped readers work; what is missing is the **MT delay**, which only `getMtorTgl` returns (TGL's own decoder already includes `delay`, §6.5). |
 | **High** | `getRS`/`setRS` both unwrapped (§14.7) | RS feature entirely unreachable. |
-| **High** | `setMacro` called with no `touchMode` (§7, §14.9) | **Silent config loss, pending hardware confirmation.** The app calls `setMacro(param, macros)` (`KeyboardService.ts:538`), so `touchMode` is `undefined` → `u = 0` → the whole `Layout_Mode` byte is rewritten as `(0 << 4) \| 6`. Since `KeyTouchMode.rt = 2` and `'quick'` is the only value that produces `u = 2`, a macro write to a key already in **single or RT** mode should reset it to **global**. *Test on hardware* — see the [Hardware verification checklist](#hardware-verification-checklist). |
+| **Low** (closed in current code) | `setMacro` touchMode encoding asymmetry (§7, §14.9(a)) | **App-side exposure CLOSED (sprint-25):** wrapper `KeyboardService.ts:603` requires `touchMode` and passes it (`:608`); zero app callers; the import path binds the localStorage-only facade (no device write). Residual hazard for a future macro page: the controller maps only `'quick'`→`u=2` / `'single'`→`u=1`, so passing back the `getPerformanceMode` value `'rt'` yields `u=0` and resets that key to global. The SDK device behavior remains hardware-unverified — see the [Hardware verification checklist](#hardware-verification-checklist). |
 | **Medium** | `deleteKey` unwrapped (§14.4) | No per-key reset; only `factoryDataReset`. |
 | **Medium** | `on`/`off`/`reconnection` bypassed (§14.1) | App maintains a hand-rolled reconnect state machine the SDK already provides. |
 | **Medium** | `resetUpgradeStatus` unexposed (§14.8) | Failed firmware flash can wedge reconnect handling with no public recovery path. |

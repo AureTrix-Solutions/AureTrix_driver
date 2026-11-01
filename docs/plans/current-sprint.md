@@ -9,17 +9,17 @@
 - Branch: `sprint-25-sdk-ref-2`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — docs-only sprint, code self-check gate SKIPPED (no .ts/.vue touched)
 - Cleanup (actual ls at PM-open): .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty — no cleanup needed
-- Task 1 → IN-REVIEW @ 0b7401a (review-ref-sweep.md). Edits applied + verified; all old refs 0 ✓, new values ✓, historical body untouched ✓. TWO expected counts off by +1, both caused by the PM-specified sprint-25 banner text itself containing "ExportService.ts:4" (:3791) and "Site 3" (:3791) — flagged in review file for Reviewer ruling. Cleanup (actual ls): .scratch/ has pm-notes.md only (PO may delete); _to_delete/ has .gitkeep only — no cleanup needed
+- Task 1 → DONE @ 0b7401a (Reviewer PASS 2026-11-01, review-ref-sweep.md; the two +1 count deltas ruled — caused by the PM-specified banner text itself, substantive criteria all met). Cleanup (actual ls): .scratch/ has pm-notes.md + review-notes.md (PO may delete); _to_delete/ has .gitkeep only — no cleanup needed
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted → STOP, report.
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph.
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Task 2 — setMacro exposure-CLOSED rewrite (f). Do this task, then stop. (Task 1 is IN-REVIEW — a separate Reviewer window runs "follow docs/plans/reviews/review-ref-sweep.md"; note the two +1 count deltas flagged there.)
+Next: Task 2 — setMacro exposure-CLOSED rewrite (f). Do this task, then stop. (Task 1 is DONE — Reviewer PASS.)
 
 ## Tasks
 
-1. **Stale line-ref sweep (a)–(e)** — [high-stakes] — STATUS: IN-REVIEW (review-ref-sweep.md; base d9c210d head 0b7401a)
+1. **Stale line-ref sweep (a)–(e)** — [high-stakes] — ✓ DONE (Reviewer PASS 2026-11-01 @ 0b7401a; review-ref-sweep.md)
    - Files: `docs/sdk-reference-v2.md` only.
    - **Doc line numbers below are PM refs for ordering ONLY — they drift after every edit. Anchor every edit on the quoted TEXT; grep the anchor before editing to confirm uniqueness/count.**
    - Edits (all PM-verified 2026-11-01, both sides):
@@ -57,4 +57,4 @@ Next: Task 2 — setMacro exposure-CLOSED rewrite (f). Do this task, then stop. 
 
 ## Findings
 <!-- Out-of-scope bugs/ideas: ONE line each (defect + where to verify), edit tool only. PM routes at next touchpoint. -->
-(none yet)
+- Task 1 Done-when counts for `ExportService\.ts:4` (exp 3, actual 4) and `Site 3` (exp before==after, actual 1→2) were wrong as written — the PM-specified banner text contains both strings; correct head counts are 4/2 if re-checked at close. Verify: review-ref-sweep.md §REVIEWER VERDICT finding F1.

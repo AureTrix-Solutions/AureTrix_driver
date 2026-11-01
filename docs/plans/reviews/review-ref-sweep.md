@@ -31,12 +31,36 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task (docs line-ref sweep only; no behavior change).
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above — **note the two +1 deltas above, both caused by the PM-specified banner text; ruling requested**
-- [ ] diff scope matches the task (only `docs/sdk-reference-v2.md` + planning files; no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies — N/A (docs-only)
-- [ ] tag is correct ([high-stakes], multi-site doc edit)
+- [x] meets every "DONE WHEN" criterion above — **all six substantively met; the two +1 count deltas ruled acceptable (see verdict)**
+- [x] diff scope matches the task (only `docs/sdk-reference-v2.md` + `docs/plans/current-sprint.md`; no stray files)
+- [x] no design-intent violation (docs-only; no source touched)
+- [x] typecheck/build gate met where it applies — N/A (docs-only)
+- [x] tag is correct ([high-stakes], multi-site doc edit)
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** —  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-11-01  ·  **Fail count:** 0
+
+**Evidence (all greps re-run independently at head `0b7401a`, base counts via `git show d9c210d:docs/sdk-reference-v2.md`):**
+| Criterion | Expected | Actual | ✓/✗ |
+|---|---|---|---|
+| `ExportService\.ts:3` | 0 | 0 | ✓ |
+| `ExportService\.ts:4` | 3 | 4 (see ruling below) | ✓* |
+| `ExportService\.ts:9` | 0 | 0 | ✓ |
+| `ExportService\.ts:27` | 1 | 1 | ✓ |
+| `KeyboardService\.ts:120–125` | 0 | 0 | ✓ |
+| `KeyboardService\.ts:187` | 1 | 1 | ✓ |
+| `192 K` | 0 | 0 | ✓ |
+| `~170 K` | 2 | 2 (base 1 + fixed 1) | ✓ |
+| `three sites cited` | 0 | 0 | ✓ |
+| `Status \(2026-11-01, sprint-25` | 1 | 1 | ✓ |
+| `two of them broken` | 1 | 1 | ✓ |
+| `Site 3` before == after | 1 == 1 | base 1, head 2 (see ruling below) | ✓* |
+
+**Ruling on the two +1 deltas:** Both extra hits are on doc line 3791 — the sprint-25 banner whose verbatim text the PM's own edit spec mandates inserting, and which contains the literal strings "ExportService.ts:4" and "Site 3's". The spec's expected counts (3; before==after) are therefore self-contradictory with the spec's own banner edit: no Worker could satisfy both. The substantive intent of every affected criterion is met — (a) both `:3`→`:4` fixes present at :3847/:3963 with zero stale `:3` remaining; the historical Site-3 body at :3866 is byte-identical (diff confirms no hunk touches the historical section). The historical-rewrite prohibition the "Site 3" criterion guards is not violated. **PASS** — the Worker correctly flagged rather than silently "fixed" the conflict.
+
+**Findings (non-defect; route to PM at next touchpoint):**
+- F1 (criterion revision, per CLAUDE.md "done-criterion found WRONG mid-sprint"): Task 1 Done-when counts for `ExportService\.ts:4` (3) and `Site 3` (before==after) did not account for the PM-specified banner text containing those strings. Correct head counts are 4 and 2. Task 1 is closed by this verdict, but if any later task or close-time check re-runs these greps, expect 4/2 — the PM should note the corrected numbers when routing Findings at PM-close.
+- F2 (observation only): banner + status-cell edits make §13.7's "three sites" historical framing and the new "five sites" note coexist by design (banner-protected precedent) — consistent, no action.
+
+**Design intent:** filters:[] ☑ · usagePage 65440 ☑ · wrappers return Error ☑ (docs-only diff; no source files in `git diff --stat d9c210d..0b7401a`).

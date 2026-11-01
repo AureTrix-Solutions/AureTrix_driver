@@ -176,7 +176,7 @@ not the SDK).
 | §13.4 Packaging defects | Verified | empirical Node import tests | 4b, 5 | ✅ Each claim tested by attempting the import and reading the error code. Batch 4b: ✅ corrected the `byte.d.ts` bullet — `param.ts` uses the same `Layout_` prefix and is the exported file, so `byte.d.ts` is not the source of the exported string unions. Batch 5: ✅ added the readable-`src/` mitigation note (16 `.ts` files, reference-only, not runtime-loadable) |
 | §13.5 Gaps closed after first pass | Verified | disk + bundle greps | — | ✅ `hidv2.js` absence and path-import failure both confirmed |
 | §13.6 Type-vs-runtime gap, generally | Partial | — | — | Interpretation built on §13.4/§13.5 evidence, not independently testable |
-| §13.7 How `src/` imports these types | Verified | `src/` (three sites cited) | sprint-03 | ✅ Import sites and their failure modes confirmed. sprint-03: ✅ corrected §13.7.4's `configs` claim — reachable via hid's internal devices()→requestDevice zero-match fallback (chain verified in sprint-01 review-variant-p-imports.md §R2) — and banner-noted preamble/Site 1/§13.7.3 as superseded by sprint-01's variant-P adoption |
+| §13.7 How `src/` imports these types | Verified | `src/` (five `utils/validate` sites since sprint-21; historical count banner-noted in §13.7) | sprint-03 | ✅ Import sites and their failure modes confirmed. sprint-03: ✅ corrected §13.7.4's `configs` claim — reachable via hid's internal devices()→requestDevice zero-match fallback (chain verified in sprint-01 review-variant-p-imports.md §R2) — and banner-noted preamble/Site 1/§13.7.3 as superseded by sprint-01's variant-P adoption |
 | §14 The 21 unwrapped SDK methods (+§14.9 cross-cutting gaps) | Verified | `.d.ts` + facade/controller bundle traces + `src/` for §14.9(a)/(c) | 4c, 5 | ✅ All 21 signatures re-verified verbatim against `index.d.ts` (incl. `updateBin` config shape, `toBoot`, `reconnection`). §14.9: (a) `setMacro` touchMode-clobber encoding ✅ from bundle, runtime effect hardware-pending; (b) `v`-gate unreachability ✅ from bundle (§6.0/§8); (c) 2-of-3 DB write ✅ from `setAdvancedKeys` source (§6.1). Implementations traced in the bundle for all functional groups: on/off/reconnection (§14.1), `setTopDeadSwitch` = ORDER_TYPE envelope write, `getSaturation` = `QUERY_LIGHT_FIX_RGB` read on InfoController, `setLightingSaturation` = `[68, …param, 0xff, 0xff]` payload (§14.2–14.3), `deleteKey` = single touch-mode-slot write `value = KeyTouchMode[mode] << 4` (§14.4), DKS/TRPS reads + `setDks` decode-reply pattern (§14.5), common "setters return the decoded read-back" pattern for all seven setters (§14.6), RS read packs `{key, dks: 0}` and set decodes reply (§14.7), `updateBin` rethrows + runtime ArrayBuffer check + fresh controller instance + `updateStatus` strings passed at runtime though absent from the type, `updateDrive` flow re-confirmed (§14.8). Remaining `[unverified]`: hardware behaviour of any of these (never exercised) |
 
 Each verification batch must update its rows here.
@@ -3519,10 +3519,10 @@ this is SDK behaviour — it is the convention every caller in `src/` follows.
    `init` does **not** throw — it resolves `null` on every failure path (§2) — and the SDK's
    `requestDevice` is not exposed on the facade at all; this app calls
    `navigator.hid.requestDevice` directly inside its own try/catch
-   (`KeyboardService.ts:120–125`).
+   (`KeyboardService.ts:187`).
 
 **Retry with backoff for bulk reads.** `ExportService` wraps every SDK read in
-`retryWithBackoff` (`src/services/ExportService.ts:9` — defaults `maxRetries = 2` (3 attempts),
+`retryWithBackoff` (`src/services/ExportService.ts:27` — defaults `maxRetries = 2` (3 attempts),
 linear backoff `backoffMs * (attempt + 1)` from `backoffMs = 200`). Caveat: it retries only on
 **thrown** errors — since `KeyboardService` wrappers *return* `Error` instances rather than
 throwing, a returned `Error` passes straight through as a "successful" result, so callers must
@@ -3681,7 +3681,7 @@ Reason 2 — **there is nothing at the path to load.** Each package ships **exac
 
 | Package | `.js` files | `.d.ts` files | bundle size |
 |---|---|---|---|
-| `sdk-keyboard` | **1** (`dist/esm/index.js`) | 14 | 192 K |
+| `sdk-keyboard` | **1** (`dist/esm/index.js`) | 14 | ~170 K |
 | `protocol-keyboard` | **1** (`dist/esm/index.js`) | 15 | 64 K |
 | `hid` | **1** (`dist/esm/index.js`) | 8 | 64 K |
 
@@ -3788,6 +3788,8 @@ disagree with the runtime results in §13.4. Verified with `npx tsc --noEmit -p 
 
 > **Status (2026-10-11, sprint-06): the protocol-keyboard root specifier now resolves too** — tsconfig paths remaps `@sparklinkplayjoy/protocol-keyboard` → `dist/esm/types/index.d.ts` (same variant-P pattern as hid). sdk-keyboard's own .d.ts root imports (type.d.ts ~24 names, validate.d.ts LightModeType) are now real instead of silent `any` under skipLibCheck. Exactly one error unmasked, absorbed in-sprint: KeyboardService.setPerformanceMode wrapper param narrowed `string` → `'global' | 'single' | 'rt'` (TouchModeType). VersionString remains dangling (§13.1). Baseline unchanged at 23.
 
+> **Status (2026-11-01, sprint-25): the "three sites" count below predates sprint-21** — `src/` now has **5** `utils/validate` import sites (prod: `ExportService.ts:4`, `KeyboardService.ts:5`; tests: `exportservice-helpers.ts:7`, `ExportService.import.test.ts:12`, `ExportService.roundtrip.test.ts:20`), and Site 3's "no other file imports from the three packages" no longer holds — `protocol-keyboard` is also imported directly by `Performance.vue:124`, `RapidTrigger.vue:404`, `types.ts:7`, and `hid` by `webhid.d.ts:4` + `connection.async.test.ts:3`. The text below describes the sprint-03 import map and is kept as historical context.
+
 **Site 1 — `KeyboardService.ts:2` and `DebugKeyboardService.ts:2` (identical line): broken.** *(Superseded — fixed in sprint-01 via variant P; see the status note above. The 4 × TS2614 no longer occur.)*
 
 ```ts
@@ -3842,7 +3844,7 @@ correctly today — the breakage is invisible outside `tsc`, which is exactly wh
 > so **migrating `moduleResolution` would change which of these imports work**, in both
 > directions.
 
-**Site 2 — `ExportService.ts:3`: works, but only by accident of the resolver.**
+**Site 2 — `ExportService.ts:4`: works, but only by accident of the resolver.**
 
 ```ts
 import type { KeyboardConfig, Keyboards } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate';
@@ -3958,7 +3960,7 @@ Four parts, in order of independence:
 2. **Import `Device` and `HIDDevice` from a specifier that actually resolves.** Two candidates,
    both now measured:
    - the deep path `@sparklinkplayjoy/hid/dist/cjs/src/types/types` (variants B/D, **72**) —
-     works today under `moduleResolution: "node"`, and is the same pattern `ExportService.ts:3`
+     works today under `moduleResolution: "node"`, and is the same pattern `ExportService.ts:4`
      already uses (Site 2). It fixes *only the app's own import line*. Fragile in the same way:
      it breaks if the package reorders `dist`, starts emitting per-module JS, or if the project
      migrates to `node16`/`bundler`. Must stay `import type` — a value import of that path fails

@@ -9,6 +9,7 @@
 - Branch: `sprint-25-sdk-ref-2`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — docs-only sprint, code self-check gate SKIPPED (no .ts/.vue touched)
 - Cleanup (actual ls at PM-open): .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty — no cleanup needed
+- Task 1 edits applied + verified: (a) :3→:4 ×2; (b) sprint-25 banner inserted after sprint-06 banner (:3789) + table cell swapped (:179); (c) 192K→~170K; (d) :9→:27; (e) :120–125→:187. Done-when: old refs all 0 ✓; ~170K=2 ✓; :27=1 ✓; :187=1 ✓; banner=1 ✓; historical body untouched ("two of them broken"=1, "all three import sites"=1, Site-3 heading intact). TWO expected counts off by +1, caused by the PM-specified banner text itself containing the strings: "ExportService.ts:4"=4 not 3 (extra hit :3791) and "Site 3" before=1/after=2 (extra hit :3791) — criterion conflict flagged in review file for Reviewer/PM
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted → STOP, report.
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph.
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
@@ -18,7 +19,7 @@ Next: Task 1 — stale line-ref sweep (a)–(e). Do this task, then stop.
 
 ## Tasks
 
-1. **Stale line-ref sweep (a)–(e)** — [high-stakes] — STATUS: PENDING
+1. **Stale line-ref sweep (a)–(e)** — [high-stakes] — STATUS: IN-PROGRESS
    - Files: `docs/sdk-reference-v2.md` only.
    - **Doc line numbers below are PM refs for ordering ONLY — they drift after every edit. Anchor every edit on the quoted TEXT; grep the anchor before editing to confirm uniqueness/count.**
    - Edits (all PM-verified 2026-11-01, both sides):

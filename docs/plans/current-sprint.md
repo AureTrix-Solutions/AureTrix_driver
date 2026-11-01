@@ -12,11 +12,11 @@
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: Task 1b — Connect.md back half (Dependencies → Related Documentation). Apply edits 8-14 below verbatim, run the Done-when greps, commit. Then stop.
+Next: Reviewer session — follow docs/plans/reviews/review-connect-docs.md (Task 1 group 1a+1b, cumulative diff 52e09e7..d021578). On PASS → task DONE, sprint flag "ALL TASKS DONE — awaiting PO sign-off".
 
 ## Tasks
-1. **Connect.md front half (Purpose → Data Flow)** — [high-stakes, group 1a/1b] — STATUS: IN-PROGRESS
-   - CHECKPOINT (1a, 2026-11-01): edits 1-7 applied verbatim; all 7 Done-when greps PASS ("App Navigation Enabled"/"Display connection status to the user"/"Shows error (handled by store)"/"Enables navigation to other pages" → 0; "Renders from:" → 1; "font-size: 0%" → 3; "KeyboardService" → 2). Docs-only, no typecheck gate. Committed as recovery point. No new findings.
+1. **Connect.md doc reconcile (group 1a+1b)** — [high-stakes] — STATUS: IN-REVIEW
+   - CHECKPOINT (1b, 2026-11-01): edits 8-14 applied verbatim (edit 14 initially mis-replaced, corrected to plan text); all 1a+1b Done-when greps PASS; QA sweep clean; F2 routed; review file written; base 52e09e7 → head d021578. Docs-only, no typecheck gate.
    - Files: `docs/pages/Connect.md`
    - Scope note: docs task — no typecheck/build gate. Apply each edit by grepping the FIND text (unique), replacing with the given text. Do not touch sections outside the edit list.
    - **Edit 1** — FIND `- Display connection status to the user` (Purpose) → REPLACE:
@@ -133,3 +133,4 @@ Next: Task 1b — Connect.md back half (Dependencies → Related Documentation).
 
 ## Findings
 - F1 RESOLVED (PO decision 2026-11-01): the hidden disabled-state label (`font-size: 0%` + transparent bg) is INTENTIONAL design — not a defect, no backlog entry. Doc edits 2/3 describe it as fact. Nothing further to route at close.
+- F2: PAGES_OVERVIEW.md "Navigation Flow → Typical User Journey" diagram still prescribes a linear Connect→Performance→Calibration→KeyMapping→Macro journey; app has no navigation gating, so the diagram overstates a required order. Where to verify: `grep -n "Typical User Journey" docs/PAGES_OVERVIEW.md` (sed ~340-355).

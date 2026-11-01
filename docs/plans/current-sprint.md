@@ -4,18 +4,19 @@
 **DONE-CRITERIA (sprint):** Task 1's 4 edits applied exactly as specced; `git show --stat` touches ONLY docs/sdk-reference-v2.md; every Done-when grep passes; Reviewer PASS. Docs-only sprint → typecheck/build gate N/A (no .ts/.vue touched), but hand off free of inline-fixable defects.
 
 <!-- rev0 (2026-10-29): sprint opened by PM. Full claim sweep + bundle re-verification done at PM-open (evidence was in .scratch/pm-notes.md — private, recreated per PM session; the verified FACTS live in the Task 1 spec below). -->
+<!-- rev1 (2026-11-01): F1 upheld and revised — Done-when 5's bare `all three import sites` → 0 grep was unsatisfiable in scope (§13.7's own intro :3783 keeps the phrase; out of scope + already backlogged under Document issues). Grep re-scoped to the E4 anchor: old anchor → 0 AND new anchor → 1 (both re-verified this session). No Worker edit was needed. -->
 
 ## Checkpoint
 - Branch: `sprint-24-sdk-ref-s9-verify` — clean at PM-open; base HEAD `59baae1`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — gate N/A (docs-only)
 - Cleanup (actual `ls` at PM-open): `.scratch/` has pm-notes.md (PO may delete); `_to_delete/` empty (only .gitkeep)
+- rev1 (2026-11-01, PM revision session): F1 upheld — Done-when 5 revised to the E4-anchor grep (old → 0 AND new → 1, both re-verified on tree); residual at :3783 = §13.7 intro, covered by the existing backlog Document-issues item, no new entry. Task 1 → IN-REVIEW; review-s9-verify.md created (Base `59baae1` → Head `563e0a0`); ▶ RUN THIS → Reviewer. Session start: tree clean, HEAD `5d56f8d`.
 
 ## ▶ RUN THIS
-**PM session (plan mode):** revise Task 1's Done-when criterion 5 — it is WRONG as written (see `## Findings` F1). All 4 edits (E1–E4) are already applied verbatim and committed (`563e0a0`); only the criterion needs revising. Proposed: scope the grep to the E4 line, e.g. `grep -cF "See §13.7 for all three import sites" docs/sdk-reference-v2.md` → `0`, plus a note that the residual `all three import sites` at :3783 is §13.7's own intro (backlogged, untouched). Revise + log `revN (date): <change>` on PO confirmation, update the checkpoint, then hand to the Reviewer: create `docs/plans/reviews/review-s9-verify.md` per the original block (Base `59baae1` → Head `563e0a0`, or the revision commit if the file changes), set Task 1 → IN-REVIEW, and overwrite this block with:
 > **Reviewer session:** follow docs/plans/reviews/review-s9-verify.md
 
 ## Tasks
-1. **Apply the 4 in-§9 drift fixes to docs/sdk-reference-v2.md** — [high-stakes] — STATUS: IN-PROGRESS
+1. **Apply the 4 in-§9 drift fixes to docs/sdk-reference-v2.md** — [high-stakes] — STATUS: IN-REVIEW
    - CHECKPOINT (Worker): E1–E4 applied verbatim, committed `563e0a0` (touches ONLY docs/sdk-reference-v2.md; hunks at :2262/:2389/:2397, all inside §9). Done-when greps rerun: 1,2,3a,3b,4,6 all PASS; 5 FAILS BY SPEC CONFLICT (see Findings F1 — routed to PM, no improvisation). Self-check done: both edited spans reread once — list numbering in §9 item 6 intact, backticks balanced, no double spaces at joins; no TODO/FIXME introduced. Cleanup (actual `ls`): `.scratch/` has pm-notes.md (PO may delete); `_to_delete/` empty — no cleanup needed from this task.
    - Files: `docs/sdk-reference-v2.md` ONLY. No source edits. No other doc sections (the status-table row :154 "`setMacro` not awaited" stays — that phrase is still true; the FALSE claim is the body sentence fixed in E1).
    - Why high-stakes: rewrites an SDK behavioral claim (E1) in the project's ground-truth reference.
@@ -46,12 +47,12 @@
      - `grep -cF 'localStorage.setItem("MacroList"' docs/sdk-reference-v2.md` → `1` (E1 NEW text landed)
      - `grep -cF '192 K `dist/esm/index.js` bundle' docs/sdk-reference-v2.md` → `0` AND `grep -cF "~170 K" docs/sdk-reference-v2.md` → `1`
      - `grep -cF "src/services/ExportService.ts:4" docs/sdk-reference-v2.md` → `1` (the two remaining `ExportService.ts:3` hits must both be in §13.7, lines ~3839/~3955 — verify with `grep -n`)
-     - `grep -cF "all three import sites" docs/sdk-reference-v2.md` → `0`
+     - `grep -cF "See §13.7 for all three import sites" docs/sdk-reference-v2.md` → `0` AND `grep -cF "See §13.7 for the import sites" docs/sdk-reference-v2.md` → `1` (rev1: scoped to the E4 anchor — the bare phrase `all three import sites` remains at §13.7's own intro (:3783), which is out of scope and backlogged under Document issues)
      - `grep -n "macroSnapshot" src/services/ExportService.ts` → hits exist (:891/:908) — the E1 factual claim holds
-     - `git show --stat HEAD` lists EXACTLY `docs/sdk-reference-v2.md`; every `git show HEAD` hunk header falls inside §9 (:2226–:2501) — expect ~3 hunks (the :2394/:2399 edits are close enough that git merges them); the status-table row :154 and §13.7 are NOT touched
+     - `git show --stat 563e0a0` lists EXACTLY `docs/sdk-reference-v2.md`; every `git show 563e0a0` hunk header falls inside §9 (§9 = from `## 9. Config import/export & firmware` to the next `## ` header — currently :2226–:2508, but judge by section boundary not a fixed range, since the E-edits themselves shifted §9's end) — expect ~3 hunks (the :2394/:2399 edits are close enough that git merges them); the status-table row :154 and §13.7 are NOT touched. (Pinned to `563e0a0` — at review time `HEAD` is the PM revision commit, planning files only.)
      - Cleanup report from actual `ls .scratch/ _to_delete/` in the checkpoint line
    - Worker self-check before IN-REVIEW: reread the 4 edited spans ONCE for markdown sanity (list numbering in §9 item 6 intact, backticks balanced, no double spaces at line joins); fix inline-fixable defects before handoff.
 
 ## Findings (raw — PM routes at close)
-- F1 (WRONG DONE-CRITERION — this sprint, Task 1): Done-when `grep -cF "all three import sites" docs/sdk-reference-v2.md → 0` is unsatisfiable within Task 1's scope. E4 replaces that phrase only at its §9.2 anchor (:2399); a second, distinct occurrence lives in §13.7's own intro (`grep -n "all three import sites" docs/sdk-reference-v2.md` → :3783), which E4 explicitly declares out of scope and Done-when 7 forbids touching. Verify: after applying E4 verbatim the grep returns 1 (commit `563e0a0`). Criterion needs PM revision (scope the grep to the E4 anchor phrase), not a Worker edit.
+- F1 (WRONG DONE-CRITERION — this sprint, Task 1): Done-when `grep -cF "all three import sites" docs/sdk-reference-v2.md → 0` is unsatisfiable within Task 1's scope. E4 replaces that phrase only at its §9.2 anchor (:2399); a second, distinct occurrence lives in §13.7's own intro (`grep -n "all three import sites" docs/sdk-reference-v2.md` → :3783), which E4 explicitly declares out of scope and Done-when 7 forbids touching. Verify: after applying E4 verbatim the grep returns 1 (commit `563e0a0`). Criterion needs PM revision (scope the grep to the E4 anchor phrase), not a Worker edit. → **ROUTED (rev1, 2026-11-01): revised in place — Done-when 5 now greps the E4 anchor (old → 0 AND new → 1); residual :3783 is §13.7's own intro, already covered by the backlog Document-issues item; no new backlog entry.**
 <!-- Out-of-§9 drift found at PM-open was routed DIRECTLY to backlog.md (Document issues) — PM is sole backlog writer; no need to re-route at close. -->

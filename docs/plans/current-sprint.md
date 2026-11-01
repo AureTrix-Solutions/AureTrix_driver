@@ -11,11 +11,11 @@
 - Cleanup (from actual ls): `.scratch/` has pm-notes.md + review-notes.md (review-notes.md is stale sprint-26 leftover; PO may delete both freely). `_to_delete/` empty.
 
 ## ▶ RUN THIS
-Next: Task 1c — LayoutPreview.md: insert NEW "Load Custom Layouts" subsection (Edit 5) + renumber/replace Restore snippet (Edit 6). Do this task, commit, advance this block to 1d, then stop.
+Next: Task 1d — LayoutPreview.md: prose/diagram point edits (Edits 7-16). Do this task, commit, then fix inline defects if any, set Task 1 → IN-REVIEW, write docs/plans/reviews/review-layout-preview-docs.md (base=a846953, head=1d commit), commit, stop.
 
 ## Tasks
 1. **LayoutPreview.md ↔ LayoutPreview.vue reconciliation** — [high-stakes] — STATUS: IN-PROGRESS
-   - Checkpoint (1b DONE): Edits 3+4 applied verbatim via Edit tool (getKeyStyle → CSSProperties/layoutData/rowLength guard; updateLayout → productName/keyCount split + 6-param getLayoutConfig). Done-when all pass: `selectedLayout.value ?? 82` → nothing; `rowLength` → 2; `getLayoutConfig(keyCount` → 1 (doc now 359 lines). base=a846953 for review file. Committed. Next: 1c.
+   - Checkpoint (1c DONE): Edits 5+6 applied in one replacement (NEW §4 Load Custom Layouts inserted verbatim; old §4 renumbered → §5, onMounted block replaced with async/custom-productName restore). Done-when all pass: `loadCustomLayouts` → 2; `isCustom` → 2 lines; `onMounted(async` → 1; `#### 5. **Restore` → exactly 1 line (doc now 380 lines). base=a846953 for review file. Committed. Next: 1d.
    - Sequential sub-tasks 1a→1b→1c→1d, each with its OWN commit + Done-when greps. Parent stays IN-PROGRESS until 1d; then Worker → IN-REVIEW + writes `docs/plans/reviews/review-layout-preview-docs.md` (base = this PM-open commit — `git rev-parse HEAD` at 1a start; head = the 1d commit). Reviewer runs ONCE at the end over cumulative base..head.
    - Files: edit ONLY `docs/pages/LayoutPreview.md`. Source of truth (READ-ONLY): `src/pages/LayoutPreview.vue`. Read each file ONCE.
    - All replacement text below is grep/awk-verified against src this session — apply VERBATIM. Code-snippet formatting may stay condensed, but identifiers/values must match src exactly.

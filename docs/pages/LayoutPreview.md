@@ -129,18 +129,39 @@ const updateLayout = () => {
 }
 ```
 
-#### 4. **Restore from localStorage**
+#### 4. **Load Custom Layouts**
 ```typescript
-onMounted(() => {
-  const savedLayout = localStorage.getItem('lastSelectedLayout');
-  
-  if (savedLayout && layouts.includes(parseInt(savedLayout))) {
-    selectedLayout.value = parseInt(savedLayout);
-  } else {
-    selectedLayout.value = 82;  // Fallback to 82-key
+const loadCustomLayouts = async () => {
+  try {
+    customLayouts.value = await LayoutStorageService.getAllLayouts();
+    await refreshCustomLayouts();
+  } catch (error) {
+    console.warn('Failed to load custom layouts:', error);
   }
-  
-  updateLayout();
+};
+```
+
+#### 5. **Restore from localStorage**
+```typescript
+onMounted(async () => {
+  await loadCustomLayouts();
+
+  const savedLayout = localStorage.getItem('lastSelectedLayout');
+  if (savedLayout) {
+    // Check if it's a custom layout
+    const isCustom = customLayouts.value.some(layout => layout.productName === savedLayout);
+    if (isCustom) {
+      selectedLayout.value = savedLayout;
+    } else if (layouts.includes(parseInt(savedLayout))) {
+      selectedLayout.value = parseInt(savedLayout);
+    } else {
+      selectedLayout.value = 82; // Fallback
+    }
+  } else {
+    selectedLayout.value = 82; // Fallback
+  }
+
+  await updateLayout();
 });
 ```
 

@@ -1,13 +1,15 @@
 <template>
-  <div class="page-wrapper" />
-  <div class="connect-page">
-    <button
-      :disabled="connectionStore.isConnecting || connectionStore.isConnected"
-      class="connect-btn"
-      @click="connectDevice"
-    >
-      {{ connectionStore.isConnecting ? 'Connecting...' : connectionStore.isConnected ? 'Connected' : 'Connect Keyboard' }}
-    </button>
+  <div class="viewport">
+    <div class="stage" />
+    <div class="connect-page">
+      <button
+        :disabled="connectionStore.isConnecting || connectionStore.isConnected"
+        class="connect-btn"
+        @click="connectDevice"
+      >
+        {{ connectionStore.isConnecting ? 'Connecting...' : connectionStore.isConnected ? 'Connected' : 'Connect Keyboard' }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -38,32 +40,40 @@ export default defineComponent({
 @use 'sass:color';
 @use '@styles/variables' as v;
 
-.page-wrapper {
-  position:absolute;
-  width: 3125px;
-  height: 1700px;
-  aspect-ratio: 16/9;
-  background-image: url('@/assets/connect.svg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center center;
+$art-w: 1024;
+$art-h: 640;
+
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  container-type: size;
+}
+
+.stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100cqw, calc(100cqh * #{$art-w} / #{$art-h}));
+  aspect-ratio: #{$art-w} / #{$art-h};
+  background: url('@/assets/connect.svg') center / 100% 100% no-repeat;
+  container-type: inline-size;
 }
 
 .connect-page {
-  position: relative;
-  margin-top: 275px;
-  text-align: right;
-  width: 250px;
+  position: absolute;
+  top: clamp(340px, 12cqh, 120px);
+  left: clamp(0px, 3cqw, 48px);
+  width: clamp(150px, 14cqw, 220px);
+  z-index: 1;
   color: v.$text-color;
-  h2 {
-    margin-bottom: 20px;
-    color: v.$primary-color;
-  }
+
   .connect-btn {
-    padding: 8px 20px;
-    width: 250px;
-    height: 38px;
-    font-size: 1rem;
+    width: 100%;
+    height: clamp(30px, 3cqw, 40px);
+    padding: 0 clamp(8px, 1cqw, 16px);
+    font-size: clamp(0.8rem, 1.1cqw, 1rem);
     font-weight: bold;
     text-align: center;
     background-color: v.$text-color;
@@ -71,15 +81,17 @@ export default defineComponent({
     border: v.$border-style;
     border-radius: v.$border-radius;
     cursor: pointer;
+
     &:disabled {
       background-color: transparent;
       border: v.$border-style;
-      font-size: 0%;
+      font-size: 0;
       cursor: not-allowed;
     }
   }
+
   .device-info {
-    margin-top: 20px;
+    margin-top: clamp(6px, 1cqw, 12px);
     color: v.$primary-color;
   }
 }

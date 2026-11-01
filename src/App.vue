@@ -1207,10 +1207,11 @@ export default defineComponent({
 
 .main-content {
   flex-grow: 1;
+  min-width: 0;          // lets flex child shrink without overflow
+  position: relative;    // Connect page now fills this box only
   padding: 20px;
   overflow-y: auto;
-  scrollbar-gutter: stable both-edges;
-  transition: margin-left 0.3s ease; // Smooth shift if needed
+  transition: margin-left 0.3s ease;
 }
 
 .copyright {

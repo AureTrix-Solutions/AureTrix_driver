@@ -38,6 +38,7 @@ extraction per sprint/branch — never a multi-phase rewrite in one go.
 - Foundation: docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet reassembly).
 
 ### docs-pages-verify — reconcile each docs/pages/*.md against its current .vue (one page per sprint)
+- PROGRESS: sprint-26 (docs-pages-verify-1) = Connect page (planned 2026-11-01). Item STAYS in backlog until all implemented pages done (precedent: advanced-key-pages). Debug.md explicitly SKIPPED (possible future sprint of its own).
 - [docs] Page docs predate the code changes and haven't been re-verified. One sprint per implemented page: check the doc against current source, update stale content. Advanced-key stub pages excluded (documented when built). Skip debug.md for a possible future sprint of its own.
 
 

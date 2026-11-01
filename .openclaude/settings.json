@@ -1,5 +1,5 @@
 {
-  "modelLimits": { "qwen/qwen3.8-max-0902": { "contextWindow": 256000 } },
+  "modelLimits": { "qwen/qwen3.8-max-prime": { "contextWindow": 256000 } },
   "permissions": {
     "allow": [
       "Bash(grep:*)",

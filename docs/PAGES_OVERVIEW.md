@@ -19,7 +19,7 @@ This document provides a comprehensive index of all functional pages in the Aure
 **Key Features**:
 - WebHID device pairing
 - Auto-reconnect to previous devices
-- Connection status display
+- Connection state via button feedback (status/device details live in the sidebar)
 - Decorative circuit board UI
 
 **Primary Use Case**: Initial keyboard setup and connection

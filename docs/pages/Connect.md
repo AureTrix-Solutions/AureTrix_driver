@@ -103,21 +103,20 @@ Profile Synced (profileStore.syncActiveProfileFromHardware)
 5. Browser shows available USB HID devices
 6. User selects their keyboard
 7. Connection established
-8. Can navigate to feature pages
+8. Uses the sidebar (always visible) to reach feature pages — navigation is never gated on connection state
 
 ### Subsequent Sessions
-1. App attempts auto-connect using saved device ID
-2. If successful, user can skip Connect page
-3. If failed (device unplugged, etc.), returns to Connect page
+1. On app startup the KeyboardService constructor schedules a deferred auto-reconnect: reads `localStorage.pairedStableId`, retries up to 3 times (1s apart) to match an already-permitted WebHID device
+2. If successful, the store's `onAutoConnectSuccess` sets deviceInfo/status; the user lands on the Connect page already connected — no automatic page navigation exists anywhere in the app
+3. If failed (device unplugged, etc.), the Connect button remains available for a manual connection
 
 ## Error Handling
-- Connection failures are handled by the connection store
-- User sees button return to "Connect Keyboard" state
-- Can retry connection immediately
-- No error messages displayed on this page (handled globally)
+- Connection failures are caught by the connection store (`requestDevice()` throws; the store converts the error to a `status` string)
+- `finally` resets `isConnecting`, so the button returns to the enabled "Connect Keyboard" state and can be retried immediately
+- No error messages render on this page; the store's `status` string is displayed in the App.vue sidebar
 
 ## Accessibility Notes
-- Button provides clear visual and text feedback
+- Button provides a clear label ("Connect Keyboard") and a visible outline when disabled; its text feedback is hidden in disabled states (font-size: 0%)
 - Disabled state prevents multiple simultaneous connection attempts
 - High contrast design for visibility
 
@@ -125,7 +124,7 @@ Profile Synced (profileStore.syncActiveProfileFromHardware)
 - Circuit board background SVG creates immersive tech aesthetic
 - Button positioned to align with the visual design
 - Uses SCSS variables for consistent theming
-- Responsive layout adapts to different screen sizes
+- Fixed-size layout: the background wrapper is a fixed 3125x1700px canvas and the component has no media queries — the page does not adapt to small screens
 
 ## Future Enhancements (Potential)
 - Display device info after connection (currently computed but not shown)
@@ -135,6 +134,6 @@ Profile Synced (profileStore.syncActiveProfileFromHardware)
 
 ## Developer Notes
 - This is intentionally kept simple - connection complexity is abstracted to the store
-- Page auto-loads on mount (no manual initialization needed)
+- The page has no onMounted hook; auto-reconnect happens at app startup inside the KeyboardService constructor (deferred to document load +100ms), independent of this page
 - SVG background file must be present in `@/assets/connect.svg`
 - Button styling changes completely when disabled (font-size: 0%)

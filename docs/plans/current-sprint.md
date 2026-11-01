@@ -15,7 +15,7 @@ Next: Task 1d — LayoutPreview.md: prose/diagram point edits (Edits 7-16). Do t
 
 ## Tasks
 1. **LayoutPreview.md ↔ LayoutPreview.vue reconciliation** — [high-stakes] — STATUS: IN-PROGRESS
-   - Checkpoint (1c DONE): Edits 5+6 applied in one replacement (NEW §4 Load Custom Layouts inserted verbatim; old §4 renumbered → §5, onMounted block replaced with async/custom-productName restore). Done-when all pass: `loadCustomLayouts` → 2; `isCustom` → 2 lines; `onMounted(async` → 1; `#### 5. **Restore` → exactly 1 line (doc now 380 lines). base=a846953 for review file. Committed. Next: 1d.
+   - Checkpoint (1d IN-PROGRESS): doc read once (380 lines post-1c); all Edit 7-16 anchors confirmed present by unique text. Applying 10 point edits now.
    - Sequential sub-tasks 1a→1b→1c→1d, each with its OWN commit + Done-when greps. Parent stays IN-PROGRESS until 1d; then Worker → IN-REVIEW + writes `docs/plans/reviews/review-layout-preview-docs.md` (base = this PM-open commit — `git rev-parse HEAD` at 1a start; head = the 1d commit). Reviewer runs ONCE at the end over cumulative base..head.
    - Files: edit ONLY `docs/pages/LayoutPreview.md`. Source of truth (READ-ONLY): `src/pages/LayoutPreview.vue`. Read each file ONCE.
    - All replacement text below is grep/awk-verified against src this session — apply VERBATIM. Code-snippet formatting may stay condensed, but identifiers/values must match src exactly.

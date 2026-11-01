@@ -13,7 +13,7 @@ The Layout Preview page provides a visual representation of different keyboard p
 ## Key Features
 
 ### 1. **Multiple Layout Support**
-- Seven supported layouts:
+- Seven built-in layouts:
   - 61-key (60% keyboard)
   - 67-key (65% keyboard)
   - 68-key (65% keyboard variant)
@@ -21,11 +21,13 @@ The Layout Preview page provides a visual representation of different keyboard p
   - 82-key (75% keyboard)
   - 84-key (75% keyboard variant)
   - 87-key (TKL keyboard)
+- Plus user-created custom layouts (IndexedDB, created in the Layout Creator page)
 
 ### 2. **Layout Selector**
 - Dropdown to choose layout size
 - Selection persists to localStorage
 - Immediate visual update on selection change
+- Custom layouts appear in a "Custom Layouts" optgroup when present
 - Defaults to 82-key if no saved preference
 
 ### 3. **Accurate Key Positioning**
@@ -46,6 +48,7 @@ The Layout Preview page provides a visual representation of different keyboard p
 - **Layout Selector**:
   - Label: "Select Layout:"
   - Dropdown showing sizes (e.g., "61-key", "82-key")
+  - "Custom Layouts" optgroup (rendered only when custom layouts exist), each option valued by productName
   - Immediately updates preview on change
 
 ### Layout Display
@@ -171,27 +174,32 @@ onMounted(async () => {
 - **getLayoutConfig** (`@utils/layoutConfigs`): Provides layout geometry data
   - `keyPositions`: Array of [left, top, width, height] for each key
   - `gaps`: Vertical spacing between rows
+- **refreshCustomLayouts** (`@utils/layoutConfigs`): reloads the module-level custom-layout cache from IndexedDB
+
+### Services
+- **LayoutStorageService** (`@/services/LayoutStorageService`): `getAllLayouts()` returns `CustomLayoutConfig[]` (custom layouts from IndexedDB)
 
 ### Storage
 - **localStorage**:
   - Key: `'lastSelectedLayout'`
-  - Value: Layout number as string (e.g., "82")
+  - Value: Built-in layout number (e.g., "82") or custom layout productName, as string
 
 ## Data Flow
 
 ```
 Page Mount
     ↓
-onMounted() - Restore saved layout preference
+onMounted() (async) - loadCustomLayouts() first, then restore preference
     ↓
 Read localStorage['lastSelectedLayout']
     ↓
-If valid: Set selectedLayout to saved value
+If saved value matches a custom productName: restore it as string
+Else if valid built-in number: restore as number
 Else: Default to 82
     ↓
 updateLayout() - Load layout config
     ↓
-getLayoutConfig(selectedLayout)
+getLayoutConfig(keyCount, ..., productName) → layoutData
     ↓
 layout.value = keyPositions matrix
     ↓
@@ -205,7 +213,7 @@ User Changes Layout Dropdown
     ↓
 @change="updateLayout"
     ↓
-Fetch new layout config
+Fetch new layout config (built-in by keyCount, custom by productName)
     ↓
 Save to localStorage
     ↓
@@ -295,10 +303,10 @@ gaps: [0, 4, 4, 4, 4, 12]  // Extra space after each row
 ## State Persistence
 
 ### What's Saved
-- **Last selected layout**: Layout number (61, 67, etc.)
+- **Last selected layout**: built-in layout number (61, 67, etc.) or custom layout productName
 
 ### What's Not Saved
-- Layout configurations themselves (static, from code)
+- Layout configurations themselves (built-ins from code; custom layouts live in IndexedDB via LayoutStorageService)
 - Visual state (scroll position, etc.)
 
 ### Storage Location
@@ -309,7 +317,7 @@ gaps: [0, 4, 4, 4, 4, 12]  // Extra space after each row
 ## Error Handling
 
 ### Invalid Saved Layout
-- If stored value not in `layouts` array, defaults to 82
+- If stored value matches a custom layout productName, it is restored; else if not in `layouts` array, defaults to 82
 - Prevents crashes from manual localStorage editing
 
 ### Missing Layout Config
@@ -364,7 +372,6 @@ gaps: [0, 4, 4, 4, 4, 12]  // Extra space after each row
 - Hover tooltips with key info
 - Side-by-side layout comparison
 - Export layout as image
-- Custom layout editor
 - Zoom/pan controls for large layouts
 - Highlight specific keys (e.g., modifiers)
 - 3D perspective view
@@ -373,7 +380,7 @@ gaps: [0, 4, 4, 4, 4, 12]  // Extra space after each row
 - Uses same `layoutConfigs` as other pages
 - Completely standalone (no keyboard connection needed)
 - Useful for testing layout rendering logic
-- Can add new layouts by updating `layouts` array and `layoutConfigs.ts`
+- Built-in layouts: add to `layouts` array + `layoutConfigs.ts`. Custom layouts: created in Layout Creator, stored in IndexedDB, resolved by productName (Priority 1 in getLayoutConfig)
 - Key sizes in pixels (not percentage or em units)
 - No key labels rendered (simplifies implementation)
 - LocalStorage fallback ensures page never breaks

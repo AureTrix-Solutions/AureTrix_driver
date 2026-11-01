@@ -2262,8 +2262,14 @@ The **only** `XDKeyboard` method with a properly typed result rather than `any`.
    `Error("配置验证失败")` (the validator's own error is only `console.error`d).
 6. `setImportData(config)` — resolves `{ success: true }`, or catches and resolves
    `{ success: false, error }`. Actual write order: **`setKeyboards` → `setLighting` (main,
-   then logo) → `setSystem` → `setMacro`**. Note `setMacro` is fired **without `await`** —
-   `{ success: true }` can resolve before macros are written.
+   then logo) → `setSystem` → `setMacro`**. Note `setMacro` is fired **without `await`**, but
+   the method `setImportData` binds is `ExportController`'s own **synchronous** `setMacro` — a
+   single `localStorage.setItem("MacroList", …)`, no hardware write — so there is **no race**:
+   it completes before `{ success: true }` resolves. It does **unconditionally overwrite**
+   `localStorage["MacroList"]` with the imported file's macro list (usually empty), which is
+   why `ExportService.importProfile` snapshots and restores that key around `importConfig`.
+   (The hardware-writing async `setMacro` — §7 — is a different method and is not called by
+   import.)
    - `setKeyboards` iterates every key entry; per key it runs `setPerformance`,
      `setCustomLight`, `setCustomKeys`, `setAdvancedKeys`, each with its own `.catch` so one
      failure doesn't abort the rest (results collected via `Promise.allSettled` and logged).
@@ -2383,7 +2389,7 @@ Under Node's exports resolution this blocks *every* subpath — importing
 
 Bypassing `exports` would not help. `dist/esm/src/utils/` contains only `index.d.ts` and
 `validate.d.ts` — **there is no `validate.js`**. The implementation was inlined into the single
-192 K `dist/esm/index.js` bundle. So even a bundler configured to ignore `exports`, or a direct
+~170 K `dist/esm/index.js` bundle. So even a bundler configured to ignore `exports`, or a direct
 relative path into `node_modules`, resolves the *types* and then has nothing to load.
 
 `ConfigValidator` is therefore usable for **type-only** purposes — you can import the type via a
@@ -2391,12 +2397,12 @@ relative path or path alias and type-check against it — but the class is **not
 runtime**. Importing the type is fine; `new`-ing or calling `ConfigValidator.validateConfig(…)`
 will fail.
 
-**A live example of this exact pattern is already in the repo.** `src/services/ExportService.ts:3`
+**A live example of this exact pattern is already in the repo.** `src/services/ExportService.ts:4`
 does `import type { KeyboardConfig, Keyboards } from '@sparklinkplayjoy/sdk-keyboard/dist/esm/src/utils/validate'`
 — the same specifier that `ERR_PACKAGE_PATH_NOT_EXPORTED`s at runtime — and it type-checks cleanly,
 because `tsconfig.json` sets `"moduleResolution": "node"`, which ignores `exports`. It works only
 because the import is **type-only and erased**. Importing `ConfigValidator` the same way would
-compile and then fail on load. See §13.7 for all three import sites and why the resolver setting
+compile and then fail on load. See §13.7 for the import sites and why the resolver setting
 is load-bearing.
 
 Practical consequence: you cannot reuse the SDK's validator. If this app wants to check a

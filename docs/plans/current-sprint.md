@@ -1,8 +1,59 @@
-# No active sprint
+# SPRINT: sprint-25-sdk-ref-2
 
-COMPLETE — run PM-open for the next sprint.
+**GOAL:** Refresh every stale app line-ref in docs/sdk-reference-v2.md outside §9 (backlog items a–e) and close the stale "app calls setMacro without touchMode" exposure claim across its 4 doc sites (item f), using grep-verified anchors only.
+**DONE-CRITERIA (sprint):** All Task 1 + Task 2 Done-when greps pass; independent Reviewer PASS on both [high-stakes] tasks; no historical/banner-protected body text rewritten.
+**Started:** 2026-11-01  ·  **Status:** IN PROGRESS
+<!-- revN (YYYY-MM-DD): <what changed> -->
+
+## Checkpoint
+- Branch: `sprint-25-sdk-ref-2`
+- tsc baseline: 0 errors (docs/tsc-baseline.txt) — docs-only sprint, code self-check gate SKIPPED (no .ts/.vue touched)
+- Cleanup (actual ls at PM-open): .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty — no cleanup needed
+<!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted → STOP, report.
+     Updating a task's status REPLACES its one checkpoint line — never append a second paragraph.
+     On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-No active sprint. To start one, open a fresh window and paste:
-  Act as PM per CLAUDE.md. Plan the "<name>" sprint from docs/plans/backlog.md.
-(Or a direct goal: Act as PM per CLAUDE.md. Goal: <...>.)
+Next: Task 1 — stale line-ref sweep (a)–(e). Do this task, then stop.
+
+## Tasks
+
+1. **Stale line-ref sweep (a)–(e)** — [high-stakes] — STATUS: PENDING
+   - Files: `docs/sdk-reference-v2.md` only.
+   - **Doc line numbers below are PM refs for ordering ONLY — they drift after every edit. Anchor every edit on the quoted TEXT; grep the anchor before editing to confirm uniqueness/count.**
+   - Edits (all PM-verified 2026-11-01, both sides):
+     1. (a) `grep -c "ExportService\.ts:3"` → 2 (doc ~:3845 §13.7 "Site 2" heading, ~:3961 "same pattern"). Edit `ExportService.ts:3` → `ExportService.ts:4` **replace_all** (exactly 2 sites). Truth: import moved to :4 in sprint-21 (`grep -n "utils/validate" src/services/ExportService.ts`).
+     2. (c) `grep -c "192 K"` → 1 (doc ~:3684 bundle table, sdk-keyboard row). Edit cell `192 K` → `~170 K`. Truth: `dist/esm/index.js` = 173,688 B @ sdk-keyboard 1.0.20. Phrasing `~170 K` matches the existing ~:2392 usage.
+     3. (d) `grep -c "ExportService\.ts:9"` → 1 (doc ~:3525 retryWithBackoff). Edit `ExportService.ts:9` → `ExportService.ts:27`. Truth: declaration at src ExportService.ts:27; the defaults claim (`maxRetries = 2`, `backoffMs = 200`) is STILL TRUE — do not touch it.
+     4. (e) `grep -c "KeyboardService\.ts:120–125"` → 1 (doc ~:3522; note EN-DASH `–`). Edit `KeyboardService.ts:120–125` → `KeyboardService.ts:187`. Truth: method `requestDevice` at :182, the `navigator.hid!.requestDevice({ filters: [] })` call at :187; sentence describes the call → :187.
+     5. (b) banner: find the sprint-06 banner (`grep -n "Status (2026-10-11, sprint-06"` — ends "Baseline unchanged at 23."). INSERT after it (blank line between, same `> **Status …**` pattern as the sprint-03/06 banners):
+        `> **Status (2026-11-01, sprint-25): the "three sites" count below predates sprint-21** — `src/` now has **5** `utils/validate` import sites (prod: `ExportService.ts:4`, `KeyboardService.ts:5`; tests: `exportservice-helpers.ts:7`, `ExportService.import.test.ts:12`, `ExportService.roundtrip.test.ts:20`), and Site 3's "no other file imports from the three packages" no longer holds — `protocol-keyboard` is also imported directly by `Performance.vue:124`, `RapidTrigger.vue:404`, `types.ts:7`, and `hid` by `webhid.d.ts:4` + `connection.async.test.ts:3`. The text below describes the sprint-03 import map and is kept as historical context.`
+     6. (b) status-table row: `grep -c "three sites cited"` → 1 (doc ~:179). Edit cell `` `src/` (three sites cited) `` → `` `src/` (five `utils/validate` sites since sprint-21; historical count banner-noted in §13.7) ``.
+     - **Do NOT rewrite §13.7 historical body** (~:3779 heading "three sites, two of them broken", ~:3783 "all three import sites below", ~:3864 "Site 3 — the rest of src/. No other file imports…") — banner-protected per the sprint-03/06 precedent.
+   - Done when: `grep -c "ExportService\.ts:3" docs/sdk-reference-v2.md` → 0 AND `grep -c "ExportService\.ts:4" docs/sdk-reference-v2.md` → 3 (2 fixed + 1 pre-existing at ~:2400)
+   - Done when: `grep -c "ExportService\.ts:9" docs/sdk-reference-v2.md` → 0 AND `grep -c "ExportService\.ts:27" docs/sdk-reference-v2.md` → 1
+   - Done when: `grep -c "KeyboardService\.ts:120–125" docs/sdk-reference-v2.md` → 0 AND `grep -c "KeyboardService\.ts:187" docs/sdk-reference-v2.md` → 1
+   - Done when: `grep -c "192 K" docs/sdk-reference-v2.md` → 0 AND `grep -c "~170 K" docs/sdk-reference-v2.md` → 2 (1 fixed + 1 pre-existing at ~:2392)
+   - Done when: `grep -c "three sites cited" docs/sdk-reference-v2.md` → 0 AND `grep -c "Status (2026-11-01, sprint-25" docs/sdk-reference-v2.md` → 1
+   - Done when: historical body untouched — `grep -c "two of them broken"` → 1 AND `grep -c "Site 3"` before edits == after edits (record both counts in the checkpoint)
+   - Then: commit `sprint-25-sdk-ref-2: task 1 — line-ref sweep (a)-(e)`; write review-ref-sweep.md (sprint goal + these criteria + Base/Head hashes); STATUS → IN-REVIEW; advance ▶ RUN THIS to Task 2.
+
+2. **setMacro exposure-CLOSED rewrite (f)** — [high-stakes] — STATUS: PENDING
+   - Files: `docs/sdk-reference-v2.md` only. Sequel to Task 1 (line refs have drifted — anchors only).
+   - PM-verified ground truth (all banked; Worker may re-grep to confirm, not re-derive): wrapper `src/services/KeyboardService.ts:603` is `async setMacro(param: IMacroMode, macros: MacroType[], touchMode: string)` — REQUIRED 3rd arg — and `:608` passes it (`ensureKeyboard().setMacro(param, macros, touchMode)`). **Zero app callers** (`grep -rn "setMacro" src/` minus KeyboardService.ts → only ExportService comments about the localStorage facade). SDK bundle @1.0.20: `XDKeyboard.setMacro` forwards 3 args to the controller; controller maps `"quick"`→u=2, `"single"`→u=1, else u=0 (`let u=0;…y=u<<4|6`); `setImportData` calls `ExportController`'s SYNC `setMacro` = localStorage-only facade → **import path has NO touchMode exposure** (doc ~:2271 already says this correctly — NO EDIT there). SDK `.d.ts` types the param as bare `string` (index.d.ts:76) — doc ~:1973 sentence "typed as bare `string` on `XDKeyboard`" stays TRUE — NO EDIT. §7 u-mapping table (~:1970-1971, `'quick'`/`'single'`/collapse rows) is SDK-true — NO EDIT.
+   - Residual hazard to state in the rewrite: `getPerformanceMode` reads back `'global'|'single'|'rt'` (bundle `getLayoutModel`), but the controller only accepts `'quick'`→u=2 — so a FUTURE macro-page caller passing back a read `'rt'` still collapses that key to global. Hardware confirmation of the SDK device behavior remains PENDING (encoding source-verified, never tested on device) — keep the checklist row, do not delete it.
+   - Edits — the 4 stale sites are exactly `grep -n "KeyboardService\.ts:538"` → doc ~:105, ~:1974, ~:4281, ~:4319:
+     1. ~:105 Hardware-checklist row "setMacro touchMode reset bug": claim cell stays (SDK-true). Replace test cell `Put a key in single or RT mode (\`setPerformanceMode\`), call \`setMacro\` **without** \`touchMode\` (as \`KeyboardService.ts:538\` does), then \`getPerformanceMode(key)\` — expected \`{ touchMode: 'global', advancedKeyMode: 6 }\`` with: `No longer reachable through app code (wrapper \`KeyboardService.ts:603\` requires \`touchMode\` and passes it at \`:608\`; zero app callers as of sprint-25). To test the SDK behavior directly: put a key in single or RT mode (\`setPerformanceMode\`), then from the console call the raw \`XDKeyboard.setMacro(param, macros)\` with no third argument, then \`getPerformanceMode(key)\` — expected \`{ touchMode: 'global', advancedKeyMode: 6 }\``
+     2. ~:1974 (§7): replace `**This app calls \`setMacro(param, macros)\` with no third argument** (\`KeyboardService.ts:538\`), so \`touchMode\` is \`undefined\` → \`u = 0\` in practice.` with: `**The app wrapper requires the third argument** — \`KeyboardService.ts:603\` declares \`touchMode: string\` and \`:608\` forwards it to \`XDKeyboard.setMacro\` — so \`touchMode\` is never \`undefined\` from app code (zero app callers as of sprint-25; the macro page is not built yet). Residual hazard for a future caller: \`getPerformanceMode\` reads back \`'rt'\`, but only \`'quick'\` maps to \`u = 2\` — passing \`'rt'\` through would yield \`u = 0\` and reset an RT key to global, so the macro page must map \`'rt'\`→\`'quick'\` (or re-apply the mode after the write).`
+     3. ~:4281 (§14.9(a)): keep the `**(a) …**` heading. Replace the paragraph `The app calls \`setMacro(param, macros)\` with **no third argument** (\`KeyboardService.ts:538\`), … or re-apply it after the macro write.` (ends before `**(b)`) with: `The app wrapper now requires the third argument — \`KeyboardService.ts:603\` declares \`touchMode: string\` and \`:608\` forwards it — and no app code calls it as of sprint-25, so the omission is unreachable through the app (the import path is unaffected too: \`setImportData\` binds the **synchronous** \`ExportController.setMacro\`, a localStorage-only facade with no device write). The encoding hazard remains SDK-true: with \`touchMode\` omitted or any value other than \`'quick'\`/\`'single'\`, the compiled implementation computes \`u = 0\` and rewrites the entire \`Layout_Mode\` byte as \`(u << 4) | 6 = 0x06\`; because \`KeyTouchMode\` is \`{ global = 0, single = 1, rt = 2 }\` (§5.2) but \`'quick'\` is the **only** accepted string yielding \`u = 2\`, a future caller that passes back the \`getPerformanceMode\` value \`'rt'\` would still collapse that key to \`global\` (and set \`advancedKeyMode = 6\`). This is a source-verified encoding; its **real-world effect is a hardware test** (see the [Hardware verification checklist](#hardware-verification-checklist), "setMacro touchMode reset bug"). The macro-page sprint must map \`'rt'\`→\`'quick'\` or re-apply the mode after the write.`
+     4. ~:4319 risk-table row: replace severity cell `**High**` → `**Low** (closed in current code)`; replace risk-name cell `\`setMacro\` called with no \`touchMode\` (§7, §14.9)` → `\`setMacro\` touchMode encoding asymmetry (§7, §14.9(a))`; replace detail cell with: `**App-side exposure CLOSED (sprint-25):** wrapper \`KeyboardService.ts:603\` requires \`touchMode\` and passes it (\`:608\`); zero app callers; the import path binds the localStorage-only facade (no device write). Residual hazard for a future macro page: the controller maps only \`'quick'\`→\`u=2\` / \`'single'\`→\`u=1\`, so passing back the \`getPerformanceMode\` value \`'rt'\` yields \`u=0\` and resets that key to global. The SDK device behavior remains hardware-unverified — see the [Hardware verification checklist](#hardware-verification-checklist).`
+   - Done when: `grep -c "KeyboardService\.ts:538" docs/sdk-reference-v2.md` → 0
+   - Done when: `grep -c "no third argument" docs/sdk-reference-v2.md` → 0
+   - Done when: `grep -c "KeyboardService\.ts:603" docs/sdk-reference-v2.md` → 4 (one per edited site)
+   - Done when: `grep -c "Residual hazard" docs/sdk-reference-v2.md` → 2 (edits 2 + 4)
+   - Done when: SDK-true text untouched — `grep -c "typed as bare \`string\` on \`XDKeyboard\`"` → 1 AND `grep -c "all collapse to the same value"` → 1 AND `grep -c "is not called by"` → 1 (import-trace note ~:2271)
+   - Then: commit `sprint-25-sdk-ref-2: task 2 — setMacro exposure closed (f)`; write review-setmacro-close.md; STATUS → IN-REVIEW; advance ▶ RUN THIS to "ALL TASKS DONE — awaiting Reviewer, then PO sign-off".
+
+## Findings
+<!-- Out-of-scope bugs/ideas: ONE line each (defect + where to verify), edit tool only. PM routes at next touchpoint. -->
+(none yet)

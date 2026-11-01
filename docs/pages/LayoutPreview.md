@@ -96,18 +96,14 @@ const gridStyle = computed<CSSProperties>(() => {
 
 #### 2. **Key Style Calculation**
 ```typescript
-const getKeyStyle = (rowIdx: number, colIdx: number) => {
-  const { keyPositions, gaps } = getLayoutConfig(selectedLayout.value ?? 82);
-  
-  // Validate row/col indices
-  if (!keyPositions[rowIdx] || colIdx >= keyPositions[rowIdx].length) {
-    return { width: '0px', height: '0px', left: '0px', top: '0px' };
+const getKeyStyle = (rowIdx: number, colIdx: number): CSSProperties => {
+  const { keyPositions, gaps } = layoutData.value;
+  const rowLength = keyPositions[rowIdx]?.length || 0;
+  if (!keyPositions || !keyPositions[rowIdx] || !Array.isArray(keyPositions[rowIdx]) || colIdx >= rowLength) {
+    return { width: '0px', height: '0px', left: '0px', top: '0px' } as CSSProperties;
   }
-  
-  // Extract key position [left, top, width, height]
   const [left, top, width, height] = keyPositions[rowIdx][colIdx];
   const topGapPx = gaps[rowIdx] || 0;
-  
   return {
     position: 'absolute',
     left: `${left}px`,
@@ -115,20 +111,21 @@ const getKeyStyle = (rowIdx: number, colIdx: number) => {
     width: `${width}px`,
     height: `${height}px`,
     backgroundColor: '#444',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
   };
-}
+};
 ```
 
 #### 3. **Update Layout**
 ```typescript
 const updateLayout = () => {
-  const { keyPositions } = getLayoutConfig(selectedLayout.value ?? 82);
-  layout.value = keyPositions;
-  
-  // Persist selection to localStorage
-  localStorage.setItem('lastSelectedLayout', 
-    selectedLayout.value?.toString() ?? '82');
+  const productName = typeof selectedLayout.value === 'string' ? selectedLayout.value : undefined;
+  const keyCount = typeof selectedLayout.value === 'number' ? selectedLayout.value : 82;
+
+  const config = getLayoutConfig(keyCount, undefined, undefined, undefined, undefined, productName);
+  layoutData.value = config;
+  layout.value = config.keyPositions;
+  localStorage.setItem('lastSelectedLayout', selectedLayout.value?.toString() ?? '82');
 }
 ```
 

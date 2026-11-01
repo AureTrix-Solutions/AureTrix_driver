@@ -12,8 +12,9 @@ The Connect page is the entry point for establishing a connection between the we
 - **WebHID Connection**: Triggers the browser's device selection dialog
 - **Auto-Connect**: Automatically attempts to reconnect to previously paired devices on app startup
   - Known limitation: WebHID exposes no usable serialNumber on Chromium/Windows, so auto-reconnect matches vendorId+productId only — with two same-model boards it may open the wrong one. Manual connect via the browser picker is unaffected.
-- **Connection State Feedback**: The button label binding switches between "Connect Keyboard" / "Connecting..." / "Connected"; in the two disabled states the label is hidden (disabled style sets font-size: 0%), so only the default label is ever visible
-- **Visual Design**: Features a large circuit board SVG background for brand identity
+- **Connection State Feedback**: The button label binding switches between "Connect Keyboard" / "Connecting..." / "Connected"; in the two disabled states the label is hidden (disabled style sets `font-size: 0`), so only the default label is ever visible
+- **Visual Design**: Features a circuit board SVG background for brand identity
+- **Responsive Layout**: Background and button adapt to any window size without letterboxing or scrollbars
 
 ## User Interface Elements
 
@@ -23,24 +24,33 @@ The Connect page is the entry point for establishing a connection between the we
   - "Connecting..." - Active connection attempt in progress
   - "Connected" - Device successfully connected
 - **Disabled States**: Button is disabled during connection or when already connected
-- **Visual Feedback**: When disabled the button becomes a transparent, border-only outline (background-color: transparent + font-size: 0%); the "Connecting..." and "Connected" labels are bound but never rendered visibly
+- **Visual Feedback**: When disabled the button becomes a transparent, border-only outline (`background-color: transparent` + `font-size: 0`); the "Connecting..." and "Connected" labels are bound but never rendered visibly
+- **Positioning**: Anchored to the content area (not the artwork), so it stays a consistent distance from the sidebar at any window size. Size, padding, and font scale with the content area and are capped with `clamp()` so it stays usable on small windows and doesn't grow oversized in fullscreen
 
 ### Background
-- Large decorative SVG graphic (`connect.svg`) showing electrical circuit design
+- Decorative SVG graphic (`connect.svg`, 1024×640 viewBox) showing an electrical circuit design
 - Reinforces the electronic/technical nature of the keyboard driver
-- Positioned absolutely to fill the page
+- Fills the content area beside the sidebar using cover-style scaling: keeps its 16:10 aspect ratio, scales to the larger of the container's width or height, and crops the overflow instead of letterboxing
+- Sized from its container (CSS container query units), not the viewport, so it never sits under the sidebar or causes scrollbars
 
 ## Technical Implementation
 
 ### Component Structure
 ```vue
 <template>
-  <div class="page-wrapper"></div>  <!-- Background SVG -->
-  <div class="connect-page">
-    <button @click="connectDevice">...</button>
+  <div class="viewport">          <!-- Fills .main-content; size container -->
+    <div class="stage" />         <!-- Background SVG, cover-scaled -->
+    <div class="connect-page">    <!-- Button, pinned to content area -->
+      <button @click="connectDevice">...</button>
+    </div>
   </div>
 </template>
 ```
+
+- `.viewport`: `position: absolute; inset: 0; overflow: hidden; container-type: size`
+- `.stage`: centered with `transform: translate(-50%, -50%)`, `width: max(100cqw, 100cqh × 1024/640)`, `aspect-ratio: 1024 / 640`, background at `100% 100%`
+- `.connect-page`: absolute within `.viewport`, `z-index: 1`, position and sizes use `clamp()` with `cqw` / `cqh`
+- SVG dimensions are stored as SCSS variables (`$art-w: 1024`, `$art-h: 640`); update them if the artwork's viewBox changes
 
 ### State Management
 - Uses Pinia's `useConnectionStore()`
@@ -70,6 +80,9 @@ The Connect page is the entry point for establishing a connection between the we
 ### External APIs
 - **WebHID**: Browser API for USB HID device communication
 - **SparkLink SDK** (`@sparklinkplayjoy/sdk-keyboard`): Keyboard communication protocol
+
+### Layout (App.vue)
+- `.main-content` must have `position: relative`, `min-width: 0`, and a defined height (inherited from `.app-container`'s `100vh`) — the page sizes itself against this box
 
 ## Data Flow
 
@@ -116,15 +129,17 @@ Profile Synced (profileStore.syncActiveProfileFromHardware)
 - No error messages render on this page; the store's `status` string is displayed in the App.vue sidebar
 
 ## Accessibility Notes
-- Button provides a clear label ("Connect Keyboard") and a visible outline when disabled; its text feedback is hidden in disabled states (font-size: 0%)
+- Button provides a clear label ("Connect Keyboard") and a visible outline when disabled; its text feedback is hidden in disabled states (`font-size: 0`)
 - Disabled state prevents multiple simultaneous connection attempts
+- Button text has a minimum size (`clamp()` floor of 0.8rem) so it stays readable on small windows
 - High contrast design for visibility
 
 ## Styling Highlights
 - Circuit board background SVG creates immersive tech aesthetic
-- Button positioned to align with the visual design
+- Responsive layout: background covers the content area at any window size with no letterboxing or scrollbars; edges crop on extreme aspect ratios
+- Button stays beside the sidebar and scales within fixed min/max bounds
 - Uses SCSS variables for consistent theming
-- Fixed-size layout: the background wrapper is a fixed 3125x1700px canvas and the component has no media queries — the page does not adapt to small screens
+- No media queries; responsiveness comes from container query units (`cqw` / `cqh`) and `clamp()`
 
 ## Future Enhancements (Potential)
 - Display device info after connection (currently computed but not shown)
@@ -136,4 +151,7 @@ Profile Synced (profileStore.syncActiveProfileFromHardware)
 - This is intentionally kept simple - connection complexity is abstracted to the store
 - The page has no onMounted hook; auto-reconnect happens at app startup inside the KeyboardService constructor (deferred to document load +100ms), independent of this page
 - SVG background file must be present in `@/assets/connect.svg`
-- Button styling changes completely when disabled (font-size: 0%)
+- If `connect.svg` is replaced, update `$art-w` / `$art-h` to the new viewBox or the art will letterbox
+- `scrollbar-gutter` was removed from App.vue's `.main-content`; it reserved empty strips that showed as black bars beside the background
+- Button styling changes completely when disabled (`font-size: 0`)
+- Type-check with `npx vue-tsc --noEmit` (plain `tsc` cannot read `.vue` files)

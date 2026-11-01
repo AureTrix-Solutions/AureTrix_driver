@@ -12,10 +12,11 @@
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report. -->
 
 ## ▶ RUN THIS
-Next: Task 1a — Connect.md front half (Purpose → Data Flow). Apply edits 1-7 below verbatim, run the Done-when greps, commit. Then stop.
+Next: Task 1b — Connect.md back half (Dependencies → Related Documentation). Apply edits 8-14 below verbatim, run the Done-when greps, commit. Then stop.
 
 ## Tasks
-1. **Connect.md front half (Purpose → Data Flow)** — [high-stakes, group 1a/1b] — STATUS: PENDING
+1. **Connect.md front half (Purpose → Data Flow)** — [high-stakes, group 1a/1b] — STATUS: IN-PROGRESS
+   - CHECKPOINT (1a, 2026-11-01): edits 1-7 applied verbatim; all 7 Done-when greps PASS ("App Navigation Enabled"/"Display connection status to the user"/"Shows error (handled by store)"/"Enables navigation to other pages" → 0; "Renders from:" → 1; "font-size: 0%" → 3; "KeyboardService" → 2). Docs-only, no typecheck gate. Committed as recovery point. No new findings.
    - Files: `docs/pages/Connect.md`
    - Scope note: docs task — no typecheck/build gate. Apply each edit by grepping the FIND text (unique), replacing with the given text. Do not touch sections outside the edit list.
    - **Edit 1** — FIND `- Display connection status to the user` (Purpose) → REPLACE:

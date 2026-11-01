@@ -5,14 +5,14 @@ The Connect page is the entry point for establishing a connection between the we
 
 ## Purpose
 - Initiate WebHID device pairing with compatible SparkLink keyboards
-- Display connection status to the user
+- Show connection state through the button (status text and device details are displayed in the App.vue sidebar, not on this page)
 - Provide a welcoming visual experience with branded graphics
 
 ## Key Features
 - **WebHID Connection**: Triggers the browser's device selection dialog
 - **Auto-Connect**: Automatically attempts to reconnect to previously paired devices on app startup
   - Known limitation: WebHID exposes no usable serialNumber on Chromium/Windows, so auto-reconnect matches vendorId+productId only — with two same-model boards it may open the wrong one. Manual connect via the browser picker is unaffected.
-- **Connection State Display**: Button text changes based on connection status
+- **Connection State Feedback**: The button label binding switches between "Connect Keyboard" / "Connecting..." / "Connected"; in the two disabled states the label is hidden (disabled style sets font-size: 0%), so only the default label is ever visible
 - **Visual Design**: Features a large circuit board SVG background for brand identity
 
 ## User Interface Elements
@@ -23,7 +23,7 @@ The Connect page is the entry point for establishing a connection between the we
   - "Connecting..." - Active connection attempt in progress
   - "Connected" - Device successfully connected
 - **Disabled States**: Button is disabled during connection or when already connected
-- **Visual Feedback**: Button appears semi-transparent when disabled
+- **Visual Feedback**: When disabled the button becomes a transparent, border-only outline (background-color: transparent + font-size: 0%); the "Connecting..." and "Connected" labels are bound but never rendered visibly
 
 ### Background
 - Large decorative SVG graphic (`connect.svg`) showing electrical circuit design
@@ -44,28 +44,28 @@ The Connect page is the entry point for establishing a connection between the we
 
 ### State Management
 - Uses Pinia's `useConnectionStore()`
-- Monitors:
-  - `isConnecting`: Boolean indicating active connection attempt
-  - `isConnected`: Boolean indicating successful connection
-  - `deviceInfo`: Object containing device metadata (BoardID, version, etc.)
+- Renders from:
+  - `isConnecting` / `isConnected`: drive the button label and `:disabled` state
+  - `deviceInfo`: feeds a `deviceInfoText` computed (BoardID + appVersion) returned from `setup()` but never rendered on this page — the App.vue sidebar shows device details instead
 
 ### Connection Flow
 1. User clicks "Connect Keyboard" button
 2. `connectDevice()` method calls `connectionStore.connectDevice()`
-3. Connection store triggers WebHID device selection dialog
-4. On selection, attempts to initialize the keyboard via SparkLink SDK
+3. The store calls `KeyboardService.requestDevice()`: unfiltered WebHID picker (`filters: []`), opens the chosen device, saves its stable ID to `localStorage.pairedStableId`, initializes the SDK keyboard
+4. The store fetches `getBaseInfo()` and merges it into `deviceInfo`
 5. If successful:
-   - Stores device identifiers for auto-reconnect
-   - Updates connection state
-   - Enables navigation to other pages
+   - `isConnected = true`; status text updated (shown in the sidebar)
+   - Active hardware profile synced via `profileStore.syncActiveProfileFromHardware()`
+   - The user stays on the Connect page — sidebar navigation is always available and never gated by connection state
 6. If failed:
-   - Shows error (handled by store)
-   - Returns to default state
+   - The store catches the thrown Error and sets a `status` string (displayed in the App.vue sidebar; nothing renders on this page)
+   - `finally` resets `isConnecting`; the button returns to the enabled default state
 
 ## Dependencies
 
 ### Services
-- **ConnectionStore** (`@/store/connection`): Manages connection lifecycle
+- **ConnectionStore** (`@/store/connection`): manages connection lifecycle (isConnecting/isConnected/status/deviceInfo)
+- **KeyboardService** (`@/services/KeyboardService`): singleton the store calls — `requestDevice()`, `getBaseInfo()`, `autoConnect()`
 
 ### External APIs
 - **WebHID**: Browser API for USB HID device communication
@@ -86,11 +86,11 @@ User Selects Device
     ↓
 SparkLink SDK Initialize
     ↓
-Connection Store Updates (isConnected = true)
+Connection Store Updates (isConnected = true, status set)
     ↓
-deviceInfo Populated
+deviceInfo Populated (rendered in the App.vue sidebar, not on this page)
     ↓
-App Navigation Enabled
+Profile Synced (profileStore.syncActiveProfileFromHardware)
 ```
 
 ## User Workflow

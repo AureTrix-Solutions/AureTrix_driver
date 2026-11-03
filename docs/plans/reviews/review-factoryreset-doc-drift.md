@@ -32,18 +32,23 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task (documentation-only change; no hardware behavior touched).
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies — or N/A
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies — or N/A (docs-only)
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
-<!-- After ONE verification pass, RULE. Don't keep investigating. A runtime/behavior question goes
-     to the PO hardware check, not more static analysis. Output = PASS/FAIL + findings + your own
-     Findings one-liners (into current-sprint.md). Do NOT plan task order/parallelism. -->
-**Result:** (pending)  ·  **Date:** YYYY-MM-DD  ·  **Fail count:** <n>
+**Result:** PASS  ·  **Date:** 2026-11-02  ·  **Fail count:** 0
+
+### Findings
+- All six Done-when greps re-run independently on `docs/pages/FactoryResetModal.md`: stale-pattern count 0 · `&:hover` 2 · `background: #444` 1 · `background: #ff6666` 1 · `isInitialized` 1 · `November 2, 2026` 1. Exact match to criteria.
+- Diff (`git diff 25657b0..7c7ff83`) touches only 3 files: the doc under review, the sprint checkpoint, and this review file — no stray source edits.
+- Doc `.cancel-btn` / `.ok-btn` SCSS matches `src/components/FactoryResetModal.vue` :129-145 verbatim (doc keeps its "// Red for destructive action" annotation — doc-only commentary, not drift).
+- Data Flow annotation "(button disabled unless connectionStore.isInitialized)" verified against `src/App.vue` :167-173 (`:disabled="!connectionStore.isInitialized"`, `@click="showFactoryResetModal"`).
+- Docs-only change: typecheck/build gate N/A; design-intent properties (filters:[], usagePage 65440, wrappers return Error) untouched. Tag [high-stakes] correct.
+- No non-defect observations worth routing; no Findings lines added.
 
 ### Failed items (FAIL only)
-(none yet)
+(none)

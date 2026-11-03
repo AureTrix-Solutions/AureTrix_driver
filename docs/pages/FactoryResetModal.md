@@ -148,13 +148,21 @@ None - this is a self-contained modal.
 }
 
 .cancel-btn {
-  background: transparent;
-  border: 1px solid #666;
+  background: #444;
+  color: #fff;
+
+  &:hover {
+    background: #555;
+  }
 }
 
 .ok-btn {
   background: #ff4444;  // Red for destructive action
-  color: white;
+  color: #fff;
+
+  &:hover {
+    background: #ff6666;
+  }
 }
 ```
 
@@ -194,7 +202,7 @@ async handleFactoryReset() {
 ## Data Flow
 
 ```
-Factory Reset button clicked
+Factory Reset button clicked (button disabled unless connectionStore.isInitialized)
     |
     v
 showFactoryResetModal()
@@ -252,4 +260,4 @@ FactoryResetModal renders
 
 ---
 
-*Last Updated: November 26, 2025*
+*Last Updated: November 2, 2026*

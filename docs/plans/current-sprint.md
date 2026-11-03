@@ -15,10 +15,11 @@
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Task 1 — fix FactoryResetModal.md drifts (4 spec'd edits + sweep, below). Do this task, then stop.
+Next: Reviewer — "follow docs/plans/reviews/review-factoryreset-doc-drift.md" (Task 1 IN-REVIEW, base 25657b0, head = the Task-1 commit). Task 1 is the sprint's only task: on PASS → ALL TASKS DONE — awaiting PO sign-off (PM-close).
 
 ## Tasks
-1. **Fix FactoryResetModal.md drifts + verify sweep** — [high-stakes] — STATUS: PENDING
+1. **Fix FactoryResetModal.md drifts + verify sweep** — [high-stakes] — STATUS: IN-REVIEW
+   - Checkpoint (Worker 2026-11-02): 4 PM-spec'd edits applied to docs/pages/FactoryResetModal.md (cancel-btn SCSS, ok-btn SCSS+hover, isInitialized gate line, footer date); sweep vs .vue + App.vue found no further drift. Done-when greps: 0/2/1/1/1/1 — all pass. Review file: docs/plans/reviews/review-factoryreset-doc-drift.md. Cleanup (actual ls): .scratch/ has pm-notes.md (PO may delete); _to_delete/ empty.
    - Done when: `grep -c "background: transparent\|color: white\|November 26, 2025" docs/pages/FactoryResetModal.md` → 0
    - Done when: `grep -c "&:hover" docs/pages/FactoryResetModal.md` → 2
    - Done when: `grep -c "background: #444" docs/pages/FactoryResetModal.md` → 1 AND `grep -c "background: #ff6666" docs/pages/FactoryResetModal.md` → 1

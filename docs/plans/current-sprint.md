@@ -15,7 +15,7 @@
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Reviewer — "follow docs/plans/reviews/review-factoryreset-doc-drift.md" (Task 1 IN-REVIEW, base 25657b0, head = the Task-1 commit). Task 1 is the sprint's only task: on PASS → ALL TASKS DONE — awaiting PO sign-off (PM-close).
+Next: Reviewer — "follow docs/plans/reviews/review-factoryreset-doc-drift.md" (Task 1 IN-REVIEW, base 25657b0, head 7c7ff83). Task 1 is the sprint's only task: on PASS → ALL TASKS DONE — awaiting PO sign-off (PM-close).
 
 ## Tasks
 1. **Fix FactoryResetModal.md drifts + verify sweep** — [high-stakes] — STATUS: IN-REVIEW

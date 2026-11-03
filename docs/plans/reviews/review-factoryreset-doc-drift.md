@@ -22,7 +22,7 @@
 - typecheck/build: N/A — no .ts/.vue edits; self-check gate inactive for this sprint per checkpoint (docs/tsc-baseline.txt = 0 errors, docs-only sprint).
 
 ## 🔍 Commits to review
-Base: `25657b0` (branch point / PM-open)   Head: `<this task's commit — see git log, message "sprint-28-docs-pages-verify-3: Task 1">`
+Base: `25657b0` (branch point / PM-open)   Head: `7c7ff83` (this task)
 <!-- Reviewer runs this itself — do NOT paste the diff here:
        git diff --stat <base>..<head>     then      git diff <base>..<head>
      A file touched outside this task's scope is a flag. -->

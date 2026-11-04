@@ -44,14 +44,28 @@ Fix-round ranges (added on each re-review): —
 N/A — docs-only task, no hardware behavior changed.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (only docs/pages/GlobalTravel.md + planning files; no src/)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies — N/A (docs-only)
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above — all 16 greps rerun, every count matches (hasLoadedSettings=3 ≥1, adjust*=2 ≥2, getDpDr|setSingleTravel=7 ≥4, Auto-clamp=2, mode-changed Event=1, @mode-changed=1, all stale phrases=0)
+- [x] diff scope matches the task (only docs/pages/GlobalTravel.md + planning files; no src/) — `git diff --name-only 2c8ef76..a58ad9c -- src/` empty
+- [x] no design-intent violation — docs-only, no wrappers/filters/usagePage touched
+- [x] typecheck/build gate met where it applies — N/A (docs-only)
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
+
+### Verification performed (grep-confirmed vs source, not memory)
+- Load gate/triggers: `hasLoadedSettings` :460, gate at :466/:489/:498, 4 trigger sites, disconnect reset :479 — GlobalTravel.vue ✓
+- `getGlobalTouchTravel()`: component reads only `settings.globalTouchTravel` :211–214; `export interface IDB` (3 fields) at protocol-keyboard/src/types/interface.ts:74 and sdk-reference-v2.md :705/:2755 — corrected claim is TRUE ✓
+- 0.1–4.0 clamp :213–214; fallback `getDpDr(keyIds[0])` :248; console.error-only (:265/:404, no console.warn, no setTimeout) ✓
+- Lazy clamp: no watcher on `profileMaxTravel` (watch list :448/:463/:474/:485 only); second trigger = guard before `setGlobalTouchTravel` :296–303 ✓
+- WF4 write order: setSingleTravel :371 → setDp :376 → setDr :381 → setPerformanceMode :386 (writes BEFORE mode switch) ✓
+- Parent binding: emits :189 incl. `mode-changed`; KeyTravel.vue `@mode-changed="handleModeChange"` :8 — quoted line exact ✓; `refresh-overlays` 0 hits in src/ ✓
+- Batch snippet: `!(mode instanceof Error) && mode.touchMode === 'global'` :276 verbatim ✓
+- Functions section: adjustTravel :323–327 / adjustDeadZone :330–345 behavior matches doc; deadzone-merge `deadChanged` :306–311 ✓
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** _pending_  ·  **Date:** _pending_  ·  **Fail count:** _pending_
+**Result:** PASS  ·  **Date:** 2026-11-03  ·  **Fail count:** 0
 
 ### Failed items (FAIL only)
+_None._
+
+### Findings (non-defect observations)
+- docs/sdk-reference-v2.md renders the IDB blocks (`interface IDB` :705/:2755) without the `export` keyword that protocol-keyboard/src/types/interface.ts:74 carries — cosmetic fidelity gap in the SDK reference; verify at `grep -n "interface IDB" docs/sdk-reference-v2.md`.

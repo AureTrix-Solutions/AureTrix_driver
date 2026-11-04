@@ -38,8 +38,23 @@ extraction per sprint/branch — never a multi-phase rewrite in one go.
 - Foundation: docs/sdk-reference-v2.md §10.5 wire-framing (64-byte packets, additive checksum, multi-packet reassembly).
 
 ### docs-pages-verify — reconcile each docs/pages/*.md against its current .vue (one page per sprint)
-- PROGRESS: sprint-26 (docs-pages-verify-1) = Connect page — CLOSED, Reviewer PASS, PO signed off 2026-11-01 (archive/sprint-26-docs-pages-verify-1/). sprint-27 (docs-pages-verify-2) = LayoutPreview page — CLOSED, Reviewer PASS, PO signed off 2026-11-01 (archive/sprint-27-docs-pages-verify-2/; custom-layouts feature documented, 14/14 greps). sprint-28 (docs-pages-verify-3) = FactoryResetModal — CLOSED, Reviewer PASS (6/6 greps), PO signed off 2026-11-02 (archive/sprint-28-docs-pages-verify-3/; 4 drifts fixed + sweep clean). sprint-29 (docs-pages-verify-4) = GlobalTravel — CLOSED, Reviewer PASS ×2 (16/16 + 3/3 greps, fail count 0), PO signed off 2026-11-03 (archive/sprint-29-docs-pages-verify-4/; 7 drifts fixed in GlobalTravel.md + routed PAGES_OVERVIEW.md "Typical User Journey" fix shipped as Task 2). Next candidates: SwitchProfiles/SingleKeyTravel (500-700-line pairs, each ≥1 sprint). Item STAYS in backlog until all implemented pages done (precedent: advanced-key-pages). Debug.md explicitly SKIPPED (possible future sprint of its own).
-- [docs] Page docs predate the code changes and haven't been re-verified. One sprint per implemented page: check the doc against current source, update stale content. Advanced-key stub pages excluded (documented when built). Skip debug.md for a possible future sprint of its own.
+- [docs] One sprint per page: check the doc against current source, fix drift. Advanced-key stub pages excluded (documented when built). Item STAYS until all implemented pages done (precedent: advanced-key-pages).
+- [x] Connect.md — sprint-26, Reviewer PASS, PO signed off 2026-11-01 (archive/sprint-26-docs-pages-verify-1/)
+- [x] LayoutPreview.md — sprint-27, PASS 14/14 greps, PO signed off 2026-11-01 (archive/sprint-27-docs-pages-verify-2/)
+- [x] FactoryResetModal.md — sprint-28, PASS 6/6 greps, 4 drifts fixed, PO signed off 2026-11-02 (archive/sprint-28-docs-pages-verify-3/)
+- [x] GlobalTravel.md — sprint-29, PASS ×2 (16/16 + 3/3 greps), 7 drifts fixed + PAGES_OVERVIEW journey fix, PO signed off 2026-11-03 (archive/sprint-29-docs-pages-verify-4/)
+- [ ] SwitchProfiles.md ↔ src/components/performance/SwitchProfiles.vue — next candidate (680/713 lines, ≥1 sprint)
+- [ ] SingleKeyTravel.md ↔ src/components/performance/SingleKeyTravel.vue — next candidate (625/619)
+- [ ] KeyTravel.md ↔ src/components/performance/KeyTravel.vue — doc 482 vs source 89; drift likely
+- [ ] KeyMapping.md ↔ src/pages/KeyMapping.vue
+- [ ] Lighting.md ↔ src/pages/Lighting.vue
+- [ ] RapidTrigger.md ↔ src/pages/RapidTrigger.vue
+- [ ] Performance.md ↔ src/pages/Performance.vue
+- [ ] Calibration.md ↔ src/pages/Calibration.vue
+- [ ] MacroRecording.md ↔ src/pages/MacroRecording.vue
+- [ ] LayoutCreator.md ↔ src/pages/LayoutCreator.vue
+- [ ] GlobalFeatures.md ↔ App.vue sidebar (not a routed page)
+- [ ] Debug.md ↔ src/pages/Debug.vue — SKIPPED, possible future sprint of its own
 
 ### docs-meta-verify — correctness pass on project meta docs
 README.md (repo root) + .github/* (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, issue/PR templates, ci.yml).

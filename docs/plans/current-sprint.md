@@ -14,7 +14,7 @@
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Worker window: Task 2 — PAGES_OVERVIEW.md Typical User Journey (Task 1 is DONE — Reviewer PASS, see review-globaltravel.md).
+Reviewer window: "follow docs/plans/reviews/review-typical-journey.md" — Task 2 (PAGES_OVERVIEW Typical User Journey). Task 1 is DONE (Reviewer PASS). Task 2 is IN-REVIEW awaiting verdict; on PASS this sprint is ALL TASKS DONE — awaiting PO sign-off.
 
 ## Scope notes (apply to every task)
 - **Docs-only.** Never edit any file under `src/`. Verify after each task: `git status --short src/` returns NOTHING.
@@ -26,7 +26,8 @@ Worker window: Task 2 — PAGES_OVERVIEW.md Typical User Journey (Task 1 is DONE
 
 1. **GlobalTravel.md drift fixes (parent, 4 sequential sub-tasks)** — [high-stakes] — STATUS: ✓ DONE (Reviewer PASS 2026-11-03, fail count 0 — all 16 cumulative Done-when greps rerun green; every new claim grep-verified vs GlobalTravel.vue + sdk-reference-v2.md + protocol-keyboard/src; review-globaltravel.md holds the verdict)
 
-2. **PAGES_OVERVIEW.md — "Typical User Journey" overstates a required order** — [high-stakes] — STATUS: PENDING
+2. **PAGES_OVERVIEW.md — "Typical User Journey" overstates a required order** — [high-stakes] — STATUS: IN-REVIEW
+   Checkpoint: both edits applied in one span; router claim re-verified this session (guard grep → nothing, exit 1). Done-when greps green (count=1, -A12 block correct, src/ empty). Docs-only → tsc gate skipped. Cleanup: `.scratch/` = pm-notes.md + review-notes.md (PO may delete); `_to_delete/` empty. Review file: review-typical-journey.md (Base fea8491 / Head 57d3d57).
    File: `docs/PAGES_OVERVIEW.md`
    - **Edit 1** — Under `### Typical User Journey` (~:342) the fenced diagram presents Connect → Performance → Calibration → Key Mapping → Macro Recording as a linear sequence. Rewrite it so the order reads as *typical*, not *required*: keep Connect Page first and label it the only real prerequisite (a device must be paired), then present the remaining four as a common order that may be visited in any sequence.
      > **Why (PM-verified):** `grep -n "beforeEach\|requiresAuth\|meta:\|isConnected\|redirect" src/router/index.ts` returns NOTHING — the router defines no navigation guards or gating, so no page depends on another having been visited. This is the backlog `## Document issues` item from sprint-26 F2, routed here at PM-open.

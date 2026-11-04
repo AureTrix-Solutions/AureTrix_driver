@@ -7,14 +7,14 @@
 ## Checkpoint
 - Branch: `sprint-29-docs-pages-verify-4`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — **gate skipped, all tasks are docs-only** per CLAUDE.md
-- Cleanup (from `ls` at Task 1b): `.scratch/` holds `pm-notes.md` (PM working file, PO may delete); `_to_delete/` empty (`.gitkeep` only). No repo file staged for removal.
+- Cleanup (from `ls` at Task 1c): `.scratch/` holds `pm-notes.md` (PM working file, PO may delete); `_to_delete/` empty (`.gitkeep` only). No repo file staged for removal.
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report.
      Do NOT record or update a commit hash here — git log is the source of truth.
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph.
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Task 1c — correct the §Error Handling and Recovery table + remove the false console.warn row. Do this task, then stop.
+Next: Task 1d — Scenario 3 auto-clamp, integration snippet, stale 300ms limitation. Do this task, then stop.
 
 ## Scope notes (apply to every task)
 - **Docs-only.** Never edit any file under `src/`. Verify after each task: `git status --short src/` returns NOTHING.
@@ -72,7 +72,7 @@ Next: Task 1c — correct the §Error Handling and Recovery table + remove the f
    - Done when: `grep -c "Apply Before Switch" docs/pages/GlobalTravel.md` → `1`
    - Done when: `git status --short src/` → empty
 
-   **1c. Batch snippet guards + Workflow 4 + missing API functions** — STATUS: PENDING
+   **1c. Batch snippet guards + Workflow 4 + missing API functions** — STATUS: ✓ DONE (5 edits applied, all Done-when greps pass incl. WF4 line re-verified at :378–379, src/ clean)
    - **Edit 1** — §Batch Processing Strategy snippet: replace `if (mode.touchMode === 'global') {` with the source's guard `if (!(mode instanceof Error) && mode.touchMode === 'global') {`
    - **Edit 2** — Second snippet of that section (target: `await processBatches(globalModeKeys, async (keyId) => {`): wrap it as the source does with `if (globalModeKeys.length > 0) {` … `}`, so the snippet can't be copied without the guard.
    - **Edit 3** — Workflow 4 step 4 (target: ``Component batches `setPerformanceMode(key, 'global', 0)` for each selected key``) → `Component batches each selected key through setSingleTravel, setDp, setDr, then setPerformanceMode(key, 'global', 0) — the values are written BEFORE the mode switch`

@@ -146,6 +146,13 @@ const maxTravel = computed(() =>
 
 These computed values ensure the global travel slider always operates within valid bounds defined by the deadzones and profile max travel.
 
+### Functions
+
+Two adjustment entry points are returned from `setup()`:
+
+- `adjustTravel(delta)` — clamps to `[minTravel, maxTravel]`, rounds to 2dp, then calls `updateGlobalSettings()`.
+- `adjustDeadZone(delta, 'press' | 'release')` — early-returns for `'release'` while zones are linked; clamps to `[0, 1.0]`; when linked, mirrors the value onto the other zone; then calls `updateGlobalSettings()`.
+
 ---
 
 ## Data Flow
@@ -292,6 +299,8 @@ watch([pressDead, releaseDead], () => {
 | `setPerformanceMode(key, mode, param)` | Set key to global mode | Key ID, 'global', 0 |
 | `setDp(key, value)` | Set top deadzone for key | Key ID, pressDead value |
 | `setDr(key, value)` | Set bottom deadzone for key | Key ID, releaseDead value |
+| `getDpDr(key)` | Read a global-mode key's deadzones | Key ID |
+| `setSingleTravel(key, travel)` | Written per key before the global-mode switch | Key ID, travel value |
 
 ### Batch Processing Strategy
 
@@ -304,7 +313,7 @@ The component uses batch processing for two critical operations:
    
    await processBatches(keyIds, async (keyId) => {
      const mode = await KeyboardService.getPerformanceMode(keyId);
-     if (mode.touchMode === 'global') {
+     if (!(mode instanceof Error) && mode.touchMode === 'global') {
        globalModeKeys.push(keyId);
      }
    });
@@ -312,12 +321,14 @@ The component uses batch processing for two critical operations:
 
 2. **Updating Deadzones for Global Keys**:
    ```typescript
-   await processBatches(globalModeKeys, async (keyId) => {
-     await Promise.all([
-       KeyboardService.setDp(keyId, pressDead.value),
-       KeyboardService.setDr(keyId, releaseDead.value),
-     ]);
-   });
+   if (globalModeKeys.length > 0) {
+     await processBatches(globalModeKeys, async (keyId) => {
+       await Promise.all([
+         KeyboardService.setDp(keyId, pressDead.value),
+         KeyboardService.setDr(keyId, releaseDead.value),
+       ]);
+     });
+   }
    ```
 
 The `processBatches` composable handles:
@@ -364,8 +375,8 @@ The `processBatches` composable handles:
 1. User selects specific keys on keyboard grid (e.g., WASD for gaming)
 2. "Select to Global" button becomes enabled
 3. User clicks "Select to Global"
-4. Component batches `setPerformanceMode(key, 'global', 0)` for each selected key
-5. Current global travel and deadzones apply to newly converted keys
+4. Component batches each selected key through `setSingleTravel`, `setDp`, `setDr`, then `setPerformanceMode(key, 'global', 0)` — the values are written BEFORE the mode switch
+5. The travel and deadzone values written are the ones held in the component's UI refs at click time
 6. Overlay updates to show global settings on those keys
 
 ### Workflow 5: View Global Settings on Keyboard

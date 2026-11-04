@@ -7,14 +7,14 @@
 ## Checkpoint
 - Branch: `sprint-29-docs-pages-verify-4`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — **gate skipped, all tasks are docs-only** per CLAUDE.md
-- Cleanup (from `ls` at Task 1c): `.scratch/` holds `pm-notes.md` (PM working file, PO may delete); `_to_delete/` empty (`.gitkeep` only). No repo file staged for removal.
+- Cleanup (from `ls` at Task 1d): `.scratch/` holds `pm-notes.md` (PM working file, PO may delete); `_to_delete/` empty (`.gitkeep` only). No repo file staged for removal.
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report.
      Do NOT record or update a commit hash here — git log is the source of truth.
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph.
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Task 1d — Scenario 3 auto-clamp, integration snippet, stale 300ms limitation. Do this task, then stop.
+Reviewer window: "follow docs/plans/reviews/review-globaltravel.md" (Task 1, 1a–1d cumulative). Worker window after that: Task 2 — PAGES_OVERVIEW.md Typical User Journey.
 
 ## Scope notes (apply to every task)
 - **Docs-only.** Never edit any file under `src/`. Verify after each task: `git status --short src/` returns NOTHING.
@@ -24,7 +24,7 @@ Next: Task 1d — Scenario 3 auto-clamp, integration snippet, stale 300ms limita
 
 ## Tasks
 
-1. **GlobalTravel.md drift fixes (parent, 4 sequential sub-tasks)** — [high-stakes] — STATUS: IN-PROGRESS
+1. **GlobalTravel.md drift fixes (parent, 4 sequential sub-tasks)** — [high-stakes] — STATUS: IN-REVIEW (1a–1d all ✓; review-globaltravel.md written; Base 2c8ef76 / Head a58ad9c)
    Files: `docs/pages/GlobalTravel.md`; source of truth `src/components/performance/GlobalTravel.vue`
 
    **1a. §Loading Global Settings — real load gate + false SDK claim** — STATUS: ✓ DONE (4 edits applied, all Done-when greps pass, src/ clean)
@@ -86,7 +86,7 @@ Next: Task 1d — Scenario 3 auto-clamp, integration snippet, stale 300ms limita
    - Done when: `grep -c "getDpDr\|setSingleTravel" docs/pages/GlobalTravel.md` → `>= 4` (was 3 at plan time)
    - Done when: `git status --short src/` → empty
 
-   **1d. Scenario 3 auto-clamp, integration snippet, stale 300ms limitation** — STATUS: PENDING
+   **1d. Scenario 3 auto-clamp, integration snippet, stale 300ms limitation** — STATUS: ✓ DONE (3 edits applied, all Done-when greps pass, cumulative 1a–1d sweep green, src/ clean)
    - **Edit 1** — Replace the Scenario 3 fenced block (target its UNIQUE first line `profileMaxTravel = 4.0mm, releaseDead = 0.1mm`; the block runs to its `Result:` line) with:
      ```
      Initial: globalTravel = 3.8mm, profileMaxTravel = 4.0mm, releaseDead = 0.1mm

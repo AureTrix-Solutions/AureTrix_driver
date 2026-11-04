@@ -23,15 +23,17 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task.
 
 ## ❓ Reviewer, please confirm
-- [ ] meets every "DONE WHEN" criterion above
-- [ ] diff scope matches the task (no stray files — doc edit only; the current-sprint.md/review-file commit is Worker status mechanics, not task scope)
-- [ ] no design-intent violation
-- [ ] typecheck/build gate met where it applies — N/A (docs-only)
-- [ ] tag is correct (high-stakes where required) — else auto-FAIL
+- [x] meets every "DONE WHEN" criterion above
+- [x] diff scope matches the task (no stray files — doc edit only; the current-sprint.md/review-file commit is Worker status mechanics, not task scope)
+- [x] no design-intent violation
+- [x] typecheck/build gate met where it applies — N/A (docs-only)
+- [x] tag is correct (high-stakes where required) — else auto-FAIL
 
 ---
 ## ✅ REVIEWER VERDICT
-**Result:** —  ·  **Date:** —  ·  **Fail count:** —
+**Result:** PASS  ·  **Date:** 2026-11-03  ·  **Fail count:** 0
+
+All three Done-when criteria rerun green by the Reviewer: `grep -c "Typical User Journey" docs/PAGES_OVERVIEW.md` → 1; the `-A12` block shows the Connect Page as "← the only prerequisite" with the remaining four pages as a bulleted "Then, in any order (a common sequence shown)" list, plus the required adjacent sentence ("The app enforces no page ordering…"); `git status --short src/` → empty. `git diff --stat fea8491..57d3d57` confirms scope: only `docs/PAGES_OVERVIEW.md`, +11/−8, confined to the `### Typical User Journey` section (the adjacent `### Developer Journey` untouched). The underlying factual claim was independently re-verified: `grep -n "beforeEach\|requiresAuth\|meta:\|isConnected\|redirect" src/router/index.ts` → no output (exit 1) — the router defines no navigation guards, so the corrected wording is factually accurate. Docs-only task: tsc/build gate N/A; design-intent properties untouched. No failed items.
 
 ### Failed items (FAIL only)
 —

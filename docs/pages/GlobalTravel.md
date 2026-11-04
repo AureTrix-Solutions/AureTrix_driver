@@ -425,9 +425,12 @@ Result: Valid configuration maintained
 Initial: globalTravel = 3.8mm, profileMaxTravel = 4.0mm, releaseDead = 0.1mm
 User switches to profile with maxTravel = 3.5mm
 maxTravel becomes min(3.5, 3.5 - 0.1) = 3.4mm
-globalTravel (3.8) > maxTravel (3.4)
-Auto-clamp: globalTravel = 3.4mm
-Result: Travel respects new profile limits
+globalTravel stays 3.8mm — it is NOT clamped at switch time
+(no watcher observes props.profileMaxTravel)
+Clamping is lazy: globalTravel is corrected to 3.4mm at the next
+  - deadzone change (the [pressDead, releaseDead] watcher), or
+  - write to hardware (the guard before setGlobalTouchTravel)
+Result: an over-limit value can persist in the UI until one of those fires
 ```
 
 ---
@@ -442,7 +445,7 @@ GlobalTravel is one of three sub-components rendered by KeyTravel.vue:
   :selected-keys="selectedKeys" 
   :profile-max-travel="profileMaxTravel"
   @update-overlay="setOverlay" 
-  @refresh-overlays="$emit('refresh-overlays')" 
+  @mode-changed="handleModeChange"
 />
 ```
 
@@ -533,8 +536,6 @@ const loadGlobalSettings = async () => {
 2. **Batch Operation Performance**: Updating deadzones for 100+ keys can take several seconds due to batch processing delays.
 
 3. **No Undo/Redo**: Changes apply immediately with no rollback capability.
-
-4. **Overlay Timing**: 300ms delay after mode conversion before re-showing overlay (intentional to allow state to settle).
 
 ---
 

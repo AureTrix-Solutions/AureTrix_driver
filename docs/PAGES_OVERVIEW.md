@@ -340,17 +340,20 @@ Common patterns:
 ## Navigation Flow
 
 ### Typical User Journey
+
+The Connect Page is the only real prerequisite — a device must be paired before the feature pages do anything useful. The four pages below are shown in a common order, but they may be visited in any sequence.
+
 ```
-1. Connect Page (pair device)
+1. Connect Page (pair device)   ← the only prerequisite
    ↓
-2. Performance Page (adjust travel)
-   ↓
-3. Calibration Page (calibrate sensors)
-   ↓
-4. Key Mapping Page (customize layout)
-   ↓
-5. Macro Recording Page (create macros)
+   Then, in any order (a common sequence shown):
+   • Performance Page (adjust travel)
+   • Calibration Page (calibrate sensors)
+   • Key Mapping Page (customize layout)
+   • Macro Recording Page (create macros)
 ```
+
+The app enforces no page ordering: once a device is connected, every feature page is reachable directly from the navigation.
 
 ### Developer Journey
 ```

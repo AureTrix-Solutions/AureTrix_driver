@@ -153,22 +153,34 @@ These computed values ensure the global travel slider always operates within val
 ### Loading Global Settings
 
 ```
-Component Mount
+Load gate — runs only when ALL of:
+  connectionStore.isInitialized && props.layout.length > 0 && !hasLoadedSettings
+  (hasLoadedSettings is a load-once-per-session flag, set true before the call)
+Trigger sites, all behind that gate: onMounted · watch(isInitialized) ·
+  watch(layout.length) (empty→populated only) · watch(isConnected)
+  (on disconnect resets hasLoadedSettings = false, so settings reload on next connection)
   ↓
 loadGlobalSettings()
   ↓
 KeyboardService.getGlobalTouchTravel()  → Gets global travel value
+  (the component reads only settings.globalTouchTravel, and applies it only when it is
+   within the hardcoded 0.1–4.0 range: globalTravel.value = Number(settings.globalTouchTravel.toFixed(2)))
   ↓
 Find a global-mode key from layout (using getPerformanceMode)
   ↓
 KeyboardService.getDpDr(globalModeKey)  → Gets deadzones (pressDead, releaseDead)
   ↓
+If no global-mode key is found: fall back to KeyboardService.getDpDr(keyIds[0])
+  (same validation: numeric, non-NaN, and each deadzone applied only when within [0, 1.0])
+  ↓
 Update reactive state (globalTravel, pressDead, releaseDead)
   ↓
 Store previous deadzone values for change detection
+
+On failure: the outer catch logs console.error('[GlobalTravel] loadGlobalSettings failed:', error)
 ```
 
-**Important:** The global deadzones are fetched via `getDpDr()` from a key that is confirmed to be in global performance mode, not from `getGlobalTouchTravel()` which only returns the travel distance. This is because `getGlobalTouchTravel()` does not return deadzone values.
+**Important:** `getGlobalTouchTravel()` returns an `IDB` object that DOES carry all three fields — `globalTouchTravel`, `pressDead`, `releaseDead` (verified: docs/sdk-reference-v2.md §5.1 and `export interface IDB { globalTouchTravel: number; pressDead: number; releaseDead: number; }`). The component reads only the travel value from that response and sources the global deadzones from `getDpDr()` on a key confirmed to be in global performance mode instead.
 
 ### Updating Global Settings
 

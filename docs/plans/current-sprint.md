@@ -14,7 +14,7 @@
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Task 1a — fix the §Loading Global Settings root line + the false `getGlobalTouchTravel()` SDK claim. Do this task, then stop.
+Next: Task 1b — rewrite §Updating Global Settings to the real flow (debounce wrapper, clamp order, deadzone-merge rule). Do this task, then stop.
 
 ## Scope notes (apply to every task)
 - **Docs-only.** Never edit any file under `src/`. Verify after each task: `git status --short src/` returns NOTHING.
@@ -27,7 +27,7 @@ Next: Task 1a — fix the §Loading Global Settings root line + the false `getGl
 1. **GlobalTravel.md drift fixes (parent, 4 sequential sub-tasks)** — [high-stakes] — STATUS: IN-PROGRESS
    Files: `docs/pages/GlobalTravel.md`; source of truth `src/components/performance/GlobalTravel.vue`
 
-   **1a. §Loading Global Settings — real load gate + false SDK claim** — STATUS: PENDING
+   **1a. §Loading Global Settings — real load gate + false SDK claim** — STATUS: ✓ DONE (4 edits applied, all Done-when greps pass, src/ clean)
    The existing tree (target: the fenced block from `Component Mount` through `Store previous deadzone values for change detection`, ~:155–169) is accurate EXCEPT its root line. Make surgical edits — do not rewrite the whole block.
    - **Edit 1** — Replace the root line `Component Mount` (and the `↓` following it) with the real gate, keeping every line below `loadGlobalSettings()` as-is:
      ```

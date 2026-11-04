@@ -214,13 +214,10 @@ setKeyToGlobalMode()
   ↓
 Map selectedKeys to physical key values
   ↓
-Step 1: Fetch current global settings from keyboard
+Step 1: Source values from the current UI settings (refs), not the Global-DB register
   ↓
-KeyboardService.getGlobalTouchTravel()
-  ↓
-Validate returned values (globalTouchTravel, pressDead, releaseDead)
-  ↓
-Check all values are valid numbers (throw if NaN)
+globalTravelValue = globalTravel.value, globalPressDead = pressDead.value,
+globalReleaseDead = releaseDead.value   (no SDK read, no NaN validation)
   ↓
 Step 2: Apply global values to each key BEFORE switching mode
   ↓
@@ -232,32 +229,22 @@ processBatches: For each selected key
   ↓
 All service calls validated (throw on Error)
   ↓
-Step 3: Sync UI state with applied values
-  ↓
-globalTravel.value = globalTravelValue
-pressDead.value = globalPressDead
-releaseDead.value = globalReleaseDead
-  ↓
-Step 4: Emit 'mode-changed' event with keyIds and 'global'
+Step 3: Emit 'mode-changed' event with keyIds and 'global'
   ↓
 Parent updates keyModeMap tracking (critical for overlay reactivity)
   ↓
-Step 5: If overlay enabled, emit current global values
+Step 4: If overlay enabled, emit current global values
   ↓
 Overlay shows values that were actually applied to keys
 ```
 
 **Critical Implementation Details**:
 
-1. **Fetch-First Pattern**: The button fetches current global settings from the keyboard before applying them. This ensures the UI always shows what's actually on the device, even if the user adjusted sliders without saving.
+1. **UI Refs as Source**: The button applies the values currently held in the component's refs (`globalTravel`, `pressDead`, `releaseDead`). It performs no read-back from the keyboard, so what the sliders show is what gets written to the keys.
 
 2. **Apply Before Switch**: Each key receives the individual travel and deadzone values BEFORE switching to global mode. This prevents a bug where keys would switch to global mode but retain their old deadzone values because global deadzones are only enforced at the global level, not per-key.
 
-3. **NaN Validation**: After casting the SDK response to access `pressDead` and `releaseDead` fields (which aren't in the TypeScript type), the code validates all three values are valid numbers. This prevents silent failures from malformed SDK responses.
-
-4. **UI State Synchronization**: After applying values to keys, the component updates its reactive refs to match what was actually written. This ensures the sliders and overlays show the device state, not stale UI state.
-
-5. **mode-changed Event**: Essential for preventing overlay persistence bugs. When keys switch from single to global mode, the parent Performance page must immediately update its `keyModeMap` tracking so the computed `overlayData` knows to apply global values instead of per-key values. Without this event, keys would show stale single-mode overlay values until page refresh.
+3. **mode-changed Event**: Essential for preventing overlay persistence bugs. When keys switch from single to global mode, the parent Performance page must immediately update its `keyModeMap` tracking so the computed `overlayData` knows to apply global values instead of per-key values. Without this event, keys would show stale single-mode overlay values until page refresh.
 
 ### Deadzone Linking
 

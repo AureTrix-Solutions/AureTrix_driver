@@ -7,14 +7,14 @@
 ## Checkpoint
 - Branch: `sprint-29-docs-pages-verify-4`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — **gate skipped, all tasks are docs-only** per CLAUDE.md
-- Cleanup: to be reported by Worker from an actual `ls .scratch/ _to_delete/`
+- Cleanup (from `ls` at Task 1b): `.scratch/` holds `pm-notes.md` (PM working file, PO may delete); `_to_delete/` empty (`.gitkeep` only). No repo file staged for removal.
 <!-- Session-start check: on sprint branch (not main) + clean tree. Uncommitted changes → STOP, report.
      Do NOT record or update a commit hash here — git log is the source of truth.
      Updating a task's status REPLACES its one checkpoint line — never append a second paragraph.
      On resume, trust this checkpoint as the plan; consult only the compiler for results. -->
 
 ## ▶ RUN THIS
-Next: Task 1b — rewrite §Updating Global Settings to the real flow (debounce wrapper, clamp order, deadzone-merge rule). Do this task, then stop.
+Next: Task 1c — correct the §Error Handling and Recovery table + remove the false console.warn row. Do this task, then stop.
 
 ## Scope notes (apply to every task)
 - **Docs-only.** Never edit any file under `src/`. Verify after each task: `git status --short src/` returns NOTHING.
@@ -51,7 +51,7 @@ Next: Task 1b — rewrite §Updating Global Settings to the real flow (debounce 
    - Done when: `grep -c "console.warn" docs/pages/GlobalTravel.md` → `0`
    - Done when: `git status --short src/` → empty
 
-   **1b. §Setting Keys to Global Mode — remove the nonexistent fetch-first Step 1** — STATUS: PENDING
+   **1b. §Setting Keys to Global Mode — remove the nonexistent fetch-first Step 1** — STATUS: ✓ DONE (4 spec edits + inline plan-defect fix [tree Step 3 sync deleted, renumbered], all Done-when greps = 0, src/ clean, defect logged in Findings)
    - **Edit 1** — Replace the Step 1 lines of the flow tree (target: `Step 1: Fetch current global settings from keyboard` through `Check all values are valid numbers (throw if NaN)`, ~:205–212) with:
      ```
      Step 1: Source values from the current UI settings (refs), not the Global-DB register
@@ -125,4 +125,4 @@ Next: Task 1b — rewrite §Updating Global Settings to the real flow (debounce 
    - Then set → IN-REVIEW, write `docs/plans/reviews/review-pages-overview-journey.md`, and advance ▶ RUN THIS to "ALL TASKS DONE — awaiting PO sign-off".
 
 ## Findings (raw — PM routes at close)
-- <none yet>
+- Task 1b plan defect (fixed inline): spec replacement tree kept a Step 3 "Sync UI state" (globalTravel.value = globalTravelValue / pressDead.value = … / releaseDead.value = …) that does not exist in source — refs are never reassigned in setKeyToGlobalMode (the same reason spec Edit 4 deletes the "UI State Synchronization" detail item). Worker deleted that tree step + its detail item and renumbered (tree Steps 4→3, 5→4; list 5→3). Verify: src/components/performance/GlobalTravel.vue setKeyToGlobalMode — no ref reassignments after processBatches.

@@ -7,18 +7,18 @@
 ## Checkpoint
 - Branch: `sprint-31-docs-pages-verify-6`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — docs-only sprint; self-check gate SKIPPED (no source changes)
-- Cleanup at open: `.scratch/` has pm-notes.md (PO may delete); `_to_delete/` nothing to git rm
+- Cleanup (actual `ls`, after 1a): `.scratch/` = pm-notes.md only (PM's, PO may delete); `_to_delete/` = empty, nothing to git rm
 - Split rationale: 4 sub-tasks × (≤11 edits, ≤35 new lines authored) → sequential 1a→1b→1c→1d, ONE Reviewer over cumulative base..head after 1d
 - PM research banked in `.scratch/pm-notes.md` F5–F26 (private). Specs below are final — Worker APPLIES, does not re-derive. Line refs below drift as edits land — grep the quoted text, don't trust numbers.
 
 ## ▶ RUN THIS
-Next: Task 1a — Props/Emits/Features/Data-Flow fixes. Do this ONE task, commit, update checkpoint + ▶ RUN THIS, then stop.
+Next: Task 1b — Props/Emits/Data-Flow code snippets. Do this ONE task, commit, update checkpoint + ▶ RUN THIS, then stop.
 
 ## Tasks
 1. **Fix SingleKeyTravel.md drift (24 edits, docs-only)** — [high-stakes] — STATUS: IN-PROGRESS (parent; stays IN-PROGRESS until 1d, then IN-REVIEW)
    - Files: `docs/pages/SingleKeyTravel.md` ONLY. No src edits anywhere in this sprint.
 
-   **1a. Props/Emits/Features/Data-Flow** — STATUS: IN-PROGRESS — CKPT: first-pass read of SingleKeyTravel.md done (626 lines, one read pass); all 10 edits' CURRENT text present verbatim at expected spots; no spec drift; applying edits
+   **1a. Props/Emits/Features/Data-Flow** — ✓ DONE (commit `74bea7a`) — all 10 spec edits applied verbatim, 13/13 Done-when greps green (5 stale=0, 8 new-text=1); no defects; docs-only so self-check gate skipped
    - Edits (each CURRENT text grep-verified 2026-11-04):
      1. DELETE line `  baseLayout: any;                // Base layout configuration (unused in current implementation)` (.vue has exactly 3 props: selectedKeys/layout/profileMaxTravel)
      2. emits block line `  'update-single-overlay',   // Sends per-key overlay data or null/{}` → `  'update-single-overlay',   // Boolean: true = show/refresh overlays, false = hide`

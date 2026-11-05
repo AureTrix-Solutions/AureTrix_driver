@@ -62,7 +62,7 @@ This component enables users to define physical switch characteristics (e.g., "G
 - **Label**: "Select Profile:"
 - **Dropdown**: 
   - First option: "Default 4mm" (null value)
-  - Subsequent options: Custom profiles with format "SwitchName (X.Xmm)"
+  - Subsequent options: Custom profiles with format "SwitchName (X.Xmm)"; shows "N/A" instead of the number when maxTravel is unset (vue: maxTravel ? toFixed(1) : 'N/A')
 - **Delete Button**: Disabled when no profile selected (on "Default 4mm")
 
 #### Key Test Toggle Group
@@ -106,7 +106,7 @@ This component enables users to define physical switch characteristics (e.g., "G
 | A (example) | 0.00 mm | N/A |
 
 - **Key Column**: Label of selected key (e.g., "A", "Space", "Esc")
-- **Travel Column**: Live-updating travel value (green text, updates in real-time)
+- **Travel Column**: Live-updating travel value (accent color, updates in real-time)
 - **Trigger Column**: 
   - Red "N/A" when not triggered
   - Green value (e.g., "1.85 mm") when key actuates
@@ -123,7 +123,6 @@ This component enables users to define physical switch characteristics (e.g., "G
 interface Props {
   selectedKeys: IDefKeyInfo[];    // Currently selected keys
   layout: IDefKeyInfo[][];        // Full keyboard layout
-  baseLayout: any;                // Base layout (unused)
   profileMaxTravel: number;       // Current profile's max travel (from KeyTravel)
 }
 ```
@@ -163,8 +162,8 @@ const currentProfileName = ref('');          // Name of profile being captured
 const isCapturing = ref(false);              // Capture in progress flag
 const capturedTravel = ref(0);               // Captured max travel value
 const countdown = ref(5);                    // Countdown timer (seconds)
-let captureInterval: NodeJS.Timeout | null = null;      // Polling interval
-let countdownInterval: NodeJS.Timeout | null = null;    // Timer interval
+let captureInterval: ReturnType<typeof setTimeout> | null = null;      // Polling interval
+let countdownInterval: ReturnType<typeof setTimeout> | null = null;    // Timer interval
 let maxObservedTravel = 0;                   // Running max during capture
 ```
 
@@ -177,8 +176,8 @@ const showKeyTestModal = ref(false);         // Modal visibility
 const travelValue = ref('0.00');             // Current travel display
 const triggerValue = ref('0.00');            // Captured trigger point
 const triggered = ref(false);                // Trigger state (green highlight)
-let keyTestInterval: NodeJS.Timeout | null = null;      // Polling interval
-const keydownListener = ref<Function | null>(null);     // Keyboard event listener
+let keyTestInterval: ReturnType<typeof setTimeout> | null = null;      // Polling interval
+const keydownListener = ref<((event: KeyboardEvent) => void) | null>(null);     // Keyboard event listener
 const pendingTriggerCapture = ref(false);    // Waiting for trigger event
 const triggerCaptured = ref(false);          // Trigger already captured this press
 const originalKeyMapping = ref<number | null>(null);    // Original key value before remap
@@ -205,7 +204,7 @@ Store generates unique ID and adds to profiles array
   ↓
 Store selects new profile (selectedProfileId updates)
   ↓
-Component syncs selectedProfileId via watcher
+Component sets selectedProfileId directly from store in addProfile (watcher covers external store changes)
   ↓
 Set currentProfileName = "Gateron Red"
   ↓
@@ -229,8 +228,8 @@ Start capture interval (polls continuously, 0ms delay = max speed)
   ↓
 Every interval tick:
   ├─ KeyboardService.getRm6X21Travel()
-  ├─ SDK returns { travels: [[...], [...], ...], maxTravel: X }
-  ├─ Flatten nested travels array
+  ├─ KeyboardService wrapper returns { travels: number[] (already flat), maxTravel: X } (raw SDK travels is nested number[][]; wrapper flattens + computes maxTravel)
+  ├─ Defensive re-flatten: Array.isArray(travels[0]) ? travels.flat() : travels
   ├─ Filter out zero values (no key pressed)
   ├─ Find max from non-zero values
   ├─ Round to 0.1mm precision (e.g., 3.87 → 3.9)
@@ -283,7 +282,7 @@ Store removes profile from array
   ↓
 Store resets selectedProfile to null (Default 4mm)
   ↓
-Component syncs: selectedProfileId = null
+Component sets selectedProfileId = null directly, resets capturedTravel = 0, closes capture modal
   ↓
 Dropdown shows "Default 4mm"
   ↓
@@ -306,6 +305,8 @@ Step 1: loadActuationPoint()
   ├─ Loads configured travel (e.g., 2.0mm)
   ├─ Validates range (0.1 - profileMaxTravel)
   └─ Sets actuationPoint.value = 2.0
+  ↓
+Guard: if actuationPoint <= 0 after load → keyTestEnabled = false, abort (no remap, no modal)
   ↓
 Step 2: remapKeyForTest(physicalKey)
   ├─ KeyboardService.getLayoutKeyInfo([{ key: physicalKey, layout: 0 }])
@@ -358,7 +359,7 @@ stopPolling()
 
 | SDK Method | Purpose | Usage |
 |------------|---------|-------|
-| `getRm6X21Travel()` | Get current travel for all keys | Capture and key test polling |
+| `getRm6X21Travel()` | Get current travel for all keys (KeyboardService wrapper flattens travels to number[] and computes maxTravel) | Capture and key test polling |
 | `getSingleTravel(key)` | Load key's configured travel | Load actuation point for testing |
 | `getLayoutKeyInfo(keys)` | Get current key mapping | Save original mapping before test |
 | `setKey(mappings)` | Remap key to specific value | Remap to 'A', restore original |
@@ -380,20 +381,17 @@ captureInterval = setInterval(async () => {
 - SDK and hardware can handle the request rate
 - Browser automatically throttles to ~4ms minimum anyway
 
-**getRm6X21Travel() Response Structure**:
+**getRm6X21Travel() Response Structure** (KeyboardService wrapper OUTPUT — the raw SDK returns `status: number[][]` and nested `travels: number[][]`; the wrapper transforms both, see `async getRm6X21Travel` in src/services/KeyboardService.ts):
 
 ```typescript
 {
-  travels: [
-    [0, 0, 2.3, 0, ...],  // Row 1 travels
-    [0, 0, 0, 1.8, ...],  // Row 2 travels
-    // ... more rows
-  ],
-  maxTravel: 2.3  // Overall max across all keys
+  status: number[][],   // per-key status grid (passed through)
+  travels: number[],    // FLAT — wrapper flattens the SDK's nested rows
+  maxTravel: number     // wrapper-computed: max of travels > 0; 4.0 if no travels reported; 0 if all ≤ 0
 }
 ```
 
-For capture, we flatten the nested array and find the max. For key test, we use `maxTravel` directly.
+For capture, the component defensively re-flattens (`Array.isArray(travels[0]) ? travels.flat() : travels`), filters out zero values and tracks the running max. For key test, we use `maxTravel` directly.
 
 ---
 
@@ -567,7 +565,6 @@ SwitchProfiles is the third child of KeyTravel:
 <SwitchProfiles 
   :selected-keys="selectedKeys" 
   :layout="layout" 
-  :base-layout="baseLayout"
   :profile-max-travel="profileMaxTravel"
 />
 ```
@@ -606,7 +603,7 @@ SwitchProfiles is the third child of KeyTravel:
 - **Width**: 80% of modal width
 - **Border Collapse**: Collapsed borders for clean look
 - **Cell Padding**: 8px
-- **Header**: Background dark, text color from variables
+- **Header**: Background transparent (rgba of $background-dark with alpha 0.0), text color from variables
 - **Live Travel**: Accent color, font-weight 500
 - **Trigger**: 
   - Red (#ff4444) when N/A

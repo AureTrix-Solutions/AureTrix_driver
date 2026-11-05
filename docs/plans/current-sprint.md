@@ -7,12 +7,12 @@
 ## Checkpoint
 - Branch: `sprint-31-docs-pages-verify-6`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — docs-only sprint; self-check gate SKIPPED (no source changes)
-- Cleanup (actual `ls`, after 1a): `.scratch/` = pm-notes.md only (PM's, PO may delete); `_to_delete/` = empty, nothing to git rm
+- Cleanup (actual `ls`, after 1b): `.scratch/` = pm-notes.md only (PM's, PO may delete); `_to_delete/` = empty, nothing to git rm
 - Split rationale: 4 sub-tasks × (≤11 edits, ≤35 new lines authored) → sequential 1a→1b→1c→1d, ONE Reviewer over cumulative base..head after 1d
 - PM research banked in `.scratch/pm-notes.md` F5–F26 (private). Specs below are final — Worker APPLIES, does not re-derive. Line refs below drift as edits land — grep the quoted text, don't trust numbers.
 
 ## ▶ RUN THIS
-Next: Task 1b — Props/Emits/Data-Flow code snippets. Do this ONE task, commit, update checkpoint + ▶ RUN THIS, then stop.
+Next: Task 1c — Update Failures + watcher params + load-catch snippets (6 edits). Do this ONE task, commit, update checkpoint + ▶ RUN THIS, then stop.
 
 ## Tasks
 1. **Fix SingleKeyTravel.md drift (24 edits, docs-only)** — [high-stakes] — STATUS: IN-PROGRESS (parent; stays IN-PROGRESS until 1d, then IN-REVIEW)
@@ -33,7 +33,7 @@ Next: Task 1b — Props/Emits/Data-Flow code snippets. Do this ONE task, commit,
    - Done when: `grep -n "baseLayout: any\|refresh: true\|emit null\|300ms\|newMode: 'single' }\|Auto-refreshes when selection" docs/pages/SingleKeyTravel.md` returns nothing
    - Done when: `grep -c "NEVER emitted" docs/pages/SingleKeyTravel.md` ≥ 1; commit `<sprint>: Task 1a`
 
-   **1b. updateSingleKeyAll snippet → verbatim source** — STATUS: PENDING
+   **1b. updateSingleKeyAll snippet → verbatim source** — ✓ DONE — snippet replaced with .vue `updateSingleKeyAll` verbatim (dedent-4, diff-clean: VERBATIM-OK); Done-when greps green (keyIds/processBatches(keyIds=2, processBatches(keys,=1 per spec — Update Failures snippet, 1c fixes); docs-only, self-check gate skipped
    - Edit: in `### Batch Processing Strategy`, replace the whole snippet from `const updateSingleKeyAll = async () => {` through its closing `};` (currently maps to `keys` objects, passes `processBatches(keys,`, has no try/catch, no emits) with a VERBATIM copy of the .vue's `updateSingleKeyAll` (grep that symbol in src/components/performance/SingleKeyTravel.vue, ~33 lines: `const keyIds = keys.map(k => k.physicalKeyValue);`, `processBatches(keyIds,`, try → `emit('mode-changed', keyIds, 'single')` → catch `console.error(\`[SINGLEKEYTRAVEL] Error in updateSingleKeyAll:\`, error)`, prev* updates AFTER catch, tail `if (showOverlay.value) { emit('update-single-overlay', true); }`), dedented to snippet level. Copy = apply; do not paraphrase.
    - Done when: `grep -c "const keyIds = keys.map\|processBatches(keyIds" docs/pages/SingleKeyTravel.md` = 2 (one each)
    - Done when: `grep -c "processBatches(keys," docs/pages/SingleKeyTravel.md` = 1 (Update Failures snippet — fixed in 1c); commit `<sprint>: Task 1b`

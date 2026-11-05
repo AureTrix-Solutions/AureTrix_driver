@@ -272,34 +272,36 @@ All updates to selected keys use batch processing to prevent hardware overwhelm:
 ```typescript
 const updateSingleKeyAll = async () => {
   if (props.selectedKeys.length === 0) return;
-  
   const travelChanged = singleKeyTravel.value !== prevSingleKeyTravel.value;
-  const deadChanged = topDeadZone.value !== prevTopDeadZone.value || 
-                      bottomDeadZone.value !== prevBottomDeadZone.value;
-  
-  if (!travelChanged && !deadChanged) return; // Optimization: exit early
-  
+  const deadChanged = topDeadZone.value !== prevTopDeadZone.value || bottomDeadZone.value !== prevBottomDeadZone.value;
+  if (!travelChanged && !deadChanged) return;
   const keys = props.selectedKeys.map(key => ({
     physicalKeyValue: key.physicalKeyValue || key.keyValue,
   }));
-  
-  await processBatches(keys, async (physicalKeyValue) => {
-    await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);
-    
-    if (travelChanged) {
-      await KeyboardService.setSingleTravel(physicalKeyValue, singleKeyTravel.value);
-    }
-    
-    if (deadChanged) {
-      await KeyboardService.setDp(physicalKeyValue, topDeadZone.value);
-      await KeyboardService.setDr(physicalKeyValue, bottomDeadZone.value);
-    }
-  });
-  
-  // Update tracking values
+  const keyIds = keys.map(k => k.physicalKeyValue);
+  try {
+    await processBatches(keyIds, async (physicalKeyValue) => {
+      await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);
+      if (travelChanged) {
+        await KeyboardService.setSingleTravel(physicalKeyValue, singleKeyTravel.value);
+      }
+      if (deadChanged) {
+        await KeyboardService.setDp(physicalKeyValue, topDeadZone.value);
+        await KeyboardService.setDr(physicalKeyValue, bottomDeadZone.value);
+      }
+    });
+    // Emit mode change so parent can update keyModeMap
+    emit('mode-changed', keyIds, 'single');
+  } catch (error) {
+    console.error(`[SINGLEKEYTRAVEL] Error in updateSingleKeyAll:`, error);
+  }
   prevSingleKeyTravel.value = singleKeyTravel.value;
   prevTopDeadZone.value = topDeadZone.value;
   prevBottomDeadZone.value = bottomDeadZone.value;
+  // Refresh single overlays if showing
+  if (showOverlay.value) {
+    emit('update-single-overlay', true);
+  }
 };
 ```
 

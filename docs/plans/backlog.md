@@ -45,7 +45,7 @@ extraction per sprint/branch — never a multi-phase rewrite in one go.
 - [x] GlobalTravel.md — sprint-29, PASS ×2 (16/16 + 3/3 greps), 7 drifts fixed + PAGES_OVERVIEW journey fix, PO signed off 2026-11-03 (archive/sprint-29-docs-pages-verify-4/)
 - [x] SwitchProfiles.md — sprint-30, Reviewer PASS (15 drift edits: phantom baseLayout prop, timer/listener types, wrapper-vs-SDK travels shape, UI/CSS details, actuationPoint guard), PO signed off 2026-11-04 (archive/sprint-30-docs-pages-verify-5/)
 - [ ] SingleKeyTravel.md ↔ src/components/performance/SingleKeyTravel.vue — PLANNED as sprint-31-docs-pages-verify-6 (in progress; PM ticked/closed at PM-close). PM pre-verified drift: phantom baseLayout prop (md:103, :526) + phantom @refresh-overlays binding, dead 'update-overlay' emit, wrong event payloads (boolean/positional, not objects), phantom 300ms/null overlay flow, stale snippets (processBatches(keys), watcher params, catch bodies), overlay scope (all single-mode keys, not selection), re-click matrix row (parent toggles out) — full edit spec in current-sprint.md Task 1a-1d
-- [ ] KeyTravel.md ↔ src/components/performance/KeyTravel.vue — doc 482 vs source 89; drift likely. Known drift (found sprint-30 PM-open): doc claims baseLayout is passed to SingleKeyTravel and SwitchProfiles (KeyTravel.md:74/:205/:213/:226/:370) — KeyTravel.vue passes NO :base-layout to any child; verify all when the sprint runs
+- [ ] KeyTravel.md ↔ src/components/performance/KeyTravel.vue — doc 482 vs source 89; drift likely. Known drift (found sprint-30 PM-open): doc claims baseLayout is passed to SingleKeyTravel and SwitchProfiles (KeyTravel.md:74/:205/:213/:226/:370) — KeyTravel.vue passes NO :base-layout to any child; verify all when the sprint runs. Also (sprint-31 Findings): `setSingleOverlay` param typed `(data: {travel; pressDead; releaseDead} | null)` but child emits boolean — stale annotation; relay still works (re-emits arg unchanged). Verify: grep `const setSingleOverlay` in src/components/performance/KeyTravel.vue
 - [ ] KeyMapping.md ↔ src/pages/KeyMapping.vue
 - [ ] Lighting.md ↔ src/pages/Lighting.vue
 - [ ] RapidTrigger.md ↔ src/pages/RapidTrigger.vue
@@ -60,7 +60,7 @@ extraction per sprint/branch — never a multi-phase rewrite in one go.
 README.md (repo root) + .github/* (CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, issue/PR templates, ci.yml).
 
 ## Code issues
-(empty — the 2 sprint-22 items were routed into sprint-23-code-issues, 2026-10-29.)
+- [cleanup] SingleKeyTravel.vue `emits` array still declares `'update-overlay'` (:194) though no code path ever emits it — dead declaration (doc now correctly records it). Verify: grep `emit('update-overlay'` in src/components/performance/SingleKeyTravel.vue (exit 1). (sprint-31 Reviewer Findings; detail: docs/plans/reviews/review-singlekeytravel.md → archive/sprint-31-docs-pages-verify-6/ after close.)
 
 ## Document issues
 - [docs] docs/sdk-reference-v2.md renders the IDB blocks as `interface IDB` (:705, :2755) while SDK source carries `export interface IDB` (protocol-keyboard/src/types/interface.ts:74) — cosmetic fidelity gap. Verify: `grep -n "interface IDB" docs/sdk-reference-v2.md`. (sprint-29 F1; detail: docs/plans/archive/sprint-29-docs-pages-verify-4/sprint.md §Findings.)

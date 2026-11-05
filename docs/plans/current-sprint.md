@@ -7,12 +7,12 @@
 ## Checkpoint
 - Branch: `sprint-31-docs-pages-verify-6`
 - tsc baseline: 0 errors (docs/tsc-baseline.txt) — docs-only sprint; self-check gate SKIPPED (no source changes)
-- Cleanup (actual `ls`, after 1b): `.scratch/` = pm-notes.md only (PM's, PO may delete); `_to_delete/` = empty, nothing to git rm
+- Cleanup (actual `ls`, after 1c): `.scratch/` = pm-notes.md only (PM's, PO may delete); `_to_delete/` = empty, nothing to git rm
 - Split rationale: 4 sub-tasks × (≤11 edits, ≤35 new lines authored) → sequential 1a→1b→1c→1d, ONE Reviewer over cumulative base..head after 1d
 - PM research banked in `.scratch/pm-notes.md` F5–F26 (private). Specs below are final — Worker APPLIES, does not re-derive. Line refs below drift as edits land — grep the quoted text, don't trust numbers.
 
 ## ▶ RUN THIS
-Next: Task 1c — Update Failures + watcher params + load-catch snippets (6 edits). Do this ONE task, commit, update checkpoint + ▶ RUN THIS, then stop.
+Next: Task 1d — Workflows/matrix/binding/Event-Flow/overlay scope (7 edits) + parent → IN-REVIEW + write review-singlekeytravel.md from template. Do this ONE task, commit, update checkpoint + ▶ RUN THIS, then stop.
 
 ## Tasks
 1. **Fix SingleKeyTravel.md drift (24 edits, docs-only)** — [high-stakes] — STATUS: IN-PROGRESS (parent; stays IN-PROGRESS until 1d, then IN-REVIEW)
@@ -38,16 +38,7 @@ Next: Task 1c — Update Failures + watcher params + load-catch snippets (6 edit
    - Done when: `grep -c "const keyIds = keys.map\|processBatches(keyIds" docs/pages/SingleKeyTravel.md` = 2 (one each)
    - Done when: `grep -c "processBatches(keys," docs/pages/SingleKeyTravel.md` = 1 (Update Failures snippet — fixed in 1c); commit `<sprint>: Task 1b`
 
-   **1c. Update Failures + watcher params + load-catch snippets** — STATUS: IN-PROGRESS — CKPT: first-pass read of SingleKeyTravel.md done (622 lines, one read pass); all 6 edits' CURRENT text present verbatim at expected spots; no spec drift; applying edits
-   - Edits:
-     1. `Update failures are caught but don't interrupt the user experience:` → `Update failures are caught, logged via console.error, and don't interrupt the user experience (prev* tracking values update even on failure):`
-     2. Replace its snippet body `try {\n  await processBatches(keys, async (physicalKeyValue) => {\n    await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);\n    // ...additional SDK calls\n  });\n} catch (error) {\n  // Silent failure - UI state remains consistent\n}` → `try {\n  await processBatches(keyIds, async (physicalKeyValue) => {\n    await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);\n    // ...additional SDK calls\n  });\n  emit('mode-changed', keyIds, 'single');\n} catch (error) {\n  console.error(\`[SINGLEKEYTRAVEL] Error in updateSingleKeyAll:\`, error);\n}`
-     3. `watch(topDeadZone, (newVal, oldVal) => {` → `watch(topDeadZone, () => {`
-     4. `watch(bottomDeadZone, (newVal, oldVal) => {` → `watch(bottomDeadZone, () => {`
-     5. `watch(() => props.selectedKeys, async (newKeys) => {` → `watch(() => props.selectedKeys, async () => {`
-     6. loadSingleKeyTravel snippet: `} catch (error) {\n    // Fall through to default\n  }` → `} catch {\n  }` (source has bare empty catch)
-   - Done when: `grep -n "processBatches(keys,\|Silent failure\|Fall through to default\|(newVal, oldVal)\|async (newKeys)" docs/pages/SingleKeyTravel.md` returns nothing
-   - Done when: `grep -c "console.error" docs/pages/SingleKeyTravel.md` ≥ 2; commit `<sprint>: Task 1c`
+   **1c. Update Failures + watcher params + load-catch snippets** — ✓ DONE (commit `61f9e4f`) — all 6 spec edits applied verbatim; Done-when greps green (stale-pattern=0/exit1, console.error=3 ≥2); docs-only so self-check gate skipped
 
    **1d. Workflows/matrix/binding/Event-Flow/overlay scope** — STATUS: PENDING
    - Edits:

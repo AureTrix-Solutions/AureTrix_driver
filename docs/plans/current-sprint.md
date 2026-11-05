@@ -10,11 +10,12 @@
 - Cleanup: .scratch/ has pm-notes.md (PO may delete); _to_delete/ absent (from actual ls at PM-open)
 
 ## ▶ RUN THIS
-Next: Task 1 — apply the 14 numbered edits below to docs/pages/SwitchProfiles.md, then write the review file and go IN-REVIEW. Do this task, then stop.
+**REVIEWER — Task 1 (SwitchProfiles drift fix, high-stakes).** Follow docs/plans/reviews/review-switchprofiles.md (base 9461bb3, head 7efb6e8); re-run the Done-when greps; PASS → set Task 1 DONE (collapse to ✓) and advance ▶ RUN THIS to Task 2; FAIL → detail in the review file + fix checklist here.
 PM research is COMPLETE: every OLD text below was grep-verified 2026-11-04. Apply as written — do not re-derive. For single-line edits, match the line's exact spacing (grep it first if Edit refuses).
 
 ## Tasks
-1. **Fix SwitchProfiles.md drift (15 edits, docs-only)** — [high-stakes] — STATUS: PENDING
+1. **Fix SwitchProfiles.md drift (15 edits, docs-only)** — [high-stakes] — STATUS: IN-REVIEW
+   - CHECKPOINT: all 15 edits applied + committed (7efb6e8); Done-when greps all green; review-switchprofiles.md written (base 9461bb3, head 7efb6e8). Awaiting Reviewer.
    - Files: `docs/pages/SwitchProfiles.md` (ONLY file edited; no src/ changes)
    - Why high-stakes: SDK-correctness claims in docs (wrapper output shape) + multi-edit; Reviewer required.
    - Edits (line refs from 2026-11-04; re-grep the OLD text if a prior edit shifted lines):

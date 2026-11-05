@@ -15,10 +15,10 @@
 Next: Task 1a — Props/Emits/Features/Data-Flow fixes. Do this ONE task, commit, update checkpoint + ▶ RUN THIS, then stop.
 
 ## Tasks
-1. **Fix SingleKeyTravel.md drift (24 edits, docs-only)** — [high-stakes] — STATUS: PENDING (parent; stays IN-PROGRESS until 1d, then IN-REVIEW)
+1. **Fix SingleKeyTravel.md drift (24 edits, docs-only)** — [high-stakes] — STATUS: IN-PROGRESS (parent; stays IN-PROGRESS until 1d, then IN-REVIEW)
    - Files: `docs/pages/SingleKeyTravel.md` ONLY. No src edits anywhere in this sprint.
 
-   **1a. Props/Emits/Features/Data-Flow** — STATUS: PENDING
+   **1a. Props/Emits/Features/Data-Flow** — STATUS: IN-PROGRESS — CKPT: first-pass read of SingleKeyTravel.md done (626 lines, one read pass); all 10 edits' CURRENT text present verbatim at expected spots; no spec drift; applying edits
    - Edits (each CURRENT text grep-verified 2026-11-04):
      1. DELETE line `  baseLayout: any;                // Base layout configuration (unused in current implementation)` (.vue has exactly 3 props: selectedKeys/layout/profileMaxTravel)
      2. emits block line `  'update-single-overlay',   // Sends per-key overlay data or null/{}` → `  'update-single-overlay',   // Boolean: true = show/refresh overlays, false = hide`

@@ -49,8 +49,8 @@ The component automatically loads settings from the first selected key, applies 
 
 6. **Visual Overlay System**
    - Show/Hide button toggles per-key overlay display
-   - Displays unique travel and deadzone values for each selected key
-   - Auto-refreshes when selection changes
+   - Displays unique travel and deadzone values for every single-mode key with fetched data (not just the current selection)
+   - Refreshes on Show/Hide toggle and after a successful update while visible — NOT on selection change
 
 7. **Selection-Reactive Loading**
    - Automatically loads settings from first selected key when selection changes
@@ -100,7 +100,6 @@ The component automatically loads settings from the first selected key, applies 
 interface Props {
   selectedKeys: IDefKeyInfo[];    // Currently selected keys (reactive)
   layout: IDefKeyInfo[][];        // Full keyboard layout
-  baseLayout: any;                // Base layout configuration (unused in current implementation)
   profileMaxTravel: number;       // Maximum travel from active switch profile
 }
 ```
@@ -109,8 +108,8 @@ interface Props {
 
 ```typescript
 emits: [
-  'update-single-overlay',   // Sends per-key overlay data or null/{}
-  'update-overlay',          // Clears global overlay when switching to single mode
+  'update-single-overlay',   // Boolean: true = show/refresh overlays, false = hide
+  'update-overlay',          // Declared but NEVER emitted by the component
   'mode-changed'             // Notifies parent when keys switch to single mode
 ]
 ```
@@ -118,13 +117,12 @@ emits: [
 **Event Details**:
 
 - **`update-single-overlay`**: Emitted when single-mode overlay visibility toggles or settings change
-  - Payload: `null` to hide overlays, or `{ refresh: true }` to trigger per-key value fetching
+  - Payload: boolean — `true` when shown (toggleOverlay or post-update refresh), `false` when hidden via toggleOverlay
   
-- **`update-overlay`**: Emitted when keys switch to single mode to clear global overlay display
-  - Payload: `null` (clears global overlay values)
+- **`update-overlay`**: declared in `emits` but never emitted — no code path fires it (grep `emit(` in SingleKeyTravel.vue: only update-single-overlay ×2, mode-changed ×1)
   
 - **`mode-changed`**: Critical for overlay reactivity - emitted when selected keys are converted to single mode
-  - Payload: `{ keyIds: number[], newMode: 'single' }`
+  - Payload: POSITIONAL args `(keyIds: number[], 'single')` — not an object
   - Triggers parent to update `keyModeMap` tracking
   - Ensures overlays switch from global to per-key values without page refresh
 
@@ -202,15 +200,13 @@ processBatches: For each key
   ├─ If travel changed: setSingleTravel(key, singleKeyTravel)
   └─ If deadzones changed: setDp(key, topDead) & setDr(key, bottomDead)
   ↓
-Emit 'mode-changed' event with { keyIds: [...], newMode: 'single' }
+Emit 'mode-changed' (positional: keyIds, 'single') — inside try, only on batch success
   ↓
 Parent updates keyModeMap tracking (critical for overlay reactivity)
   ↓
-Update prev values for future change detection
+Update prev values for future change detection (runs even if the batch failed)
   ↓
-Clear overlays (emit null)
-  ↓
-If overlay enabled: Re-emit after 300ms to refresh display
+If overlay is visible: emit 'update-single-overlay' (true) — immediate, no timer (no setTimeout in .vue)
 ```
 
 **Critical Event**: The `mode-changed` emission is essential for preventing overlay persistence bugs. When keys switch from global to single mode (or reaffirm single mode), the parent Performance page must immediately update its `keyModeMap` tracking so the computed `overlayData` knows to apply per-key values instead of global values. Without this event, keys switching modes would show stale overlay values until page refresh.
@@ -593,8 +589,6 @@ Performance.vue updates keyboard grid overlays for selected keys
 4. **String-to-Number Conversion**: SDK returns travel as string (e.g., "2.05"). Component must explicitly convert with `Number()`.
 
 5. **No Validation Feedback**: Invalid values are clamped silently without notifying user.
-
-6. **Overlay Refresh Delay**: 300ms delay after updates before overlay re-renders (intentional, allows state to settle).
 
 ---
 

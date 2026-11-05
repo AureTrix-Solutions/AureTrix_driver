@@ -43,7 +43,16 @@ Fix-round ranges (added on each re-review): —
 N/A — not a [hw] task; docs-only sprint, no hardware behavior changed.
 
 ## ⚖️ Reviewer findings
-<!-- F1..Fn blocks or "No defects found". Every quote/line-ref grep-verified before surfacing. -->
+No defects found. All checks re-run independently against final state (HEAD 9b8fe8f; doc identical to 8e2d320 — verified `git diff 8e2d320..HEAD -- docs/pages/SingleKeyTravel.md` empty):
+
+- **Scope**: `git diff --stat d5ce52c..8e2d320` = exactly docs/pages/SingleKeyTravel.md + docs/plans/current-sprint.md. No source files touched.
+- **1a**: stale-claims grep (`baseLayout: any|refresh: true|emit null|300ms|newMode: 'single' }|Auto-refreshes when selection`) → nothing; `NEVER emitted` = 1 — and grep-confirmed against source: `emit('update-overlay'` does not exist in SingleKeyTravel.vue (exit 1), so the doc's claim is accurate.
+- **1b**: `keyIds|processBatches(keyIds` = 3 and `processBatches(keys,` = 0, matching this file's final-state observations. Verbatim claim confirmed by diff: doc snippet vs `sed -n '213,245p' SingleKeyTravel.vue | sed 's/^    //'` → clean (33 lines each side).
+- **1c**: stale-snippets grep (`processBatches(keys,|Silent failure|Fall through to default|(newVal, oldVal)|async (newKeys)`) → nothing; `console.error` = 3 (≥2).
+- **1d**: stale-claims grep (`baseLayout|base-layout|refresh-overlays|for each selected key|deep watch doesn't detect change`) → nothing; `@mode-changed="handleModeChange"` = 1; wc -l = 620 (590–650).
+- **Doc↔source spot checks** (beyond the greps): Props interface (doc ~L100-104) matches props at SingleKeyTravel.vue:181-193 (selectedKeys/layout/profileMaxTravel); Emits array (doc L109-113) matches :194 verbatim in order; payload claims match source — `emit('mode-changed', keyIds, 'single')` positional at :234, `emit('update-single-overlay', true)` at :243 and `(showOverlay.value)` at :360; binding block (doc L521-527) matches KeyTravel.vue:10-16 attribute-for-attribute (doc re-indents 6sp→2sp — presentation only), with no `:base-layout` / `@refresh-overlays` in either.
+
+Non-defect observation (routed to Findings, not a fix item): `update-overlay` remains declared in SingleKeyTravel.vue's `emits` (:194) though never emitted — the doc now correctly records this as dead-declared; removing it from the component would be a source change outside this docs sprint.
 
 ## ✅ VERDICT
-<!-- PASS (→DONE) / FAIL (→IN-PROGRESS + "fix ONLY these" checklist into ▶ RUN THIS). Never edits source. -->
+**PASS** — Task 1 (1a–1d) → DONE. All 9 Done-when criteria green at final state; verbatim-snippet and binding-block claims independently diff-confirmed; every doc claim spot-checked matches source. Reviewed range d5ce52c..8e2d320 (doc unchanged through HEAD 9b8fe8f). No fix round needed.

@@ -12,10 +12,10 @@
 - PM research banked in `.scratch/pm-notes.md` F5–F26 (private). Specs below are final — Worker APPLIES, does not re-derive. Line refs below drift as edits land — grep the quoted text, don't trust numbers.
 
 ## ▶ RUN THIS
-Next: Reviewer window — "follow docs/plans/reviews/review-singlekeytravel.md" (ONE pass over cumulative diff d5ce52c..8e2d320; re-run all four Done-when sets; note the two 1b snapshot-superseded criteria documented in the review file). On PASS → parent DONE, advance to PM-close; on FAIL → fix checklist here.
+Next: PM-close — "Act as PM per CLAUDE.md. All tasks DONE; assemble work + QA verdicts vs the goal for my sign-off; on acceptance archive, on rejection revise." (Reviewer PASS recorded; sprint = single task, no [hw], no fix rounds.)
 
 ## Tasks
-1. **Fix SingleKeyTravel.md drift (24 edits, docs-only)** — [high-stakes] — STATUS: IN-REVIEW (review-singlekeytravel.md written; base `d5ce52c`, head `8e2d320`; Reviewer runs ONCE over cumulative diff)
+1. **Fix SingleKeyTravel.md drift (24 edits, docs-only)** — [high-stakes] — ✓ DONE (Reviewer PASS on review-singlekeytravel.md; all 9 Done-when criteria green at final state, verbatim snippet + binding block diff-confirmed, doc↔source spot checks clean)
    - Files: `docs/pages/SingleKeyTravel.md` ONLY. No src edits anywhere in this sprint.
 
    **1a.** ✓ DONE (`74bea7a`) — 10 edits; D1 grep nothing, D2 NEVER emitted =1
@@ -25,6 +25,7 @@ Next: Reviewer window — "follow docs/plans/reviews/review-singlekeytravel.md" 
 
 ## Findings
 - (PM-open) KeyTravel.vue `setSingleOverlay` param typed `(data: {travel; pressDead; releaseDead} | null)` but child emits boolean — stale annotation; relay still works (re-emits arg unchanged). Verify: grep `const setSingleOverlay` in src/components/performance/KeyTravel.vue. Route to the KeyTravel.md backlog row at PM-close.
+- (Reviewer) SingleKeyTravel.vue `emits` array still declares `'update-overlay'` which no code path ever emits — dead declaration in source (doc now correctly records it). Verify: grep `emit('update-overlay'` in src/components/performance/SingleKeyTravel.vue (exit 1). Source cleanup candidate for backlog.
 
 ## Close checklist (PM-close only)
 1. All tasks DONE + Reviewer PASS + PO sign-off  2. Route Findings → backlog  3. Snapshot → archive/sprint-31-docs-pages-verify-6/sprint.md  4. git mv review file into archive  5. Repoint backlog pointers  6. index.md row 31 = `signed off`  7. Reset this file to IDLE stub (verbatim from template)  8. One close commit

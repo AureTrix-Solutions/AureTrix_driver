@@ -381,7 +381,7 @@ The component implements automatic clamping via watchers to maintain valid confi
 ### Top Deadzone Watcher
 
 ```typescript
-watch(topDeadZone, (newVal, oldVal) => {
+watch(topDeadZone, () => {
   if (singleKeyTravel.value < minTravel.value) {
     singleKeyTravel.value = Number(minTravel.value.toFixed(2));
   }
@@ -397,7 +397,7 @@ watch(topDeadZone, (newVal, oldVal) => {
 ### Bottom Deadzone Watcher
 
 ```typescript
-watch(bottomDeadZone, (newVal, oldVal) => {
+watch(bottomDeadZone, () => {
   if (!deadZonesLinked.value) { // Only clamp if unlinked
     if (singleKeyTravel.value > maxTravel.value) {
       singleKeyTravel.value = Number(maxTravel.value.toFixed(2));
@@ -440,7 +440,7 @@ const updateDeadZones = async () => {
 The component reacts to selection changes via a deep watcher:
 
 ```typescript
-watch(() => props.selectedKeys, async (newKeys) => {
+watch(() => props.selectedKeys, async () => {
   await loadSingleKeyTravel();
   await loadDeadZones();
 }, { deep: true });
@@ -486,8 +486,7 @@ const loadSingleKeyTravel = async () => {
         return; // Success path
       }
     }
-  } catch (error) {
-    // Fall through to default
+  } catch {
   }
   
   // Default fallback
@@ -498,16 +497,17 @@ const loadSingleKeyTravel = async () => {
 
 ### Update Failures
 
-Update failures are caught but don't interrupt the user experience:
+Update failures are caught, logged via console.error, and don't interrupt the user experience (prev* tracking values update even on failure):
 
 ```typescript
 try {
-  await processBatches(keys, async (physicalKeyValue) => {
+  await processBatches(keyIds, async (physicalKeyValue) => {
     await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);
     // ...additional SDK calls
   });
+  emit('mode-changed', keyIds, 'single');
 } catch (error) {
-  // Silent failure - UI state remains consistent
+  console.error(`[SINGLEKEYTRAVEL] Error in updateSingleKeyAll:`, error);
 }
 ```
 

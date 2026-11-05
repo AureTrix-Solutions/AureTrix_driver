@@ -38,7 +38,7 @@ Next: Task 1c — Update Failures + watcher params + load-catch snippets (6 edit
    - Done when: `grep -c "const keyIds = keys.map\|processBatches(keyIds" docs/pages/SingleKeyTravel.md` = 2 (one each)
    - Done when: `grep -c "processBatches(keys," docs/pages/SingleKeyTravel.md` = 1 (Update Failures snippet — fixed in 1c); commit `<sprint>: Task 1b`
 
-   **1c. Update Failures + watcher params + load-catch snippets** — STATUS: PENDING
+   **1c. Update Failures + watcher params + load-catch snippets** — STATUS: IN-PROGRESS — CKPT: first-pass read of SingleKeyTravel.md done (622 lines, one read pass); all 6 edits' CURRENT text present verbatim at expected spots; no spec drift; applying edits
    - Edits:
      1. `Update failures are caught but don't interrupt the user experience:` → `Update failures are caught, logged via console.error, and don't interrupt the user experience (prev* tracking values update even on failure):`
      2. Replace its snippet body `try {\n  await processBatches(keys, async (physicalKeyValue) => {\n    await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);\n    // ...additional SDK calls\n  });\n} catch (error) {\n  // Silent failure - UI state remains consistent\n}` → `try {\n  await processBatches(keyIds, async (physicalKeyValue) => {\n    await KeyboardService.setPerformanceMode(physicalKeyValue, 'single', 0);\n    // ...additional SDK calls\n  });\n  emit('mode-changed', keyIds, 'single');\n} catch (error) {\n  console.error(\`[SINGLEKEYTRAVEL] Error in updateSingleKeyAll:\`, error);\n}`

@@ -43,9 +43,9 @@ extraction per sprint/branch — never a multi-phase rewrite in one go.
 - [x] LayoutPreview.md — sprint-27, PASS 14/14 greps, PO signed off 2026-11-01 (archive/sprint-27-docs-pages-verify-2/)
 - [x] FactoryResetModal.md — sprint-28, PASS 6/6 greps, 4 drifts fixed, PO signed off 2026-11-02 (archive/sprint-28-docs-pages-verify-3/)
 - [x] GlobalTravel.md — sprint-29, PASS ×2 (16/16 + 3/3 greps), 7 drifts fixed + PAGES_OVERVIEW journey fix, PO signed off 2026-11-03 (archive/sprint-29-docs-pages-verify-4/)
-- [ ] SwitchProfiles.md ↔ src/components/performance/SwitchProfiles.vue — next candidate (680/713 lines, ≥1 sprint)
-- [ ] SingleKeyTravel.md ↔ src/components/performance/SingleKeyTravel.vue — next candidate (625/619)
-- [ ] KeyTravel.md ↔ src/components/performance/KeyTravel.vue — doc 482 vs source 89; drift likely
+- [ ] SwitchProfiles.md ↔ src/components/performance/SwitchProfiles.vue — PLANNED as sprint-30-docs-pages-verify-5 (in progress; PM ticked/closed at PM-close). PM pre-verified 14 drifts: phantom baseLayout prop, NodeJS.Timeout/ref<Function> types, wrapper-vs-SDK travels shape (KS getRm6X21Travel flattens + computes maxTravel — both sides grep-verified), UI/CSS details, missing actuationPoint guard in Key Test Flow
+- [ ] SingleKeyTravel.md ↔ src/components/performance/SingleKeyTravel.vue — next candidate (625/619). Known drift (found sprint-30 PM-open): doc lists a baseLayout prop (SingleKeyTravel.md:103, :526) — verify against current props when the sprint runs
+- [ ] KeyTravel.md ↔ src/components/performance/KeyTravel.vue — doc 482 vs source 89; drift likely. Known drift (found sprint-30 PM-open): doc claims baseLayout is passed to SingleKeyTravel and SwitchProfiles (KeyTravel.md:74/:205/:213/:226/:370) — KeyTravel.vue passes NO :base-layout to any child; verify all when the sprint runs
 - [ ] KeyMapping.md ↔ src/pages/KeyMapping.vue
 - [ ] Lighting.md ↔ src/pages/Lighting.vue
 - [ ] RapidTrigger.md ↔ src/pages/RapidTrigger.vue

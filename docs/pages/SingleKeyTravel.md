@@ -63,7 +63,7 @@ The component automatically loads settings from the first selected key, applies 
 
 ### Header Section
 - **Title**: "Single Travel" in primary color
-- **Show/Hide Button**: Toggles overlay visibility for selected keys
+- **Show/Hide Button**: Toggles overlay visibility (parent refreshes overlays for ALL single-mode keys, not just the current selection)
 
 ### Travel Row
 - **Label**: "Trigger Travel (mm)"
@@ -363,12 +363,12 @@ const updateSingleKeyAll = async () => {
 1. User has configured different travels for different keys
 2. User selects a configured key (e.g., "A")
 3. User clicks "Show" button
-4. Component emits `update-single-overlay` with `{}`
+4. Component emits `update-single-overlay` with payload `true`
 5. Parent component (Performance.vue) reads travel and deadzone from keyboard
-6. Overlay displays unique values for each selected key
+6. Overlay displays unique values for every single-mode key with fetched data
 7. User selects different key (e.g., "B")
-8. Selection watcher reloads settings from "B"
-9. Overlay auto-refreshes to show "B" key's values
+8. Selection watcher reloads the component's sliders from "B"
+9. The overlay itself does NOT refresh on selection change — it updates on the next toggle or successful value change
 10. User clicks "Hide" button
 11. Overlay clears from display
 
@@ -454,7 +454,7 @@ watch(() => props.selectedKeys, async () => {
 | Key A selected → Key B selected | Load settings from Key B (replaces A's values in UI) |
 | Keys A+B selected → Keys C+D selected | Load settings from Key C (first in new selection) |
 | Keys selected → No keys selected | Reset to defaults (2.0mm travel, 0.2mm deadzones) |
-| Same keys selected (re-click) | No reload triggered (deep watch doesn't detect change) |
+| Selected key re-clicked | Parent TOGGLES it OUT of the selection (Performance.vue findIndex→splice) → watcher fires → empty selection resets to defaults |
 
 **Important**: When multiple keys are selected, only the **first key** determines what values display in the UI. Changes will apply to **all selected keys**, not just the first one.
 
@@ -521,10 +521,9 @@ SingleKeyTravel is rendered within KeyTravel.vue:
 <SingleKeyTravel 
   :selected-keys="selectedKeys" 
   :layout="layout" 
-  :base-layout="baseLayout" 
   :profile-max-travel="profileMaxTravel"
   @update-single-overlay="setSingleOverlay" 
-  @refresh-overlays="$emit('refresh-overlays')" 
+  @mode-changed="handleModeChange"
 />
 ```
 
@@ -547,7 +546,7 @@ KeyTravel.setSingleOverlay() forwards event
   ↓
 Performance.vue receives event
   ↓
-Performance.vue updates keyboard grid overlays for selected keys
+Performance.vue rebuilds overlays for ALL single-mode keys (payload true) or clears them (payload false)
 ```
 
 ---
